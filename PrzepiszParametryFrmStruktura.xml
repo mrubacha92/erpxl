@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja tabeli DokDefinicje - kasowanie wyzwalacza FrmStruktura_PrzepiszParametryProdukcja" hidden="True">
+IF EXISTS (SELECT *
+FROM sysobjects
+WHERE NAME = 'FrmStruktura_PrzepiszParametryProdukcja' AND xtype = 'TR')
+  DROP TRIGGER CDN.FrmStruktura_PrzepiszParametryProdukcja
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza FrmStruktura_PrzepiszParametryProdukcja" hidden="False">
+CREATE TRIGGER [CDN].[FrmStruktura_PrzepiszParametryProdukcja] ON [CDN].[FrmStruktura]
+FOR UPDATE
+AS
+     IF TRIGGER_NESTLEVEL(OBJECT_ID('FrmStruktura_PrzepiszParametryProdukcja')) &gt; 1
+         BEGIN
+             RETURN;
+         END;
+         ELSE
+         BEGIN
+             DECLARE @FrsId INT, @FRSProdukcjaZRodzica TINYINT;
+             DECLARE @AktualizowaneFrsId TABLE(FrsId INT);
+             DECLARE PrzepiszParametryProdukcja_Cursor CURSOR
+             FOR SELECT FRS_Id,
+                        FRS_ProdukcjaZRodzica
+                 FROM INSERTED;
+             OPEN PrzepiszParametryProdukcja_Cursor;
+             FETCH NEXT FROM PrzepiszParametryProdukcja_Cursor INTO @FrsId, @FrsProdukcjaZRodzica;
+             WHILE @@FETCH_STATUS = 0
+                 BEGIN
+                     IF UPDATE(FRS_ProdukcjaZRodzica)
+                        AND @FrsProdukcjaZRodzica = 1
+                         BEGIN
+                             WITH A
+                                  AS (
+                                  SELECT *,
+                                         1 Poziom
+                                  FROM cdn.FrmStruktura
+                                  WHERE FRS_GIDTyp = -4272
+                                        AND FRS_Warstwa = 1
+                                        AND FRS_ID = @FrsId
+                                  UNION ALL
+                                  SELECT frs.*,
+                                         A.Poziom + 1
+                                  FROM cdn.FrmStruktura frs
+                                       JOIN A ON A.FRS_GidTyp = frs.FRS_GIDTyp
+                                                 AND A.FRS_GroNumer = frs.FRS_GIDNumer
+                                  WHERE frs.FRS_GIDTyp = -4272
+                                        AND frs.FRS_Warstwa = 1)
+                                  SELECT TOP 1 @FrsId = FRS_ID
+                                  FROM A
+                                  WHERE FRS_ProdukcjaZRodzica &lt;&gt; 1
+                                        OR FRS_ID = 1
+                                  ORDER BY Poziom ASC;
+                         END;
+                         ELSE
+                     IF @FrsProdukcjaZRodzica = 1
+                        AND NOT UPDATE(FRS_ProdukcjaZRodzica)
+                         BEGIN
+                             CLOSE PrzepiszParametryProdukcja_Cursor;
+                             DEALLOCATE PrzepiszParametryProdukcja_Cursor;
+                             RETURN;
+                         END;
+                     --    ELSE
+                     --IF NOT(UPDATE(FRS_MESWyswietlajIlosciWJPom))
+                     --    BEGIN
+                     --        CLOSE PrzepiszParametryProdukcja_Cursor;
+                     --        DEALLOCATE PrzepiszParametryProdukcja_Cursor;
+                     --        RETURN;
+                     --    END;
+
+                     WITH A
+                          AS (
+                          SELECT *,
+                                 1 poziom
+                          FROM cdn.FrmStruktura
+                          WHERE FRS_GIDTyp = -4272
+                                AND FRS_Warstwa = 1
+                                AND FRS_ID = @FrsId
+                          UNION ALL
+                          SELECT frs.*,
+                                 poziom + 1
+                          FROM cdn.FrmStruktura frs
+                               JOIN A ON frs.frs_GroTyp = A.FRS_GidTYP
+                                         AND FRS.FRS_GroNumer = A.FRS_GidNumer
+                          WHERE frs.FRS_GIDTyp = -4272
+                                AND frs.FRS_Warstwa = 1
+                                AND FRS.FRS_ProdukcjaZRodzica = 1)
+                          INSERT INTO @AktualizowaneFrsId(FrsId)
+                                 SELECT FRS_ID
+                                 FROM A
+                                 WHERE poziom &gt; 1;
+                     --UPDATE A
+                     --  SET
+                     --      FRS_MESWyswietlajIlosciWJPom = B.FRS_MESWyswietlajIlosciWJPom
+                     --FROM cdn.FrmStruktura A
+                     --     JOIN cdn.FrmStruktura B ON B.FRS_ID = @FrsId
+                     --WHERE A.FRS_ID IN(SELECT FrsId
+                     --                  FROM @AktualizowaneFrsId);
+                     FETCH NEXT FROM PrzepiszParametryProdukcja_Cursor INTO @FrsId, @FrsProdukcjaZRodzica;
+                 END;
+             CLOSE PrzepiszParametryProdukcja_Cursor;
+             DEALLOCATE PrzepiszParametryProdukcja_Cursor;
+         END;
+</scriptdef>
+</ROOT>

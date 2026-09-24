@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<indexdef name="PCZRealizuje">
+CREATE NONCLUSTERED INDEX PCZRealizuje ON CDN.ProdCzynnosci
+             (
+             PCZ_Realizuje
+             )
+;
+</indexdef>
+<indexdef name="PTCOjciec">
+CREATE NONCLUSTERED INDEX PTCOjciec ON CDN.ProdTechnologiaCzynnosci
+             (
+             PTC_Ojciec                     
+             )
+;
+</indexdef>
+<indexdef name="PTZTechnologiaZasob">
+CREATE NONCLUSTERED INDEX PTZTechnologiaZasob ON CDN.ProdTechnologiaZasoby
+             (
+             PTZ_TechnologiaZasob           
+             )
+;
+</indexdef>
+<indexdef name="PZAZasob">
+CREATE NONCLUSTERED INDEX PZAZasob ON CDN.ProdZasoby
+             (
+             PZA_Zasob                      
+             )
+;
+</indexdef>
+<indexdef name="PZLZamkniete">
+CREATE NONCLUSTERED INDEX PZLZamkniete ON CDN.ProdZlecenia
+             (
+             PZL_DataZamkniecia             
+             )
+;
+</indexdef>
+</ROOT>

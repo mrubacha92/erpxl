@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="ProdTechnologiaCzynnosci_UsunPotomne">
+CREATE TRIGGER CDN.ProdTechnologiaCzynnosci_UsunPotomne
+  ON CDN.ProdTechnologiaCzynnosci
+  FOR DELETE
+AS
+begin
+if @@NESTLEVEL&gt;4 return
+SET NOCOUNT ON
+declare @lista table (PTC_Id int)
+insert into @lista select PTC_Id from deleted
+while 1=1
+  begin
+    insert into @lista
+    select CDN.ProdTechnologiaCzynnosci.PTC_Id
+    from @lista Lista
+    inner join CDN.ProdTechnologiaCzynnosci on CDN.ProdTechnologiaCzynnosci.PTC_Ojciec=Lista.PTC_Id
+    left outer join @Lista Sa on Sa.PTC_Id=CDN.ProdTechnologiaCzynnosci.PTC_Id
+    where Sa.PTC_Id is null
+    if @@RowCount=0 break
+  end
+delete CDN.ProdTechnologiaCzynnosci
+  from CDN.ProdTechnologiaCzynnosci
+  inner join @lista Lista on Lista.PTC_Id=CDN.ProdTechnologiaCzynnosci.PTC_Id
+  left outer join deleted on deleted.PTC_Id=CDN.ProdTechnologiaCzynnosci.PTC_Id
+  where deleted.PTC_Id is null
+SET NOCOUNT OFF
+end
+</triggerdef>
+</ROOT>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="ProdTechnologia_DeleteWersja">
+CREATE TRIGGER CDN.ProdTechnologia_DeleteWersja ON CDN.ProdTechnologia
+FOR DELETE
+AS
+     SET NOCOUNT ON;
+     DECLARE @MaxID INT;
+     DECLARE @tmp1 TABLE
+     (Wersja    INT,
+      NewWersja INT
+     );
+     INSERT INTO @tmp1
+            SELECT cdn.ProdTechnologia.PTE_Wersja,
+                   MAX(cdn.ProdTechnologia.PTE_ID)
+            FROM cdn.ProdTechnologia
+                 INNER JOIN deleted ON cdn.ProdTechnologia.PTE_Wersja = deleted.PTE_ID
+            GROUP BY cdn.ProdTechnologia.PTE_Wersja;
+     UPDATE cdn.ProdTechnologia
+       SET
+           PTE_Wersja = NewWersja
+     FROM cdn.ProdTechnologia
+          INNER JOIN @tmp1 ON(PTE_Wersja = Wersja);
+     SET NOCOUNT OFF;
+
+</triggerdef>
+<triggerdef name="ProdTechnologia_Duplikacje">
+CREATE TRIGGER CDN.ProdTechnologia_Duplikacje ON CDN.ProdTechnologia
+FOR UPDATE, INSERT
+AS
+     SET NOCOUNT ON;
+     DECLARE @KOD VARCHAR(40);
+     SELECT TOP 1 @KOD = Pte_Kod
+     FROM inserted;
+     IF UPDATE(PTE_Numer)
+        OR UPDATE(PTE_Seria)
+        OR UPDATE(PTE_Rok)
+        OR UPDATE(Pte_Miesiac)
+         IF EXISTS
+         (
+             SELECT TOP 1 a.PTE_ID
+             FROM inserted a
+                  INNER JOIN cdn.ProdTechnologia b ON a.PTE_Wersja &lt;&gt; b.PTE_Wersja
+                                                      AND a.PTE_Wersja &lt;&gt; 0
+                                                      AND a.PTE_Rok = b.PTE_Rok
+                                                      AND a.PTE_Seria = b.PTE_Seria
+                                                      AND a.PTE_Numer = b.PTE_Numer
+                                                      AND a.PTE_Id &lt;&gt; b.PTE_Id
+                                                      AND a.PTE_PrjID = b.PTE_PrjId
+                                                      AND a.PTE_Miesiac = b.PTE_Miesiac
+                                                      AND a.PTE_Typ = b.PTE_Typ
+         )
+             BEGIN
+                 RAISERROR('#CDN_BLAD/##CDN_1=Technologia o kodzie %s już istnieje. Zmień kod i zapisz ponownie./#', 16, 1, @KOD);
+                 ROLLBACK TRAN;
+                 SET NOCOUNT OFF;
+         END;
+     IF UPDATE(PTE_Wersja)
+        OR UPDATE(PTE_Kod)
+         IF EXISTS
+         (
+             SELECT TOP 1 a.PTE_ID
+             FROM inserted a
+                  INNER JOIN cdn.ProdTechnologia b ON a.PTE_Wersja &lt;&gt; b.PTE_Wersja
+                                                      AND a.PTE_Wersja &lt;&gt; 0
+                                                      AND a.PTE_Kod = b.PTE_Kod
+                                                      AND a.PTE_Id &lt;&gt; b.PTE_Id
+                                                      AND a.PTE_PrjID = b.PTE_PrjId
+                                                      AND a.PTE_Typ = b.PTE_Typ
+         )
+             BEGIN
+                 RAISERROR('#CDN_BLAD/##CDN_1=Technologia o kodzie %s już istnieje. Zmień kod i zapisz ponownie./#', 16, 1, @KOD);
+                 ROLLBACK TRAN;
+                 SET NOCOUNT OFF;
+         END;
+     SET NOCOUNT OFF;
+
+</triggerdef>
+<triggerdef name="ProdTechnologia_Terminy">
+CREATE TRIGGER CDN.ProdTechnologia_Terminy ON CDN.ProdTechnologia
+FOR INSERT,UPDATE
+AS
+     SET NOCOUNT ON;
+
+     IF UPDATE(PTE_DataZatw)
+         INSERT INTO [CDN].[ProdTechnologiaTerminy]
+         ([PTR_TechnologiaId],
+          [PTR_TerminOd],
+          [PTR_TerminDo]
+         )
+                SELECT pte_id,
+                       [PTE_DataZatw],
+                       93890
+                FROM inserted
+                     LEFT JOIN cdn.ProdTechnologiaTerminy ON PTR_TechnologiaId = pte_id
+                                                             AND (PTR_TerminOd = 0
+                                                                  OR PTR_TerminOd &lt;= DATEDIFF(d, '18001228', GETDATE()))
+                                                             AND (PTR_TerminDo = 0
+                                                                  OR PTR_TerminDo &gt;= DATEDIFF(d, '18001228', GETDATE()))
+
+			 where [PTR_Id] is NULL 
+			 and PTE_DataZatw &gt; 0;
+     SET NOCOUNT OFF;
+
+</triggerdef>
+</ROOT>
