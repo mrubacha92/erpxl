@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="ProdCzynnosci_UsunPotomne">
+CREATE TRIGGER CDN.ProdCzynnosci_UsunPotomne
+  ON CDN.ProdCzynnosci
+  FOR DELETE
+AS
+begin
+SET NOCOUNT ON
+declare @lista table (PCZ_Id int, PCZ_TechnologiaCzynnosc int, PCZ_Proces int)
+insert into @lista select PCZ_Id, PCZ_TechnologiaCzynnosc, PCZ_Proces from deleted
+while 1=1
+  begin
+    insert into @lista
+    select Potomne.PCZ_Id, Potomne.PCZ_TechnologiaCzynnosc, Potomne.PCZ_Proces
+    from @lista Lista
+    inner join CDN.ProdTechnologiaCzynnosci on PTC_Ojciec=Lista.PCZ_TechnologiaCzynnosc and PTC_Ojciec&lt;&gt;0
+    inner join CDN.ProdCzynnosci Potomne on Potomne.PCZ_TechnologiaCzynnosc=PTC_Id and Potomne.PCZ_Proces=Lista.PCZ_Proces
+    left outer join @Lista Sa on Sa.PCZ_Id=Potomne.PCZ_Id
+    left outer join CDN.ProdCzynnosci Rodzice on Rodzice.PCZ_TechnologiaCzynnosc=Lista.PCZ_TechnologiaCzynnosc
+      and Rodzice.PCZ_Proces=Lista.PCZ_Proces and Rodzice.PCZ_Id&lt;&gt;Lista.PCZ_Id and Rodzice.PCZ_Realizuje=0
+    where Rodzice.PCZ_Id is null and Potomne.PCZ_Realizuje&lt;1 and Sa.PCZ_Id is null
+    if @@RowCount=0 break
+  end
+insert into @lista
+select CDN.ProdCzynnosci.PCZ_Id, CDN.ProdCzynnosci.PCZ_TechnologiaCzynnosc, CDN.ProdCzynnosci.PCZ_Proces
+  from CDN.ProdCzynnosci
+  inner join @lista Lista on Lista.PCZ_Id=CDN.ProdCzynnosci.PCZ_Realizuje
+delete CDN.ProdCzynnosci
+  from CDN.ProdCzynnosci
+  inner join @lista Lista on Lista.PCZ_Id=CDN.ProdCzynnosci.PCZ_Id
+  left outer join deleted on deleted.PCZ_Id=CDN.ProdCzynnosci.PCZ_Id
+  where deleted.PCZ_Id is null
+SET NOCOUNT OFF
+end
+</triggerdef>
+</ROOT>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:25:15 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="ProdCzujnikiZdarzenia" ident="b6894b26-02bf-4afb-8139-c7cc7a714d80" prefix="PCZZ" filename="'produkcja.cdn\!ProdCzujnikiZdarzenia'" options="SQL_IDENTITY()"
+  description="Dane zdarzeń czujnikow IoT" longdescription="" owner="Connect_DSN3" glbx="3" nosql="No"
+  aliases="">
+  <columns>
+    <column ident="ce84448d-9f02-498b-a2c5-97bba4ee43ac" clarionname="PCZZ:Id" sqlname="PCZZ_Id" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator zdarzenia w systemie" longdescription="" options="SQL_IDENTITY()"
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="a0f69533-80a2-44d7-bdc7-481462b87e59" clarionname="PCZZ:PCZUId" sqlname="PCZZ_PCZUId" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator czujnika" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="PCZUI d" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="a28590ff-1fa8-44df-bb65-21b950115595" clarionname="PCZZ:Timestamp" sqlname="PCZZ_Timestamp" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Informacja o momencie wystapienia zdarzenia" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Timestamp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="ab2494b3-b3ca-40d6-8b48-0a2d4109c7ac" clarionname="PCZZ:Zdarzenie" sqlname="PCZZ_Zdarzenie" type="CSTRING" clariontype="CSTRING(51)" sqltype="VARCHAR(50)"
+      size="51" places="0" description="" longdescription="" options=""
+      picture="@s50" initial="" justification.type="L" justification.indent="0"
+      header="Zdarzenie" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="99dbb819-f600-48c8-baab-cb4704fdd4ae" clarionname="PCZZ:Primary" sqlname="PCZZPrimary" description="Klucz podstawowy" longdescription="" options="" primary="Yes" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="Yes" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="ce84448d-9f02-498b-a2c5-97bba4ee43ac" clarionname="PCZZ:Id" sqlname="PCZZ_Id" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="3a6f2749-14df-4e22-b19c-53f28b23dcaa" clarionname="PCZZ:KeyCzujnik" sqlname="PCZZCzujnik" description="Klucz wg czujnika" longdescription="" options="" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="a0f69533-80a2-44d7-bdc7-481462b87e59" clarionname="PCZZ:PCZUId" sqlname="PCZZ_PCZUId" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+    <relation type="MANY:1" onupdate="" ondelete="CASCADE"
+        options=""
+        comments="" nosql="No" setnull="No"
+        conditional=""
+        parent="ProdCzujniki" primaryname="PCZU:Primary" primarysqlname="PCZUPrimary" parenthandler="" parentlink="ProdCzujniki"
+        child="ProdCzujnikiZdarzenia" foreignname="PCZZ:KeyCzujnik" foreignsqlname="PCZZCzujnik" childhandler="FK_PCZZCzujnik" childlink="ProdCzujnikiZdarzenia">
+      <relationcolumn
+        parentident="1493ad12-e" parentname="PCZU:Id" parentsqlname="PCZU_Id"
+        childident="a0f69533-80a2-44d7-bdc7-481462b87e59" childname="PCZZ:PCZUId" childsqlname="PCZZ_PCZUId" isinsqlprimary="Yes" />
+    </relation>
+  
+  </relations>
+</table>
+</ROOT>

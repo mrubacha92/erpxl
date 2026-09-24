@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury CDN.ProdKopiujZalaczniki" hidden="True">
+IF exists(select * from sysobjects where name='ProdKopiujZalaczniki' and type='P') 
+	DROP PROCEDURE CDN.ProdKopiujZalaczniki
+</scriptdef>
+<scriptdef name="Tworzenie procedury CDN.ProdKopiujZalaczniki" hidden="False">
+CREATE PROCEDURE CDN.ProdKopiujZalaczniki @ZrdTyp INT, @ZrdNumer INT, @DocTyp INT, @DocNumer INT
+as
+begin
+	INSERT INTO CDN.DaneObiekty (DAO_DABId, DAO_ObiTyp, DAO_ObiNumer, DAO_ObiLp, DAO_Domyslna, DAO_Blokada, DAO_PPPrawa, DAO_PKPrawa, DAO_eSklep, DAO_iMall, 
+	DAO_MobSpr, DAO_Systemowa, DAO_Retail, DAO_Pozycja, DAO_ObiSubLp,DAO_BI,DAO_WMSZarzadzanie,DAO_WMSMagazynier) 
+	SELECT DAO_DABId, @DocTyp, @DocNumer, DAO_ObiLp, DAO_Domyslna, DAO_Blokada,DAO_PPPrawa,DAO_PKPrawa,DAO_eSklep,DAO_iMall,DAO_MobSpr,DAO_Systemowa, 
+	DAO_Retail,	DAO_Pozycja,DAO_ObiSubLp,DAO_BI,DAO_WMSZarzadzanie,DAO_WMSMagazynier 
+	FROM CDN.DaneObiekty WHERE DAO_ObiTyp=@ZrdTyp and DAO_ObiNumer=@ZrdNumer		
+end
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury CDN.ProdKopiujZalaczniki" hidden="False">
+GRANT EXECUTE ON CDN.ProdKopiujZalaczniki TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:25:15 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="ProdCzujnikiZdarzeniaDefinicje" ident="12a06fca-d640-44c0-8b5a-71e9e174b9c4" prefix="PCZZD" filename="'produkcja.cdn\!ProdCzujnikiZdarzeniaDefinicje'" options=""
+  description="Definicje zdarzeń czujników IoT" longdescription="" owner="Connect_DSN3" glbx="3" nosql="No"
+  aliases="">
+  <columns>
+    <column ident="8e13cf3e-bbd2-4695-a4fc-b7ee25e09d17" clarionname="PCZZD:Id" sqlname="PCZZD_Id" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator definicji zdarzenia w Systemie" longdescription="" options="SQL_IDENTITY()"
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="bdea7f90-5262-4a16-98c0-045cdf96c936" clarionname="PCZZD:Kod" sqlname="PCZZD_Kod" type="CSTRING" clariontype="CSTRING(31)" sqltype="VARCHAR(30)"
+      size="31" places="0" description="Kod definicji zdarzenia" longdescription="" options=""
+      picture="@s30" initial="" justification.type="L" justification.indent="0"
+      header="Kod" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="eacc736d-b9d5-463d-bf55-92bc2e19c283" clarionname="PCZZD:Nazwa" sqlname="PCZZD_Nazwa" type="CSTRING" clariontype="CSTRING(51)" sqltype="VARCHAR(50)"
+      size="51" places="0" description="Nazwa definicji zdarzenia" longdescription="" options=""
+      picture="@s50" initial="" justification.type="L" justification.indent="0"
+      header="Nazwa" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="8664562d-a796-47d2-ae1e-5a2eb4c8741b" clarionname="PCZZD:Tytul" sqlname="PCZZD_Tytul" type="CSTRING" clariontype="CSTRING(51)" sqltype="VARCHAR(50)"
+      size="51" places="0" description="Tytuł definicji zdarzenia, wyświetlany jako informacja na zdarzeniu" longdescription="" options=""
+      picture="@s50" initial="" justification.type="L" justification.indent="0"
+      header="Tytul" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="b21c8a8d-857f-4248-b546-ce3acedaf90b" clarionname="PCZZD:ZadaniaDoWykonania" sqlname="PCZZD_ZadaniaDoWykonania" type="CSTRING" clariontype="CSTRING(256)" sqltype="VARCHAR(255)"
+      size="256" places="0" description="Zadania do wykonania, które będą wyświetlane w komunikacie zdarzenia" longdescription="" options=""
+      picture="@s255" initial="" justification.type="L" justification.indent="0"
+      header="Zadania Do Wykonania" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="db9e162a-29a6-4973-bbfe-4b4fdebbddd4" clarionname="PCZZD:PriorytetIoTId" sqlname="PCZZD_PriorytetIoTId" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Wartość priorytetu dla zdarzenia wywołanego w oparciu w definicję" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Priorytet Io TI d" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="23a2cd6f-b968-4ac2-8d45-cbaeb6055511" clarionname="PCZZD:Archiwalna" sqlname="PCZZD_Archiwalna" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Czy definicja zdarzenia archiwalna" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Archiwalna" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="57f59422-89a0-4f36-a658-c319655d7d5c" clarionname="PCZZD:WyswietlacKomunikat" sqlname="PCZZD_WyswietlacKomunikat" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Czy wyświetlać komunikat po wystąpieniu zdarzenia" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Wyswietlac Komunikat" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="ed27770e-bd92-4a68-8637-a1e71449895f" clarionname="PCZZD:Primary" sqlname="PCZZDPrimary" description="Klucz podstawowy" longdescription="" options="" primary="Yes" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="Yes" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="8e13cf3e-bbd2-4695-a4fc-b7ee25e09d17" clarionname="PCZZD:Id" sqlname="PCZZD_Id" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="e0524cd6-4346-4ca9-810a-961ddc473a12" clarionname="PCZZD:KeyKod" sqlname="PCZZD" description="Klucz wg kodu" longdescription="" options="" primary="No" unique="Yes" casesensitive="No"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="bdea7f90-5262-4a16-98c0-045cdf96c936" clarionname="PCZZD:Kod" sqlname="PCZZD_Kod" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+  </relations>
+</table>
+</ROOT>

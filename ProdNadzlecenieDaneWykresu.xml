@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury CDN.ProdNadzlecenieDaneWykresu" hidden="True">
+if exists(select * from sysobjects where name='ProdNadzlecenieDaneWykresu' and type='P')
+	drop procedure CDN.ProdNadzlecenieDaneWykresu
+</scriptdef>
+<scriptdef name="Tworzenie funkcji CDN.ProdNadzlecenieDaneWykresu" hidden="False">
+CREATE PROCEDURE CDN.ProdNadzlecenieDaneWykresu
+	@Nadzlecenie int
+AS
+BEGIN
+
+
+SELECT PCZ_Status,COUNT(*) IloscOper FROM
+(
+SELECT 
+	CASE WHEN PCZ_Status = 'Uruchomiona' OR PCZ_Status = 'W realizacji' THEN 'W realizacji' 
+	WHEN PCZ_Status = 'Zrealizowana' THEN 'Zrealizowane'
+	ELSE 'Niezrealizowane' END PCZ_Status,PCZ_Id
+	FROM CDN.ProdNadzleceniaLinki JOIN CDN.ProdCzynnosci ON PNL_PZLId = PCZ_PZLId AND PCZ_Realizuje = 0 WHERE PNL_PNZId = @Nadzlecenie) Statusy 
+GROUP BY PCZ_Status
+
+
+SELECT PCZ_Terminowosc,COUNT(*) IloscOper FROM
+(
+SELECT CASE WHEN ((A.PCZ_IloscZrealizowana &gt; 0 AND EXISTS(SELECT 1 FROM CDN.ProdCzynnosci R WHERE A.PCZ_Id = R.PCZ_Realizuje AND R.PCZ_TerminZakonczenia &gt; A.PCZ_TerminZakonczenia))
+	OR (PCZ_Status = 'Uruchomiona' AND PCZ_TerminZakonczenia &lt; DATEDIFF(S,'19900101',GETDATE()))
+    OR (PCZ_Status = 'Zaplanowana' AND PCZ_TerminRozpoczecia &lt;DATEDIFF(S,'19900101',GETDATE()))) THEN 'Opóźnione' ELSE 'W terminie' END PCZ_Terminowosc,PCZ_ID 
+FROM CDN.ProdNadzleceniaLinki JOIN CDN.ProdCzynnosci A ON PNL_PZLId = PCZ_PZLId AND A.PCZ_Realizuje = 0 WHERE PNL_PNZId = @Nadzlecenie) Terminowosc 
+GROUP BY PCZ_Terminowosc
+END
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji CDN.ProdNadzlecenieDaneWykresu" hidden="False">
+GRANT EXECUTE ON CDN.ProdNadzlecenieDaneWykresu TO CDNRaport
+</scriptdef>
+</ROOT>
