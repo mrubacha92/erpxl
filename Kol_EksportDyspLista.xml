@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="KOL_EksportDyspLista">
+CREATE PROCEDURE CDN.KOL_EksportDyspLista(@DataOd int, @DataDo int, @Kontrahent int, @Magazyn int, @OpeNumer int, @trntyp varchar(200), @zamtyp varchar(200),@mantyp varchar(200))
+AS
+BEGIN
+          -- Magazynowe
+SELECT DISTINCT CDN.NumerDokumentu(maN_GIDTyp,0,man_trnTyp,man_trnNumer,maN_trNRok,maN_trNSeria,MaN_TrNMiesiac) as [Nr Dokumentu],
+       CASE
+            WHEN MaN_ZrdTyp = 960 THEN CDN.NumerDokumentu(CDN.DokMapTypDokumentu(ZaN_GIDTyp,ZaN_ZamTyp,ZaN_Rodzaj),0,0,ZaN_ZamNumer,ZaN_ZamRok,ZaN_ZamSeria,ZaN_ZamMiesiac)
+            WHEN MaN_ZrdTyp in (2002,2000,1603,1604,1521,1529,1489,1497,1490,1498,2033,2041,2036,2044,2001,2009,2034,2042,2035,2043,2037,2045,2005,2013,1312,1824,1616,1617) THEN CDN.NumerDokumentu(TrN_GIDTyp,TrN_SpiTyp,TrN_TrNTyp,TrN_TrNNumer,TrN_TrNRok,TrN_TrNSeria,TrN_TrNMiesiac)
+            ELSE '&lt;BRAK&gt;' 
+       END As [Dokument zrd.],
+       CDN.TsToDate(MaN_Data3,0) As [Data Dok],
+       isnull(Knt_Akronim,'&lt;BRAK&gt;') As [Kontrahent],
+       Mag_Kod As [KOD MAGAZYNU],
+       MaN_GidTyp As GidTyp,
+       MaN_GidNumer As GidNumer,
+       isnull(Man_KntNumer,0) As KntNumer,
+       isnull(KDO_OpeNumer,0) As [Edytowal],
+       MaN_ZrdTyp As ZrdTyp
+FROM CDN.MagNag
+JOIN CDN.Str2List(@mantyp) ON MaN_GIDTyp=Num
+JOIN CDN.Magazyny ON MAG_GIDNumer=MaN_TrMNumer AND MAG_GIDTyp=MaN_TrMTyp AND ((MAG_GIDNumer = @Magazyn) OR (@Magazyn = -1))
+LEFT JOIN CDN.KntKarty on Man_KntNumer=Knt_GidNumer AND Man_KntTyp=Knt_GidTyp
+LEFT JOIN CDN.Tranag ON TrN_GIDNumer=MaN_ZrdNumer and TrN_GIDTyp=MaN_ZrdTyp
+LEFT JOIN CDN.ZamNag ON ZaN_GIDNumer=MaN_ZrdNumer and ZaN_GIDTyp=MaN_ZrdTyp
+LEFT JOIN CDN.KolDokumenty ON MaN_GidNumer=KDo_DokNumer AND MaN_GidTyp=KDO_DokTyp AND KDO_OpeNumer=@OpeNumer
+LEFT JOIN CDN.MagsElem on Man_GidNumer=MaS_GIDNumer
+LEFT JOIN CDN.MagElem on MaN_GIDNumer=MaE_GIDNumer
+WHERE  Man_Data3 BETWEEN @DataOd AND @DataDo
+       AND MaN_Stan &lt; 5 and MaN_Aktywny = 0 
+       AND ((man_kntNumer = @Kontrahent) OR (@Kontrahent =  -1))
+GROUP BY MaN_GIDTyp,man_trnTyp,man_trnNumer,maN_trNRok,maN_trNSeria,MaN_TrNMiesiac,
+         MaN_ZrdTyp, ZaN_GIDTyp, ZaN_ZamTyp, ZaN_Rodzaj, ZaN_ZamNumer , ZaN_ZamRok, ZaN_ZamSeria, ZaN_ZamMiesiac,
+         TrN_GIDTyp,TrN_SpiTyp,TrN_TrNTyp,TrN_TrNNumer,TrN_TrNRok,TrN_TrNSeria,TrN_TrNMiesiac,
+         MaN_Data3,Knt_Akronim,Mag_Kod,MaN_GidTyp,MaN_GidNumer,Man_KntNumer,KDO_OpeNumer
+having (count(MaS_GIDNumer) &gt; 0 or MaN_GidTyp = 1602) and (count(MaE_GIDNumer) &gt;0 or MaN_GidTyp in (1089,1601))
+
+UNION ALL -- Zamówienia
+SELECT DISTINCT CDN.NumerDokumentu(CDN.DokMapTypDokumentu(ZaN_GIDTyp, ZaN_ZamTyp, ZaN_Rodzaj),0,0, ZaN_ZamNumer , ZaN_ZamRok, ZaN_ZamSeria, ZaN_ZamMiesiac) As [Nr Dokumentu],
+       '&lt;BRAK&gt;' As [Dokument zrd.],
+       CDN.TsToDate(ZaN_DataPotwierdz,0) As [Data Dok],
+       isnull(Knt_Akronim,'&lt;BRAK&gt;') As [Kontrahent],
+       Mag_Kod as [KOD MAGAZYNU],
+       CDN.DokMapTypDokumentu (ZaN_GIDTyp,ZaN_ZamTyp,ZaN_Rodzaj) As GidTyp,
+       Zan_Gidnumer As GidNumer,
+       isnull(Zan_KntNumer,0) As KntNumer,
+       0 As [Edytowal],
+       0 As ZrdTyp
+FROM CDN.ZamNag
+JOIN CDN.Str2List(@zamtyp) ON CDN.DokMapTypDokumentu(ZaN_GIDTyp,ZaN_ZamTyp,ZaN_Rodzaj)=Num
+JOIN CDN.Magazyny on Mag_GidNumer = ZaN_MagNumer  AND Mag_GidTyp = ZaN_MagTyp AND ((Mag_gidNumer = @Magazyn) OR (@Magazyn = -1))
+LEFT JOIN CDN.KntKarty on Zan_KntNumer = Knt_GidNumer AND Zan_KntTyp = Knt_GidTyp
+WHERE ZaN_DataPotwierdz BETWEEN @DataOd AND @DataDo AND ZaN_Aktywny = 0
+      AND ((Zan_KntNumer = @Kontrahent) OR (@Kontrahent =  -1))
+      AND (ZAN_Stan=3 or (zan_stan=5 and exists(select * from cdn.zamelem join cdn.twrkarty on twr_gidnumer=zae_twrnumer
+                                                           left join ( select sum(mas_ilosc) as mas_ilosc,mas_twrnumer,mas_zlclp from cdn.magnag
+                                                                       join cdn.magselem on MaN_GIDTyp=MaS_GIDTyp AND MaN_GIDNumer=MaS_GIDNumer
+                                                                       where man_zrdnumer=zan_gidnumer and man_zrdtyp=960
+                                                                       group by mas_twrnumer,mas_zlclp
+                                                                     ) m on mas_twrnumer=zae_twrnumer and mas_zlclp=zae_gidlp
+                                                where zae_gidnumer=zan_gidnumer and zae_magnumer=@Magazyn and zae_ilosc-isnull(mas_ilosc,0)&gt;0)
+                           )
+            )
+       AND EXISTS(select * from CDN.ZamElem join CDN.TwrKarty on Twr_GIDNumer=ZaE_TwrNumer where ZaE_GIDNumer=ZaN_GIDNumer and Twr_Typ not in (3,4,6) and (ZaE_MagNumer=@Magazyn or isnull(ZaE_MagNumer,0)=0))
+
+UNION ALL -- Handlowe
+SELECT DISTINCT CDN.NumerDokumentu(TrN_GIDTyp,TrN_SpiTyp,TrN_TrNTyp,TrN_TrNNumer,TrN_TrNRok,TrN_TrNSeria,TrN_TrNMiesiac) As [Nr Dokumentu],
+       '&lt;BRAK&gt;' As [Dokument zrd.],
+       CDN.TsToDate(TrN_Data2,0) As [Data Dok],
+       ISNULL(Knt_Akronim,'&lt;BRAK&gt;') As [Kontrahent],
+       Mag_Kod AS [KOD MAGAZYNU],
+       TrN_GIDTyp As GidTyp,
+       TrN_GIDNumer As GidNumer,
+       ISNULL(TrN_KntNumer,0) As KntNumer,
+       0 As [Edytowal],
+       0 As ZrdTyp
+FROM
+CDN.TraNag
+JOIN CDN.Str2List(@trntyp) ON TrN_GIDTyp=Num
+LEFT JOIN CDN.KntKarty ON TrN_KntNumer=Knt_GIDNumer AND TrN_KntTyp=32
+JOIN CDN.Magazyny ON  Mag_GIDNumer = CASE WHEN TrN_GidTyp in (2033, 2001, 2034, 1616, 1603, 2037, 2005, 2000) THEN TrN_MagZNumer else TrN_MagDNumer END
+WHERE TrN_Data2 BETWEEN @DataOd AND @DataDo AND TrN_Stan between 3 AND 5 AND TrN_Aktywny = 0 
+      AND ((TrN_KntNumer = @Kontrahent) OR (@Kontrahent =  -1))
+      AND ((TrN_MagDNumer = @Magazyn) OR (TrN_MagZNumer = @Magazyn) OR (@Magazyn = -1))
+      AND TrN_GenDokMag in (0,1)
+      --AND ((select isnull(sum(tre_ilosc),0) from cdn.traelem where tre_gidnumer=TrN_GIDNumer)&gt;(select isnull(sum(mae_ilosc),0) from cdn.magnag join cdn.magelem on  man_gidnumer=mae_gidnumer where man_zrdnumer=TrN_GIDNumer and man_zrdtyp=trn_gidtyp))
+      --AND EXISTS(select * from CDN.TraElem  WHERE TrE_GIDNumer=TrN_GIDNumer AND TrE_TypTwr NOT IN (3,4,6))
+      AND EXISTS(select * from CDN.TraSElem WHERE TrS_GIDNumer=TrN_GIDNumer AND (@Magazyn=-1 OR TrS_MagNumer=@Magazyn OR isnull(TrS_MagNumer,0)=0))
+END
+</proceduredef>
+</ROOT>

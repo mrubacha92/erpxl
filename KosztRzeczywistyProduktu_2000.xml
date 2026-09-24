@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="KosztRzeczywistyProduktu">
+CREATE function CDN.KosztRzeczywistyProduktu( 
+@p_twrnumer integer, 
+@p_DataPoczatkowa integer, 
+@p_DataKoncowa integer
+) 
+
+
+Returns  varchar(128) 
+AS 
+BEGIN 
+  declare @Koszt Decimal(28,2); 
+  declare @retval  varchar(128);
+
+   set @Koszt = (select sum(PRODROZL.kosztrw * (PRODROZL.iloscpwwokresie/PRODROZL.iloscpw))
+                        FROM   (select 
+                                            Sum(PW.tre_ilosc) as IloscPWWOkresie, 
+                                            (SELECT SUM(PWAll.tre_ilosc) from cdn.traelem PWAll 
+                                                           where PWAll.tre_zlctyp = PRODUKT.zce_gidtyp and 
+                                                                      PWAll.tre_zlcnumer = PRODUKT.zce_gidnumer and PWAll.tre_zlclp = PRODUKT.zce_gidlp
+                                             ) as IloscPW,
+                                            ( select sum(RW.tre_kosztrzeczywisty)
+                                              from cdn.zlcelem SKLADNIKI join cdn.traelem RW on 
+                                                                                                                         RW.tre_zlctyp   = SKLADNIKI.zce_gidtyp and 
+                                                                                                                         RW.tre_zlcfirma = SKLADNIKI.zce_gidfirma and 
+                                                      					 RW.tre_zlcnumer = SKLADNIKI.zce_gidnumer and 
+							   		 RW.tre_zlclp    = SKLADNIKI.zce_gidlp
+	   		      where SKLADNIKI.zce_prodtyp   = PRODUKT.zce_gidtyp and 
+			                 SKLADNIKI.zce_prodfirma = PRODUKT.zce_gidfirma and
+				    SKLADNIKI.zce_prodnumer = PRODUKT.zce_gidnumer and
+				    SKLADNIKI.zce_prodlp    = PRODUKT.zce_gidlp
+                                              ) as KosztRW
+                                         from cdn.zlcelem PRODUKT join cdn.traelem PW on 
+                                                                                                              	PW.tre_zlctyp = PRODUKT.zce_gidtyp and 
+                                                                                                                	PW.tre_zlcfirma = PRODUKT.zce_gidfirma and 
+                                                                                                            	PW.tre_zlcnumer = PRODUKT.zce_gidnumer and 
+                                                                                                                    	PW.tre_zlclp = PRODUKT.zce_gidlp
+                                                                                       join cdn.zlcnag on 
+                                                                                                                	zcn_gidtyp = PRODUKT.zce_gidtyp and 
+                                                                                                               	zcn_gidfirma = PRODUKT.zce_gidfirma and 
+                                                                                                                    	zcn_gidnumer = PRODUKT.zce_gidnumer
+                                                                                       join cdn.tranag on 
+                                                                                                                      	trn_gidtyp = PW.tre_gidtyp and
+                                                                                                                 	trn_gidfirma = PW.tre_gidfirma and
+                                                                                                                  	trn_gidnumer = PW.tre_gidnumer
+                                         where trn_data2 between @p_DataPoczatkowa and @p_DataKoncowa and trn_gidtyp = 1617
+                                                    and PRODUKT.zce_TWRnumer = @p_twrnumer and  zcn_stan=64
+                                         group by PRODUKT.zce_gidtyp , PRODUKT.zce_gidfirma, PRODUKT.zce_gidnumer,PRODUKT.zce_gidlp
+                                         ) as PRODROZL)
+
+        set @retval=cast(Round(@Koszt,2) as varchar(28)); 
+         return @retval; 
+END 
+</functiondef>
+</ROOT>

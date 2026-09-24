@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="Kol_StanTowaru">
+CREATE PROCEDURE CDN.Kol_StanTowaru
+@kntnumer int,
+@tpaid int, 
+@twrnumer int,
+@magnumer int
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	if(@tpaid&lt;1)
+	begin
+		declare @wydanie int
+		select @wydanie=twr_rozliczmag from cdn.twrkarty where twr_gidnumer=@twrnumer
+		select @tpaid=(case when @wydanie=2 then max(tzm_tpaid) else min(tzm_tpaid) end)
+		from cdn.twrzasobymag
+		join cdn.twrpartie on tzm_tpaid=tpa_id
+		where tzm_magnumer=@magnumer and tpa_twrnumer=@twrnumer
+	end
+
+	select isnull(sum(zas_ilosc),0.0) as ilosc
+	from cdn.PobierzListeAdresowDoWydaniaTowaru(@tpaid,@magnumer,9999999)
+
+	SELECT CDN.SubstringEx(ISNULL(CDN.DokSumaStanowTowaru(Twr_GIDTyp,Twr_GIDFirma,Twr_GIDNumer,Twr_Typ,
+	-1,1,1,0,@magnumer,0,0,0,DATEDIFF(DAY,CONVERT(DATETIME,'28-12-1800',105),GETDATE()),0,1,0,0,0,0,0,0,0,
+	@kntnumer),'0:0:'),':',2) As IloscDostepna FROM CDN.TwrKarty WHERE Twr_GIDNumer=@twrnumer
+END
+</proceduredef>
+</ROOT>

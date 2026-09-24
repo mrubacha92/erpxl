@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji CDN.KolumnaDodatkowaBST" hidden="True">
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'CDN.KolumnaDodatkowaBST') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+DROP FUNCTION CDN.KolumnaDodatkowaBST
+</scriptdef>
+<scriptdef name="Tworzenie funkcji CDN.KolumnaDodatkowaBST" hidden="False">
+
+CREATE FUNCTION CDN.KolumnaDodatkowaBST(@BsNID INT,@BSETwrNumer INT)
+RETURNS VARCHAR(255)
+AS
+BEGIN
+	DECLARE @Wynik VARCHAR(255)
+
+	IF(@BsnID &lt; 0) --Nagłówek kolumny
+		SET @Wynik = ''
+	ELSE --Wartość w kolumnie
+		SET @Wynik = ''
+
+	RETURN @Wynik
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji CDN.KolumnaDodatkowaBST" hidden="False">
+GRANT EXECUTE ON CDN.KolumnaDodatkowaBST TO CDNRaport
+</scriptdef>
+</ROOT>

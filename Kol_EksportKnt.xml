@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="KOL_EksportKnt">
+CREATE PROCEDURE CDN.KOL_EksportKnt(@TS INT,@RozmiarPaczki int,@NumerPaczki int,@OpeNumer int)
+AS
+BEGIN TRAN
+
+
+DECLARE @WierszOd int
+DECLARE @WierszDo int
+
+SET @WierszOD = @RozmiarPaczki * @NumerPAczki + 1
+SET @WierszDo = @RozmiarPAczki * (@NumerPaczki+1)
+
+
+CREATE TABLE #TmpTable
+(GIDNumerO int not null,
+Typ int not null,
+Akronim varchar(20) COLLATE Polish_CI_AS not null,
+Nazwa1 varchar(50) COLLATE Polish_CI_AS not null,
+KodP varchar(10) COLLATE Polish_CI_AS not null,
+Miasto varchar(30) COLLATE Polish_CI_AS not null,
+Ulica varchar(30) COLLATE Polish_CI_AS not null,
+Adres varchar(30) COLLATE Polish_CI_AS not null,
+NipE varchar(13) COLLATE Polish_CI_AS not null,
+Knt_LastModC int not null,
+LP int identity not null)
+
+INSERT INTO #TmpTable (GIDNumerO,Typ,Akronim,Nazwa1,KodP,Miasto,Ulica,Adres,NipE,Knt_LastModC)
+SELECT	
+   Knt_GIDNumer,
+   isnull(Knt_Typ,0),
+   isnull(Knt_Akronim,''),
+   isnull(Knt_Nazwa1,''),
+   isnull(Knt_KodP,''),
+   isnull(Knt_Miasto,''),
+   isnull(Knt_Ulica,''),
+   isnull(Knt_Adres,''),
+   isnull(Knt_NipE,0),
+   Knt_LastModC
+FROM CDN.KntKarty
+WHERE Knt_Aktywna=0 AND Knt_LastModC &gt; @TS AND KNT_ARCHIWALNY&lt;&gt;1 
+	 
+SELECT GIDNumerO,Typ,Akronim,Nazwa1,KodP,Miasto,Ulica,Adres,NipE,Knt_LastModC, LP 
+FROM #TmpTable
+WHERE LP Between @WierszOD AND @WierszDo
+ORDER BY LP
+
+DROP TABLE #TmpTable
+
+COMMIT TRAN     
+</proceduredef>
+</ROOT>

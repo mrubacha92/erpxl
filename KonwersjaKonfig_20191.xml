@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Aktualizacja pól tabel CDN.Konfig" hidden="False">
+SET NOCOUNT ON;
+
+-- Dodanie i atualizacja wpisów do CDN.Konfig
+if not exists(select * from cdn.konfig where kon_numer = 9841 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(9841,0,0,0,'0','Uproszczona procedura importu',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = 7406 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(7406,0,0,0,'','ID SISC',0,0,0)
+
+if not exists(select Kon_Numer from cdn.konfig where kon_numer = -136)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(-145,0,0,0,'1','Pozostaw zaznaczenie rekordów listy elementów zamówień przy zmianie filtrów',0,0,0)
+
+SET NOCOUNT OFF;
+</scriptdef>
+</ROOT>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="Kol_EksportMag">
+CREATE PROCEDURE CDN.Kol_EksportMag(@TS INT,@RozmiarPaczki int,@NumerPaczki int,@OpeNumer int)
+AS
+BEGIN TRAN
+DECLARE @WierszOd int
+DECLARE @WierszDo int
+
+SET @WierszOD = @RozmiarPaczki * @NumerPAczki + 1
+SET @WierszDo = @RozmiarPAczki * (@NumerPaczki+1)
+	
+CREATE TABLE #tmpMag
+(
+	Lp int identity, 
+	Mag_GidNumer int , 
+	Mag_GidTyp smallint, 
+	Mag_Kod varchar(5) COLLATE Polish_CI_AS, 
+	Mag_Nazwa varchar(30) COLLATE Polish_CI_AS, 
+	Mag_Zablokowany smallint,
+	Mag_ObszarID int, 
+	Mag_ObszarKod varchar(10) COLLATE Polish_CI_AS, 
+	Mag_ObszarNazwa varchar(30) COLLATE Polish_CI_AS,
+	Mag_AdresID int, 
+	Mag_AdresKod varchar(25) COLLATE Polish_CI_AS,
+	Mag_CzasModyfikacji int
+)
+
+INSERT INTO #tmpMag(Mag_GidNumer, Mag_GidTyp, Mag_Kod, Mag_Nazwa, Mag_Zablokowany, Mag_ObszarID, Mag_ObszarKod, Mag_ObszarNazwa, Mag_AdresID, Mag_AdresKod, MAG_CzasModyfikacji)
+SELECT	Mag_GIDNumer, 
+		Mag_GIDTyp,
+		Mag_Kod,
+		Mag_Nazwa,
+		Mag_Zablokowany,
+		isnull(Mgo_Id,0) as Mag_ObszarID,
+		isnull(Mgo_Kod,0) as Mag_ObszarKod,
+		isnull(Mgo_Nazwa,0) as Mag_ObszarNazwa,
+		isnull(Mga_ID,0) as Mag_AdresID,
+		isnull(CDN.PobierzMagAdres(Mga_ID),0) as Mag_AdresKod,
+		CASE  WHEN Mag_CzasModyfikacji &gt;= MgO_CzasModyfikacji AND Mag_CzasModyfikacji &gt;= MgA_CzasModyfikacji THEN Mag_CzasModyfikacji        
+			  WHEN MgO_CzasModyfikacji &gt;= Mag_CzasModyfikacji AND MgO_CzasModyfikacji &gt;= MgA_CzasModyfikacji THEN MgO_CzasModyfikacji
+              WHEN MgA_CzasModyfikacji &gt;= Mag_CzasModyfikacji AND MgA_CzasModyfikacji &gt;= MgO_CzasModyfikacji THEN MgA_CzasModyfikacji
+        ELSE  Mag_CzasModyfikacji  END as Mag_CzasModyfikacji   
+FROM    CDN.Magazyny
+		LEFT JOIN CDN.MagObszary ON Mgo_MagTyp = Mag_GIDTyp AND Mgo_MagNumer = Mag_GIDNumer
+		LEFT JOIN CDN.MagAdresy ON MgO_Id=MgA_MgOId
+WHERE   Mag_CzasModyfikacji &gt; @TS OR MgO_CzasModyfikacji &gt; @TS OR MgA_CzasModyfikacji &gt; @TS
+ORDER BY Mag_GidNumer, isnull(Mga_ID,0)
+
+SELECT	Mag_GidNumer, 
+		Mag_GidTyp, 
+		Mag_Kod, 
+		Mag_Nazwa, 
+		Mag_Zablokowany,
+		Mag_ObszarID, 
+		Mag_ObszarKod, 
+		Mag_ObszarNazwa,
+		Mag_AdresID, 
+		Mag_AdresKod,
+        Mag_CzasModyfikacji 
+FROM	#tmpMag
+WHERE	LP BETWEEN @WierszOd AND @WierszDo
+
+COMMIT TRAN     
+</proceduredef>
+</ROOT>

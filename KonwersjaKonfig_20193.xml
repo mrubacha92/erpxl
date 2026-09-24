@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Aktualizacja pól tabel CDN.Konfig" hidden="False">
+SET NOCOUNT ON;
+
+-- Dodanie i atualizacja wpisów do CDN.Konfig
+if not exists(select * from cdn.konfig where kon_numer = 9844 and Kon_Lp = 0) and (select isnull(Kon_Wartosc,0) from cdn.Konfig where Kon_Numer = 988 and Kon_Lp = 0) = 1
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(9844,0,0,0,'1','Obowiazkowy mechanizm podzielonej płatnosci',0,0,0)
+
+SET NOCOUNT OFF;
+</scriptdef>
+</ROOT>

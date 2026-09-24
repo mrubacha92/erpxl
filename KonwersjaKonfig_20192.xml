@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Aktualizacja pól tabel CDN.Konfig" hidden="False">
+SET NOCOUNT ON;
+
+-- Dodanie i atualizacja wpisów do CDN.Konfig
+if not exists(select * from cdn.konfig where kon_numer = -146 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(-146,0,0,0,'','Login do IBARD',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = -147 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(-147,0,0,0,'','Token do IBARD',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = -148 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(-148,0,0,0,'','Domyślny harmonogram backupu baz danych',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = 20142 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(20142,0,0,0,'0','Firmowa instytucja dla PPK',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = 9842 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(9842,0,0,0,'0','Czy zapisywać faktury dodane za pomocą OCR jako załączniki?',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = 9843 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(9843,0,0,0,'0','Sposób zapisu faktury dodanej za pomocą OCR jako załącznik: 0 - Plik w bazie, 1 - Link do pliku',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = 20143 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(20143,0,0,0,'1','Interpretuj transakcję dostawy opodatkowanej poza terytorium kraju w stawce 0% jako krajową',0,0,0)
+
+SET NOCOUNT OFF;
+</scriptdef>
+</ROOT>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="KOL_EksportJmL">
+CREATE Procedure CDN.KOL_EksportJmL(@TS int,@Ope_Numer int)
+AS
+BEGIN TRAN
+
+SELECT 
+    isnull(SLW_ID, 0) as [ID],  
+    isnull(SLW_WartoscS,'') as [Nazwa], 
+    isnull(SLW_WartoscN1,0) as [Dlugosc],
+    isnull(SLW_WartoscN2,0) as [Szerokosc], 
+    isnull(SLW_WartoscN3,0) as [Wysokosc], 
+    isnull(SLW_WartoscN4,0) as [Waga], 
+    isnull(SLW_Aktywny,0) as [Aktywny] 
+FROM CDN.Slowniki
+WHERE Slw_Kategoria = 'Jednostki składowania'
+UNION
+SELECT 0 as [ID] , '' as [NAZWA] , 0 as [Długość],0 as [Szerokość],0 as [Wysokość] ,0 as [Waga], 1 as [Aktywny]
+ORDER BY ID
+
+COMMIT TRAN
+     
+</proceduredef>
+</ROOT>

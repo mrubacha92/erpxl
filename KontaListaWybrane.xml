@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:24:34 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="KontaListaWybrane" ident="1aa68f5c-7613-48e2-bcb2-3d8039becf44" prefix="KLW" filename="'konta.cdn\!KontaListaWybrane'" options=""
+  description="Wybrane konta na liście planu kont" longdescription="" owner="Connect_DSN2" glbx="2" nosql="No"
+  aliases="">
+  <columns>
+    <column ident="024bd9a3-40d3-4980-8a4e-089fae94a3f4" clarionname="KLW:OpeNumer" sqlname="KLW_OpeNumer" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="GIDNumer operatora" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Ope Numer" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="41ad3571-d1ad-458b-8b4c-98ef4dd01977" clarionname="KLW:KKSKonto" sqlname="KLW_KKSKonto" type="CSTRING" clariontype="CSTRING(31)" sqltype="VARCHAR(30)"
+      size="31" places="0" description="Numer konta księgowego" longdescription="" options=""
+      picture="@s30" initial="" justification.type="L" justification.indent="0"
+      header="KKSK onto" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="3f672156-a176-4c3f-b2fa-c98ee73a6d8e" clarionname="KLW:TS" sqlname="KLW_TS" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="TimeStamp" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="TS" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="93f9e6b1-6454-4b52-aae0-65876e888ce6" clarionname="KLW:Primary" sqlname="KLWPrimary" description="Klucz główny" longdescription="" options="" primary="Yes" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="024bd9a3-40d3-4980-8a4e-089fae94a3f4" clarionname="KLW:OpeNumer" sqlname="KLW_OpeNumer" nosql="No"/>
+         <indexcolumn ident="41ad3571-d1ad-458b-8b4c-98ef4dd01977" clarionname="KLW:KKSKonto" sqlname="KLW_KKSKonto" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="3a86d66e-bcc0-4a95-9aa2-d72b19e65d9f" clarionname="KLW:KeyOpeTS" sqlname="KLWOpeTS" description="Wg czasu zmian" longdescription="" options="" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="024bd9a3-40d3-4980-8a4e-089fae94a3f4" clarionname="KLW:OpeNumer" sqlname="KLW_OpeNumer" nosql="No"/>
+         <indexcolumn ident="3f672156-a176-4c3f-b2fa-c98ee73a6d8e" clarionname="KLW:TS" sqlname="KLW_TS" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+  </relations>
+</table>
+</ROOT>

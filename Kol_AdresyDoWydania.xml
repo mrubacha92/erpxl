@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="KOL_AdresyDoWydania">
+CREATE function CDN.KOL_AdresyDoWydania(
+@p_ope int,
+@p_twr int,
+@p_tpa int,
+@p_cck int,
+@p_cecha varchar(20),
+@p_ean varchar(40),
+@p_data int,
+@p_dst int,
+@p_mag int,
+@p_ilosc decimal(11,4),
+@p_jlog int
+)
+returns @adresy2 table(adres varchar(25),mga_id int, ilosc decimal(15,6), tzm_jednostkalog int,tpaid int)
+AS
+BEGIN
+
+if @p_tpa&lt;0 set @p_tpa=null
+if @p_data&lt;0 set @p_data=null
+if @p_dst&lt;0 set @p_dst=null
+if @p_jlog&lt;0 set @p_jlog=null
+declare @adresy table(adres varchar(25),mga_id int, ilosc decimal(15,6), tzm_jednostkalog int,tpaid int)
+
+	insert into @adresy select isnull(cdn.pobierzmagadres(TZM_MgAId),'Nieznane') adres, TZM_MgAId MgA_Id, sum(TZM_Ilosc) Ilosc, TZM_JednostkaLog,tpa_id
+	from CDN.TwrPartie
+	inner join CDN.TwrKarty on Twr_GIDNumer=TPA_TwrNumer
+	inner join CDN.TwrZasobyMag on TZM_TPAId=TPA_Id and TZM_MagNumer=@p_mag 
+	left outer join CDN.MagAdresy A on A.MgA_Id=TZM_MgAId
+	--MSm begin
+	--left outer join CDN.InwNag on InN_MagNumer=@p_mag and InN_TStampZam=0
+	left outer join CDN.InwMag on InM_MagNumer=@p_mag
+	left outer join CDN.InwNag on InN_Id=InM_InNId and InN_TStampZam=0
+	--MSm end		
+	left outer join CDN.InwArk on InA_MgOId=A.MgA_MgOId and InA_InNId=InN_Id
+	left outer join CDN.MagAdresy O on O.MgA_Id=InA_MgAIdOd
+	left outer join CDN.MagAdresy D on D.MgA_Id=InA_MgAIdDo and A.MgA_Segment1+A.MgA_Segment2+A.MgA_Segment3+A.MgA_Segment4 between O.MgA_Segment1+O.MgA_Segment2+O.MgA_Segment3+O.MgA_Segment4 and D.MgA_Segment1+D.MgA_Segment2+D.MgA_Segment3+D.MgA_Segment4
+	left outer join CDN.MagParAdr on MPA_Id=A.MgA_MPAId
+	where TPA_TwrNumer=@p_twr and TZM_JednostkaLog=isnull(@p_jlog,TZM_JednostkaLog) and D.MgA_Id is null
+	group by TPA_Id, TPA_CCKNumer, TPA_Cecha, TPA_Ean, TPA_DataW, TPA_DstNumer, Twr_PartiaDostawa,
+			TZM_MgAId, TZM_JednostkaLog, MPA_PriorytetP
+	order by MPA_PriorytetP,												-- priorytet
+		case when TPA_Id=@p_tpa then 0
+			when TPA_CCKNumer=@p_cck and TPA_Cecha=@p_cecha and TPA_Ean=isnull(@p_ean,TPA_Ean) and TPA_DataW=isnull(@p_data,TPA_DataW)
+				and (TPA_DstNumer=isnull(@p_dst,TPA_DstNumer) or Twr_PartiaDostawa=0) then 1
+			else 2 end,														-- dobra partia lub jej cechy
+		case when sum(TZM_Ilosc)&lt;=@p_ilosc then 0 else sum(TZM_Ilosc) end	-- można zwolnić do końca lub jak najmniejsze
+
+
+	insert into @adresy2 select * from @adresy where tpaid=@p_tpa or @p_tpa is null
+	delete from @adresy
+	insert into @adresy select distinct adres,mga_id,0,0,0 from @adresy2
+	delete from @adresy2
+	insert into @adresy2 select * from @adresy
+
+	return
+
+END
+</functiondef>
+</ROOT>

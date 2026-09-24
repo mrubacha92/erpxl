@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja tabeli CDN.SentElem" hidden="True">
+insert into cdn.SentElem (SnE_SnTId, SnE_Pozycja, SnE_KCNId, SnE_Ilosc, SnE_JM, SnE_StawkaVat, SnE_FlagaVat)
+select SnT_Id, 1, SnT_KCNId, SnT_Ilosc, SnT_JM, SnT_StawkaVat, SnT_FlagaVat
+from cdn.Sent sz
+where not exists (select 1 from cdn.SentElem where SnE_SnTId = sz.SnT_Id) and SnT_KCNId &gt; 0
+</scriptdef>
+</ROOT>

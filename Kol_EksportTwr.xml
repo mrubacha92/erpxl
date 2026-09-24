@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="KOL_EksportTwr">
+CREATE PROCEDURE CDN.KOL_EksportTwr(@TS INT,@NumerPaczki INT,@RozmiarPaczki INT,@OpeNumer INT)
+AS
+BEGIN TRAN
+
+DECLARE @lowerRank int
+DECLARE @upperRank int
+
+SET @lowerRank=@RozmiarPaczki * @NumerPaczki + 1
+SET @upperRank=@RozmiarPAczki * (@NumerPaczki+1)
+
+CREATE TABLE #TmpTable
+(GIDNumer int not null,
+Typ int not null,
+Kod varchar(40) COLLATE Polish_CI_AS not null,
+FPPKod varchar(20) COLLATE Polish_CI_AS not null,
+Nazwa varchar(255) COLLATE Polish_CI_AS not null,
+Sww varchar(20) COLLATE Polish_CI_AS not null,
+Ean varchar(40) COLLATE Polish_CI_AS not null,
+Jm varchar(8) COLLATE Polish_CI_AS not null,
+Waga decimal(7,3) not null,
+LastModC int not null,
+LP int identity not null,
+KlasaCechy int not null,
+cenanetto decimal(15,2) not null,
+cenabrutto decimal(15,2) not null
+)
+
+declare @frs varchar(255)
+declare @frsid int
+select @frsid=ope_frsid from cdn.opekarty where ope_gidnumer=@OpeNumer
+set @frs=convert(varchar(10),@frsid)
+while @frsid&lt;&gt;0
+begin
+	select @frsid=frs_gronumer from cdn.frmstruktura where FrS_Id=@frsid
+	set @frs=@frs+','+convert(varchar(10),@frsid)
+end
+select @frsid=FRS_CenaDomyslna from cdn.frmstruktura where FrS_Id in (select ope_frsid from cdn.opekarty where ope_gidnumer=@OpeNumer)
+
+INSERT INTO #TmpTable (GIDNumer,Typ,Kod,FPPKod,Nazwa,Sww,Ean,Jm,Waga,LastModC,KlasaCechy,cenanetto,cenabrutto)
+SELECT
+   Twr_GidNumer,
+   ISNULL(Twr_GidTyp,0),
+   ISNULL(Twr_Kod,''),
+   ISNULL(Twr_FppKod,''),
+   ISNULL(Twr_Nazwa,''),
+   ISNULL(Twr_Sww,''),
+   ISNULL(Twr_Ean,''),
+   ISNULL(Twr_Jm,''),
+   ISNULL(Twr_WagaBrutto,0)*(case twr_wjm when 'Gram' then 0.001 when 'Dkg' then 0.01 when 'Tona' then 1000 else 1 end) ,
+   Twr_LastModC,
+   ISNULL(Twr_CCKNumer,0),
+   convert(decimal(15,2),round(isnull((case when substring(a.naz_nazwa,11,1)='N' then twc_wartosc else twc_wartosc/(1+convert(decimal(15,4),rtrim(substring(b.naz_nazwa1,1,2)))/100) end),0),2)) as netto,
+   convert(decimal(15,2),round(isnull((case when substring(a.naz_nazwa,11,1)='B' then twc_wartosc else twc_wartosc*(1+convert(decimal(15,4),rtrim(substring(b.naz_nazwa1,1,2)))/100) end),0),2)) as brutto
+FROM CDN.TwrKarty
+left join cdn.twrceny on Twr_GIDNumer=TwC_TwrNumer and twc_twrlp=(case when @OpeNumer=0 then Twr_CenaSpr else (case when CDN.CzyCenaWCentrum(@frs,Twr_CenaSpr)=1 then twr_cenaspr else @frsid end) end)
+left join cdn.nazwy a on a.naz_gidlp= (case when @OpeNumer=0 then Twr_CenaSpr else twc_twrlp end) and a.naz_gidtyp=64
+left join cdn.nazwy b on b.naz_gidtyp=624 and Twr_GrupaPodSpr=substring(b.naz_nazwa,1,1)
+WHERE Twr_GIDNumer &gt; 0 AND Twr_Aktywna = 0 AND Twr_LastModC &gt; @TS AND twr_archiwalny = 0
+
+DELETE FROM #TmpTable WHERE LP NOT BETWEEN @lowerRank AND @upperRank
+
+SELECT GIDNumer, Typ, Kod, FPPKod, Nazwa, Sww, Ean, Jm, Waga,LastModC, LP, KlasaCechy,cenanetto,cenabrutto
+FROM #TmpTable ORDER BY LP
+
+SELECT TwJ_TwrNumer, TwJ_TwrLp, TwK_Kod, TwJ_TypJm, TwJ_JmZ, TwJ_PrzeliczL, TwJ_PrzeliczM
+FROM CDN.TwrJM join CDN.TwrKody on TwK_TwrNumer=TwJ_TwrNumer and TwK_Jm=TwJ_JmZ and TwK_Rodzaj=0 JOIN #TmpTable ON GidNumer = TwJ_TwrNumer 
+WHERE ISNULL(TwK_Kod,'') &lt;&gt; '' AND LastModC &gt; @TS
+ORDER BY LP
+
+DROP TABLE #TmpTable
+
+COMMIT TRAN
+  
+</proceduredef>
+</ROOT>

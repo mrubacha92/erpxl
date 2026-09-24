@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja pól tabeli CDN.Sent z 2018.2.1" hidden="False">
+SET NOCOUNT ON;
+IF EXISTS (SELECT * FROM sys.columns WHERE  object_id = OBJECT_ID(N'CDN.Sent') AND name = 'SnT_WojewodztwoT') 
+	AND EXISTS (SELECT * FROM sys.columns WHERE  object_id = OBJECT_ID(N'CDN.Sent') AND name = 'SnT_DlugoscGeoT')
+	AND EXISTS (SELECT * FROM sys.columns WHERE  object_id = OBJECT_ID(N'CDN.Sent') AND name = 'SnT_SzerokoscGeoT')
+BEGIN
+	DECLARE @sql VARCHAR(150)
+	SET @sql = 'UPDATE CDN.Sent SET SnT_Wojewodztwo = SnT_WojewodztwoT,SnT_DlugoscGeo = SnT_DlugoscGeoT,SnT_SzerokoscGeo = SnT_SzerokoscGeoT'
+	EXECUTE(@sql)
+	SET @sql = 'ALTER TABLE CDN.Sent DROP COLUMN SnT_WojewodztwoT,SnT_DlugoscGeoT,SnT_SzerokoscGeoT'
+	EXECUTE(@sql)
+END
+SET NOCOUNT OFF;
+</scriptdef>
+</ROOT>

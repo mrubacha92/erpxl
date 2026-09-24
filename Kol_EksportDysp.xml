@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="KOL_EksportDysp">
+CREATE PROCEDURE CDN.KOL_EksportDysp (@GidNumer int,@GidTyp int,@OpeNumer int, @MagKod varchar(5))
+AS
+BEGIN
+	if @GidTyp in (1089,1601,1602)
+	begin
+		declare @wart varchar(10)
+		set @wart='&lt;BRAK&gt;'
+		if exists(SELECT * FROM CDN.Magazyny JOIN CDN.MagObszary ON Mgo_MagTyp = Mag_GidTyp AND Mgo_MagNumer = Mag_GidNumer JOIN CDN.MagAdresy as A  ON MgO_Id=MgA_MgOId where mag_gidnumer in (select man_magdnumer from cdn.magnag where man_gidnumer=@GidNumer))
+			set @wart='Nieznane'
+
+		INSERT INTO CDN.KolDokumenty(KDO_DokTyp, KDO_DokNumer, KDo_OpeNumer, KDo_OpeTyp, KDO_CzasWyslania, KDo_CzasOddania, KDo_Stan)
+				VALUES(@GidTyp, @GidNumer, @OpeNumer, 128, datediff(ss,'19900101',getdate()), 0, 0)
+
+		if @GidTyp&lt;&gt;1602
+		begin
+			select 
+			Twr_GIDNumer As TwrNumer, Twr_Kod as Towar, Twr_Nazwa as Nazwa
+			,map_ilosc as 'Ilosc',0.0000 as 'Ilosc Mag',twr_jm as 'Jm'
+			,isnull(CDN.PobierzMagAdres(MaP_MgAId),@wart) as 'Polozenie','' as 'Polozenie Mag'
+			,mae_cecha as Cecha
+			,isnull(SLW_WartoscS,'') as JednostkaLog
+			,Map_GidLp,Map_SubGidLp,mae_tpaid as Tpa_ID
+			from cdn.magpelem
+			left join cdn.slowniki on map_jednostkalog=slw_id
+			join cdn.magelem on mae_gidnumer=map_gidnumer and mae_gidlp=map_gidlp
+			join cdn.twrkarty on twr_gidnumer=mae_twrnumer
+			where map_gidnumer=@gidnumer
+			order by map_gidlp,map_subgidlp
+		end
+		else
+		begin
+			select
+			Twr_GIDNumer As TwrNumer, Twr_Kod as Towar, Twr_Nazwa as Nazwa
+			,a.map_ilosc as 'Ilosc',0.0000 as 'Ilosc Mag',twr_jm as 'Jm'
+			,isnull(CDN.PobierzMagAdres(a.MaP_MgAId),@wart) as 'Polozenie','' as 'Polozenie Mag'
+			,isnull(CDN.PobierzMagAdres(b.MaP_MgAId),@wart) as 'Polozenie D' ,'' as 'Polozenie MagD'
+			,mae_cecha as Cecha,isnull(SLW_WartoscS,'') as JednostkaLog
+			,a.Map_GidLp,a.Map_SubGidLp,mae_tpaid as Tpa_ID
+			from cdn.magpelem a
+			left join cdn.slowniki on a.map_jednostkalog=slw_id
+			join cdn.magelem on mae_gidnumer=a.map_gidnumer and mae_gidlp=a.map_gidlp
+			join cdn.twrkarty on twr_gidnumer=mae_twrnumer
+			join cdn.magpelem b on b.map_gidnumer=a.map_gidnumer and b.map_gidlp=a.map_gidlp and b.map_subgidlp&lt;0
+			where a.map_gidnumer=@gidnumer and a.map_ilosc&gt;0
+			order by a.map_gidlp,a.map_subgidlp
+		end
+	end
+	else
+	begin
+		declare @zarzadz int 
+		if exists(SELECT * FROM CDN.Magazyny JOIN CDN.MagObszary ON Mgo_MagTyp = Mag_GidTyp AND Mgo_MagNumer = Mag_GidNumer JOIN CDN.MagAdresy as A  ON MgO_Id=MgA_MgOId where mag_kod=@magkod) 
+			set @zarzadz=1 
+		else 
+			set @zarzadz=0
+
+		if @GidTyp in (960,9344,9472,9473)
+		begin
+			    select 
+                Twr_GIDNumer As TwrNumer, Twr_Kod as Towar, Twr_Nazwa as Nazwa
+				,(case when rez_ilosc is null then zae_ilosc-isnull(mas_ilosc,0) else rez_ilosc-rez_iloscmag end) as 'Ilość',twr_jm as 'Jm'
+				,0.0000 as 'Ilość Mag' 
+				,(case when @zarzadz=0 then '&lt;BRAK&gt;' else 'Nieznane' end) as 'Położenie Mag' 
+				,zae_cecha as 'Cecha','' as JednostkaLog,zae_gidnumer as Trn_GidNumer 
+				,CDN.DokMapTypDokumentu (ZaN_GIDTyp,ZaN_ZamTyp,ZaN_Rodzaj) as Trn_GidTyp,zae_gidfirma as Trn_GidFirma,zae_gidlp as Tre_GidLp,0 as Trs_SubGidLp,-1 as Map_GidLp,-1 Map_SubGidLp
+				,isnull(dst_tpaid,-1) as Tpa_ID,zae_MagNumer as Mag_Numer 
+				from cdn.zamelem 
+				join cdn.zamnag on zae_gidnumer=zan_gidnumer 
+				join cdn.twrkarty on twr_gidnumer=zae_twrnumer 
+				left join cdn.rezerwacje on rez_zrdnumer=zae_gidnumer and zae_gidlp=rez_zrdlp and rez_gidtyp=2576
+				left join cdn.dostawy on rez_dstnumer=dst_gidnumer
+				left join 
+				(select sum(mas_ilosc) as mas_ilosc,mas_twrnumer,mas_zlclp from cdn.magnag 
+				join cdn.magselem on MaN_GIDTyp=MaS_GIDTyp AND MaN_GIDNumer=MaS_GIDNumer 
+				where man_zrdnumer=@gidnumer and man_zrdtyp=960 
+				group by mas_twrnumer,mas_zlclp 
+				) m on mas_twrnumer=zae_twrnumer and mas_zlclp=zae_gidlp 
+				where zae_gidnumer=@gidnumer and zae_magnumer in (select mag_gidnumer from cdn.magazyny where mag_kod=@magkod) 
+				and (case when rez_ilosc is null then zae_ilosc-isnull(mas_ilosc,0) else rez_ilosc-rez_iloscmag end)&gt;0
+		end
+		else
+		begin
+			select 
+			Twr_GIDNumer As TwrNumer, Twr_Kod as Towar, Twr_Nazwa as Nazwa
+			,trs_ilosc-isnull(m.mas_ilosc,0) as 'Ilość',twr_jm as 'Jm'
+			,0.0000 as 'Ilość Mag'
+			,(case when @zarzadz=0 then '&lt;BRAK&gt;' else 'Nieznane' end) as 'Położenie Mag' 
+			,dst_cecha as 'Cecha','' as JednostkaLog 
+			,tre_gidnumer as Trn_GidNumer,tre_gidtyp as Trn_GidTyp,tre_gidfirma as Trn_GidFirma,Tre_GidLp,Trs_SubGidLp,-1 as Map_GidLp,-1 as Map_SubGidLp
+			,isnull(dst_tpaid,-1) as Tpa_ID,TrS_MagNumer as Mag_Numer 
+			from cdn.Traelem join cdn.Traselem on TrE_GIDTyp=TrS_GIDTyp AND TrE_GIDNumer=TrS_GIDNumer AND TrE_GIDLp=TrS_GIDLp 
+			join cdn.twrkarty on twr_gidnumer=tre_twrnumer 
+			left join cdn.dostawy on trs_dstnumer=dst_gidnumer
+			left join 
+			(select mas_twrnumer,isnull(sum(mas_ilosc),0) as mas_ilosc,mas_zrdlp,mas_subzrdlp from cdn.magnag 
+			join cdn.magselem on MaN_GIDNumer=MaS_GIDNumer 
+			where man_zrdnumer=@gidnumer 
+			group by mas_twrnumer,mas_zrdlp,mas_subzrdlp) m on m.mas_twrnumer=tre_twrnumer and m.mas_zrdlp=trs_gidlp and mas_subzrdlp=trs_subgidlp 
+			where trs_ilosc-isnull(m.mas_ilosc,0)&gt;0 and tre_gidnumer=@gidnumer and trs_magnumer in (select mag_gidnumer from cdn.magazyny where mag_kod=@magkod)
+		end
+	end
+END
+</proceduredef>
+</ROOT>

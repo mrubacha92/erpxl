@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="KOL_EksportInw">
+CREATE PROCEDURE CDN.KOL_EksportInw (@Magazyn int, @OpeNumer int)
+AS
+BEGIN TRAN
+SELECT	UPPER(InA_Nazwa) as [Nazwa arkusza]
+		,(case InA_Przyrostowa when 0 then 'Porównawcze' else 'Przyrostowe' end) as [Rodzaj odczytów]
+		,(case InN_Polozenie when 0 then 'Wg towarów' else 'Wg położenia' end) as [Rodzaj inwentaryzacji] 
+		,ISNULL(MgO_Kod,'') as [Kod obszaru]
+		,ISNULL(CDN.PobierzMagAdres(InA_MgAIdOd),'') as [Adres od]
+		,ISNULL(CDN.PobierzMagAdres(InA_MgAIdDo),'') as [Adres do]
+		,InA_Id as [InAID]
+		,InA_InNId as [InNID]
+		,ISNULL(InA_MgOId,0) as [MgOID]	  
+		,ISNULL(InA_MgAIdOd,0) as [MgAIDod]
+		,ISNULL(InA_MgAIdDo,0) as [MgAIDdo]
+		,(case Mag_Zarzadzanie when 0 then convert(bit,0) else convert(bit,1) end)  as [Zarzadzanie]
+		,(case InA_PowielanieTwr when 1 then convert(bit,1) else convert(bit,0) end)  as [Powielanie]
+		,InN_RodzajIlosci as [RodzIlosci]
+FROM CDN.InwNag
+JOIN CDN.InwMag on InN_Id=InM_InNId
+JOIN CDN.Magazyny on Mag_GidNumer = InM_MagNumer
+JOIN CDN.InwArk on InN_Id=InA_InNId
+LEFT JOIN CDN.MagObszary on MgO_ID = InA_MgOId
+WHERE InN_TStampZam = 0 AND  InM_MagNumer = @Magazyn
+COMMIT TRAN
+</proceduredef>
+</ROOT>

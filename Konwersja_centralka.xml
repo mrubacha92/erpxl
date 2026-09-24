@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<tabledef name="CDN.BOKStatystyki">
+CREATE TABLE CDN.BOKStatystyki
+  (
+      BKS_Id                          INTEGER        IDENTITY NOT NULL , --- LONG
+      BKS_KntNumer                    INTEGER        , --- LONG
+      BKS_Status                      INTEGER        , --- LONG
+      BKS_Ocena                       INTEGER        , --- LONG
+      BKS_Data                        DATETIME    , --- STRING(20)
+      BKS_Prawa                       INTEGER        , --- LONG
+      CONSTRAINT BKS_Primary PRIMARY KEY
+        (
+                          BKS_Id                        
+        )
+  );
+
+  GRANT SELECT ON CDN.BOKStatystyki TO CDNRaport;
+END
+</tabledef>
+<tabledef name="CDN.seq_table">
+CREATE TABLE CDN.seq_table
+  (
+      seq_numer                       INTEGER        IDENTITY NOT NULL , --- LONG
+  );
+  GRANT SELECT ON CDN.seq_table TO CDNRaport;
+END
+</tabledef>
+</ROOT>

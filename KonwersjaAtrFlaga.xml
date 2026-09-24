@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja wartości atrybutów typu flaga" hidden="True">
+SET NOCOUNT ON;
+UPDATE CDN.Atrybuty SET Atr_Wartosc = UPPER(SA.Atr_Wartosc) FROM CDN.Atrybuty SA JOIN CDN.AtrybutyKlasy ON AtK_ID = SA.Atr_AtkID WHERE AtK_Typ = 1
+SET NOCOUNT OFF;
+</scriptdef>
+</ROOT>

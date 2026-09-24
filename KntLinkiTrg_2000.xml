@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="KntLinkiInsert">
+CREATE TRIGGER KntLinkiInsert ON CDN.KntGrupy
+FOR INSERT
+AS
+
+DECLARE @GidTyp SMALLINT
+DECLARE @GidFirma INT
+DECLARE @GidNumer INT
+DECLARE @GroTyp SMALLINT
+DECLARE @GroFirma INT
+DECLARE @GroNumer INT
+DECLARE @InsertedGroNumer INT
+DECLARE @prevcount INT
+DECLARE @count INT
+
+DECLARE	TriggerCursor CURSOR FOR 
+SELECT KnG_GIDTyp,KnG_GIDFirma,KnG_GIDNumer,
+	KnG_GROTyp,KnG_GROFirma,
+	KnG_GRONumer FROM INSERTED
+
+OPEN TriggerCursor
+
+FETCH NEXT FROM	TriggerCursor INTO @GIDTyp,@GIDFirma,@GIDNumer,@GROTyp,@GROFirma,@GRONumer
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	SET @prevcount=0
+	SET @count=-1
+
+	--tu z INSERTED oczywiscie
+	CREATE TABLE #gronumery(GN INT,C INT)             
+	IF (@GIDTyp=-32)
+	BEGIN
+		INSERT INTO #gronumery exec CDN.KntRodzice @GroNumer
+
+		IF ((SELECT COUNT(*) FROM CDN.KntLinki WHERE KnL_GRONumer=@GIDNumer)&gt;0)
+		BEGIN
+			INSERT INTO CDN.KntLinki (KnL_GIDTyp,KnL_GIDFirma,KnL_GIDNumer,KnL_GIDLp,KnL_GrOTyp,KnL_GrOFirma,KnL_GrONumer,KnL_GrOLp,KnL_Lisc,KnL_LiczbaPowtorzen,KnL_TStampDataMod)
+			SELECT KnL_GIDTyp,KnL_GIDFirma,KnL_GIDNumer,KnL_GIDLp,-32,@GROFirma,GN,0,0,0,DATEDIFF(S,'19900101',GETDATE()) FROM (SELECT CDN.KntLinki.KnL_GIDTyp,CDN.KntLinki.KnL_GIDFirma,CDN.KntLinki.KnL_GIDNumer,CDN.KntLinki.KnL_GIDLp,GN,Linki.KnL_GRONumer AS GRO FROM CDN.KntLinki RIGHT OUTER JOIN #gronumery ON KnL_GRONumer=@GIDNumer LEFT OUTER JOIN CDN.KntLinki AS Linki ON Linki.KnL_GIDNumer=CDN.KntLinki.KnL_GIDNumer AND Linki.KnL_GIDTyp=CDN.KntLinki.KnL_GIDTyp AND Linki.KnL_GRONumer=GN) SelectWewn WHERE GRO IS NULL
+			UPDATE CDN.KntLinki --update dla wszystkich elementow nalezacych do grupy, ktora zostala wstawiona
+			SET KnL_LiczbaPowtorzen=KnL_LiczbaPowtorzen+(SELECT (C) FROM #gronumery WHERE KnL_GRONumer=GN),
+			KnL_TStampDataMod = DATEDIFF(S,'19900101',GETDATE())
+			WHERE 
+			KnL_GRONumer IN (SELECT GN FROM #gronumery) AND
+			KnL_GIDNumer IN (SELECT KnL_GIDNumer FROM CDN.KntLinki WHERE KnL_GRONumer=@GIDNumer)
+		END
+		TRUNCATE TABLE #gronumery
+		--DROP TABLE #gronumery
+	END
+		INSERT INTO #gronumery exec CDN.KntRodzice @GroNumer
+
+		INSERT INTO CDN.KntLinki (KnL_GIDTyp,KnL_GIDFirma,KnL_GIDNumer,KnL_GIDLp,KnL_GrOTyp,KnL_GrOFirma,KnL_GrONumer,KnL_GrOLp,KnL_Lisc,KnL_LiczbaPowtorzen,KnL_TStampDataMod)
+		SELECT @GIDTyp,@GIDFirma,@GIDNumer,0,-32,@GROFirma,GN,0,0,0,DATEDIFF(S,'19900101',GETDATE()) FROM 
+		(SELECT @GIDNumer as GIDNr,GN,Linki.KnL_GRONumer as GRO FROM #gronumery 
+		LEFT OUTER JOIN CDN.KntLinki AS Linki ON Linki.KnL_GIDNumer=@GIDNumer AND Linki.KnL_GIDTyp = @GIDTyp
+		AND Linki.KnL_GRONumer=GN) SelectWewn WHERE GRO IS NULL  --insert brakujacych rekordow to KntLinki
+		UPDATE CDN.KntLinki -- dodanie odpowiedniej LP
+		SET KnL_LiczbaPowtorzen=KnL_LiczbaPowtorzen+(SELECT c FROM #gronumery WHERE GN=KnL_GRONumer),
+		KnL_TStampDataMod = DATEDIFF(S,'19900101',GETDATE())
+		WHERE 
+		KnL_GiDTyp = @GidTyp AND
+		KnL_GiDFirma = @GidFirma AND
+		KnL_GiDNumer = @GidNumer AND
+		KnL_GroTyp = @GroTyp AND
+		KnL_GroFirma = @GroFirma AND
+		KnL_GroNumer IN (SELECT GN FROM #gronumery)
+		UPDATE CDN.KntLinki --ustawienie liscia
+		SET KnL_Lisc=1,KnL_TStampDataMod = DATEDIFF(S,'19900101',GETDATE())
+		WHERE 
+		KnL_GiDTyp = @GidTyp AND
+		KnL_GiDFirma = @GidFirma AND
+		KnL_GiDNumer = @GidNumer AND
+		KnL_GroTyp = @GroTyp AND
+		KnL_GroFirma = @GroFirma AND
+		KnL_GroNumer =@GROnumer
+		DROP TABLE #gronumery
+	FETCH NEXT FROM	TriggerCursor INTO @GIDTyp,@GIDFirma,@GIDNumer,@GROTyp,@GROFirma,@GRONumer
+END
+CLOSE TriggerCursor
+DEALLOCATE TriggerCursor
+
+</triggerdef>
+<triggerdef name="KntLinkiUpdate">
+CREATE TRIGGER KntLinkiUpdate ON CDN.KntGrupy
+FOR UPDATE
+AS
+
+IF NOT (UPDATE(KnG_GIDTyp) OR UPDATE(KnG_GIDFirma) OR UPDATE(KnG_GIDNumer) OR UPDATE(KnG_GIDLp) OR
+		UPDATE(KnG_GrOTyp) OR UPDATE(KnG_GrOFirma) OR UPDATE(KnG_GrONumer) OR UPDATE(KnG_GrOLp))
+		RETURN
+		
+DECLARE @GidTyp SMALLINT
+DECLARE @GidFirma INT
+DECLARE @GidNumer INT
+DECLARE @GroTyp SMALLINT
+DECLARE @GroFirma INT
+DECLARE @GroNumer INT
+DECLARE @InsertedGroNumer INT
+DECLARE @prevcount INT
+DECLARE @count INT
+
+DECLARE	TriggerCursorDeleted CURSOR FOR 
+SELECT KnG_GIDTyp,KnG_GIDFirma,KnG_GIDNumer,
+	KnG_GROTyp,KnG_GROFirma,
+	KnG_GRONumer FROM DELETED
+
+DECLARE	TriggerCursorInserted CURSOR FOR 
+SELECT KnG_GIDTyp,KnG_GIDFirma,KnG_GIDNumer,
+	KnG_GROTyp,KnG_GROFirma,
+	KnG_GRONumer FROM INSERTED
+
+OPEN TriggerCursorDeleted
+OPEN TriggerCursorInserted
+
+FETCH NEXT FROM	TriggerCursorDeleted INTO @GIDTyp,@GIDFirma,@GIDNumer,@GROTyp,@GROFirma,@GRONumer
+WHILE @@FETCH_STATUS = 0
+BEGIN
+
+	SET @prevcount=0
+	SET @count=-1
+
+	CREATE TABLE #gronumery(GN INT,C INT)             
+
+	IF (@GIDTyp=-32)
+	BEGIN
+		INSERT INTO #gronumery exec CDN.KntRodzice @GroNumer
+		
+		--INSERT INTO CDN.KntLinki SELECT KnL_GIDTyp,KnL_GIDFirma,KnL_GIDNumer,KnL_GIDLp,-32,@GROFirma,GN,0,0,0 FROM (SELECT CDN.KntLinki.KnL_GIDTyp,CDN.KntLinki.KnL_GIDFirma,CDN.KntLinki.KnL_GIDNumer,CDN.KntLinki.KnL_GIDLp,GN,Linki.KnL_GRONumer AS GRO FROM CDN.KntLinki RIGHT OUTER JOIN #gronumery ON KnL_GRONumer=@GIDNumer LEFT OUTER JOIN CDN.KntLinki AS Linki ON Linki.KnL_GIDNumer=CDN.KntLinki.KnL_GIDNumer AND Linki.KnL_GRONumer=GN) SelectWewn WHERE GRO IS NULL
+		UPDATE CDN.KntLinki --update dla wszystkich elementow nalezacych do grupy, ktora zostala usunieta
+		SET KnL_LiczbaPowtorzen=KnL_LiczbaPowtorzen-(SELECT (C) FROM #gronumery WHERE KnL_GRONumer=GN),
+		KnL_TStampDataMod = DATEDIFF(S,'19900101',GETDATE())
+		WHERE 
+		KnL_GRONumer IN (SELECT GN FROM #gronumery) AND
+		KnL_GIDNumer IN (SELECT KnL_GIDNumer FROM CDN.KntLinki WHERE KnL_GRONumer=@GIDNumer)
+		DELETE FROM CDN.KntLinki WHERE KnL_LiczbaPowtorzen=0
+		TRUNCATE TABLE #gronumery
+	END
+		INSERT INTO #gronumery exec CDN.KntRodzice @GroNumer
+		--INSERT INTO CDN.KntLinki SELECT KnL_GIDTyp,KnL_GIDFirma,KnL_GIDNumer,KnL_GIDLp,-32,@GROFirma,GN,0,0,0 FROM (SELECT CDN.KntLinki.KnL_GIDTyp,CDN.KntLinki.KnL_GIDFirma,CDN.KntLinki.KnL_GIDNumer,CDN.KntLinki.KnL_GIDLp,GN,Linki.KnL_GRONumer AS GRO FROM CDN.KntLinki RIGHT OUTER JOIN #gronumery ON KnL_GRONumer=@GIDNumer LEFT OUTER JOIN CDN.KntLinki AS Linki ON Linki.KnL_GIDNumer=CDN.KntLinki.KnL_GIDNumer AND Linki.KnL_GRONumer=GN) SelectWewn WHERE GRO IS NULL
+		UPDATE CDN.KntLinki --update dla wszystkich elementow nalezacych do grupy, ktora zostala usunieta
+		SET KnL_LiczbaPowtorzen=KnL_LiczbaPowtorzen-(SELECT (C) FROM #gronumery WHERE KnL_GRONumer=GN),
+		KnL_TSTampDataMod = DATEDIFF(S,'19900101',GETDATE())
+		WHERE 
+		KnL_GRONumer IN (SELECT GN FROM #gronumery) AND
+		KnL_GIDNumer=@GIDNumer AND KnL_GIDTyp = @GIDTyp
+
+		UPDATE CDN.KntLinki --ustawienie liscia
+		SET KnL_Lisc=0,KnL_TStampDataMod = DATEDIFF(S,'19900101',GETDATE())
+		WHERE 
+		KnL_GiDTyp = @GidTyp AND
+		KnL_GiDFirma = @GidFirma AND
+		KnL_GiDNumer = @GidNumer AND
+		KnL_GroTyp = @GroTyp AND
+		KnL_GroFirma = @GroFirma AND
+		KnL_GroNumer =@GROnumer
+		DELETE FROM CDN.KntLinki WHERE KnL_LiczbaPowtorzen=0 AND KnL_GIDTyp = @GIDTyp
+
+	FETCH NEXT FROM	TriggerCursorInserted INTO @GIDTyp,@GIDFirma,@GIDNumer,@GROTyp,@GROFirma,@GRONumer
+
+	SET @prevcount=0
+	SET @count=-1
+
+	--tu z INSERTED oczywiscie
+	DELETE FROM #gronumery 
+
+	IF (@GIDTyp=-32)
+	BEGIN
+		INSERT INTO #gronumery exec CDN.KntRodzice @GroNumer
+
+	
+		IF ((SELECT COUNT(*) FROM CDN.KntLinki WHERE KnL_GRONumer=@GIDNumer)&gt;0)
+		BEGIN
+			INSERT INTO CDN.KntLinki (KnL_GIDTyp,KnL_GIDFirma,KnL_GIDNumer,KnL_GIDLp,KnL_GrOTyp,KnL_GrOFirma,KnL_GrONumer,KnL_GrOLp,KnL_Lisc,KnL_LiczbaPowtorzen,KnL_TStampDataMod)
+			SELECT KnL_GIDTyp,KnL_GIDFirma,KnL_GIDNumer,KnL_GIDLp,-32,@GROFirma,GN,0,0,0,DATEDIFF(S,'19900101',GETDATE()) FROM (SELECT CDN.KntLinki.KnL_GIDTyp,CDN.KntLinki.KnL_GIDFirma,CDN.KntLinki.KnL_GIDNumer,CDN.KntLinki.KnL_GIDLp,GN,Linki.KnL_GRONumer AS GRO FROM CDN.KntLinki RIGHT OUTER JOIN #gronumery ON KnL_GRONumer=@GIDNumer LEFT OUTER JOIN CDN.KntLinki AS Linki ON Linki.KnL_GIDNumer=CDN.KntLinki.KnL_GIDNumer AND Linki.KnL_GIDTyp=CDN.KntLinki.KnL_GIDTyp AND Linki.KnL_GRONumer=GN) SelectWewn WHERE GRO IS NULL
+			UPDATE CDN.KntLinki --update dla wszystkich elementow nalezacych do grupy, ktora zostala wstawiona
+			SET KnL_LiczbaPowtorzen=KnL_LiczbaPowtorzen+(SELECT (C) FROM #gronumery WHERE KnL_GRONumer=GN),
+			KnL_TStampDataMod = DATEDIFF(S,'19900101',GETDATE())
+			WHERE 
+			KnL_GRONumer IN (SELECT GN FROM #gronumery) AND
+			KnL_GIDNumer IN (SELECT KnL_GIDNumer FROM CDN.KntLinki WHERE KnL_GRONumer=@GIDNumer)
+		END
+		TRUNCATE TABLE #gronumery
+		--DROP TABLE #gronumery
+	END
+		INSERT INTO #gronumery exec CDN.KntRodzice @GroNumer
+
+		INSERT INTO CDN.KntLinki (KnL_GIDTyp,KnL_GIDFirma,KnL_GIDNumer,KnL_GIDLp,KnL_GrOTyp,KnL_GrOFirma,KnL_GrONumer,KnL_GrOLp,KnL_Lisc,KnL_LiczbaPowtorzen,KnL_TStampDataMod)
+		SELECT @GIDTyp,@GIDFirma,@GIDNumer,0,-32,@GROFirma,GN,0,0,0,DATEDIFF(S,'19900101',GETDATE()) FROM 
+		(SELECT @GIDNumer as GIDNr,GN,Linki.KnL_GRONumer as GRO FROM #gronumery 
+		LEFT OUTER JOIN CDN.KntLinki AS Linki ON Linki.KnL_GIDNumer=@GIDNumer AND Linki.KnL_GIDTyp=@GIDTyp
+		AND Linki.KnL_GRONumer=GN) SelectWewn WHERE GRO IS NULL  --insert brakujacych rekordow to KntLinki
+		UPDATE CDN.KntLinki -- dodanie odpowiedniej LP
+		SET KnL_LiczbaPowtorzen=KnL_LiczbaPowtorzen+(SELECT c FROM #gronumery WHERE GN=KnL_GRONumer),
+		KnL_TStampDataMod = DATEDIFF(S,'19900101',GETDATE())
+		WHERE 
+		KnL_GiDTyp = @GidTyp AND
+		KnL_GiDFirma = @GidFirma AND
+		KnL_GiDNumer = @GidNumer AND
+		KnL_GroTyp = @GroTyp AND
+		KnL_GroFirma = @GroFirma AND
+		KnL_GroNumer IN (SELECT GN FROM #gronumery)
+		UPDATE CDN.KntLinki --ustawienie liscia
+		SET KnL_Lisc=1,KnL_TStampDataMod = DATEDIFF(S,'19900101',GETDATE())
+		WHERE 
+		KnL_GiDTyp = @GidTyp AND
+		KnL_GiDFirma = @GidFirma AND
+		KnL_GiDNumer = @GidNumer AND
+		KnL_GroTyp = @GroTyp AND
+		KnL_GroFirma = @GroFirma AND
+		KnL_GroNumer =@GROnumer
+
+		DROP TABLE #gronumery
+	FETCH NEXT FROM	TriggerCursorDeleted INTO @GIDTyp,@GIDFirma,@GIDNumer,@GROTyp,@GROFirma,@GRONumer
+END
+CLOSE TriggerCursorDeleted
+CLOSE TriggerCursorInserted
+DEALLOCATE TriggerCursorDeleted
+DEALLOCATE TriggerCursorInserted
+</triggerdef>
+<triggerdef name="KntLinkiDelete">
+CREATE TRIGGER KntLinkiDelete ON CDN.KntGrupy
+FOR DELETE
+AS
+
+DECLARE @GidTyp SMALLINT
+DECLARE @GidFirma INT
+DECLARE @GidNumer INT
+DECLARE @GroTyp SMALLINT
+DECLARE @GroFirma INT
+DECLARE @GroNumer INT
+DECLARE @InsertedGroNumer INT
+DECLARE @prevcount INT
+DECLARE @count INT
+
+DECLARE	TriggerCursor CURSOR FOR 
+SELECT KnG_GIDTyp,KnG_GIDFirma,KnG_GIDNumer,
+	KnG_GROTyp,KnG_GROFirma,
+	KnG_GRONumer FROM DELETED
+
+OPEN TriggerCursor
+
+FETCH NEXT FROM	TriggerCursor INTO @GIDTyp,@GIDFirma,@GIDNumer,@GROTyp,@GROFirma,@GRONumer
+WHILE @@FETCH_STATUS = 0
+BEGIN
+
+	SET @prevcount=0
+	SET @count=-1
+
+
+	--tu z DELETED oczywiscie
+	CREATE TABLE #gronumery(GN INT,C INT)             
+	IF (@GIDTyp=-32)
+	BEGIN
+		INSERT INTO #gronumery exec CDN.KntRodzice @GroNumer
+
+		--INSERT INTO CDN.KntLinki SELECT KnL_GIDTyp,KnL_GIDFirma,KnL_GIDNumer,KnL_GIDLp,-32,@GROFirma,GN,0,0,0 FROM (SELECT CDN.KntLinki.KnL_GIDTyp,CDN.KntLinki.KnL_GIDFirma,CDN.KntLinki.KnL_GIDNumer,CDN.KntLinki.KnL_GIDLp,GN,Linki.KnL_GRONumer AS GRO FROM CDN.KntLinki RIGHT OUTER JOIN #gronumery ON KnL_GRONumer=@GIDNumer LEFT OUTER JOIN CDN.KntLinki AS Linki ON Linki.KnL_GIDNumer=CDN.KntLinki.KnL_GIDNumer AND Linki.KnL_GRONumer=GN) SelectWewn WHERE GRO IS NULL
+		UPDATE CDN.KntLinki --update dla wszystkich elementow nalezacych do grupy, ktora zostala usunieta
+		SET KnL_LiczbaPowtorzen=KnL_LiczbaPowtorzen-(SELECT (C) FROM #gronumery WHERE KnL_GRONumer=GN),
+		KnL_TSTampDataMod = DATEDIFF(S,'19900101',GETDATE())
+		WHERE 
+		KnL_GRONumer IN (SELECT GN FROM #gronumery) AND
+		KnL_GIDNumer IN (SELECT KnL_GIDNumer FROM CDN.KntLinki WHERE KnL_GRONumer=@GIDNumer)
+		DELETE FROM CDN.KntLinki WHERE KnL_LiczbaPowtorzen=0
+		TRUNCATE TABLE #gronumery
+		--DROP TABLE #gronumery
+	END
+		INSERT INTO #gronumery exec CDN.KntRodzice @GroNumer
+
+		--INSERT INTO CDN.KntLinki SELECT KnL_GIDTyp,KnL_GIDFirma,KnL_GIDNumer,KnL_GIDLp,-32,@GROFirma,GN,0,0,0 FROM (SELECT CDN.KntLinki.KnL_GIDTyp,CDN.KntLinki.KnL_GIDFirma,CDN.KntLinki.KnL_GIDNumer,CDN.KntLinki.KnL_GIDLp,GN,Linki.KnL_GRONumer AS GRO FROM CDN.KntLinki RIGHT OUTER JOIN #gronumery ON KnL_GRONumer=@GIDNumer LEFT OUTER JOIN CDN.KntLinki AS Linki ON Linki.KnL_GIDNumer=CDN.KntLinki.KnL_GIDNumer AND Linki.KnL_GRONumer=GN) SelectWewn WHERE GRO IS NULL
+		UPDATE CDN.KntLinki --update dla wszystkich elementow nalezacych do grupy, ktora zostala usunieta
+		SET KnL_LiczbaPowtorzen=KnL_LiczbaPowtorzen-(SELECT (C) FROM #gronumery WHERE KnL_GRONumer=GN),
+		KnL_TStampDataMod = DATEDIFF(S,'19900101',GETDATE())
+		WHERE 
+		KnL_GRONumer IN (SELECT GN FROM #gronumery) AND
+		KnL_GIDNumer=@GIDNumer AND KnL_GIDTyp = @GIDTyp
+
+		UPDATE CDN.KntLinki --ustawienie liscia
+		SET KnL_Lisc=0,KnL_TStampDataMod = DATEDIFF(S,'19900101',GETDATE())
+		WHERE 
+		KnL_GiDTyp = @GidTyp AND
+		KnL_GiDFirma = @GidFirma AND
+		KnL_GiDNumer = @GidNumer AND
+		KnL_GroTyp = @GroTyp AND
+		KnL_GroFirma = @GroFirma AND
+		KnL_GroNumer =@GROnumer
+
+		DELETE FROM CDN.KntLinki WHERE KnL_LiczbaPowtorzen=0 AND KnL_GIDTyp = @GIDTyp
+		DROP TABLE #gronumery
+	FETCH NEXT FROM	TriggerCursor INTO @GIDTyp,@GIDFirma,@GIDNumer,@GROTyp,@GROFirma,@GRONumer
+END
+CLOSE TriggerCursor
+DEALLOCATE TriggerCursor
+
+</triggerdef>
+<proceduredef name="KntRodzice">
+CREATE PROCEDURE CDN.KntRodzice
+@GIDNumer	int
+AS
+BEGIN
+DECLARE @n INT
+DECLARE @prevcount INT
+DECLARE @count INT
+
+SET @count=-1
+SET @prevcount=0
+
+CREATE TABLE #tmpnumery(GN INT,C INT)
+INSERT INTO #tmpnumery VALUES(@GIDNumer,1)
+
+WHILE (@prevcount!=@count) --przechodzenie grafu wszerz, jezeli nic nie dodano konczymy
+BEGIN
+  INSERT INTO #tmpnumery SELECT DISTINCT KnG_GRONumer,0 FROM CDN.KntGrupy WHERE KnG_GIDNumer IN(SELECT GN FROM #tmpnumery) AND KnG_GIDTyp=-32 AND KnG_GIDNumer &gt; 0 AND KnG_GRONumer NOT IN (SELECT GN FROM #tmpnumery)
+  SET @prevcount=@count
+  SET @count=(SELECT COUNT(*) FROM #tmpnumery)
+END
+SET @prevcount=0
+SET @count=-1
+WHILE (@prevcount!=@count)
+BEGIN
+DECLARE c CURSOR FOR SELECT GN FROM #tmpnumery
+OPEN c
+FETCH NEXT FROM c INTO @n
+FETCH NEXT FROM c INTO @n --pomijamy pierwszy rekord - dla niego C=1
+IF (@count=-1)
+	SET @count=0
+WHILE @@FETCH_STATUS = 0
+BEGIN
+  UPDATE #tmpnumery --podliczanie ilosci mozliwych sciezek jako sumy ilosci na elementach prowadzacych do elementu
+  SET C=(SELECT SUM(C) FROM #tmpnumery WHERE GN IN (SELECT Kng_GIDNumer FROM CDN.KntGrupy WHERE Kng_GRONumer=@n AND Kng_GIDTyp=-32 AND KnG_GIDNumer &gt; 0))
+  WHERE GN=@n
+  SET @prevcount=@count
+  SET @count=(SELECT SUM(C) FROM #tmpnumery)
+  FETCH NEXT FROM c INTO @n
+END
+CLOSE c
+DEALLOCATE c
+END
+SELECT * FROM #tmpnumery
+END
+</proceduredef>
+</ROOT>

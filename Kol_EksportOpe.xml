@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="KOL_EksportOpe">
+CREATE PROCEDURE CDN.KOL_EksportOpe(@TS INT,@RozmiarPaczki int,@NumerPaczki int,@OpeNumer int)
+AS
+BEGIN TRAN
+DECLARE @WierszOd int
+DECLARE @WierszDo int
+
+SET @WierszOD = @RozmiarPaczki * @NumerPAczki + 1
+SET @WierszDo = @RozmiarPAczki * (@NumerPaczki+1)
+
+CREATE TABLE #TmpTable
+(Ope_GIDNumer int not null,
+Ope_GidTyp int not null,
+Ope_FrsId  int not null, 
+Ope_Ident varchar(8) COLLATE Polish_CI_AS not null, 
+Ope_Nazwisko varchar(30) COLLATE Polish_CI_AS not null,
+Ope_IsAdmin int not null,
+Ope_CzasModyfikacji int,
+LP int identity not null)
+
+INSERT INTO #TmpTable(Ope_GidNumer, Ope_GidTyp, Ope_FrsId, Ope_Ident, Ope_Nazwisko, Ope_IsAdmin, Ope_CzasModyfikacji)
+SELECT Ope_GidNumer, Ope_GidTyp, Ope_FrsId, Ope_Ident, Ope_Nazwisko, Ope_Administrator, Ope_CzasModyfikacji
+FROM CDN.OpeKarty  
+WHERE Ope_Zablokowane &lt; 1 AND Ope_CzasModyfikacji &gt; @TS
+
+SELECT Ope_GidNumer, Ope_GidTyp, Ope_FrsId, Ope_Ident, Ope_Nazwisko, Ope_IsAdmin, Ope_CzasModyfikacji, LP
+FROM #TmpTable
+WHERE LP BETWEEN @WierszOD AND @WierszDo
+ORDER BY LP
+
+DROP TABLE #TmpTable
+COMMIT TRAN
+</proceduredef>
+</ROOT>

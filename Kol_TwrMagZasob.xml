@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="[KOL_TwrMagZasob]">
+CREATE PROCEDURE [CDN].[KOL_TwrMagZasob] @twrkod varchar(40),@magkod varchar(5),@cwart varchar(40)
+AS
+BEGIN
+
+	declare @cn int select @cn=twr_ccknumer from cdn.twrkarty where twr_kod=@twrkod
+	declare @tab table (polozenie varchar(24),ilosc decimal(15,4),cecha varchar(255),mgaid int)
+	declare @tpaid int
+	declare @cecha varchar(255) 
+	declare @magnumer int 
+	 select @magnumer=mag_gidnumer from cdn.magazyny where mag_kod=@magkod 
+	 declare adresy cursor fast_forward read_only for 
+	select tpa_id,tpa_cecha from cdn.twrpartie where tpa_ccknumer in (0,@cn) and tpa_twrnumer in (select twr_gidnumer from cdn.twrkarty where twr_kod=@twrkod) 
+	 open adresy 
+	 fetch next from adresy into @tpaid,@cecha 
+	while @@FETCH_STATUS = 0 
+	 begin 
+	insert into @tab SELECT polozenie,zas_ilosc,@cecha,zas_mgaid FROM [CDN].[PobierzListeAdresowDoWydaniaTowaru] 
+	 (@tpaid,@magnumer,100000) 
+	left join 
+	 ( 
+	select [CDN].[PobierzMagAdres] (mga_id)as polozenie,mga_id 
+	 from cdn.magobszary join cdn.magadresy on MgO_Id=MgA_MgOId where mgo_magnumer=@magnumer 
+	 ) m  on zas_mgaid=m.mga_id 
+	fetch next from adresy into @tpaid,@cecha 
+	end 
+	close adresy 
+	deallocate adresy 
+	select * from @tab where cecha=@cwart
+	END
+</proceduredef>
+</ROOT>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="KOL_SprawdzMagZasob">
+CREATE Procedure CDN.KOL_SprawdzMagZasob(@Ope_Numer int,@Mag_GidNumer int,@Mag_AdresID int)
+AS
+BEGIN 
+
+SELECT  Twr_Kod as KOD,
+        Twr_Nazwa as Nazwa,
+        Tzm_Ilosc as [Ilość],
+        isnull(CDN.PobierzMagAdres(Mga_Id),'&lt;N/O&gt;') as [Położenie],
+        Mag_Kod as [Magazyn],
+        (case when tpa_ccknumer=twr_ccknumer then TpA_Cecha else '' end) as [Cecha],
+		Twr_jm as [Jm],
+		(case when TpA_DataW=0 then '-' else convert(nvarchar(25),dateadd(d,TpA_DataW,'18001228'),104) end) as [DataW]
+FROM  CDN.TwrZasobyMag
+LEFT JOIN CDN.MagAdresy ON TZM_MgAId = Mga_Id
+JOIN CDN.Magazyny on TZM_MagNumer = Mag_GidNumer
+JOIN CDN.TwrPartie ON TpA_Id=TZM_TPaId
+JOIN CDN.TwrKarty ON Tpa_TwrNumer = Twr_GidNumer AND Tpa_TwrTyp = Twr_GidTyp
+WHERE (isnull(Mga_Id,0) = @Mag_AdresID OR -1=@Mag_AdresID) AND Mag_GidNumer = @Mag_GidNumer
+
+END
+</proceduredef>
+</ROOT>

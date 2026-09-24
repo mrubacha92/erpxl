@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza SystemCDN_KonwersjaDo20181" hidden="False">
+if exists(select * from sys.objects where name='SystemCDN_KonwersjaDo20181' and type='TR')
+drop trigger CDN.SystemCDN_KonwersjaDo20181
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza SystemCDN_KonwersjaDo201820" hidden="False">
+if exists(select * from sys.objects where name='SystemCDN_KonwersjaDo201820' and type='TR')
+drop trigger CDN.SystemCDN_KonwersjaDo201820
+</scriptdef>
+</ROOT>

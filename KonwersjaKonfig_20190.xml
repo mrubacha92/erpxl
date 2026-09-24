@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Aktualizacja pól tabel CDN.Konfig" hidden="False">
+SET NOCOUNT ON;
+
+-- Dodanie i atualizacja wpisów do CDN.Konfig
+if not exists(select * from cdn.konfig where kon_numer = 5015 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(5015,0,0,0,'','BI Point adres serwera',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = 5016 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(5016,0,0,0,'0','BI Point połączenie z wykorzystaniem SSL: 0 - nie, 1 - tak',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = 5017)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(5017,0,0,0,'','BI Point odcisk certyfikatu',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = -141 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(-141,0,0,0,'1','Stosuj DevExpress DataGrid',0,0,0)
+
+if not exists(select * from cdn.konfig where kon_numer = -140 and Kon_Lp = 0)
+	insert into cdn.konfig(Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+	values(-140,0,0,0,'1','Czy sprawdzać poprawność NIP',0,0,0)
+else
+	update cdn.Konfig set Kon_Wartosc = '1', Kon_Komentarz = 'Czy sprawdzać poprawność NIP'
+	where kon_numer = -140 and Kon_Lp = 0
+
+update cdn.Konfig 
+set Kon_Wartosc = (case Kon_Wartosc 
+					when '.' then '1' 
+					when ',' then '2'
+					else Kon_Wartosc 
+					end),
+	Kon_Komentarz = 'Separator miejsc dziesiętnych: . - 1; , - 2'
+where Kon_Numer = 2138 and Kon_Lp = 0
+
+update cdn.Konfig 
+set Kon_Wartosc =(case Kon_Wartosc 
+					when '.' then '1' 
+					when ',' then '2'
+					when '&lt;Spacja&gt;' then '3'
+					when '&lt;Brak&gt;' then '4'
+					else Kon_Wartosc 
+					end),
+	Kon_Komentarz = 'Separator grupowania cyfr: . - 1; , - 2; spacja - 3; brak - 4'
+where Kon_Numer = 2139 and Kon_Lp = 0
+
+update CDN.Konfig
+set Kon_Wartosc = 'Operator dla zapisów z aplikacji Comarch HRM'
+where Kon_Numer = 20129 and Kon_Lp = 0
+
+
+if not exists(select * from cdn.Konfig where Kon_Numer in(9829,9830) and Kon_Lp=0 and Kon_Wartosc=1)
+	merge cdn.Konfig as target
+	using (select Numer,Lp,Wartosc,Komentarz from 
+		(values (9836,0,'1','Czy pobierać zasoby wg partii?'),
+				(9828,0,'0','Czy pobierać zasoby wg kasy i cechy dostawy?'),
+				(9829,0,'0','Czy pobierać zasoby wg EAN?'),
+				(9830,0,'0','Czy pobierać zasoby wg daty ważności?')) Kon (Numer,Lp,Wartosc,Komentarz)) as source (Numer,Lp,Wartosc,Komentarz) 
+		on target.Kon_Numer = source.Numer and target.Kon_Lp = source.Lp
+	when matched then
+		update set Kon_Wartosc = Wartosc
+	when not matched by target then
+		insert (Kon_Numer,Kon_Lp,Kon_System,Kon_Status,Kon_Wartosc,Kon_Komentarz,Kon_Archiwalny,Kon_CzasModyfikacji,Kon_Pozycja)
+		values(Numer,Lp,0,0,Wartosc,Komentarz,0,0,0);
+
+SET NOCOUNT OFF;
+</scriptdef>
+</ROOT>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="KOL_SprawdzSer">
+CREATE PROCEDURE CDN.KOL_SprawdzSer (@OpeNumer int, @DokTyp int)
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	declare @frsid int
+	declare @frsoid int
+	declare @serrodz int
+	declare @seriecentrum table(nazwa varchar(5) null,opis varchar(60) null,gidtyp int not null, gidnumer int not null)
+	select @frsoid=Ope_FrSId from cdn.opekarty where ope_gidnumer=@OpeNumer
+	set @serrodz=1
+	while @frsoid&lt;&gt;0 and @serrodz=1
+	begin
+		set @frsid=@frsoid
+		select @serrodz=FRS_SerieZRodzica,@frsoid=frs_gronumer from cdn.frmstruktura where frs_id=@frsoid and frs_warstwa=1 and frs_grotyp=-4272
+	end
+	/*w @frsid mam ID miejsca w strukturze firmy, skad pobierac dostepne serie*/
+	if @frsid=1
+	begin
+		insert into @seriecentrum select ser_nazwa,ser_opis,ser_gidtyp,ser_gidnumer from cdn.serie
+	end
+	else
+	begin
+		insert into @seriecentrum
+		select ser_nazwa,ser_opis,ser_gidtyp,ser_gidnumer from cdn.frmobiekty
+		join cdn.serie on fro_gidtyp=ser_gidtyp and ser_gidnumer=fro_gidnumer
+		where fro_frmid=@frsid and fro_gidtyp=272
+	end
+	/*w @seriecentrum mam wszystkie serie dostepne w miejscu struktury firmy*/
+	/*i przecinam je z seriami z definicji dokumentu*/
+	select a.* from @seriecentrum a
+	join 
+	(select ser_nazwa,ser_opis,ser_gidtyp,ser_gidnumer from cdn.dokrelacje
+	join cdn.serie on dor_mstyp=ser_gidtyp and ser_gidnumer=dor_msnumer
+	where dor_id in (select dok_id from cdn.dokdefinicje where dok_gidtyp=@DokTyp and dok_frsid=1) and dor_mstyp=272) b on b.ser_gidnumer=a.gidnumer
+	order by a.gidnumer
+
+END
+</proceduredef>
+</ROOT>

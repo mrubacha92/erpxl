@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Przepisywanie Trp_RodzajDLG do TrP_Rodzaj w tabeli Traplat" hidden="False">
+set nocount on;
+	Update cdn.traplat set TrP_Rodzaj = TrP_RodzajDLG where TrP_rodzajDLG &lt;&gt; 0 AND trp_gidtyp = 2984 AND TrP_Rodzaj &lt;&gt; TrP_RodzajDLG
+set nocount off;
+</scriptdef>
+</ROOT>
