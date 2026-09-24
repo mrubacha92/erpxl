@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="CenaNetto">
+CREATE FUNCTION CDN.CenaNetto (@Cena DECIMAL(18,4), @TwCID SMALLINT, @StawkaVat DECIMAL(5,2))
+RETURNS DECIMAL(18,4)
+AS 
+BEGIN
+
+DECLARE @CzyBrutto SMALLINT
+
+SELECT @CzyBrutto= CASE WHEN SUBSTRING(Naz_Nazwa,11,1)='B' THEN 1 ELSE 0 END FROM CDN.Nazwy WHERE Naz_GIDTyp = 64 AND Naz_GIDLp = @TwCID
+
+RETURN (@Cena/(1+@CzyBrutto*@StawkaVat/100.00))
+
+END
+</functiondef>
+<functiondef name="CenaBrutto">
+CREATE FUNCTION CDN.CenaBrutto (@Cena DECIMAL(18,4), @TwCID SMALLINT, @StawkaVat DECIMAL(5,2))
+RETURNS DECIMAL(18,4)
+AS 
+BEGIN
+
+DECLARE @CzyNetto SMALLINT
+
+SELECT @CzyNetto= CASE WHEN SUBSTRING(Naz_Nazwa,11,1)='N' THEN 1 ELSE 0 END FROM CDN.Nazwy WHERE Naz_GIDTyp = 64 AND Naz_GIDLp = @TwCID
+
+RETURN (@Cena*(1+@CzyNetto*@StawkaVat/100.00))
+
+END
+</functiondef>
+<functiondef name="CenaUnettowiona">
+CREATE FUNCTION CDN.CenaUnettowiona (
+	@Cena DECIMAL(18, 4)
+	, @FlagaNB VARCHAR(2)
+	, @StawkaVat DECIMAL(5, 2)
+	)
+RETURNS DECIMAL(18, 4)
+AS
+BEGIN
+	RETURN cast(CASE WHEN @FlagaNB = 'N' THEN @Cena ELSE @Cena * 100 / (100 + @StawkaVat) END AS DECIMAL(18, 4))
+END
+</functiondef>
+</ROOT>

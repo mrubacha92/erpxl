@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji CDN.CzyKlasaAtrOkresowa" hidden="True">
+if exists(select type from sysobjects where name='CzyKlasaAtrOkresowa' and type='FN')
+	drop function CDN.CzyKlasaAtrOkresowa
+</scriptdef>
+<scriptdef name="Tworzenie funkcji CDN.CzyKlasaAtrOkresowa" hidden="False">
+CREATE FUNCTION CDN.CzyKlasaAtrOkresowa(@KlasaAtr int)
+RETURNS int
+AS
+BEGIN
+	IF EXISTS(SELECT 1 FROM CDN.AtrybutyKlasy WHERE AtK_ID = @KlasaAtr AND AtK_Okresowe = 1)
+		RETURN 1
+
+	RETURN 0
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji CDN.CzyKlasaAtrOkresowa" hidden="False">
+GRANT EXEC ON CDN.CzyKlasaAtrOkresowa TO CDNRaport
+</scriptdef>
+</ROOT>

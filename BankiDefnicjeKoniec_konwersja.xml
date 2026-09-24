@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Przepisanie warunków lokat do definicji banków (Krok:Uworzenie wpisów w tabeli cdn.BankDefinicje)" hidden="False">
+SET NOCOUNT ON
+
+DECLARE  @Bank_Kod VARCHAR(20),@Bank_Nazwa VARCHAR(100), @Bank_Id int, @BnD_Id int;
+
+DECLARE bank_kursor CURSOR FOR 
+SELECT distinct Bnk_Kod, Bnk_Nazwa, Bnk_GIDNumer FROM CDN.BankiFormKryt join cdn.Banki on BFK_BankDoUsuniecia = Bnk_GIDNumer FOR UPDATE OF BFK_BankDefId, Bnk_BnDId;
+OPEN bank_kursor
+FETCH NEXT FROM bank_kursor INTO @Bank_Kod ,@Bank_Nazwa,@Bank_Id ;
+
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	INSERT INTO cdn.BankiDefinicje (BND_Kod,BnD_Nazwa) VALUES(@Bank_Kod,@Bank_Nazwa) 
+	IF @@ROWCOUNT &gt; 0 
+	BEGIN
+		set @BnD_Id = SCOPE_IDENTITY();
+
+		UPDATE CDN.BankiFormKryt 
+		SET BFK_BankDefId = @BnD_Id
+		WHERE BFK_BankDoUsuniecia = @Bank_Id
+
+		UPDATE CDN.Banki
+		SET Bnk_BnDId = @BnD_Id
+		WHERE Bnk_GIDNumer = @Bank_Id
+
+	END
+	FETCH NEXT FROM bank_kursor INTO @Bank_Kod ,@Bank_Nazwa,@Bank_Id ;
+END
+
+CLOSE bank_kursor;
+DEALLOCATE bank_kursor; 
+
+ALTER TABLE cdn.BankiFormKryt
+DROP COLUMN BFK_BankDoUsuniecia;
+
+	
+
+SET NOCOUNT OFF
+</scriptdef>
+</ROOT>

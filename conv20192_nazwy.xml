@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja nazw drukarek fiskalnych" hidden="True">
+	update cdn.nazwy set Naz_Nazwa1 = 'Posnet Thermal HS i FV' where Naz_Nazwa1='Posnet Thermal HS i ' and Naz_GIDNumer=1 and Naz_GIDTyp=2672
+</scriptdef>
+</ROOT>

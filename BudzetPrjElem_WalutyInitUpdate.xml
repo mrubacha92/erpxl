@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Ustawienie waluty systemowej na etapach budżetów" hidden="False">
+	DECLARE @NK_WalutaSystemowa int;
+	SELECT @NK_WalutaSystemowa = 211;
+
+	DECLARE @WalutaSystemowa VARCHAR(5);
+	--SELECT @WalutaSystemowa = Kon_Wartosc from cdn.Konfig where Kon_Komentarz = 'Waluta systemowa';
+	SELECT @WalutaSystemowa = Kon_Wartosc from cdn.Konfig where Kon_Numer = 211;
+	UPDATE CDN.BudzetPrjElem
+	SET BPE_Waluta = @WalutaSystemowa,
+		BPE_StawkaWaluta = BPE_Stawka,
+		BPE_KursL = 1,
+		BPE_KursM = 1;
+</scriptdef>
+</ROOT>

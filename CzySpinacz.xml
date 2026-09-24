@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="CzySpinacz">
+create procedure CDN.CzySpinacz @GIDTyp integer,@SpiTyp integer
+AS
+begin
+
+  declare @Spinacz integer;
+  if ( @GIDTyp=1520 or @GIDTyp=1528 or @GIDTyp=1521 or @GIDTyp=1529 or @GIDTyp=2033 or @GIDTyp=2041 or @GIDTyp=2035 or @GIDTyp=2043 or @GIDTyp=2037 or @GIDTyp=2045 or @GIDTyp=2036  or @GIDTyp=2044 or @GIDTyp=2039  or @GIDTyp=2047)
+      and @SpiTyp=0 
+    set @Spinacz=1
+  else
+    set @Spinacz=0
+  return(@Spinacz)
+end
+</proceduredef>
+</ROOT>

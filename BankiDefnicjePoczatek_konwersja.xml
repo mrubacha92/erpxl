@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Przepisanie warunków lokat do definicji banków (Krok:Dodanie pola tymczasowego do tabeli BankiFormKryt) " hidden="False">
+SET NOCOUNT ON
+
+ALTER TABLE cdn.BankiFormKryt
+ADD  BFK_BankDoUsuniecia INT;
+
+SET NOCOUNT OFF
+</scriptdef>
+<scriptdef name="Przepisanie warunków lokat do definicji banków (Krok: usuwanie klucza obcego)" hidden="False">
+IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'CDN.FK_FBKBank') AND parent_object_id = OBJECT_ID(N'CDN.BankiFormKryt'))
+	ALTER TABLE CDN.BankiFormKryt DROP CONSTRAINT FK_FBKBank;
+</scriptdef>
+<scriptdef name="Przepisanie warunków lokat do definicji banków (Krok:Wypełnienie pola tymczasowego)" hidden="False">
+SET NOCOUNT ON
+
+
+UPDATE cdn.BankiFormKryt
+SET BFK_BankDoUsuniecia = BFK_BankID,
+	BFK_BankId = 0;
+
+
+
+SET NOCOUNT OFF
+</scriptdef>
+</ROOT>
