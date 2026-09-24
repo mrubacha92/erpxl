@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="StanyTowaruWOddzialach">
+CREATE PROCEDURE CDN.StanyTowaruWOddzialach (@Twr_GIDNumer INT)
+AS
+SELECT TwZ_MagNumer Id, MAX(MAG_Kod +' ('+MAG_Miasto + ', '+MAG_Ulica+', '+MAG_Adres+', '+MAG_Opis+')') Magazyn, SUM(TwZ_IlSpr) Ilosc 
+FROM CDN.TwrZasoby JOIN CDN.Magazyny ON TwZ_MagNumer=MAG_GIDNumer
+WHERE TwZ_TwrNumer=@Twr_GIDNumer
+GROUP BY TwZ_MagNumer
+</proceduredef>
+</ROOT>

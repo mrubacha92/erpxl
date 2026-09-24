@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji SumaDokBezPlatnosci" hidden="True">
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE NAME = 'SumaDokBezPlatnosci'
+			AND xtype = 'FN'
+		)
+	DROP FUNCTION CDN.SumaDokBezPlatnosci;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji SumaDokBezPlatnosci" hidden="False">
+CREATE FUNCTION CDN.SumaDokBezPlatnosci (
+	@p_KntNumer INT,
+	@p_FrSID INT,
+	@p_LimitAkw TINYINT,
+	@p_TrnNumer INT = 0,
+	@jestLimitCelowy TINYINT = NULL
+	)
+	-- Funkcja zwraca sume wartosci dokumentów nie generujących płatności (WZ, WZK, PZ, PZK)
+	-- dla konkretnego kontrahenta
+	-- pomijane są dokumenty spięte do spinaczy
+	-- 
+	-- Format wyniku: 
+	-- Wartosc 
+	-- 
+	-- Wersja 9.0   12.11.2008  MF
+	-- 
+	-- Parametry: 
+	-- @p_KntNumer        Numer kontrahenta dla którego liczymy wartość kredytu
+	-- @p_FrSID			  Właściciel dokumentu, wartość wykorzystywana gdy parametr @p_LimitAkw &gt; 0
+	-- @p_LimitAkw        Czy przekazany kontrahent jest akwizytorem
+	-- 2017.0.0 Limit kredytu przypisany do zamówienia 
+	-- 2019.1.0 &quot;@jestLimitCelowy TINYINT = NULL&quot; może być juz wyliczone wcześniej dla danego dokumentu
+RETURNS VARCHAR(255)
+AS
+BEGIN
+	DECLARE @DokBezPlatnosci DECIMAL(28, 4)
+
+	SET @jestLimitCelowy = ISNULL(@jestLimitCelowy, cdn.CzyJestLimitCelowy(@p_TrnNumer, 0, 0))
+
+	IF (@p_LimitAkw &gt; 0)
+		-- policzenie płatności z dokumentów nie generujących płatności (WZ, WZK, PZ, PZK, WZE, WKE) dla akwizytora
+		SELECT @DokBezPlatnosci = sum(Wartosc)
+		FROM (
+			SELECT CASE 
+					WHEN TrE_GIDTyp IN (2001, 2005, 2009, 2013)
+						THEN round(sum(CASE 
+										WHEN zafakturowana.Ilosc = TrE_Ilosc -- przyrównanie do nulla zwraca false
+											THEN 0
+										WHEN TrE_Ilosc &gt; zafakturowana.Ilosc -- przyrównanie do nulla zwraca false
+											THEN TrE_KsiegowaBrutto / TrE_Ilosc * (TrE_Ilosc - zafakturowana.Ilosc)
+										ELSE TrE_KsiegowaBrutto
+										END), 2)
+					WHEN TrE_GIDTyp IN (1489, 1497)
+						THEN round(sum(CASE 
+										WHEN zafakturowana.Ilosc = TrE_Ilosc
+											THEN 0
+										WHEN TrE_Ilosc &gt; zafakturowana.Ilosc
+											THEN - TrE_KsiegowaBrutto / TrE_Ilosc * (TrE_Ilosc - zafakturowana.Ilosc)
+										ELSE - TrE_KsiegowaBrutto
+										END), 2)
+					ELSE 0
+					END Wartosc,
+				CASE 
+					WHEN @jestLimitCelowy = 1
+						THEN CDN.CzyJestLimitCelowy(@p_TrnNumer, 0, TrE_GIDNumer)
+					ELSE CDN.CzyJestLimitCelowy(TrE_GIDNumer, 0, 0)
+					END jestLimitCelowy
+			FROM cdn.tranag
+			JOIN cdn.TraElem ON TrN_GIDNumer = TrE_GIDNumer
+			LEFT JOIN (
+				SELECT TrS_SpiNumer SpiNumer,
+					TrS_SpiLp SpiLp,
+					SUM(TrS_Ilosc) Ilosc
+				FROM cdn.TraSElem
+				WHERE TrS_SpiNumer &lt;&gt; 0 AND TrS_SpiLp &lt;&gt; 0 --optymalizacja 
+				GROUP BY TrS_SpiNumer,
+					TrS_SpiLp
+				) zafakturowana ON TrE_GIDNumer = SpiNumer
+				AND TrE_GIDLp = SpiLp
+			WHERE trn_akwtyp = 32
+				AND trn_akwnumer = @p_KntNumer
+				AND trn_platnosci = 0
+				AND trn_frsid = @p_FrSID
+				AND TrN_SpiTyp &lt;= 0
+				AND trn_gidtyp IN (2001, 2009, 1489, 1497, 2005, 2013) --WZ, WZK, PZ, PZK, WZE, WKE
+			GROUP BY TrE_GIDNumer,
+				TrE_GIDTyp
+			) aaa
+		WHERE jestLimitCelowy = @jestLimitCelowy
+	ELSE
+		-- policzenie płatności z dokumentów nie generujących płatności (WZ, WZK, PZ, PZK, WZE, WKE) dla kontrahenta
+		SELECT @DokBezPlatnosci = sum(Wartosc)
+		FROM (
+			SELECT CASE 
+					WHEN TrE_GIDTyp IN (2001, 2005, 2009, 2013)
+						THEN round(sum(CASE 
+										WHEN zafakturowana.Ilosc = TrE_Ilosc
+											THEN 0
+										WHEN TrE_Ilosc &gt; zafakturowana.Ilosc
+											THEN TrE_KsiegowaBrutto / TrE_Ilosc * (TrE_Ilosc - zafakturowana.Ilosc)
+										ELSE TrE_KsiegowaBrutto
+										END), 2)
+					WHEN TrE_GIDTyp IN (1489, 1497)
+						THEN round(sum(CASE 
+										WHEN zafakturowana.Ilosc = TrE_Ilosc
+											THEN 0
+										WHEN TrE_Ilosc &gt; zafakturowana.Ilosc
+											THEN - TrE_KsiegowaBrutto / TrE_Ilosc * (TrE_Ilosc - zafakturowana.Ilosc)
+										ELSE - TrE_KsiegowaBrutto
+										END), 2)
+					ELSE 0
+					END Wartosc,
+				CASE 
+					WHEN @jestLimitCelowy = 1
+						THEN CDN.CzyJestLimitCelowy(@p_TrnNumer, 0, TrE_GIDNumer)
+					ELSE CDN.CzyJestLimitCelowy(TrE_GIDNumer, 0, 0)
+					END jestLimitCelowy
+			FROM cdn.tranag
+			JOIN cdn.TraElem ON TrN_GIDNumer = TrE_GIDNumer
+			LEFT JOIN (
+				SELECT TrS_SpiNumer SpiNumer,
+					TrS_SpiLp SpiLp,
+					SUM(TrS_Ilosc) Ilosc
+				FROM cdn.TraSElem
+				WHERE TrS_SpiNumer &lt;&gt; 0 AND TrS_SpiLp &lt;&gt; 0 --optymalizacja 
+				GROUP BY TrS_SpiNumer,
+					TrS_SpiLp
+				) zafakturowana ON TrE_GIDNumer = SpiNumer
+				AND TrE_GIDLp = SpiLp
+			WHERE TrN_KnPTyp = 32
+				AND TrN_KnPNumer = @p_KntNumer
+				AND TrN_Platnosci = 0
+				AND TrN_SpiTyp &lt;= 0
+				AND TrN_GIDTyp IN (2001, 2009, 1489, 1497, 2005, 2013) --WZ, WZK, PZ, PZK, WZE, WKE
+			GROUP BY TrE_GIDNumer,
+				TrE_GIDTyp
+			) aaa
+		WHERE jestLimitCelowy = @jestLimitCelowy
+
+	RETURN isnull(@DokBezPlatnosci, 0)
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji SumaDokBezPlatnosci" hidden="False">
+GRANT EXECUTE
+	ON CDN.SumaDokBezPlatnosci
+	TO CDNRaport;
+</scriptdef>
+</ROOT>

@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="StanRealizacjiZlecenia">
+CREATE function CDN.StanRealizacjiZlecenia( 
+@p_gt smallint, 
+@p_gf integer, 
+@p_gn integer, 
+@p_typ integer, 
+@p_MagFirma integer, 
+@p_MagNumer integer, 
+@p_ZlcGIDTyp smallint,
+@p_ZlcGIDFirma integer,
+@p_ZlcGIDNumer integer,
+@p_ZlcGIDLp smallint,
+@p_biezacadata integer,
+@p_data_pocz integer,
+@p_data_kon integer
+) 
+
+Returns  varchar(128) 
+AS 
+BEGIN 
+  declare @retval         varchar(128); 
+  declare @opuscic      integer; 
+  declare @iloscSpr       Decimal(28,4); 
+  declare @iloscMag     Decimal(28,4);
+  declare @iloscRez      Decimal(28,4);
+  declare @iloscZam     Decimal(28,4);
+  declare @iloscZlcZre  Decimal(28,4);
+  declare @Cena          varchar(20); 
+  declare @Waluta       varchar(3); 
+  declare @ZnakZero  varchar(1); 
+  declare @statusUsluga integer; 
+  declare @wartoscstanu Decimal(28,2); 
+
+
+ 
+  -- rozroznienie obiektow, ktore nie maja stanow 
+  if (@p_typ=0 or @p_typ=3 or @p_typ=4 or @p_typ=6 or @p_typ is null) 
+    -- obiekty bezstanowe lub przypadek, gdy interesują nas tylko ceny 
+    begin 
+      set @ZnakZero='-' 
+      set @statusUsluga=1 
+    end 
+  else 
+    -- obiekty stanowe 
+    begin 
+      set @ZnakZero='0' 
+      set @statusUsluga=0 
+    end; 
+  -- Koniec rozrozniania obiektow 
+  -- 
+  -- 
+
+  if(@statusUsluga=0 )        -- jest to towar dla ktorego stany mają sens 
+    begin                    -- pobranie ilosci 
+      if(@p_MagNumer&gt;0)      --                  z konkretnego magazynu 
+         begin 
+          select @IloscSpr=sum(TwZ_IlSpr), @iloscMag=sum(TwZ_IlMag) 
+          from cdn.TwrZasoby 
+          where 
+            TwZ_TwrTyp=@p_gt and TwZ_TwrFirma=@p_gf and TwZ_TwrNumer=@p_gn 
+            and TwZ_MagTyp=208 and TwZ_MagFirma=@p_MagFirma 
+            and TwZ_MagNumer=@p_MagNumer ;
+         end
+      else 
+        if(@p_MagNumer=0)  --                    ze wszystkich magazynow 
+          begin
+             select @IloscSpr=sum(TwZ_IlSpr), @iloscMag=sum(TwZ_IlMag) 
+            from cdn.TwrZasoby JOIN  cdn.Magazyny ON (TwZ_MagTyp = Mag_GIDTyp AND TwZ_MagFirma = Mag_GIDFirma AND 
+                   TwZ_MagNumer = Mag_GIDNumer) 
+            where 
+              TwZ_TwrTyp=@p_gt and TwZ_TwrFirma=@p_gf and TwZ_TwrNumer=@p_gn  
+          end
+        -- 
+        -- 
+        -- Koniec ze wszystkich magazynów 
+        -- 
+        else --                Informacja o magazynach w tabeli pomocniczej 
+          -- 
+          -- 
+            select @IloscSpr=sum(TwZ_IlSpr), @iloscMag=sum(TwZ_IlMag)
+            from cdn.TwrZasoby, cdn.MagWybor 
+            where 
+              TwZ_TwrTyp=@p_gt and TwZ_TwrFirma=@p_gf and TwZ_TwrNumer=@p_gn 
+              and TwZ_MagTyp=208 and TwZ_MagFirma=MgW_MagFirma 
+              and TwZ_MagNumer=MgW_MagNumer 
+              and MgW_SesjaID=-@p_MagFirma and MgW_Watek=-@p_MagNumer 
+        -- 
+        -- 
+        -- Koniec z wybranych magazynów 
+        -- 
+      -- nie jest to stan zerowy trzeba pobrac dalsze informacje 
+      -- 
+      begin 
+        if(@p_MagNumer&gt;0)    --                  z konkretnego magazynu 
+           BEGIN
+            set @IloscRez = 
+              (select sum(Rez_Ilosc-Rez_Zrealizowano) from cdn.Rezerwacje 
+               where 
+                rez_gidtyp=2576 
+                and Rez_twrtyp=@p_gt and Rez_twrfirma=@p_gf 
+                and Rez_twrnumer=@p_gn 
+                and Rez_MagTyp=208 and Rez_MagFirma=@p_MagFirma 
+                and Rez_MagNumer=@p_MagNumer 
+                and Rez_DataWaznosci&gt;=@p_biezacadata -- data waznosci &gt; dzis 
+                and Rez_DataAktywacji&lt;=@p_biezacadata -- dataAktywacji &gt; dzis 
+                and Rez_aktywna=1 
+                and Rez_Ilosc&lt;&gt;0);  -- aby nie brac anulowanych zamowien 
+
+               set @IloscZam = (select sum(Rez_Ilosc- Rez_Zrealizowano)  from cdn.Rezerwacje 
+               where rez_gidtyp=2592 
+                         and Rez_TwrTyp=@p_gt and Rez_TwrFirma=@p_gf and Rez_TwrNumer=@p_gn 
+                         and Rez_MagTyp=208 and Rez_MagFirma=@p_MagFirma and Rez_MagNumer=@p_MagNumer 
+                         and Rez_DataRealizacji&gt;=@p_data_pocz and Rez_DataRealizacji&lt;=@p_data_kon 
+                         and Rez_DataWaznosci&gt;=@p_biezacadata      -- data waznosci &gt; dzis 
+                         and Rez_DataAktywacji&lt;=@p_biezacadata -- dataAktywacji &gt; dzis 
+                         and Rez_aktywna=1 
+                         and Rez_Ilosc&lt;&gt;0);  -- aby nie brac pod uwage anulowanych zamowien 
+
+
+          -- 
+          -- koniec z konkretnego magazynu 
+          -- 
+           END
+        else 
+          if(@p_MagNumer=0)  --                  ze wszystkich magazynow 
+            BEGIN           
+              set @IloscRez = 
+                (select sum(Rez_Ilosc-Rez_Zrealizowano) 
+                 from cdn.Rezerwacje LEFT OUTER JOIN cdn.Magazyny ON (Rez_MagTyp = Mag_GIDTyp AND Rez_MagFirma = Mag_GIDFirma AND Rez_MagNumer = Mag_GIDNumer) 
+                 where 
+                  Rez_gidtyp=2576 
+                  and Rez_twrtyp=@p_gt and Rez_twrfirma=@p_gf 
+                  and Rez_twrnumer=@p_gn 
+                  and Rez_DataWaznosci&gt;=@p_biezacadata -- data waznosci &gt; dzis 
+                  and Rez_DataAktywacji&lt;=@p_biezacadata -- dataAktywacji &gt; dzis 
+                  and Rez_aktywna=1 
+                  and Rez_Ilosc&lt;&gt;0 );  -- aby nie brac anulowanych zamowien 
+
+              set @IloscZam = 
+                (select sum(Rez_Ilosc-Rez_Zrealizowano) 
+                 from cdn.Rezerwacje LEFT OUTER JOIN cdn.Magazyny ON (Rez_MagTyp = Mag_GIDTyp AND Rez_MagFirma = Mag_GIDFirma AND Rez_MagNumer = Mag_GIDNumer) 
+                 where 
+                  Rez_gidtyp=2592
+                  and Rez_twrtyp=@p_gt and Rez_twrfirma=@p_gf 
+                  and Rez_twrnumer=@p_gn 
+                  and Rez_DataRealizacji&gt;=@p_data_pocz and Rez_DataRealizacji&lt;=@p_data_kon 
+                  and Rez_DataWaznosci&gt;=@p_biezacadata -- data waznosci &gt; dzis 
+                  and Rez_DataAktywacji&lt;=@p_biezacadata -- dataAktywacji &gt; dzis 
+                  and Rez_aktywna=1 
+                  and Rez_Ilosc&lt;&gt;0 );  -- aby nie brac anulowanych zamowien 
+
+             END
+            -- koniec ze wszystkich magazynow 
+            -- 
+          else               -- Informacja o magazynach w tabeli pomocniczej 
+            BEGIN
+              set @IloscRez = 
+                (select sum(Rez_Ilosc-Rez_Zrealizowano) 
+                 from cdn.Rezerwacje, cdn.MagWybor 
+                 where Rez_gidtyp=2576 
+                  and Rez_twrtyp=@p_gt and Rez_twrfirma=@p_gf 
+                  and Rez_twrnumer=@p_gn 
+                  and Rez_MagTyp=208 and Rez_MagFirma=MgW_MagFirma 
+                  and Rez_MagNumer=MgW_MagNumer 
+                  and MgW_SesjaID=-@p_MagFirma and MgW_Watek=-@p_MagNumer 
+                  and Rez_DataWaznosci&gt;=@p_biezacadata -- data waznosci &gt; dzis 
+                  and Rez_DataAktywacji&lt;=@p_biezacadata -- dataAktywacji &gt; dzis 
+                  and Rez_aktywna=1 
+                  and Rez_Ilosc&lt;&gt;0)  -- aby nie brac anulowanych zamowien 
+ 
+
+             set @IloscZam = 
+                (select sum(Rez_Ilosc-Rez_Zrealizowano) 
+                 from cdn.Rezerwacje, cdn.MagWybor 
+                 where Rez_gidtyp=2592 
+                  and Rez_twrtyp=@p_gt and Rez_twrfirma=@p_gf 
+                  and Rez_twrnumer=@p_gn 
+                  and Rez_MagTyp=208 and Rez_MagFirma=MgW_MagFirma 
+                  and Rez_MagNumer=MgW_MagNumer 
+                  and MgW_SesjaID=-@p_MagFirma and MgW_Watek=-@p_MagNumer 
+                  and Rez_DataRealizacji&gt;=@p_data_pocz and Rez_DataRealizacji&lt;=@p_data_kon 
+                  and Rez_DataWaznosci&gt;=@p_biezacadata -- data waznosci &gt; dzis 
+                  and Rez_DataAktywacji&lt;=@p_biezacadata -- dataAktywacji &gt; dzis 
+                  and Rez_aktywna=1 
+                  and Rez_Ilosc&lt;&gt;0)  -- aby nie brac anulowanych zamowien 
+ 
+            -- 
+            END
+            -- koniec z wybranych magazynow 
+            -- 
+        set @iloscRez=IsNull(@iloscRez,0) 
+        -- 
+        -- 
+      --RW
+     -- PW
+    -- koniec pobierania dalszych informacji 
+      end
+    end 
+
+         if (@p_ZlcGIDTyp &lt;&gt; 0) 
+            BEGIN 
+                 set  @iloscZlcZre  = (IsNull((Select sum(TrE_ilosc) from cdn.TraElem where TrE_GIDTyp= 1616  and TrE_GIDFirma=@p_gf   and TrE_ZlcTyp= @p_ZlcGIDTyp 
+                         and TrE_ZlcFirma= @p_ZlcGIDFirma   and TrE_ZlcNumer=@p_ZlcGIDNumer and TrE_ZlcLp=@p_ZlcGIDLp),0) +
+                                                 IsNull((Select sum(TrE_ilosc) from cdn.TraElem where TrE_GIDTyp= 2033  and TrE_GIDFirma=@p_gf   and TrE_ZlcTyp= @p_ZlcGIDTyp 
+                         and TrE_ZlcFirma= @p_ZlcGIDFirma   and TrE_ZlcNumer=@p_ZlcGIDNumer and TrE_ZlcLp=@p_ZlcGIDLp),0) +
+                                                 IsNull((Select sum(Mas_ilosc) from cdn.MagSElem where Mas_GIDTyp= 1601  and Mas_GIDFirma=@p_gf   and Mas_ZrdTyp= @p_ZlcGIDTyp 
+                         and Mas_ZrdFirma= @p_ZlcGIDFirma   and Mas_ZrdNumer=@p_ZlcGIDNumer and Mas_ZrdLp=@p_ZlcGIDLp),0) - 
+                                IsNull((Select sum(TrE_ilosc) from cdn.TraElem where TrE_GIDTyp= 1617  and TrE_GIDFirma=@p_gf   and TrE_ZlcTyp= @p_ZlcGIDTyp 
+                         and TrE_ZlcFirma= @p_ZlcGIDFirma   and TrE_ZlcNumer=@p_ZlcGIDNumer and TrE_ZlcLp=@p_ZlcGIDLp),0)); 
+           END 
+         else 
+                 set  @iloscZlcZre  = (IsNull((Select sum(TrE_ilosc) from cdn.TraElem where TrE_GIDTyp= 1616  and TrE_GIDFirma=@p_gf ),0) +
+                               IsNull((Select sum(TrE_ilosc) from cdn.TraElem where TrE_GIDTyp= 2033  and TrE_GIDFirma=@p_gf ),0) +
+                               IsNull((Select sum(Mas_ilosc) from cdn.MagSElem where Mas_GIDTyp= 1601  and Mas_GIDFirma=@p_gf),0) -        
+                                IsNull((Select sum(TrE_ilosc) from cdn.TraElem where TrE_GIDTyp= 1617  and TrE_GIDFirma=@p_gf),0)); --      end
+  -- 
+  -- 
+
+
+    set @iloscSpr=IsNull(@iloscSpr,0) 
+    set @iloscMag=IsNull(@iloscMag,0) 
+    set @iloscZam=IsNull(@iloscZam,0) 
+    set @iloscZlcZre=IsNull(@iloscZlcZre,0)    
+ 
+    if (@statusUsluga=0) 
+        set @retval= 
+          cast(@iloscSpr as varchar(28))+':' 
+          +cast(@iloscMag as varchar(28))+':' 
+          +cast(@iloscRez as varchar(28))+':' 
+          +cast(@iloscZam as varchar(28))+':' 
+         +cast(@iloscZlcZre as varchar(28))
+    else 
+       set @retval= 
+          @ZnakZero+':' 
+          +@ZnakZero+':' 
+          +@ZnakZero+':' 
+          +@ZnakZero+':' 
+          +cast(@iloscZlcZre as varchar(28))
+
+  return @retval 
+END 
+</functiondef>
+</ROOT>

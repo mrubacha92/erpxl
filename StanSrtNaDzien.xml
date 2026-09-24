@@ -1,0 +1,957 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="StanSrtNaDzien">
+CREATE      PROCEDURE CDN.StanSrtNaDzien( 
+@p_NaDzien datetime, 
+@p_DtDataOd datetime, 
+@p_DtDataDo datetime, 
+@p_DataDokD  datetime,  --data zapisu dokumentu
+@p_Grupa varchar(40), 
+@p_Akronim varchar(40), 
+@p_Ksiega varchar(40), 
+@p_KST varchar(20), 
+@p_Status int, 
+@p_Rodzaj int, 
+@p_MetodaUm int, 
+@p_MetodaAm int, 
+@p_Dwutorowosc int, 
+@p_StawkaBilansowa Decimal(7,2), 
+@p_StawkaPodatkowa Decimal(7,2), 
+@p_PodlegaAMP int, 
+@p_NrInw int, 
+@p_KnDAkronim varchar(50), 
+@p_PrcBezwzglednie int, 
+@p_PrcAkronim varchar(50), 
+@p_MiejsceBezwzglednie int, 
+@p_MiejsceUzyw varchar(30), 
+@p_Zlikwidowany int, 
+@p_DtLikwidacji datetime, 
+@p_SposobLikw varchar(20), 
+@p_Sortowanie int, 
+@p_AtK1  varchar(40), 
+@p_Atr1  varchar(100), 
+@p_AtK2  varchar(40), 
+@p_Atr2  varchar(100), 
+@p_AtK3  varchar(40), 
+@p_Atr3  varchar(100), 
+@p_AtK4  varchar(40), 
+@p_Atr4  varchar(100), 
+@p_AtK5  varchar(40), 
+@p_Atr5  varchar(100),
+@p_Waluta  varchar(5),
+@p_ZestTryb tinyint=0
+) 
+/* 
+wywołanie przykładowe 
+exec CDN.StanSrtNaDzien (ts '2003-12-31 00:00:00'),(ts '1803-10-08 00:00:00'),(ts '2103-10-08 00:00:00'),(ts '2003-12-31 00:00:00'),'', '%czajnik%', '', '',-1,-1,-1,-1,-1,-1,-1,-1,-1,'',-1,'',-1,'',0,(ts '1900-12-31 00:00:00'),'',1,'','','','','','','','','',''
+*/ 
+ 
+ --@p_NaDzien - data w formacie (ts '2003-12-31 00:00:00') dzień na który chcemy uzyskać raport 
+ --@p_DtDataOd - zakres dat w których środek został przyjęty do eksploatacji 
+ --@p_DtDataDo 
+ --@p_DataDokD - data zapisu dokumentow (bierze pod uwage dok zapisane do ww daty)
+ -- @p_Grupa - do jakiej grupy ma należeć - '' pusty string zwraca dla wszystkich grup 
+ -- @p_Akronim - akronim środka 
+ -- @p_Ksiega - jaka jest ksiega inwentarzowa - '' pusty string zwraca dla wszystkich 
+ -- @p_KST klasyfikacja rodzajowa srodka 
+/*  @p_Status - 
+ 0.  - 1 wszystkich, 
+ 1. AKYTYWNYCH (nieumorzonych, niezamortyzowanych) 
+ 2. AKTYWNYCH (nieumorzonych) 
+ 3. AKTYWNYCH (niezamortyzowanych) 
+ 4. AKTYWNYCH  (umorzonych, zamortyzowanych) 
+ 5. AKTYWNYCH  (umorzonych) 
+ 6. AKTYWNYCH  (zamortyzowanych) 
+ 7. AKTYWNYCH (umorzonych, nieumorzonych, zamortyzowanych, niezamortyzowanych) 
+*/ 
+ -- @p_Rodzaj - jakiego ma być rodzaju = -1 zwraca dla wszystkich rodzajów 
+ -- @p_MetodaUm - metoda amortyzacji 
+ -- @p_MetodaAm - metoda amortyzacji 
+ -- @p_Dwutorowosc - czy amortyzacja dwutorowa - =-1 dla wszystkich 
+ -- @p_StawkaBilansowa - dla stawki*wsp - = -1 stawka nieistotna 
+ -- @p_StawkaPodatkowa Decimal(7,2) - dla stawki*wsp - = -1 stawka nieistotna 
+ -- @p_PodlegaAMP czy podlega odpisowi przyspiewszonemu 
+ -- @p_NrInw - numer inwentarzowy 
+ -- @p_KnDAkronim akronim kontrahenta docelowego 
+ -- @p_PrcBezwzglednie 0 - w dniu na ktory jest raport - 1 - zapisany na karcie 
+ -- @p_PrcAkronim akronim odpowiedzialnego pracownika 
+ -- @p_MiejsceBezwzglednie 0 0 - w dniu na ktory jest raport - 1 - zapisany na karcie 
+ -- @p_MiejsceUzyw - miejsce używania 
+ -- @p_Zlikwidowany - parametr czy ST zlikwidowany 
+ -- @p_DtLikwidacji - data likwidacji 
+ -- @p_SposobLikw - sposób likwidacji 
+ -- @p_Sortowanie - 1 - wg nr inwentarzowego, 2 - wg KŚT, 3 - wg Akronimu, 4 - wg Księgi/w ramach księgi wg grypy 
+ -- @p_AtK1 - klasa atrybutu 1 
+ -- @p_Atr1   - wartość atrybutu 1 
+ -- @p_AtK2 - klasa atrybutu 2 
+ -- @p_Atr2    - wartość atrybutu 2 
+ -- @p_AtK3 - klasa atrybutu 3 
+ -- @p_Atr3   - wartość atrybutu 3 
+ -- @p_AtK4 - klasa atrybutu 4 
+ -- @p_Atr4   - wartość atrybutu 4 
+ -- @p_AtK5 - klasa atrybutu 5 
+ -- @p_Atr5   - wartość atrybutu 5 
+ 
+ 
+AS 
+/*   declare @parametry varchar(255); 
+   declare @parametry1 varchar(255); 
+   declare @parametry2 varchar(255); 
+   declare @parametry3 varchar(255); 
+   set @parametry = convert(varchar,@p_NaDzien)+' OD '+convert(varchar,@p_DtDataOd)+' DO '+convert(varchar,@p_DtDataDo); 
+   set @parametry = @parametry+'Grupa '+@p_Grupa+' Akronim : '+@p_Akronim+' ksiega '+@p_Ksiega+' KST '+@p_KST; 
+   set @parametry1 = ' Status '+convert(varchar,@p_Status)+' Rodzaj '+convert(varchar,@p_Rodzaj)+' Metoda '+convert(varchar,@p_Metoda); 
+   set @parametry1 = @parametry1+' Dwutorowosc '+convert(varchar,@p_Dwutorowosc)+' Bilansowa '+convert(varchar,@p_StawkaBilansowa)+' Podatkowa '+convert(varchar,@p_StawkaPodatkowa); 
+   set @parametry2 = @parametry2+' AMP '+convert(varchar,@p_PodlegaAMP)+' Nr inw '+convert(varchar,@p_NrInw)+' KndAkronim '+@p_KnDAkronim+' Prcbezwzglednie '+convert(varchar,@p_PrcBezwzglednie); 
+   set @parametry3 = ' prcakronim '+@p_PrcAkronim+' miejscebezwzgl '+convert(varchar,@p_MiejsceBezwzglednie)+' Miejsce '+@p_MiejsceUzyw+' zlikwidowany '+convert(varchar,@p_Zlikwidowany); 
+   set @parametry3 = @parametry3+' Data L '+convert(varchar,@p_DtLikwidacji)+' Sposoblikwidacj '+@p_SposobLikw+' sortowanie '+convert(varchar,@p_Sortowanie) 
+   print @parametry 
+   print @parametry1 
+   print @parametry2 
+   print @parametry3 
+*/ 
+
+set @p_NaDzien = coalesce(@p_NaDzien, getdate())
+set @p_Grupa = coalesce(@p_Grupa,'')
+set @p_Akronim = coalesce(@p_Akronim,'')
+set @p_Ksiega = coalesce(@p_Ksiega,'')
+set @p_KST = coalesce(@p_KST,'')
+set @p_Status = coalesce(@p_Status,0)
+set @p_Rodzaj = coalesce(@p_Rodzaj, -1) --wszystkie
+set @p_MetodaUm = coalesce(@p_MetodaUm, -1) --wszystkie
+set @p_MetodaAm = coalesce(@p_MetodaAm, -1) --wszystkie
+set @p_Dwutorowosc = coalesce(@p_Dwutorowosc, -1) --wszytskie 
+set @p_StawkaBilansowa = coalesce(@p_StawkaBilansowa,0)
+set @p_StawkaPodatkowa = coalesce(@p_StawkaPodatkowa,0)
+set @p_PodlegaAMP = coalesce(@p_PodlegaAMP, 0)
+set @p_NrInw = coalesce(@p_NrInw,0)
+set @p_KnDAkronim = coalesce(@p_KnDAkronim,'')
+set @p_PrcBezwzglednie = coalesce(@p_PrcBezwzglednie,0)
+set @p_PrcAkronim = coalesce(@p_PrcAkronim,'')
+set @p_MiejsceBezwzglednie = coalesce(@p_MiejsceBezwzglednie,0) 
+set @p_MiejsceUzyw = coalesce(@p_MiejsceUzyw, '')
+set @p_Zlikwidowany = coalesce(@p_Zlikwidowany,0)
+set @p_SposobLikw = coalesce(@p_SposobLikw,'')
+set @p_Sortowanie = coalesce(@p_Sortowanie,0)
+set @p_AtK1 = coalesce(@p_AtK1,'') 
+set @p_Atr1 = coalesce(@p_Atr1,'')
+set @p_AtK2 = coalesce(@p_AtK2,'')
+set @p_Atr2 = coalesce(@p_Atr2,'')
+set @p_AtK3 = coalesce(@p_AtK3,'')
+set @p_Atr3 = coalesce(@p_Atr3,'')
+set @p_AtK4 = coalesce(@p_AtK4,'')
+set @p_Atr4 = coalesce(@p_Atr4,'')
+set @p_AtK5 = coalesce(@p_AtK5,'')
+set @p_Atr5 = coalesce(@p_Atr5,'')
+
+
+
+
+
+   IF EXISTS (SELECT * FROM sysobjects WHERE NAME = '#tmprezultat') 
+   Drop table #tmprezultat 
+ 
+ 
+   Create Table #tmprezultat( Stan int,SrtNumer int, SrtNrInw int ,SrtKsiega varchar(40) COLLATE Polish_CI_AS, SrGAkronim varchar(40) COLLATE Polish_CI_AS,SrtKRST varchar(20) COLLATE Polish_CI_AS,SrtAkronim varchar(40) COLLATE Polish_CI_AS, SrtDwutorowosc int,Srt_MetodaUm int,Srt_MetodaAm int,Srtstawka decimal(7,2) , 
+                                               SrtstawkaAm decimal(7,2), DataEkspStr varchar(10) COLLATE Polish_CI_AS, DataRozpStr varchar(10) COLLATE Polish_CI_AS, DataRozpStrAm varchar(10) COLLATE Polish_CI_AS, DataLikwStr varchar(10) COLLATE Polish_CI_AS, DataEksp int, DataRozp int, DataRozpAm int, DataLikw int, MiesiacNaliczania int, MiesiacNaliczaniaAm int, 
+                                               PoczatkowaWartoscInw decimal(15,2), PoczatkowaWartoscPodstAm decimal(15,2),KwotaZwiekszenWartoscInw decimal(15,2), 
+                                               KwotaZwiekszenPodstAm decimal(15,2), KwotaZmniejszenWartoscInw decimal(15,2),KwotaZmniejszenPodstAm decimal(15,2), 
+                                               KwotaUmWDanymRoku decimal(15,2), KwotaAmWDanymRoku decimal(15,2), KwotaUmWUbieglychLatach decimal(15,2), KwotaAmWUbieglychLatach decimal(15,2), 
+                                               KwotaAktualizacjiDanymRoku decimal(15,2), KwotaAktualizacjiWUbieglychLatach decimal(15,2), WartoscInwentarzowaNetto decimal(15,2), WartoscPodatkowaNetto decimal(15,2),                                                
+                                               SrGGIDNumer int, SrtSciezka varchar(250) COLLATE Polish_CI_AS,srllisc int, Usuniety int
+                                               
+                                               ,PoczatkowaWartoscInwSys decimal(15,2), PoczatkowaWartoscPodstAmSys decimal(15,2),KwotaZwiekszenWartoscInwSys decimal(15,2), 
+                                               KwotaZwiekszenPodstAmSys decimal(15,2), KwotaZmniejszenWartoscInwSys decimal(15,2),KwotaZmniejszenPodstAmSys decimal(15,2), 
+                                               KwotaUmWDanymRokuSys decimal(15,2), KwotaAmWDanymRokuSys decimal(15,2), KwotaUmWUbieglychLatachSys decimal(15,2), KwotaAmWUbieglychLatachSys decimal(15,2), 
+                                               KwotaAktualizacjiDanymRokuSys decimal(15,2), KwotaAktualizacjiWUbieglychLatachSys decimal(15,2), WartoscInwentarzowaNettoSys decimal(15,2), WartoscPodatkowaNettoSys decimal(15,2) 
+                                               ) 
+                                               
+ 
+Declare @p_DataNaDzien int; 
+declare @p_DataDokC int
+Declare @p_DataOd int; 
+Declare @p_DataDo int; 
+Declare @p_DataLikwidacji int; 
+Declare @p_KnDNumer int; 
+Declare @p_PrcNumer  int; 
+set @p_DataDokC = datediff(day,convert(datetime,'1800-12-28',120),@p_DataDokD) 
+SET @p_DataNaDzien = datediff(day,convert(datetime,'1800-12-28',120),@p_NaDzien) 
+SET @p_DataOd = coalesce(datediff(day,convert(datetime,'1800-12-28',120),@p_DtDataOd),0)
+SET @p_DataDo = coalesce(datediff(day,convert(datetime,'1800-12-28',120),@p_DtDataDo),0) 
+SET @p_DataLikwidacji = coalesce(datediff(day,convert(datetime,'1800-12-28',120),@p_DtLikwidacji),0)
+SELECT @p_KnDNumer = Knt_GIDNumer FROM CDN.KntKarty WHERE Knt_Akronim = @p_KnDAkronim and len(ltrim(rtrim(@p_KnDAkronim)))&gt;0 
+SELECT @p_PrcNumer = Prc_GIDNumer FROM CDN.PrcKarty WHERE Prc_Akronim = @p_PrcAkronim and len(ltrim(rtrim(@p_PrcAkronim)))&gt;0 
+If @p_KnDNumer is null 
+        SET @p_KnDNumer=-1 
+If @p_PrcNumer is null 
+        SET @p_PrcNumer=-1 
+
+  if Upper(ltrim(rtrim(@p_Grupa))) = 'GRUPA GŁÓWNA' 
+    set @p_Grupa = '' 
+ 
+  declare @WalutaFiltr tinyint	
+  -- jeśli wprowadzono walutę systemową pobierz wszystkie środki niezależnie od waluty i zwróć wartości systemowe
+  if (select min(Kon_Wartosc) from cdn.Konfig where Kon_Komentarz = 'Waluta systemowa') &lt;&gt; @p_Waluta
+	set @WalutaFiltr = 1
+  else
+    set @WalutaFiltr = 0
+  
+ 
+  declare @ZO int; 
+  declare @ZM int; 
+  declare @PK int; 
+  declare @OT int; 
+  declare @OTK int; 
+  declare @LT int; 
+  declare @LTK int; 
+  declare @AM int; 
+  declare @AMK int; 
+  declare @AMP int; 
+  declare @AK int; 
+ 
+ 
+  declare @retval varchar(100); 
+  declare @String varchar(8000); 
+  declare @Data  varchar(10); 
+  declare @Rok   int; 
+  declare @Miesiac   int; 
+ 
+  declare @DataPrzed  int; 
+  declare @MiesiasRozp int; 
+  declare @DataPoczatekB  int;   -- początek okresu obrachunkowego w którym zawiera sie data wykonania raportu 
+  declare @DataKoniecB      int;   -- koniec okresu obrachunkowego w którym zawiera sie data wykonania raportu 
+ 
+  declare @SrtNumer int; 
+  declare @SrtNrInw     int; 
+  declare @SrGAkronim  char(40); 
+  declare @SrtKsiega    char(40); 
+  declare @SrtKRST    char(20); 
+  declare @SrtAkronim  char(40); 
+  declare @SrtDwutorowosc  int;
+  declare @Srt_MetodaUm   int;  
+  declare @Srt_MetodaAm   int; 
+  declare @Srtstawka      decimal(7,2); 
+  declare @SrtstawkaAm    decimal(7,2); 
+  declare @DataEkspStr    char(10); 
+  declare @DataRozpStr    char(10); 
+  declare @DataRozpStrAm    char(10); 
+  declare @DataLikwStr    char(10); 
+  declare @DataEksp   int; 
+  declare @DataRozp   int; 
+  declare @DataRozpAm   int; 
+  declare @DataLikw   int; 
+  declare @MiesiacNaliczania   int; 
+  declare @MiesiacNaliczaniaAm   int; 
+  declare @PoczatkowaWartoscInw decimal(15,2); 
+  declare @PoczatkowaWartoscPodstAm decimal(15,2); 
+  declare @KwotaZwiekszenWartoscInw decimal(15,2); 
+  declare @KwotaZwiekszenPodstAm decimal(15,2); 
+  declare @KwotaZmniejszenWartoscInw decimal(15,2); 
+  declare @KwotaZmniejszenPodstAm decimal(15,2); 
+  declare @KwotaUmWDanymRoku decimal(15,2); 
+  declare @KwotaAmWDanymRoku decimal(15,2); 
+  declare @KwotaUmWUbieglychLatach decimal(15,2); 
+  declare @KwotaAmWUbieglychLatach decimal(15,2); 
+  declare @KwotaAktualizacjiDanymRoku decimal(15,2); 
+  declare @KwotaAktualizacjiWUbieglychLatach decimal(15,2); 
+  declare @WartoscInwentarzowaNetto   decimal(15,2); 
+  declare @WartoscPodatkowaNetto decimal(15,2); 
+  declare @SrtZLikwidowany int; 
+  declare @Stan int; 
+  declare @StringSelect nvarchar(4000); 
+  declare @CzyAtrybuty int; 
+  declare @SrGGIDNumer int; 
+  declare @SrtSciezka varchar(250); 
+  declare @Usuniety int;
+  declare @LiczbaLT int;
+  
+  declare @PoczatkowaWartoscInwSys decimal(15,2); 
+  declare @PoczatkowaWartoscPodstAmSys decimal(15,2); 
+  declare @KwotaZwiekszenWartoscInwSys decimal(15,2); 
+  declare @KwotaZwiekszenPodstAmSys decimal(15,2); 
+  declare @KwotaZmniejszenWartoscInwSys decimal(15,2); 
+  declare @KwotaZmniejszenPodstAmSys decimal(15,2); 
+  declare @KwotaUmWDanymRokuSys decimal(15,2); 
+  declare @KwotaAmWDanymRokuSys decimal(15,2); 
+  declare @KwotaUmWUbieglychLatachSys decimal(15,2); 
+  declare @KwotaAmWUbieglychLatachSys decimal(15,2); 
+  declare @KwotaAktualizacjiDanymRokuSys decimal(15,2); 
+  declare @KwotaAktualizacjiWUbieglychLatachSys decimal(15,2); 
+  declare @WartoscInwentarzowaNettoSys decimal(15,2); 
+  declare @WartoscPodatkowaNettoSys decimal(15,2); 
+ 
+ 
+  set  @ZO = 2144; 
+  set  @ZM = 2160; 
+  set  @OT = 2048; 
+  set  @OTK = 2176; 
+  set  @PK = 2080; 
+  set  @LT = 2096; 
+  set  @LTK = 2224; 
+  set  @AM = 2064; 
+  set  @AMK = 2192; 
+  set  @AMP = 6208; 
+  set  @AK = 2304; 
+ 
+ 
+      set @MiesiasRozp = (Select Kon_Wartosc from cdn.konfig where kon_numer = 242);   -- pobranie z konfiguracji pierwszego miesiąca okresu podatkowego 
+      set @Rok = year(dateadd(day,@p_DataNaDzien,convert(datetime,'18001228',120)))   -- rok pobrany z dnia na który jest zrobiony raport 
+      set @Miesiac = month(dateadd(day,@p_DataNaDzien,convert(datetime,'18001228',120)))   -- miesiąc pobrany z dnia na który jest zrobiony raport 
+      if (@Miesiac&lt; @MiesiasRozp) 
+      set @Rok = @Rok -1 
+ 
+      set @Data = '01-'+convert(varchar(2),@MiesiasRozp)+'-'+cast(@Rok as varchar(4)); 
+      set @DataPoczatekB = datediff(day,convert(datetime,'18001228'),convert(datetime,@Data))-1; 
+ 
+      set @Data = '01-'+convert(varchar(2),@MiesiasRozp)+'-'+cast(@Rok+1 as varchar(4)); 
+      set @DataKoniecB     = datediff(day,convert(datetime,'18001228'),convert(datetime,@Data))-1; 
+ 
+      set @CzyAtrybuty = 0; 
+      if ( len(ltrim(rtrim(@p_AtK1)))&gt;0 or len(ltrim(rtrim(@p_Atr1)))&gt;0 or len(ltrim(rtrim(@p_AtK2)))&gt;0 or len(ltrim(rtrim(@p_Atr2)))&gt;0 or 
+           len(ltrim(rtrim(@p_AtK3)))&gt;0 or len(ltrim(rtrim(@p_Atr3)))&gt;0 or len(ltrim(rtrim(@p_AtK4)))&gt;0 or len(ltrim(rtrim(@p_Atr4)))&gt;0 or 
+           len(ltrim(rtrim(@p_AtK5)))&gt;0 or len(ltrim(rtrim(@p_Atr5)))&gt;0 
+         ) 
+        set @CzyAtrybuty = 1; 
+ 
+ 
+	
+
+      set @StringSelect = 'select 0, Srt_GIDNumer, Srt_NrInw,SrG_Akronim, Srt_Ksiega ,Srt_KRST ,Srt_Akronim, 
+		cdn.SrtStanDwutorowosc(Srt_GIDNumer, '+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +','+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+'),
+		cdn.SrtStanMetoda(Srt_GIDNumer, 0, 0, '+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +','+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+'),
+		cdn.SrtStanMetoda(Srt_GIDNumer, 1, 0, '+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +','+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+'),
+	    cdn.SrtStanStawka(Srt_GIDNumer, 0, 0, '+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +','+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+',0),
+            cdn.SrtStanStawka(Srt_GIDNumer, 1, 0, '+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +','+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+',0)    
+          , CASE WHEN (srt_dataeksp &gt; 0 ) THEN convert(varchar,dateadd(day,srt_dataeksp,convert(datetime,''18001228'')),105) ELSE '' '' END 
+          , CASE WHEN (srt_datarozp &gt; 0 ) THEN convert(varchar,dateadd(day,srt_datarozp,convert(datetime,''18001228'')),105) ELSE '' '' END 
+          , CASE WHEN (srt_datarozpAm &gt; 0 ) THEN convert(varchar,dateadd(day,srt_datarozpAm,convert(datetime,''18001228'')),105) ELSE '' '' END 
+          , CASE WHEN (srt_datalikw &gt; 0 ) THEN convert(varchar,dateadd(day,srt_datalikw,convert(datetime,''18001228'')),105) ELSE '' '' END, 
+            srt_dataeksp,srt_datarozp,srt_datarozpAm,srt_datalikw,isNull(Srt_MsNaliczania,'+convert(varchar,@MiesiasRozp)+'), isNull(Srt_MsNaliczaniaAm,'+convert(varchar,@MiesiasRozp)+'), 
+           0,0,0,0,0,0,0,0,0,0,0,0,0,0,isNull(SrG_GIDNumer,0),SrG_Akronim,srl_lisc,0 
+           ,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+          from cdn.SrtKarty  join cdn.SrtLinki on srt_gidtyp =srl_gidtyp and srt_gidnumer =srl_gidnumer 
+		  left outer join cdn.srtgrupy on srl_grotyp = srg_Gidtyp and srl_gronumer = srg_gidnumer '
+
+    if @p_DataDo &lt;&gt; 0 
+	set @StringSelect = @StringSelect+'
+		  left outer join cdn.SrtPrzyjecie(null,'+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+') as pOT
+			on Srt_GIDNumer = pOT.She_SrtNumer'
+    if (@p_Zlikwidowany &gt; 0 and @p_DataLikwidacji &gt; 0)
+	set @StringSelect = @StringSelect+'
+		  left outer join cdn.SrtLikwidacja(null,'+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +',0) as oLT
+			on srt_gidnumer = oLT.She_SrtNumer'
+
+      set @StringSelect = @StringSelect+' where '
+
+     if (len(ltrim(rtrim(@p_Grupa)))=0) 
+     set @StringSelect = @StringSelect+'srl_lisc = 1 and '
+
+     if (len(ltrim(rtrim(@p_Grupa)))&gt;0) 
+       set @StringSelect = @StringSelect+' srl_lisc = 1 and srg_akronim like '''+RTrim(ltrim(@p_Grupa))+''' and  srl_gidnumer in (select srl_gidnumer from cdn.srtlinki where srl_gidtyp = 368 and srl_gronumer in (select srg_gidnumer from cdn.srtgrupy where srg_akronim like '''+RTrim(ltrim(@p_Grupa))+''')) and ' 
+
+       set @StringSelect = @StringSelect+' (Srt_DataEksp &gt;='+convert(varchar,@p_DataOd) + ')'
+
+      if @p_DataDo &lt;&gt; 0 
+        set @StringSelect = @StringSelect+' and (not pOT.She_GidNumer is null and Srt_DataEksp &lt;='+convert(varchar,@p_DataDo) + ')'
+
+
+      if ( @p_Rodzaj &lt;&gt; -1) 
+        set @StringSelect = @StringSelect+ ' and (Srt_Rodzaj ='+convert(varchar,@p_Rodzaj)+')' 
+      if (len(ltrim(rtrim(@p_Ksiega)))&gt;0) 
+        set @StringSelect = @StringSelect+' and (Srt_Ksiega like ''%'+RTrim(ltrim(@p_Ksiega))+'%'')' 
+      if (@p_Zlikwidowany &gt; 0 and @p_DataLikwidacji &gt; 0)
+	set @StringSelect = @StringSelect+' and (not oLT.She_GidNumer is null and oLT.She_Data &gt;='+convert(varchar,@p_DataLikwidacji) +')'
+
+  
+      if (@p_Zlikwidowany &gt; 0 and len(ltrim(rtrim(@p_SposobLikw)))&gt;0 and ltrim(rtrim(@p_SposobLikw))&lt;&gt;'-1') 
+        set @StringSelect = @StringSelect+' and (Srt_SposobLikw like ''%'+RTrim(ltrim(@p_SposobLikw))+'%'')' 
+      if (@p_Dwutorowosc &gt;= 0) 
+        set @StringSelect = @StringSelect+ ' and (cdn.SrtStanDwutorowosc(Srt_GIDNumer, '+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +','+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+') ='+convert(varchar,@p_Dwutorowosc)+')' 
+      if (@p_StawkaBilansowa &gt; 0) 
+	set @StringSelect = @StringSelect+ ' and (cdn.SrtStanStawka(Srt_GIDNumer, 0, 0, '+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +','+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+',0) = '+convert(varchar,@p_StawkaBilansowa)+')'
+      if (@p_StawkaPodatkowa &gt; 0) 
+	set @StringSelect = @StringSelect+ ' and (cdn.SrtStanStawka(Srt_GIDNumer, 1, 0, '+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +','+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+',0) = '+convert(varchar,@p_StawkaPodatkowa)+')'
+      if (@p_MetodaUm &gt;= 0) 
+        set @StringSelect = @StringSelect+ ' and (cdn.SrtStanMetoda(Srt_GIDNumer, 0, 0, '+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +','+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+') = '+convert(varchar,@p_MetodaUm)+')' 
+      if (@p_MetodaAm &gt;= 0) 
+        set @StringSelect = @StringSelect+ ' and (cdn.SrtStanMetoda(Srt_GIDNumer, 1, 0, '+case when isnull(@p_DataNaDzien,0) &lt;&gt; 0 then convert(varchar,@p_DataNaDzien) else 'null' end +','+case when isnull(@p_DataDokC,0) &lt;&gt; 0 then convert(varchar,@p_DataDokC) else 'null' end +', '+convert(varchar(1),@p_ZestTryb)+') = '+convert(varchar,@p_MetodaAm)+')' 
+      if (@p_PodlegaAMP &gt;= 0) 
+        set @StringSelect = @StringSelect+ 'and (Srt_PodlegaAMP ='+convert(varchar,@p_PodlegaAMP)+')' 
+      if (len(ltrim(rtrim(@p_KST)))&gt;0) 
+        set @StringSelect = @StringSelect+' and (Srt_KRST like '''+RTrim(ltrim(@p_KST))+''')' 
+      if (len(ltrim(rtrim(@p_Akronim)))&gt;0) 
+        set @StringSelect = @StringSelect+' and (Srt_Akronim like ''%'+RTrim(ltrim(@p_Akronim))+'%'')' 
+      if (@p_NrInw &gt; 0) 
+        set @StringSelect = @StringSelect+ ' and (Srt_NrInw ='+convert(varchar,@p_NrInw)+')' 
+      if (@p_KndNumer &gt; 0) 
+        set @StringSelect = @StringSelect+ ' and (Srt_KnDNumer ='+convert(varchar,@p_KndNumer)+')' 
+ 
+      if (len(ltrim(rtrim(@p_PrcAkronim)))&gt;0) 
+        if (@p_PrcBezwzglednie = 1) 
+        begin
+			--set @StringSelect = @StringSelect+' and (Srt_PrcNumer ='+convert(varchar,@p_PrcNumer)+')' 
+			set @StringSelect = @StringSelect+' and (Srt_PrcNumer in (select PRC_GIDNumer from cdn.PrcKarty where PRC_Akronim LIKE ''%' +RTrim(ltrim(@p_PrcAkronim))+ '%'' ) )' 
+        end
+        else 
+	
+         set @StringSelect = @StringSelect+' and ( isnull((select top 1 she_prcNumer from cdn.srthistelem where 
+                   she_gidtyp ='+convert(varchar,@ZO)+' and she_srtnumer = Srt_GIDNumer '+ case when isnull(@p_DataDokC,0) &lt;&gt; 0 then ' and she_dataZap &lt;='+convert(varchar,@p_DataDokC) else '' end +' and she_data = (select max(she_data) from cdn.srthistelem where 
+                   she_gidtyp ='+convert(varchar,@ZO)+' and she_srtnumer = Srt_GIDNumer and she_data &lt;='+convert(varchar,@p_DataNaDzien) + case when isnull(@p_DataDokC,0) &lt;&gt; 0 then ' and she_dataZap &lt;='+convert(varchar,@p_DataDokC) else '' end +')), 
+                   isnull((select Top 1 she_prcNumer from cdn.srthistelem where 
+                   she_gidtyp ='+convert(varchar,@OT)+' and she_srtnumer = Srt_GIDNumer '+ case when isnull(@p_DataDokC,0) &lt;&gt; 0 then ' and she_dataZap &lt;='+convert(varchar,@p_DataDokC) else '' end +' and she_data = (select max(she_data) from cdn.srthistelem where 
+                   she_gidtyp ='+convert(varchar,@OT)+' and she_srtnumer = Srt_GIDNumer and she_data &lt;='+convert(varchar,@p_DataNaDzien) + case when isnull(@p_DataDokC,0) &lt;&gt; 0 then ' and she_dataZap &lt;='+convert(varchar,@p_DataDokC) else '' end +') order by she_gidnumer),Srt_PrcNumer) 
+                   ) IN ( select PRC_GIDNumer from cdn.PrcKarty where PRC_Akronim LIKE ''%'+RTrim(ltrim(@p_PrcAkronim))+'%'' ) )' 
+                   --) ='+convert(varchar,@p_PrcNumer)+' )' 
+                    
+      if (len(ltrim(rtrim(@p_MiejsceUzyw)))&gt;0) 
+       if (@p_MiejsceBezwzglednie = 1) 
+        set @StringSelect = @StringSelect+' and (Srt_MiejsceUzyw LIKE ''%'+RTrim(ltrim(@p_MiejsceUzyw))+'%'')' 
+       else 
+ 
+         set @StringSelect = @StringSelect+' and isnull((select top 1 ltrim(rtrim(she_miejsceuzyw)) from cdn.srthistelem where 
+                   she_gidtyp ='+convert(varchar,@ZM)+' and she_srtnumer = Srt_GIDNumer '+ case when isnull(@p_DataDokC,0) &lt;&gt; 0 then ' and she_dataZap &lt;='+convert(varchar,@p_DataDokC) else '' end +' and she_data = (select max(she_data) from cdn.srthistelem where 
+                   she_gidtyp ='+convert(varchar,@ZM)+' and she_srtnumer = Srt_GIDNumer '+ case when isnull(@p_DataDokC,0) &lt;&gt; 0 then ' and she_dataZap &lt;='+convert(varchar,@p_DataDokC) else '' end +' and she_data &lt;='+convert(varchar,@p_DataNaDzien)+')), 
+                   isnull((select Top 1 ltrim(rtrim(she_miejsceuzyw)) from cdn.srthistelem where 
+                   she_gidtyp ='+convert(varchar,@OT)+' and she_srtnumer = Srt_GIDNumer '+ case when isnull(@p_DataDokC,0) &lt;&gt; 0 then ' and she_dataZap &lt;='+convert(varchar,@p_DataDokC) else '' end +' and she_data = (select max(she_data) from cdn.srthistelem where 
+                   she_gidtyp ='+convert(varchar,@OT)+' and she_srtnumer = Srt_GIDNumer '+ case when isnull(@p_DataDokC,0) &lt;&gt; 0 then ' and she_dataZap &lt;='+convert(varchar,@p_DataDokC) else '' end +' and she_data &lt;='+convert(varchar,@p_DataNaDzien)+') order by she_gidnumer), 
+                   Srt_Miejsceuzyw)) LIKE ''%'+RTrim(ltrim(@p_MiejsceUzyw))+'%''' 
+ 
+ 
+         if (@CzyAtrybuty =1) 
+          begin 
+           set @StringSelect = @StringSelect+' and exists 
+           ( select atr_id from cdn.atrybuty join cdn.atrybutyklasy on atr_atkId = atk_ID 
+             where atr_obiTyp=srt_gidtyp AND atr_obiFirma=srt_gidfirma AND atr_obiNumer=srt_gidnumer and (' 
+ 
+            if (len(RTrim(ltrim(@p_AtK1)))&gt;0 and len(RTrim(ltrim(@p_Atr1)))&gt;0 ) 
+              set @StringSelect = @StringSelect+' ( atk_nazwa like ''%'+RTrim(ltrim(@p_AtK1))+'%'' and atr_wartosc like ''%'+RTrim(ltrim(@p_Atr1))+'%'')' 
+            else 
+             begin 
+              if (len(RTrim(ltrim(@p_AtK1)))&gt;0 ) 
+               set @StringSelect = @StringSelect+' ( atk_nazwa like ''%'+RTrim(ltrim(@p_AtK1))+'%'')' 
+              if (len(RTrim(ltrim(@p_Atr1)))&gt;0 ) 
+               set @StringSelect = @StringSelect+' atr_wartosc like ''%'+RTrim(ltrim(@p_Atr1))+'%''' --) 
+             end 
+ 
+            if (len(RTrim(ltrim(@p_AtK2)))&gt;0 and len(RTrim(ltrim(@p_Atr2)))&gt;0 ) 
+             begin 
+              if (len(RTrim(ltrim(@p_AtK1)))&gt;0 or len(RTrim(ltrim(@p_Atr1)))&gt;0 ) 
+              set @StringSelect = @StringSelect+' and ' 
+              set @StringSelect = @StringSelect+' ( atk_nazwa like ''%'+RTrim(ltrim(@p_AtK2))+'%'' and atr_wartosc like ''%'+RTrim(ltrim(@p_Atr2))+'%'')' 
+             end 
+            else 
+             begin 
+              if (len(RTrim(ltrim(@p_AtK1)))&gt;0 or len(RTrim(ltrim(@p_Atr1)))&gt;0 ) and (len(RTrim(ltrim(@p_AtK2)))&gt;0 or len(RTrim(ltrim(@p_Atr2)))&gt;0) 
+               set @StringSelect = @StringSelect+' and ' 
+              if (len(RTrim(ltrim(@p_AtK2)))&gt;0 ) 
+               set @StringSelect = @StringSelect+' ( atk_nazwa like ''%'+RTrim(ltrim(@p_AtK2))+'%'')' 
+              if (len(RTrim(ltrim(@p_Atr2)))&gt;0 ) 
+               set @StringSelect = @StringSelect+' atr_wartosc like ''%'+RTrim(ltrim(@p_Atr2))+'%''' -- ) 
+             end 
+ 
+            if (len(RTrim(ltrim(@p_AtK3)))&gt;0 and len(RTrim(ltrim(@p_Atr3)))&gt;0 ) 
+             begin 
+              if (len(RTrim(ltrim(@p_AtK2)))&gt;0 or len(RTrim(ltrim(@p_Atr2)))&gt;0 ) 
+              set @StringSelect = @StringSelect+' and ' 
+              set @StringSelect = @StringSelect+' ( atk_nazwa like ''%'+RTrim(ltrim(@p_AtK3))+'%'' and atr_wartosc like ''%'+RTrim(ltrim(@p_Atr3))+'%'')' 
+             end 
+            else 
+             begin 
+              if (len(RTrim(ltrim(@p_AtK2)))&gt;0 or len(RTrim(ltrim(@p_Atr2)))&gt;0 ) and (len(RTrim(ltrim(@p_AtK3)))&gt;0 or len(RTrim(ltrim(@p_Atr3)))&gt;0) 
+               set @StringSelect = @StringSelect+' and ' 
+              if (len(RTrim(ltrim(@p_AtK3)))&gt;0 ) 
+               set @StringSelect = @StringSelect+' ( atk_nazwa like ''%'+RTrim(ltrim(@p_AtK3))+'%'')' 
+              if (len(RTrim(ltrim(@p_Atr3)))&gt;0 ) 
+               set @StringSelect = @StringSelect+' atr_wartosc like ''%'+RTrim(ltrim(@p_Atr3))+'%''' -- ) 
+             end 
+ 
+            if (len(RTrim(ltrim(@p_AtK4)))&gt;0 and len(RTrim(ltrim(@p_Atr4)))&gt;0 ) 
+             begin 
+              if (len(RTrim(ltrim(@p_AtK3)))&gt;0 or len(RTrim(ltrim(@p_Atr3)))&gt;0 ) 
+              set @StringSelect = @StringSelect+' and ' 
+              set @StringSelect = @StringSelect+' ( atk_nazwa like ''%'+RTrim(ltrim(@p_AtK4))+'%'' and atr_wartosc like ''%'+RTrim(ltrim(@p_Atr4))+'%'')' 
+             end 
+            else 
+             begin 
+              if (len(RTrim(ltrim(@p_AtK3)))&gt;0 or len(RTrim(ltrim(@p_Atr3)))&gt;0 ) and (len(RTrim(ltrim(@p_AtK4)))&gt;0 or len(RTrim(ltrim(@p_Atr4)))&gt;0) 
+               set @StringSelect = @StringSelect+' and ' 
+              if (len(RTrim(ltrim(@p_AtK4)))&gt;0 ) 
+               set @StringSelect = @StringSelect+' ( atk_nazwa like ''%'+RTrim(ltrim(@p_AtK4))+'%'')' 
+              if (len(RTrim(ltrim(@p_Atr4)))&gt;0 ) 
+               set @StringSelect = @StringSelect+' atr_wartosc like ''%'+RTrim(ltrim(@p_Atr4))+'%''' --) 
+             end 
+ 
+            if (len(RTrim(ltrim(@p_AtK5)))&gt;0 and len(RTrim(ltrim(@p_Atr5)))&gt;0 ) 
+             begin 
+              if (len(RTrim(ltrim(@p_AtK4)))&gt;0 or len(RTrim(ltrim(@p_Atr4)))&gt;0 ) 
+              set @StringSelect = @StringSelect+' and ' 
+              set @StringSelect = @StringSelect+' ( atk_nazwa like ''%'+RTrim(ltrim(@p_AtK5))+'%'' and atr_wartosc like ''%'+RTrim(ltrim(@p_Atr5))+'%'')' 
+             end 
+            else 
+             begin 
+              if (len(RTrim(ltrim(@p_AtK4)))&gt;0 or len(RTrim(ltrim(@p_Atr4)))&gt;0 ) and (len(RTrim(ltrim(@p_AtK5)))&gt;0 or len(RTrim(ltrim(@p_Atr5)))&gt;0) 
+               set @StringSelect = @StringSelect+' and ' 
+              if (len(RTrim(ltrim(@p_AtK5)))&gt;0 ) 
+               set @StringSelect = @StringSelect+' ( atk_nazwa like ''%'+RTrim(ltrim(@p_AtK5))+'%'')' 
+              if (len(RTrim(ltrim(@p_Atr5)))&gt;0 ) 
+               set @StringSelect = @StringSelect+' atr_wartosc like ''%'+RTrim(ltrim(@p_Atr5))+'%''' --) 
+             end 
+ 
+            set @StringSelect = @StringSelect+'))' 
+        end 
+        
+        if @WalutaFiltr = 1
+			set @StringSelect = @StringSelect + ' and SRT_Waluta= ''' + @p_Waluta + ''''
+        
+        set @StringSelect = @StringSelect+' order by  Srt_GIDNumer'
+
+    declare @SlrLisc int; 
+	
+    insert into #tmprezultat execute sp_executesql @StringSelect 
+    
+
+    DECLARE Srt_Cursor CURSOR for select * from #tmprezultat FOR UPDATE 
+    OPEN Srt_Cursor; 
+      fetch next from Srt_Cursor into 
+               @Stan, @SrtNumer, @SrtNrInw ,@SrGAkronim,@SrtKsiega, @SrtKRST, @SrtAkronim, @SrtDwutorowosc,@Srt_MetodaUm,@Srt_MetodaAm,@Srtstawka,@SrtstawkaAm, @DataEkspStr 
+              ,@DataRozpStr,@DataRozpStrAm, @DataLikwStr, @DataEksp, @DataRozp, @DataRozpAm, @DataLikw, @MiesiacNaliczania, @MiesiacNaliczaniaAm 
+              ,@PoczatkowaWartoscInw, @PoczatkowaWartoscPodstAm,@KwotaZwiekszenWartoscInw,@KwotaZwiekszenPodstAm 
+              ,@KwotaZmniejszenWartoscInw,@KwotaZmniejszenPodstAm,@KwotaUmWDanymRoku,@KwotaAmWDanymRoku 
+              ,@KwotaUmWUbieglychLatach,@KwotaAmWUbieglychLatach,@KwotaAktualizacjiDanymRoku,@KwotaAktualizacjiWUbieglychLatach 
+              ,@WartoscInwentarzowaNetto,@WartoscPodatkowaNetto,@SrGGIDNumer,@SrtSciezka, @SlrLisc,@Usuniety 
+              
+              ,@PoczatkowaWartoscInwSys, @PoczatkowaWartoscPodstAmSys,@KwotaZwiekszenWartoscInwSys,@KwotaZwiekszenPodstAmSys 
+              ,@KwotaZmniejszenWartoscInwSys,@KwotaZmniejszenPodstAmSys,@KwotaUmWDanymRokuSys,@KwotaAmWDanymRokuSys 
+              ,@KwotaUmWUbieglychLatachSys,@KwotaAmWUbieglychLatachSys,@KwotaAktualizacjiDanymRokuSys,@KwotaAktualizacjiWUbieglychLatachSys 
+              ,@WartoscInwentarzowaNettoSys,@WartoscPodatkowaNettoSys
+ 
+      while (@@fetch_status = 0) 
+        BEGIN 
+          set @SrtSciezka = (select Cdn.SrtSciezka(@SrGGIDNumer)) 
+ 
+          if (@Srt_MetodaAm = 0) 
+          begin 
+            set @DataRozp = isnull((select min(she_data) from cdn.srthistelem where she_gidtyp =@OT and she_srtnumer =@SrtNumer and (isnull(@p_DataDokC,0) = 0 or (isnull(@p_DataDokC,0) &lt;&gt; 0 and She_DataZap &lt;= @p_DataDokC)) ),0) 
+			set @DataRozpAm = @DataRozp
+            set @MiesiacNaliczania = 1; 
+            set @MiesiacNaliczaniaAm = 1; 
+          end 
+          declare @ile int; 
+          declare @CzyUsuniety int
+          set @ile = (select count(*) from #tmprezultat where SrtNumer=@SrtNumer) 
+          set @CzyUsuniety = @Usuniety
+ 
+          /*set @SrtZLikwidowany = (select max(she_gidtyp) from cdn.srthistelem 
+          where she_gidtyp in (@LT,@LTK) and she_srtnumer = @SrtNumer and she_likwidacja = 1 and (isnull(@p_DataDokC,0) = 0 or (isnull(@p_DataDokC,0) &lt;&gt; 0 and She_DataZap &lt;= @p_DataDokC)) and she_data = (select max(she_data) from cdn.srthistelem 
+          where she_gidtyp in (@LT,@LTK) and she_srtnumer = @SrtNumer and she_likwidacja = 1 and she_data &lt;= @p_DataNaDzien and (isnull(@p_DataDokC,0) = 0 or (isnull(@p_DataDokC,0) &lt;&gt; 0 and She_DataZap &lt;= @p_DataDokC)))) */
+
+          set @LiczbaLT = (select count(she_gidtyp) from cdn.srthistelem where she_gidtyp = @LT and
+							she_srtnumer = @SrtNumer and she_likwidacja = 1 and
+							(isnull(@p_DataDokC,0) = 0 or (isnull(@p_DataDokC,0) &lt;&gt; 0 and She_DataZap &lt;= @p_DataDokC)) and
+							she_data &lt;= @p_DataNaDzien);
+                    
+          if ( @LiczbaLT &gt; 0)
+            begin        
+              set @SrtZlikwidowany = @LiczbaLT - (select count(she_gidtyp) from cdn.srthistelem where she_gidtyp = @LTk and
+							she_srtnumer = @SrtNumer and she_likwidacja = 1 and
+							(isnull(@p_DataDokC,0) = 0 or (isnull(@p_DataDokC,0) &lt;&gt; 0 and She_DataZap &lt;= @p_DataDokC)) and
+							she_data &lt;= @p_DataNaDzien)
+
+				if (@SrtZlikwidowany &gt; 0)
+                  set @SrtZlikwidowany = @LT
+                else
+				  set @SrtZlikwidowany = @LTK
+              
+            end
+          else
+             set @SrtZlikwidowany = NULL
+ 
+          if ( @p_Zlikwidowany &gt; 0 and (@SrtZLikwidowany &lt;&gt; @LT or @SrtZLikwidowany is null ))
+           begin 
+           --   delete from #tmprezultat where  SrtNumer=@SrtNumer 
+              update #tmprezultat set Usuniety = 1 where  SrtNumer=@SrtNumer 
+              set @ile = 0 
+           end 
+
+          if (@ile&lt;&gt;0 and @CzyUsuniety = 0)
+          begin 
+       --!określanie statusu 
+ 
+     --  1.1.1  Początkowa wartość inwentarzowa - A i podstawy amortyzacji  i 1.1.2 Początkowa wartość podstawy amortyzacji - B 
+ 
+ 
+ 
+         if  EXISTS (SELECT * FROM #tmprezultat where  SrtNumer=@SrtNumer and Stan =1)    --select * from  #tmprezultat where SrtNumer= @SrtNumer 
+          Begin 
+              select @Stan = Stan, @PoczatkowaWartoscInw = PoczatkowaWartoscInw, @PoczatkowaWartoscPodstAm = PoczatkowaWartoscPodstAm, 
+                         @KwotaZwiekszenWartoscInw = KwotaZwiekszenWartoscInw, @KwotaZwiekszenPodstAm = KwotaZwiekszenPodstAm, 
+                         @KwotaZmniejszenWartoscInw = KwotaZmniejszenWartoscInw,@KwotaZmniejszenPodstAm= KwotaZmniejszenPodstAm , 
+                         @KwotaUmWDanymRoku = KwotaUmWDanymRoku, @KwotaAmWDanymRoku = KwotaAmWDanymRoku, 
+                         @KwotaAmWUbieglychLatach = KwotaAmWUbieglychLatach,@KwotaUmWUbieglychLatach = KwotaUmWUbieglychLatach, 
+                         @KwotaAktualizacjiDanymRoku = KwotaAktualizacjiDanymRoku, @KwotaAktualizacjiWUbieglychLatach = KwotaAktualizacjiWUbieglychLatach, 
+                         @WartoscInwentarzowaNetto = WartoscInwentarzowaNetto, @WartoscPodatkowaNetto = WartoscPodatkowaNetto,
+                         @Usuniety = Usuniety
+                         
+                         ,@PoczatkowaWartoscInwSys = PoczatkowaWartoscInwSys, @PoczatkowaWartoscPodstAmSys = PoczatkowaWartoscPodstAmSys, 
+                         @KwotaZwiekszenWartoscInwSys = KwotaZwiekszenWartoscInwSys, @KwotaZwiekszenPodstAmSys = KwotaZwiekszenPodstAmSys, 
+                         @KwotaZmniejszenWartoscInwSys = KwotaZmniejszenWartoscInwSys,@KwotaZmniejszenPodstAmSys= KwotaZmniejszenPodstAmSys , 
+                         @KwotaUmWDanymRokuSys = KwotaUmWDanymRokuSys, @KwotaAmWDanymRokuSys = KwotaAmWDanymRokuSys, 
+                         @KwotaAmWUbieglychLatachSys = KwotaAmWUbieglychLatachSys,@KwotaUmWUbieglychLatachSys = KwotaUmWUbieglychLatachSys, 
+                         @KwotaAktualizacjiDanymRokuSys = KwotaAktualizacjiDanymRokuSys, @KwotaAktualizacjiWUbieglychLatachSys = KwotaAktualizacjiWUbieglychLatachSys, 
+                         @WartoscInwentarzowaNettoSys = WartoscInwentarzowaNettoSys, @WartoscPodatkowaNettoSys = WartoscPodatkowaNettoSys
+                         FROM #tmprezultat where  SrtNumer=@SrtNumer and Stan =1 
+          End 
+         else 
+           Begin 
+            if ( @p_Status&lt;1 or  ((@SrtZLikwidowany is null or @SrtZLikwidowany = @LTK) and @p_Zlikwidowany &lt;&gt; 1) or ( @p_Zlikwidowany &gt; 0 and @SrtZLikwidowany = @LT ) ) 
+             Begin 
+ 
+              if (@DataEksp &gt;= @DataPoczatekB and  @DataEksp &lt;= @DataKoniecB) 
+               Begin 
+                   if (@p_DataNaDzien &gt;= @DataEksp) 
+                     Begin 
+                     if (@MiesiacNaliczania &lt;&gt;2) --miesiąc przyjęcia 
+                      Begin 
+ 
+                       set @PoczatkowaWartoscInw = (select CDN.SrtPoczatkowaWartoscInw(@SrtNumer, @p_DataNaDzien, @DataRozp,@DataPoczatekB,0, @p_DataDokC,0,@p_ZestTryb)) 
+ 
+                       set @KwotaZwiekszenWartoscInw = (select CDN.SrtKwotaZwiekszenWartoscInw(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB,0, @p_DataDokC, 0, @p_ZestTryb)) 
+                       -- E 
+                       set @KwotaZmniejszenWartoscInw = (select CDN.SrtKwotaZmniejszenWartoscInw(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB,0, @p_DataDokC, 0, @p_ZestTryb)) 
+                       
+                       set @PoczatkowaWartoscInwSys = (select CDN.SrtPoczatkowaWartoscInw(@SrtNumer, @p_DataNaDzien, @DataRozp,@DataPoczatekB,0, @p_DataDokC, 1, @p_ZestTryb)) 
+ 
+                       set @KwotaZwiekszenWartoscInwSys = (select CDN.SrtKwotaZwiekszenWartoscInw(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB,0, @p_DataDokC, 1, @p_ZestTryb)) 
+                       -- E 
+                       set @KwotaZmniejszenWartoscInwSys = (select CDN.SrtKwotaZmniejszenWartoscInw(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB,0, @p_DataDokC, 1, @p_ZestTryb)) 
+
+                        End 
+                      else 
+                       begin 
+                        if (@MiesiacNaliczania =2) -- nastęny miesiąc po przyjęciu 
+                          begin 
+                            --A 
+                            set @PoczatkowaWartoscInw = (select CDN.SrtPoczatkowaWartoscInw(@SrtNumer, @p_DataNaDzien, @DataRozp,@DataPoczatekB,1, @p_DataDokC, 0, @p_ZestTryb)) 
+                            -- C 
+                            set @KwotaZwiekszenWartoscInw = (select CDN.SrtKwotaZwiekszenWartoscInw(@SrtNumer, @p_DataNaDzien, @DataRozp,@DataPoczatekB,1, @p_DataDokC, 0, @p_ZestTryb)) 
+                            -- E 
+                            set @KwotaZmniejszenWartoscInw = (select CDN.SrtKwotaZmniejszenWartoscInw(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB,1, @p_DataDokC, 0, @p_ZestTryb)) 
+                            --A 
+                            set @PoczatkowaWartoscInwSys = (select CDN.SrtPoczatkowaWartoscInw(@SrtNumer, @p_DataNaDzien, @DataRozp,@DataPoczatekB,1, @p_DataDokC, 1, @p_ZestTryb)) 
+                            -- C 
+                            set @KwotaZwiekszenWartoscInwSys = (select CDN.SrtKwotaZwiekszenWartoscInw(@SrtNumer, @p_DataNaDzien, @DataRozp,@DataPoczatekB,1, @p_DataDokC, 1, @p_ZestTryb)) 
+                            -- E 
+                            set @KwotaZmniejszenWartoscInwSys = (select CDN.SrtKwotaZmniejszenWartoscInw(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB,1, @p_DataDokC, 1, @p_ZestTryb)) 
+                          end 
+                        end 
+					if (@MiesiacNaliczaniaAm &lt;&gt;2) --miesiąc przyjęcia 
+                      Begin 
+ 
+                       set @PoczatkowaWartoscPodstAm = (select CDN.SrtPoczatkowaWartoscAm(@SrtNumer, @p_DataNaDzien, @DataRozpAm,@DataPoczatekB,0, @p_DataDokC, 0, @p_ZestTryb)) 
+                       --D 
+                       set @KwotaZwiekszenPodstAm =  (select CDN.SrtKwotaZwiekszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,0, @p_DataDokC, 0, @p_ZestTryb)) 
+                       --F 
+                       set @KwotaZmniejszenPodstAm = (select CDN.SrtKwotaZmniejszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,0, @p_DataDokC, 0, @p_ZestTryb)) 
+                       
+                       set @PoczatkowaWartoscPodstAmSys = (select CDN.SrtPoczatkowaWartoscAm(@SrtNumer, @p_DataNaDzien, @DataRozpAm,@DataPoczatekB,0, @p_DataDokC, 1, @p_ZestTryb)) 
+                       --D 
+                       set @KwotaZwiekszenPodstAmSys =  (select CDN.SrtKwotaZwiekszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,0, @p_DataDokC, 1, @p_ZestTryb)) 
+                       --F 
+                       set @KwotaZmniejszenPodstAmSys = (select CDN.SrtKwotaZmniejszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,0, @p_DataDokC, 1, @p_ZestTryb)) 
+ 
+                        End 
+                      else 
+                       begin 
+                        if (@MiesiacNaliczaniaAm =2) -- nastęny miesiąc po przyjęciu 
+                          begin 
+                            set @PoczatkowaWartoscPodstAm = (select CDN.SrtPoczatkowaWartoscAm(@SrtNumer, @p_DataNaDzien, @DataRozpAm,@DataPoczatekB,1, @p_DataDokC, 0, @p_ZestTryb)) 
+                            --D 
+                            set @KwotaZwiekszenPodstAm =  (select CDN.SrtKwotaZwiekszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,1, @p_DataDokC, 0, @p_ZestTryb)) 
+                            --F 
+                            set @KwotaZmniejszenPodstAm = (select CDN.SrtKwotaZmniejszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,1, @p_DataDokC, 0, @p_ZestTryb)) 
+                            
+                            set @PoczatkowaWartoscPodstAmSys = (select CDN.SrtPoczatkowaWartoscAm(@SrtNumer, @p_DataNaDzien, @DataRozpAm,@DataPoczatekB,1, @p_DataDokC, 1, @p_ZestTryb)) 
+                            --D 
+                            set @KwotaZwiekszenPodstAmSys =  (select CDN.SrtKwotaZwiekszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,1, @p_DataDokC, 1, @p_ZestTryb)) 
+                            --F 
+                            set @KwotaZmniejszenPodstAmSys = (select CDN.SrtKwotaZmniejszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,1, @p_DataDokC, 1, @p_ZestTryb)) 
+                          end 
+                        end 
+                     End 
+                   Else 
+                     Begin 
+                       set @PoczatkowaWartoscInw = -1; 
+                       set @PoczatkowaWartoscPodstAm = 0; 
+                       set @KwotaZwiekszenWartoscInw = 0; 
+                       set @KwotaZwiekszenPodstAm = 0; 
+                       set @KwotaZmniejszenWartoscInw = 0; 
+                       set @KwotaZmniejszenPodstAm = 0; 
+                       
+                       set @PoczatkowaWartoscInwSys = -1; 
+                       set @PoczatkowaWartoscPodstAmSys = 0; 
+                       set @KwotaZwiekszenWartoscInwSys = 0; 
+                       set @KwotaZwiekszenPodstAmSys = 0; 
+                       set @KwotaZmniejszenWartoscInwSys = 0; 
+                       set @KwotaZmniejszenPodstAmSys = 0; 
+                     End 
+               End 
+              else   -- data raportu nie jest w tym samym okresie obrachunkowym co data przyjęcia 
+               Begin 
+                 --A 
+                 set @PoczatkowaWartoscInw = (select CDN.SrtPoczatkowaWartoscInw(@SrtNumer, @p_DataNaDzien, @DataRozp,@DataPoczatekB,2, @p_DataDokC, 0, @p_ZestTryb)) 
+                 -- B 
+                 set @PoczatkowaWartoscPodstAm = (select CDN.SrtPoczatkowaWartoscAm(@SrtNumer, @p_DataNaDzien, @DataRozpAm,@DataPoczatekB,2, @p_DataDokC, 0, @p_ZestTryb)) 
+                 -- C 
+                 set @KwotaZwiekszenWartoscInw = (select CDN.SrtKwotaZwiekszenWartoscInw(@SrtNumer, @p_DataNaDzien, @DataRozp,@DataPoczatekB,2, @p_DataDokC, 0, @p_ZestTryb)) 
+                 --D 
+                 set @KwotaZwiekszenPodstAm =  (select CDN.SrtKwotaZwiekszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,2, @p_DataDokC, 0, @p_ZestTryb)) 
+                 -- E 
+                 set @KwotaZmniejszenWartoscInw = (select CDN.SrtKwotaZmniejszenWartoscInw(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB,2, @p_DataDokC, 0, @p_ZestTryb)) 
+                 --F 
+                 set @KwotaZmniejszenPodstAm = (select CDN.SrtKwotaZmniejszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,2, @p_DataDokC, 0, @p_ZestTryb)) 
+                 
+                 --A 
+                 set @PoczatkowaWartoscInwSys = (select CDN.SrtPoczatkowaWartoscInw(@SrtNumer, @p_DataNaDzien, @DataRozp,@DataPoczatekB,2, @p_DataDokC, 1, @p_ZestTryb)) 
+                 -- B 
+                 set @PoczatkowaWartoscPodstAmSys = (select CDN.SrtPoczatkowaWartoscAm(@SrtNumer, @p_DataNaDzien, @DataRozpAm,@DataPoczatekB,2, @p_DataDokC, 1, @p_ZestTryb)) 
+                 -- C 
+                 set @KwotaZwiekszenWartoscInwSys = (select CDN.SrtKwotaZwiekszenWartoscInw(@SrtNumer, @p_DataNaDzien, @DataRozp,@DataPoczatekB,2, @p_DataDokC, 1, @p_ZestTryb)) 
+                 --D 
+                 set @KwotaZwiekszenPodstAmSys =  (select CDN.SrtKwotaZwiekszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,2, @p_DataDokC, 1, @p_ZestTryb)) 
+                 -- E 
+                 set @KwotaZmniejszenWartoscInwSys = (select CDN.SrtKwotaZmniejszenWartoscInw(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB,2, @p_DataDokC, 1, @p_ZestTryb)) 
+                 --F 
+                 set @KwotaZmniejszenPodstAmSys = (select CDN.SrtKwotaZmniejszenPodstAm(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB,2, @p_DataDokC, 1, @p_ZestTryb)) 
+              End 
+ 
+             End 
+             Else 
+               Begin 
+                 set @PoczatkowaWartoscInw = -1 
+                 set @PoczatkowaWartoscInwSys = -1 
+               End 
+ 
+               if (@PoczatkowaWartoscInw&lt;&gt; -1) 
+                 Begin 
+            -- 1.1.7 Wartość umorzeń w danym roku podatkowym  G    AM, AMK, LT, LTK, PK 
+                      set @KwotaUmWDanymRoku = (select CDN.SrtKwotaUmWDanymRoku(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB, @p_DataDokC, 0, @p_ZestTryb)) 
+            -- 1.1.8    Wartość amortyzacji w danym roku podatkowym                    -- H AM, AMK, AMP, PK 
+                      set @KwotaAmWDanymRoku = (select CDN.SrtKwotaAmWDanymRoku(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB, @p_DataDokC, 0, @p_ZestTryb)) 
+            -- 1.1.9    Wartość umorzeń z lat ubiegłych  - AM, AMK, LT, LTK, PK  - I 
+                      set @KwotaUmWUbieglychLatach = (select CDN.SrtKwotaUmWUbieglychLatach(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB, @p_DataDokC, 0, @p_ZestTryb)) 
+            -- 1.1.10   Wartość amortyzacji z lat ubiegłych                     -- J AM, AMK, AMP, PK 
+                      set @KwotaAmWUbieglychLatach = (select CDN.SrtKwotaAmWUbieglychLatach(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB, @p_DataDokC, 0, @p_ZestTryb)) 
+            -- 1.1.11   Wartość odpisów aktualizacyjnych - K - AK 
+                      set @KwotaAktualizacjiDanymRoku = (select CDN.SrtKwotaAktualizacjiDanymRoku(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB, @p_DataDokC, 0)) 
+            -- 1.1.12   Wartość odpisów aktualizacyjnych z lat ubiegłych - L 
+                      set @KwotaAktualizacjiWUbieglychLatach = (select CDN.SrtKwotaAktualizacjiWUbieglychLatach(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB, @p_DataDokC, 0)) 
+                      
+            -- 1.1.7 Wartość umorzeń w danym roku podatkowym  G    AM, AMK, LT, LTK, PK 
+                      set @KwotaUmWDanymRokuSys = (select CDN.SrtKwotaUmWDanymRoku(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB, @p_DataDokC, 1, @p_ZestTryb)) 
+            -- 1.1.8    Wartość amortyzacji w danym roku podatkowym                    -- H AM, AMK, AMP, PK 
+                      set @KwotaAmWDanymRokuSys = (select CDN.SrtKwotaAmWDanymRoku(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB, @p_DataDokC, 1, @p_ZestTryb)) 
+            -- 1.1.9    Wartość umorzeń z lat ubiegłych  - AM, AMK, LT, LTK, PK  - I 
+                      set @KwotaUmWUbieglychLatachSys = (select CDN.SrtKwotaUmWUbieglychLatach(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB, @p_DataDokC, 1, @p_ZestTryb)) 
+            -- 1.1.10   Wartość amortyzacji z lat ubiegłych                     -- J AM, AMK, AMP, PK 
+                      set @KwotaAmWUbieglychLatachSys = (select CDN.SrtKwotaAmWUbieglychLatach(@SrtNumer,@p_DataNaDzien,@DataRozpAm,@DataPoczatekB, @p_DataDokC, 1, @p_ZestTryb)) 
+            -- 1.1.11   Wartość odpisów aktualizacyjnych - K - AK 
+                      set @KwotaAktualizacjiDanymRokuSys = (select CDN.SrtKwotaAktualizacjiDanymRoku(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB, @p_DataDokC, 1)) 
+            -- 1.1.12   Wartość odpisów aktualizacyjnych z lat ubiegłych - L 
+                      set @KwotaAktualizacjiWUbieglychLatachSys = (select CDN.SrtKwotaAktualizacjiWUbieglychLatach(@SrtNumer,@p_DataNaDzien,@DataRozp,@DataPoczatekB, @p_DataDokC, 1)) 
+ 
+                 end 
+              End 
+ 
+                       set @PoczatkowaWartoscInw = isnull(@PoczatkowaWartoscInw,0); 
+                       set @PoczatkowaWartoscPodstAm = isnull(@PoczatkowaWartoscPodstAm,0) 
+                       set @KwotaZwiekszenWartoscInw = isnull(@KwotaZwiekszenWartoscInw,0); 
+                       set @KwotaZwiekszenPodstAm  = isnull(@KwotaZwiekszenPodstAm,0); 
+                       set @KwotaZmniejszenWartoscInw = isnull(@KwotaZmniejszenWartoscInw,0); 
+                       set @KwotaZmniejszenPodstAm  = isnull(@KwotaZmniejszenPodstAm,0); 
+                       set @KwotaUmWDanymRoku  = isnull (@KwotaUmWDanymRoku,0); 
+                       set @KwotaAmWDanymRoku  = isnull (@KwotaAmWDanymRoku,0); 
+                       set @KwotaAmWUbieglychLatach = isnull(@KwotaAmWUbieglychLatach,0); 
+                       set @KwotaUmWUbieglychLatach = isnull(@KwotaUmWUbieglychLatach,0); 
+                       set @KwotaAktualizacjiDanymRoku = isnull(@KwotaAktualizacjiDanymRoku,0); 
+                       set @KwotaAktualizacjiWUbieglychLatach = isnull(@KwotaAktualizacjiWUbieglychLatach,0); 
+                       
+                       set @PoczatkowaWartoscInwSys = isnull(@PoczatkowaWartoscInwSys,0); 
+                       set @PoczatkowaWartoscPodstAmSys = isnull(@PoczatkowaWartoscPodstAmSys,0) 
+                       set @KwotaZwiekszenWartoscInwSys = isnull(@KwotaZwiekszenWartoscInwSys,0); 
+                       set @KwotaZwiekszenPodstAmSys  = isnull(@KwotaZwiekszenPodstAmSys,0); 
+                       set @KwotaZmniejszenWartoscInwSys = isnull(@KwotaZmniejszenWartoscInwSys,0); 
+                       set @KwotaZmniejszenPodstAmSys  = isnull(@KwotaZmniejszenPodstAmSys,0); 
+                       set @KwotaUmWDanymRokuSys  = isnull (@KwotaUmWDanymRokuSys,0); 
+                       set @KwotaAmWDanymRokuSys  = isnull (@KwotaAmWDanymRokuSys,0); 
+                       set @KwotaAmWUbieglychLatachSys = isnull(@KwotaAmWUbieglychLatachSys,0); 
+                       set @KwotaUmWUbieglychLatachSys = isnull(@KwotaUmWUbieglychLatachSys,0); 
+                       set @KwotaAktualizacjiDanymRokuSys = isnull(@KwotaAktualizacjiDanymRokuSys,0); 
+                       set @KwotaAktualizacjiWUbieglychLatachSys = isnull(@KwotaAktualizacjiWUbieglychLatachSys,0); 
+ 
+                     if (@PoczatkowaWartoscInw&lt;&gt;-1) 
+                       begin 
+                       -- 3.1.13        Wartość inwentarzowa netto A+C-E-G-I-K-L 
+                       set @WartoscInwentarzowaNetto  = @PoczatkowaWartoscInw + @KwotaZwiekszenWartoscInw - @KwotaZmniejszenWartoscInw - @KwotaUmWDanymRoku - 
+                             @KwotaUmWUbieglychLatach   - @KwotaAktualizacjiDanymRoku - @KwotaAktualizacjiWUbieglychLatach; 
+                       set @WartoscInwentarzowaNettoSys  = @PoczatkowaWartoscInwSys + @KwotaZwiekszenWartoscInwSys - @KwotaZmniejszenWartoscInwSys - @KwotaUmWDanymRokuSys - 
+                             @KwotaUmWUbieglychLatachSys   - @KwotaAktualizacjiDanymRokuSys - @KwotaAktualizacjiWUbieglychLatachSys; 
+ 
+                         -- 3.1.14      Wartość podatkowa netto  B + D – F – H - J (baseline pkt. 3) 
+                          if (@SrtZLikwidowany &lt;&gt; @LT or @SrtZLikwidowany is null ) 
+                            begin 
+                              set @WartoscPodatkowaNetto  =  @PoczatkowaWartoscPodstAm + @KwotaZwiekszenPodstAm - @KwotaZmniejszenPodstAm - @KwotaAmWDanymRoku - @KwotaAmWUbieglychLatach; 
+                              set @WartoscPodatkowaNettoSys  =  @PoczatkowaWartoscPodstAmSys + @KwotaZwiekszenPodstAmSys - @KwotaZmniejszenPodstAmSys - @KwotaAmWDanymRokuSys - @KwotaAmWUbieglychLatachSys; 
+                            end 
+                          else -- Wartość podatkowa netto  dla zlikwidowanych B + D – F (baseline pkt. 12) 
+                            begin 
+                              set @WartoscPodatkowaNetto  =  @PoczatkowaWartoscPodstAm + @KwotaZwiekszenPodstAm - @KwotaZmniejszenPodstAm; 
+                              set @WartoscPodatkowaNettoSys  =  @PoczatkowaWartoscPodstAmSys + @KwotaZwiekszenPodstAmSys - @KwotaZmniejszenPodstAmSys; 
+                            end 
+ 
+                       end 
+ 
+                       set @WartoscInwentarzowaNetto = isnull(@WartoscInwentarzowaNetto,0); 
+                       set @WartoscPodatkowaNetto = isnull(@WartoscPodatkowaNetto,0); 
+                       
+                       set @WartoscInwentarzowaNettoSys = isnull(@WartoscInwentarzowaNettoSys, 0); 
+                       set @WartoscPodatkowaNettoSys = isnull(@WartoscPodatkowaNettoSys, 0); 
+ 
+              -- sprawdzanie statusu 
+                       if (@p_Status = 1)   -- 1. AKYTYWNYCH (nieumorzonych, niezamortyzowanych) 
+                           begin
+                           if (@WartoscInwentarzowaNetto = 0 or @WartoscPodatkowaNetto = 0) 
+                             begin
+                               set @PoczatkowaWartoscInw = -1;
+                               set @PoczatkowaWartoscInwSys = -1;
+                             end 
+                           end 
+                       else 
+                          if (@p_Status = 2)   -- 2. AKTYWNYCH (nieumorzonych) 
+                             begin 
+                               if (@WartoscInwentarzowaNetto = 0 ) 
+                               begin
+                                 set @PoczatkowaWartoscInw = -1; 
+                                 set @PoczatkowaWartoscInwSys = -1; 
+                               end
+                             end 
+                          else 
+                             if (@p_Status = 3)   -- 3. AKTYWNYCH (niezamortyzowanych) 
+                               begin 
+                                 if (@WartoscPodatkowaNetto = 0 ) 
+                                 begin
+                                   set @PoczatkowaWartoscInw = -1; 
+                                   set @PoczatkowaWartoscInwSys = -1; 
+                                 end
+                               end 
+                        else 
+                          if (@p_Status = 4)   -- 4.      AKTYWNYCH  (umorzonych, zamortyzowanych) 
+                          begin 
+                            if not (@WartoscInwentarzowaNetto = 0 and @WartoscPodatkowaNetto = 0) 
+                            begin
+                              set @PoczatkowaWartoscInw = -1; 
+                              set @PoczatkowaWartoscInwSys = -1; 
+                            end
+                          end 
+                          else 
+                            if (@p_Status = 5)   -- 5.    AKTYWNYCH  (umorzonych) 
+                            begin 
+                              if (@WartoscInwentarzowaNetto&lt;&gt;0) 
+                              begin
+                                set @PoczatkowaWartoscInw = -1; 
+                                set @PoczatkowaWartoscInwSys = -1; 
+                              end
+                            end 
+                            else 
+                            if (@p_Status = 6)   -- 6.    AKTYWNYCH  (zamortyzowanych) 
+                            begin 
+                              if (@WartoscPodatkowaNetto &lt;&gt;0) 
+                              begin
+                                set @PoczatkowaWartoscInw = -1; 
+                                set @PoczatkowaWartoscInwSys = -1; 
+                              end
+                            end 
+
+
+	   	if (@p_Status = 7)   -- 7.    AKTYWNYCH  (wszystkich aktywnych(niezlikwidowanych)) 
+	        begin 
+	        	if (@SrtZLikwidowany = @LT)	        	
+			--nie wchodzi
+				begin
+	              set @PoczatkowaWartoscInw = -1; 
+	              set @PoczatkowaWartoscInwSys = -1; 
+	            end
+	       	end 
+				  
+ 
+                     
+             if (@PoczatkowaWartoscInw &lt;&gt; -1) 
+               Begin 
+				 Set @Stan = 1; 
+				 update #tmprezultat Set 
+				   Stan = @Stan, SrtNumer =@SrtNumer, SrtNrInw = @SrtNrInw, SrtKsiega =@SrtKsiega , SrGAkronim =@SrGAkronim, SrtKRST =@SrtKRST, 
+ 				   SrtAkronim =@SrtAkronim, SrtDwutorowosc =@SrtDwutorowosc, Srt_MetodaUm =@Srt_MetodaUm, Srt_MetodaAm =@Srt_MetodaAm, Srtstawka =@Srtstawka , SrtstawkaAm =@SrtstawkaAm, 
+				   DataEkspStr =@DataEkspStr, DataRozpStr =@DataRozpStr, DataRozpStrAm =@DataRozpStrAm, DataLikwStr =@DataLikwStr, DataEksp =@DataEksp, DataRozp =@DataRozp, DataRozpAm =@DataRozpAm, 
+				   DataLikw =@DataLikw, MiesiacNaliczania =@MiesiacNaliczania, MiesiacNaliczaniaAm =@MiesiacNaliczaniaAm, PoczatkowaWartoscInw =@PoczatkowaWartoscInw, PoczatkowaWartoscPodstAm =@PoczatkowaWartoscPodstAm, 
+				   KwotaZwiekszenWartoscInw =@KwotaZwiekszenWartoscInw, KwotaZwiekszenPodstAm =@KwotaZwiekszenPodstAm, KwotaZmniejszenWartoscInw =@KwotaZmniejszenWartoscInw, 
+				   KwotaZmniejszenPodstAm =@KwotaZmniejszenPodstAm, KwotaUmWDanymRoku =@KwotaUmWDanymRoku, KwotaAmWDanymRoku =@KwotaAmWDanymRoku, KwotaUmWUbieglychLatach =@KwotaUmWUbieglychLatach, 
+				   KwotaAmWUbieglychLatach =@KwotaAmWUbieglychLatach, KwotaAktualizacjiDanymRoku =@KwotaAktualizacjiDanymRoku, KwotaAktualizacjiWUbieglychLatach =@KwotaAktualizacjiWUbieglychLatach, 
+				   WartoscInwentarzowaNetto =@WartoscInwentarzowaNetto, WartoscPodatkowaNetto = @WartoscPodatkowaNetto,SrtSciezka = @SrtSciezka ,Usuniety = @Usuniety
+				   
+				   , PoczatkowaWartoscInwSys = @PoczatkowaWartoscInwSys, PoczatkowaWartoscPodstAmSys = @PoczatkowaWartoscPodstAmSys, 
+				   KwotaZwiekszenWartoscInwSys = @KwotaZwiekszenWartoscInwSys, KwotaZwiekszenPodstAmSys = @KwotaZwiekszenPodstAmSys , KwotaZmniejszenWartoscInwSys = @KwotaZmniejszenWartoscInwSys, 
+				   KwotaZmniejszenPodstAmSys = @KwotaZmniejszenPodstAmSys, KwotaUmWDanymRokuSys =@KwotaUmWDanymRokuSys, KwotaAmWDanymRokuSys = @KwotaAmWDanymRokuSys, KwotaUmWUbieglychLatachSys = @KwotaUmWUbieglychLatachSys, 
+				   KwotaAmWUbieglychLatachSys = @KwotaAmWUbieglychLatachSys, KwotaAktualizacjiDanymRokuSys = @KwotaAktualizacjiDanymRokuSys, KwotaAktualizacjiWUbieglychLatachSys = @KwotaAktualizacjiWUbieglychLatachSys, 
+				   WartoscInwentarzowaNettoSys = @WartoscInwentarzowaNettoSys, WartoscPodatkowaNettoSys = @WartoscPodatkowaNettoSys
+				 WHERE CURRENT OF Srt_Cursor 
+               End 
+             else 
+               begin 
+                if (@p_Status &gt;0) 
+                 --  delete from #tmprezultat where  SrtNumer=@SrtNumer 
+                   update #tmprezultat set Usuniety = 1 where  SrtNumer=@SrtNumer 
+               end 
+ 
+          end 
+           fetch next from Srt_Cursor into 
+               @Stan, @SrtNumer, @SrtNrInw ,@SrGAkronim,@SrtKsiega,@SrtKRST,@SrtAkronim, @SrtDwutorowosc,@Srt_MetodaUm,@Srt_MetodaAm,@Srtstawka,@SrtstawkaAm, @DataEkspStr 
+              ,@DataRozpStr, @DataRozpStrAm, @DataLikwStr, @DataEksp, @DataRozp, @DataRozpAm, @DataLikw, @MiesiacNaliczania, @MiesiacNaliczaniaAm 
+              ,@PoczatkowaWartoscInw, @PoczatkowaWartoscPodstAm,@KwotaZwiekszenWartoscInw,@KwotaZwiekszenPodstAm 
+              ,@KwotaZmniejszenWartoscInw,@KwotaZmniejszenPodstAm,@KwotaUmWDanymRoku,@KwotaAmWDanymRoku 
+              ,@KwotaUmWUbieglychLatach,@KwotaAmWUbieglychLatach,@KwotaAktualizacjiDanymRoku,@KwotaAktualizacjiWUbieglychLatach 
+              ,@WartoscInwentarzowaNetto,@WartoscPodatkowaNetto,@SrGGIDNumer,@SrtSciezka,@SlrLisc,@Usuniety 
+              
+              ,@PoczatkowaWartoscInwSys, @PoczatkowaWartoscPodstAmSys,@KwotaZwiekszenWartoscInwSys,@KwotaZwiekszenPodstAmSys 
+              ,@KwotaZmniejszenWartoscInwSys,@KwotaZmniejszenPodstAmSys,@KwotaUmWDanymRokuSys,@KwotaAmWDanymRokuSys 
+              ,@KwotaUmWUbieglychLatachSys,@KwotaAmWUbieglychLatachSys,@KwotaAktualizacjiDanymRokuSys,@KwotaAktualizacjiWUbieglychLatachSys 
+              ,@WartoscInwentarzowaNettoSys,@WartoscPodatkowaNettoSys
+         END 
+ 
+    CLOSE Srt_Cursor 
+    DEALLOCATE Srt_Cursor; 
+ 
+    update #tmprezultat set SrGAkronim = 'Grupa główna' where SRGGIDNumer = 0; 
+ 
+    if (@p_Sortowanie &lt;&gt; 4) 
+     update #tmprezultat set SrGGIDNumer = 0, SrtSciezka = '', SrlLisc = 0 
+ 
+    if (@p_Sortowanie &lt; 2 or @p_Sortowanie &gt; 4) 
+      select distinct  * from  #tmprezultat  where Usuniety = 0 order by SrtNrInw 
+    if (@p_Sortowanie = 2) 
+      select distinct  * from  #tmprezultat where Usuniety = 0  order by SrtKRST, SrtNrInw 
+    if (@p_Sortowanie = 3) 
+      select distinct  * from  #tmprezultat where Usuniety = 0  order by SrtAkronim, SrtNrInw 
+    if (@p_Sortowanie = 4) 
+     begin 
+      update #tmprezultat set SrtSciezka = ' Grupa główna' where SRGGIDNumer = 0 
+      select  * from  #tmprezultat where Usuniety = 0  order by SrtSciezka
+    end 
+
+
+   IF EXISTS (SELECT * FROM sysobjects WHERE NAME = '#tmprezultat') 
+   Drop table #tmprezultat 
+ 
+</proceduredef>
+</ROOT>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Statistics.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:27:36 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<meta>
+  <generated>
+    <date>18.10.2019</date>
+    <time>19:27:36</time>
+  </generated>
+  <product>CDNXL</product>
+  <productname>CDN XL 2019.3</productname>
+  <dictionary>D:\C10\dct\cdn.DCT</dictionary>
+</meta>
+<statistic>
+  <tables>831</tables>
+  <tables.total>881</tables.total>
+  <indexes>2434</indexes>
+  <indexes.total>3132</indexes.total>
+  <indexes.described>2351</indexes.described>
+  <columns>15406</columns>
+  <columns.total>16339</columns.total>
+  <columns.described>14418</columns.described>
+  <relations>4095</relations>
+  <relations.total>4200</relations.total>
+</statistic>
+</ROOT>

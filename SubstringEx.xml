@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="SubstringEx">
+CREATE FUNCTION CDN.SubstringEx(@str varchar(255),@sep varchar(255),@ix int)
+RETURNS 
+VARCHAR(255)
+AS
+BEGIN
+	DECLARE @tempstr varchar(255)
+	DECLARE @counter int
+	DECLARE @pos int
+
+	If @ix &lt; 1 Return ''
+
+	Set @counter = 1
+	Set @tempstr = @str
+
+	Set @pos=charindex(@sep,@tempstr,1)
+
+	While @pos&gt;0
+	Begin
+		if @counter = @ix
+		Begin
+				set @tempstr = substring(@tempstr,1,@pos-1)
+			break
+		End
+
+		set @tempstr = substring(@tempstr,@pos+1,len(@tempstr))
+
+		set @pos=charindex(@sep,@tempstr,1)
+
+		If @pos &gt; 0
+  		set @counter = @counter + 1
+	End  
+
+  If @counter &lt; @ix -1
+		Return ''
+
+	Return @tempstr
+END
+</functiondef>
+</ROOT>

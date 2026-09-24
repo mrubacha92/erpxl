@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="Str2List">
+CREATE FUNCTION CDN.Str2List (@String varchar(8000))
+RETURNS @List TABLE (
+  Num int
+)
+as
+begin
+	declare @pos smallint, @num int
+	while @String&lt;&gt;''
+	begin
+		select @pos = isnull(min(Pos),1)
+		from (
+			select case when ascii(ltrim(@String)) between 44 and 57 then 1 else 0 end Pos
+			union all select charindex('in (',@String)
+			union all select charindex('between ',@String)
+			union all select charindex('=',@String)
+		) S
+		where Pos&lt;&gt;0
+		if substring(@String,@pos,1)='='
+		begin
+			set @String = ltrim(substring(@String,@pos+1,len(@String)))
+			if charindex(' ',@String)&gt;0
+			begin
+				insert into @List values (convert(int,substring(@String,1,charindex(' ',@String))))
+				set @String = substring(@String,charindex(' ',@String)+1,len(@String))
+				continue
+			end
+			else
+			begin
+				insert into @List values (convert(int,@String))
+				break
+			end
+		end
+		if substring(@String,@pos,1)='b'
+		begin
+			set @String = ltrim(substring(@String,@pos+8,len(@String)))
+			set @num = convert(int,substring(@String,1,charindex(' ',@String)))
+			set @String = ltrim(substring(@String,charindex(' and ',@String)+5,len(@String)))
+			set @pos = case when charindex(' ',@String)&gt;0 then charindex(' ',@String) else len(@String) end
+			while @num&lt;=convert(int,substring(@String,1,@pos))
+			begin
+				insert into @List values (@num)
+				set @num = @num+1
+			end
+			if @pos=len(@String) break
+			set @String = substring(@String,@pos+1,len(@String))
+			continue
+		end
+		if substring(@String,@pos,1)='i'
+			set @String = ltrim(substring(@String,@pos+4,len(@String)))
+		while charindex(',',@String)&gt;0 and not (charindex(')',@String) between 1 and charindex(',',@String))
+		begin
+			insert into @List values (convert(int,substring(@String,1,charindex(',',@String)-1)))
+			set @String = substring(@String,charindex(',',@String)+1,len(@String))
+		end
+		if @String &lt;&gt; '' and isnumeric(@String)&gt;0
+		begin
+			insert into @List values (convert(int,@String))
+			break
+		end
+		set @pos = charindex(')',@String)
+		if @pos&gt;0
+		begin
+			insert into @List values (convert(int,substring(@String,1,@pos-1)))
+			set @String = ltrim(substring(@String,@pos+1,len(@String)))
+			continue
+		end
+	end
+	return
+end
+</functiondef>
+</ROOT>
