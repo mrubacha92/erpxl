@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="PrcKarty_UaktualnijPikElem">
+CREATE TRIGGER CDN.PrcKarty_UaktualnijPikElem
+  ON CDN.PrcKarty
+  FOR UPDATE
+AS
+begin
+SET NOCOUNT ON
+if update(Prc_Akronim)
+  update CDN.PikElem set PIE_Kod=inserted.Prc_Akronim
+  from inserted
+  inner join deleted on deleted.Prc_GIDNumer=inserted.Prc_GIDNumer
+  inner join CDN.PikElem on PIE_Znacznik='P' and PIE_Kod=deleted.Prc_Akronim
+SET NOCOUNT OFF
+end
+</triggerdef>
+</ROOT>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="Prod_WartoscAtr">
+Create function CDN.Prod_WartoscAtr(@Wartosc decimal(20,4), @KlasaAtr integer, @OBITyp smallint, @OBINumer int, @TimeStamp int = 2147483647, @PpcId int)
+returns decimal(20,4)
+as
+begin
+	Declare @cWartosc varchar(100)
+	if (@KlasaAtr &lt;&gt; 0 )
+	Begin
+		if exists(select * from cdn.atrybutyklasy where atk_typ = 5 and atk_id = @KlasaAtr and @PpcId &gt; 0)
+		begin
+			select @cWartosc = CDN.CLR_ProdObliczWartoscAtrSQL(@KlasaAtr, @PpcId)
+		end
+		else	
+			Select @cWartosc = isnull(CDN.AtrPobierzWartosc(@OBITyp, @OBINumer, 0, 1, @KlasaAtr, @TimeStamp),
+						  CDN.AtrPobierzWartosc(@OBITyp, 0, 0, 1, @KlasaAtr, @TimeStamp))
+						  
+		If (IsNumeric(@cWartosc) = 0) 
+			Set @Wartosc = 0
+		Else
+			Set @Wartosc = @Wartosc * cast(@cWartosc as decimal(20,4)) 
+	End
+
+	return IsNull(@Wartosc,0)
+end
+</functiondef>
+</ROOT>

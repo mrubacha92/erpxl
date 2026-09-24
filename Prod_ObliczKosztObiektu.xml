@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie funkcji Prod_ObliczKosztObiektu" hidden="True">
+if exists(SELECT name from sysobjects where name='Prod_ObliczKosztObiektu' and type='FN')
+	drop function CDN.Prod_ObliczKosztObiektu
+</scriptdef>
+<scriptdef name="Tworzenie funkcji Prod_ObliczKosztObiektu" hidden="False">
+CREATE FUNCTION [CDN].[Prod_ObliczKosztObiektu] (
+@idObiektu int,
+@idCzynnosci int,
+@iloscWykonanCzynnosci int,
+@terminRozpoczecia int
+)
+RETURNS  decimal(20,4)
+AS
+BEGIN
+	Declare @KosztObiektu decimal(20,4)
+	declare @czasTrwaniaCzynnosci decimal(20,4)
+	declare @ptcOddzial int
+
+	set @KosztObiektu = 0
+	    select
+        @czasTrwaniaCzynnosci = CDN.ProdIloscAtr(@iloscWykonanCzynnosci,PTC_CzasRozliczeniowy,PTC_CzasRozliczeniowyAtr,4,0,
+        PTC_Ilosc,PTC_IloscAtr,14340,PTC_Technologia,@terminRozpoczecia,0)  + PTC_CzasPrzygotowawczyRozliczeniowy,
+        @ptcOddzial = PTC_Oddzial
+        from CDN.ProdTechnologiaCzynnosci where PTC_Id = @idCzynnosci
+
+		IF 1 = (SELECT pof.POF_CzyStawki  FROM cdn.ProdObiektyFunkcje pof WHERE POF_Funkcja IN 
+				(SELECT PTG_Gniazdo FROM CDN.ProdTechnologieZasobyGniazd WHERE PTG_TechnologiaOperacje = @idCzynnosci AND PTG_ZasobGniazda = @idObiektu) AND POF_Obiekt = @idObiektu)
+
+			SELECT @KosztObiektu = CDN.Prod_WartoscAtr(pof.POF_StawkaStala, POF_StawkaStalaAtr,14337,POF_Obiekt,@terminRozpoczecia,0) + 
+			CDN.ProdIloscAtr(@iloscWykonanCzynnosci ,POF_StawkaIlosc,POF_StawkaIloscAtr,4,0,POF_StawkaIloscM,0,14337,POF_Obiekt,@terminRozpoczecia,0)+
+			CDN.ProdIloscAtr(@czasTrwaniaCzynnosci, POF_StawkaCzas,POF_StawkaCzasAtr,4,0,POF_StawkaCzasM,0,14337,POF_Obiekt,@terminRozpoczecia,0)
+			FROM cdn.ProdObiektyFunkcje pof WHERE POF_Funkcja IN 
+			(SELECT PTG_Gniazdo FROM CDN.ProdTechnologieZasobyGniazd WHERE PTG_TechnologiaOperacje = @idCzynnosci AND PTG_ZasobGniazda = @idObiektu) AND POF_Obiekt = @idObiektu
+		ELSE
+
+			SELECT @KosztObiektu = cdn.Prod_WartoscAtr(po.POB_StawkaStala, po.POB_StawkaStalaAtr, po.POB_ObiTyp,po.POB_ObiNumer,@terminRozpoczecia,0) + 
+			CDN.ProdIloscAtr(@iloscWykonanCzynnosci ,POB_StawkaIlosc,POB_StawkaIloscAtr,4,0,POB_StawkaIloscM,0,po.POB_ObiTyp,POB_Id,@terminRozpoczecia,0)+
+			CDN.ProdIloscAtr(@czasTrwaniaCzynnosci, POB_StawkaCzas,POB_StawkaCzasAtr,4,0,POB_StawkaCzasM,0,po.POB_ObiTyp,POB_Id,@terminRozpoczecia,0)
+			FROM CDN.ProdObiekty po JOIN CDN.ProdTechnologieZasobyGniazd ptzg ON po.POB_Id = ptzg.PTG_ZasobGniazda
+			WHERE po.POB_Id = @idObiektu AND ptzg.PTG_TechnologiaOperacje = @idCzynnosci
+
+	Return @KosztObiektu
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji Prod_ObliczKosztObiektu" hidden="False">
+GRANT EXECUTE
+	ON CDN.Prod_ObliczKosztObiektu
+	TO CDNRaport
+</scriptdef>
+</ROOT>

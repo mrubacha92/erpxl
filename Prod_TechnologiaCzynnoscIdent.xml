@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="Prod_TechnologiaCzynnoscIdent">
+CREATE FUNCTION CDN.Prod_TechnologiaCzynnoscIdent (@Id INT)
+RETURNS VARCHAR(400)
+AS
+BEGIN
+declare @nameDzl as varchar(400)
+declare @namePom as varchar(40)
+declare @IdParent as Int
+SET @nameDzl =  ''
+SELECT @IdParent = PTC_Ojciec from CDN.ProdTechnologiaCzynnosci
+where PTC_Id = @Id
+WHILE @Id &gt; 0
+BEGIN
+ select @namePom =  Cast(PTC_Id As Varchar) , @Id = PTC_Ojciec from CDN.ProdTechnologiaCzynnosci where PTC_Id = @Id
+ SET @nameDzl =  @namePom + '.'+ @nameDzl
+END
+IF Len(@nameDzl) &gt; 0
+   SET @nameDzl = Substring(@nameDzl, 1, len(@nameDzl)-1)
+Return @nameDzl
+END
+</functiondef>
+</ROOT>

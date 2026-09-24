@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="PrjSciezka">
+create procedure CDN.PrjSciezka 
+	 @SourceName  VARCHAR(255),
+	 @SourceDatabase  VARCHAR(255),
+	@p_PrjId int,
+	@returns varchar(255) OUTPUT
+as
+begin
+
+	declare @Sciezka varchar(255)
+	declare @Kod varchar(255)
+	declare @Prj_ID int
+	declare @Prj_Poziom int
+
+	DECLARE @sql NVARCHAR(4000)
+	DECLARE @params NVARCHAR(4000)
+
+	select @sql = 
+	N'
+	select @Kod=Prj_Kod,@Prj_ID=Prj_ParentId,@Prj_Poziom=Prj_Poziom
+	from ['+@SourceName+'].['+@SourceDatabase +'].CDN.DefProjekty
+	where Prj_PrjId=@p_PrjId
+	'		
+	SELECT @params =N'	  @p_PrjId int,
+						  @Kod varchar(255) OUTPUT,
+						  @Prj_ID int OUTPUT,
+						  @Prj_Poziom int OUTPUT'
+	EXEC sp_executesql @sql, @params, @p_PrjId , @Kod OUTPUT,@Prj_ID OUTPUT,@Prj_Poziom OUTPUT
+
+	set @Sciezka=@Kod
+
+	if @Sciezka is null or @Sciezka='brak'
+		SET @returns =''
+	else
+	begin
+		while @Prj_ID&lt;&gt;0 and @Kod is not null and @Prj_Poziom&gt;1
+		begin
+			select @sql = 
+			N'
+			select @Kod=Prj_Kod,@Prj_ID=prj_ParentId,@prj_Poziom=prj_Poziom
+			from ['+@SourceName+'].['+@SourceDatabase +'].CDN.DefProjekty
+			where prj_prjId=@prj_ID
+			'		
+			SELECT @params =N'	  @Kod varchar(255) OUTPUT,
+								  @Prj_ID int OUTPUT,
+								  @Prj_Poziom int OUTPUT'
+			EXEC sp_executesql @sql, @params, @Kod OUTPUT,@Prj_ID OUTPUT,@Prj_Poziom OUTPUT
+	
+			set @Sciezka=@Kod+'.'+@Sciezka
+		end
+	
+		if @Sciezka is null 
+			set @Sciezka='&lt;nieprawidłowy dział&gt;'
+	
+		SET @returns =@Sciezka
+
+	end
+
+end
+</proceduredef>
+</ROOT>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="Prod_CzynnosciObiektyString">
+Create Function CDN.Prod_CzynnosciObiektyString (@lCzynnosc int, @lTermin int)
+returns varchar(1024)
+as 
+Begin
+
+declare @cObiekty varchar(1024)
+
+if @lTermin=0
+ begin
+   set @cObiekty = ''
+   select @cObiekty = @cObiekty +  rtrim(POB_Kod) +','
+   from cdn.ProdCzynnosciObiekty join cdn.ProdObiekty on PCO_Obiekt = POB_ID
+   Where PCO_Czynnosc = @lCzynnosc
+   group by POB_Kod
+   order by POB_KOD
+ end
+else
+ begin
+   set @cObiekty = ''
+   select @cObiekty = @cObiekty +  rtrim(POB_Kod) +','
+   from cdn.ProdCzynnosciObiekty join cdn.ProdObiekty on PCO_Obiekt = POB_ID
+   Where PCO_Czynnosc = @lCzynnosc and (pco_termin = @lTermin or pco_termin =0)
+   group by POB_Kod
+   order by POB_KOD
+ end
+
+
+return @cObiekty
+END
+</functiondef>
+</ROOT>
