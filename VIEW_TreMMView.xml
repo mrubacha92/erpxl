@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie perspektywy TrEMMView" hidden="True">
+DROP VIEW CDN.TrEMMView
+</scriptdef>
+<scriptdef name="Tworzenie perspektywy TrEMMView" hidden="False">
+CREATE VIEW CDN.TrEMMView
+  (TrE_GIDTyp,TrE_GIDFirma,TrE_GIDNumer,TrE_GIDLp,
+  TrE_Pozycja,TrE_TwrTyp,TrE_TwrFirma,TrE_TwrNumer,TrE_TwrLp,TrE_TwrNazwa,TrE_TwrKod,TrE_TypTwr,
+  TrE_KntTyp,TrE_KntFirma,TrE_KntNumer,TrE_KntLp,
+  TrE_AkwTyp,TrE_AkwFirma,TrE_AkwNumer,TrE_AkwLp,
+  TrE_TrnTStamp,TrE_Punkty,TrE_Ilosc,TrE_JmFormat,TrE_JmZ,TrE_JmFormatZ,TrE_TypJm,
+  TrE_PrzeliczM,TrE_PrzeliczL,TrE_GrupaPod,TrE_StawkaPod,TrE_FlagaVat,
+  TrE_Zrodlowa,TrE_Akcyza,TrE_Waluta,TrE_NrKursu,TrE_KursM,TrE_KursL,TrE_Poczatkowa,
+  TrE_FlagaNB,TrE_Rabat,TrE_WartoscPoRabacie,
+  TrE_KsiegowaNetto,TrE_KsiegowaBrutto,TrE_RzeczywistaNetto,
+  TrE_KosztKsiegowy,TrE_KosztRzeczywisty,
+  TrE_ProgTyp,TrE_Prog,TrE_UpustTyp,TrE_Upust,TrE_UpustKnt,TrE_UpustKntTyp,
+  TrE_IloscDPPrzed, TrE_KsiegowyDPPrzed, TrE_ZlcTyp, TrE_ZlcFirma, TrE_ZlcNumer, TrE_ZlcLp,
+  TrE_RecTyp, TrE_RecFirma, TrE_RecNumer, TrE_RecLp, 
+  TrE_Cena, TrE_Rownanie, TrE_OdKsiegowych, TrE_RzeczywistyDPPrzed, TrE_PCN, TrE_PrecyzjaCeny,
+  TrE_VatTyp, TrE_VatFirma, TrE_VatNumer, TrE_VatLp, TrE_KosztVat, TrE_KosztNetto, TrE_Licencja,
+  TrE_KrajPoch,TrE_RabatPromocyjny,TrE_RabatKorekta,TrE_Promocje,
+  TrE_ZstTyp,TrE_ZstFirma,TrE_ZstNumer,TrE_ZstLp,
+  TrE_PrecyzjaCenyPocz,TrE_ZwroconoCalaIlosc,TrE_RodzajCenyBazowej,TrE_KosztBazowy,
+  TrE_WartoscBazowa,TrE_CenaSpr,TrE_CenaPoRabacie,TrE_CCHTyp,TrE_CCHNumer,TrE_Cecha,
+  TrE_KGOJednostkowe,TrE_IloscMin,TrE_IloscMax,TrE_PakietID,TrE_Gratis,TrE_PromocjaProgID,
+  TrE_FormatkaCyr,TrE_Zlom,TrE_IloscPrzedKorekta,TrE_CenaPrzedKorekta,TrE_WartoscPrzedKorekta,
+  TrE_GrupaPodPrzedKorekta,TrE_StawkaPodPrzedKorekta,TrE_FlagaVatPrzedKorekta,TrE_ZrodlowaPrzedKorekta,
+  TrE_AkcyzaPrzedKorekta,TrE_PrzyczynaKorekty,TrE_KatDatyOP,TrE_RodzajKosztu,TrE_PakietTwgNumer,
+  TrE_PakietTwgTyp,TrE_RabatOpeGen,TrE_PakietWymaganaPoz,TrE_SentId,TrE_Nagroda,TrE_OperatorPOS,TrE_SentElemId)
+  as select
+    TrE_GIDTyp,TrE_GIDFirma,TrE_GIDNumer,TrE_GIDLp,
+    TrE_Pozycja,TrE_TwrTyp,TrE_TwrFirma,TrE_TwrNumer,TrE_TwrLp,TrE_TwrNazwa,TrE_TwrKod,TrE_TypTwr,
+    TrE_KntTyp,TrE_KntFirma,TrE_KntNumer,TrE_KntLp,
+    TrE_AkwTyp,TrE_AkwFirma,TrE_AkwNumer,TrE_AkwLp,
+    TrE_TrnTStamp,TrE_Punkty,
+    sum(TrS_Ilosc),
+    TrE_JmFormat,TrE_JmZ,TrE_JmFormatZ,TrE_TypJm,TrE_PrzeliczM,
+    TrE_PrzeliczL,TrE_GrupaPod,TrE_StawkaPod,TrE_FlagaVat,TrE_Zrodlowa,
+    TrE_Akcyza,TrE_Waluta,TrE_NrKursu,TrE_KursM,TrE_KursL,TrE_Poczatkowa,TrE_FlagaNB,
+    TrE_Rabat,TrE_WartoscPoRabacie,TrE_KsiegowaNetto,TrE_KsiegowaBrutto,
+    TrE_RzeczywistaNetto,
+    sum(TrS_KosztKsiegowy),
+    sum(TrS_KosztRzeczywisty),
+    TrE_ProgTyp,TrE_Prog,TrE_UpustTyp,TrE_Upust,TrE_UpustKnt,TrE_UpustKntTyp,
+    TrE_IloscDPPrzed, TrE_KsiegowyDPPrzed, TrE_ZlcTyp, TrE_ZlcFirma, TrE_ZlcNumer, TrE_ZlcLp,
+    TrE_RecTyp, TrE_RecFirma, TrE_RecNumer, TrE_RecLp, 
+    TrE_Cena, TrE_Rownanie, TrE_OdKsiegowych, TrE_RzeczywistyDPPrzed, TrE_PCN, TrE_PrecyzjaCeny,
+    TrE_VatTyp, TrE_VatFirma, TrE_VatNumer, TrE_VatLp, TrE_KosztVat, TrE_KosztNetto, TrE_Licencja,
+    TrE_KrajPoch,TrE_RabatPromocyjny,TrE_RabatKorekta,TrE_Promocje,
+    TrE_ZstTyp,TrE_ZstFirma,TrE_ZstNumer,TrE_ZstLp,
+    TrE_PrecyzjaCenyPocz,TrE_ZwroconoCalaIlosc,TrE_RodzajCenyBazowej,TrE_KosztBazowy,
+    TrE_WartoscBazowa,TrE_CenaSpr,TrE_CenaPoRabacie,TrE_CCHTyp,TrE_CCHNumer,TrE_Cecha,
+    TrE_KGOJednostkowe,TrE_IloscMin,TrE_IloscMax,TrE_PakietID,TrE_Gratis,TrE_PromocjaProgID,
+	TrE_FormatkaCyr,TrE_Zlom,TrE_IloscPrzedKorekta,TrE_CenaPrzedKorekta,TrE_WartoscPrzedKorekta,
+	TrE_GrupaPodPrzedKorekta,TrE_StawkaPodPrzedKorekta,TrE_FlagaVatPrzedKorekta,TrE_ZrodlowaPrzedKorekta,
+	TrE_AkcyzaPrzedKorekta,TrE_PrzyczynaKorekty,TrE_KatDatyOP,TrE_RodzajKosztu,TrE_PakietTwgNumer,
+	TrE_PakietTwgTyp,TrE_RabatOpeGen,TrE_PakietWymaganaPoz,TrE_SentId,TrE_Nagroda,TrE_OperatorPOS,TrE_SentElemId
+
+    from CDN.TraElem JOIN CDN.TraSElem on TrS_GIDTyp = TrE_GIDTyp and TrS_GIDNumer = TrE_GIDNumer and TrS_GIDLp = TrE_GIDLp
+    where TrE_GIDTyp IN(1600,1603,1604) and TrS_GIDTyp IN(1600,1603,1604) and TrS_SUBGIDLp &gt;0
+    group by
+    TrE_GIDTyp,TrE_GIDFirma,TrE_GIDNumer,TrE_GIDLp,
+    TrE_Pozycja,TrE_TwrTyp,TrE_TwrFirma,TrE_TwrNumer,TrE_TwrLp,TrE_TwrNazwa,TrE_TwrKod,TrE_TypTwr,
+    TrE_KntTyp,TrE_KntFirma,TrE_KntNumer,TrE_KntLp,
+    TrE_AkwTyp,TrE_AkwFirma,TrE_AkwNumer,TrE_AkwLp,
+    TrE_TrnTStamp,TrE_Punkty,
+    TrE_JmFormat,TrE_JmZ,TrE_JmFormatZ,TrE_TypJm,TrE_PrzeliczM,
+    TrE_PrzeliczL,TrE_GrupaPod,TrE_StawkaPod,TrE_FlagaVat,TrE_Zrodlowa,
+    TrE_Akcyza,TrE_Waluta,TrE_NrKursu,TrE_KursM,TrE_KursL,TrE_Poczatkowa,TrE_FlagaNB,
+    TrE_Rabat,TrE_WartoscPoRabacie,TrE_KsiegowaNetto,TrE_KsiegowaBrutto,
+    TrE_RzeczywistaNetto,TrE_ProgTyp,TrE_Prog,TrE_UpustTyp,TrE_Upust,TrE_UpustKnt,TrE_UpustKntTyp,
+    TrE_IloscDPPrzed, TrE_KsiegowyDPPrzed, TrE_ZlcTyp, TrE_ZlcFirma, TrE_ZlcNumer, TrE_ZlcLp,
+    TrE_RecTyp, TrE_RecFirma, TrE_RecNumer, TrE_RecLp, 
+    TrE_Cena, TrE_Rownanie, TrE_OdKsiegowych, TrE_RzeczywistyDPPrzed, TrE_PCN, TrE_PrecyzjaCeny,
+    TrE_VatTyp, TrE_VatFirma, TrE_VatNumer, TrE_VatLp, TrE_KosztVat, TrE_KosztNetto, TrE_Licencja,
+    TrE_KrajPoch,TrE_RabatPromocyjny,TrE_RabatKorekta,TrE_Promocje,
+    TrE_ZstTyp,TrE_ZstFirma,TrE_ZstNumer,TrE_ZstLp,
+    TrE_PrecyzjaCenyPocz,TrE_ZwroconoCalaIlosc,TrE_RodzajCenyBazowej,TrE_KosztBazowy,
+    TrE_WartoscBazowa,TrE_CenaSpr,TrE_CenaPoRabacie,TrE_CCHTyp,TrE_CCHNumer,TrE_Cecha,
+    TrE_KGOJednostkowe,TrE_IloscMin,TrE_IloscMax,TrE_PakietID,TrE_Gratis,TrE_PromocjaProgID,
+	TrE_FormatkaCyr,TrE_Zlom,TrE_IloscPrzedKorekta,TrE_CenaPrzedKorekta,TrE_WartoscPrzedKorekta,
+	TrE_GrupaPodPrzedKorekta,TrE_StawkaPodPrzedKorekta,TrE_FlagaVatPrzedKorekta,TrE_ZrodlowaPrzedKorekta,
+	TrE_AkcyzaPrzedKorekta,TrE_PrzyczynaKorekty,TrE_KatDatyOP,TrE_RodzajKosztu,TrE_PakietTwgNumer,
+	TrE_PakietTwgTyp,TrE_RabatOpeGen,TrE_PakietWymaganaPoz,TrE_SentId,TrE_Nagroda,TrE_OperatorPOS,TrE_SentElemId
+</scriptdef>
+<scriptdef name="Nadawanie praw do perspektywy TrEMMView" hidden="False">
+GRANT SELECT ON CDN.TrEMMView TO CDNRaport
+</scriptdef>
+</ROOT>

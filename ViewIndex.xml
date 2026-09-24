@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\SqlIndex.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<view name="TrEMMView" link="VIEW_TreMMView.xml#TrEMMView" idx="TrEMMView" />
+<view name="DziennikView" link="VIEW_DziennikView.xml#DziennikView" idx="DziennikView" />
+<view name="TrpTrnView" link="VIEW_TrpTrnView.xml#TrpTrnView" idx="TrpTrnView" />
+<view name="PodmiotyView" link="VIEW_PodmiotyView.xml#PodmiotyView" idx="PodmiotyView" />
+<view name="Rozrachunki" link="VIEW_Rozrachunki.xml#Rozrachunki" idx="Rozrachunki" />
+<view name="KntUpusty" link="MacierzRabatowa_View.xml#KntUpusty" idx="KntUpusty" />
+<view name="TwrUpusty" link="MacierzRabatowa_View.xml#TwrUpusty" idx="TwrUpusty" />
+<view name="InboxView" link="VIEW_InboxView.xml#InboxView" idx="InboxView" />
+<view name="[PreliminarzView]" link="VIEW_PreliminarzView.xml#[PreliminarzView]" idx="[PreliminarzView]" />
+<view name="TrpTrnKazView" link="VIEW_TrpTrnKazView.xml#TrpTrnKazView" idx="TrpTrnKazView" />
+</ROOT>

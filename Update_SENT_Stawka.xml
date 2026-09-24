@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja pól tabeli CDN.Sent z poniżej 2019" hidden="False">
+update cdn.SENT set SnT_StawkaVat = 0, SnT_FlagaVat = 2 where isnull(SnT_FlagaVat, 0) = 0
+</scriptdef>
+</ROOT>

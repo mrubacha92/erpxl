@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja pól tabeli CDN.Tranag z 2019" hidden="False">
+update cdn.tranag set trn_kkgnumer=trn_kntnumer,trn_kkdnumer=trn_kndnumer,trn_kkpnumer=trn_knpnumer,trn_kagnumer=trn_knanumer,trn_kadnumer=trn_adwnumer,trn_kapnumer=trn_adpnumer
+</scriptdef>
+</ROOT>

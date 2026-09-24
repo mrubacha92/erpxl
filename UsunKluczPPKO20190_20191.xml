@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie klucza obcego FK_PPKOKJNId" hidden="False">
+IF EXISTS(SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'CDN.FK_PPKOKJNId') AND parent_object_id = OBJECT_ID(N'CDN.ProdParamKJNormyObiektow'))
+  ALTER TABLE CDN.ProdParamKJNormyObiektow DROP CONSTRAINT FK_PPKOKJNId;
+</scriptdef>
+</ROOT>

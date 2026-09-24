@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie tabeli PicoStnowiskaOperatorzy " hidden="False">
+IF OBJECT_ID('CDN.PicoStnowiskaOperatorzy', 'U') IS NOT NULL 
+	DROP TABLE CDN.PicoStnowiskaOperatorzy
+</scriptdef>
+<scriptdef name="Usuwanie tabeli  PicoStnowiskaFormyPl " hidden="False">
+IF OBJECT_ID('CDN.PicoStnowiskaFormyPl', 'U') IS NOT NULL 
+	DROP TABLE CDN.PicoStnowiskaFormyPl
+</scriptdef>
+</ROOT>
