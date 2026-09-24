@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Inne / Kolory obiektów / Kolory zadań terminarza" hidden="False">
+set nocount on;
+
+declare @MaxId int, @Czas int, @id int;
+declare @KoloryObiektowID int;
+select @KoloryObiektowID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Kolory obiektów' and SLS_OId = 7
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Kolory zadań terminarza' and SLS_OId = @KoloryObiektowID)
+	begin
+		insert into cdn.slownikistruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(@KoloryObiektowID,170,'Kolory zadań terminarza',170,0);
+		SET @id = SCOPE_IDENTITY()
+	end
+else
+	SELECT @id = SLS_Id FROM CDN.SlownikiStruktura WHERE SLS_Nazwa = 'Kolory zadań terminarza' and SLS_OId = @KoloryObiektowID
+
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Kolory zadań terminarza' and Slw_WartoscS = 'Zadanie terminarza' and SLW_WersjaNr = 1) 
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,144,'Kolory zadań terminarza','Zadanie terminarza','',0,0,0,14720256,0,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+ELSE
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,144,'Kolory zadań terminarza','Zadanie terminarza (XL)','',0,0,0,14720256,0,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Kolory zadań terminarza' and Slw_WartoscS = 'Zadanie CRM' and SLW_WersjaNr = 1)
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,145,'Kolory zadań terminarza','Zadanie CRM','',0,0,0,14015321,0,1,'',0,0,0,'',1,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+ELSE
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,145,'Kolory zadań terminarza','Zadanie CRM (XL)','',0,0,0,14015321,0,1,'',0,0,0,'',1,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Kolory zadań terminarza' and Slw_WartoscS = 'Wyjazd (WH/DLG)' and SLW_WersjaNr = 1)  
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,146,'Kolory zadań terminarza','Wyjazd (WH/DLG)','',0,0,0,14015321,0,1,'',0,0,0,'',2,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+ELSE
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,146,'Kolory zadań terminarza','Wyjazd (WH/DLG) (XL)','',0,0,0,14015321,0,1,'',0,0,0,'',2,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Kolory zadań terminarza' and Slw_WartoscS = 'Spotkanie z terminarza' and SLW_WersjaNr = 1)  
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,147,'Kolory zadań terminarza','Spotkanie z terminarza','',0,0,0,2457327,1,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+ELSE
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,147,'Kolory zadań terminarza','Spotkanie z terminarza (XL)','',0,0,0,2457327,1,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Kolory zadań terminarza' and Slw_WartoscS = 'Spotkanie z CRM' and SLW_WersjaNr = 1)  
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,148,'Kolory zadań terminarza','Spotkanie z CRM','',0,0,0,47610,1,1,'',0,0,0,'',1,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+ELSE
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,148,'Kolory zadań terminarza','Spotkanie z CRM (XL)','',0,0,0,47610,1,1,'',0,0,0,'',1,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Kolory zadań terminarza' and Slw_WartoscS = 'Inne zadania' and SLW_WersjaNr = 1) 
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,149,'Kolory zadań terminarza','Inne zadania','',0,0,0,44032,0,1,'',0,0,0,'',3,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+ELSE
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,149,'Kolory zadań terminarza','Inne zadania (XL)','',0,0,0,44032,0,1,'',0,0,0,'',3,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Inicjalizacja pola SLW_WersjaZrodlo w tabeli Slowniki" hidden="False">
+set nocount on;
+update cdn.Slowniki set SLW_WersjaZrodlo = s2.SLW_ID 
+from cdn.Slowniki s
+join (select min(SLW_Id) SLW_Id,SLW_Kategoria,SLW_WartoscS from cdn.Slowniki group by SLW_Kategoria,SLW_WartoscS) s2 on s.SLW_Kategoria=s2.SLW_Kategoria and s.SLW_WartoscS=s2.SLW_WartoscS
+where isnull(s.SLW_WersjaZrodlo,0) = 0
+set nocount off;
+</scriptdef>
+<scriptdef name="Inicjalizacja pola SLW_WersjaNr w tabeli Slowniki" hidden="False">
+set nocount on;
+update cdn.Slowniki set SLW_WersjaNr = s2.SLW_WersjaNr
+from cdn.Slowniki s
+join (select max(slw2.SLW_WersjaNr)+1 SLW_WersjaNr, slw.SLW_WersjaZrodlo,slw.SLW_Kategoria,slw.SLW_WartoscS
+	from cdn.Slowniki slw
+	join cdn.Slowniki slw2 on slw.SLW_WersjaZrodlo = slw2.SLW_WersjaZrodlo
+	where slw.SLW_WersjaNr = 0
+	group by slw.SLW_WersjaZrodlo,slw.SLW_Kategoria,slw.SLW_WartoscS) s2 on s.SLW_Kategoria=s2.SLW_Kategoria and s.SLW_WartoscS=s2.SLW_WartoscS
+where s.SLW_WersjaNr = 0
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Księgowość i Środki trwałe / Tytuł paczki przelewów" hidden="False">
+set nocount on;
+
+declare @MaxId int, @Czas int, @id int;
+declare @KsiegowoscID int;
+select @KsiegowoscID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Księgowość i Środki trwałe' and SLS_OId = 0
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Tytuł paczki przelewów' and SLS_OId = @KsiegowoscID)
+	begin
+		insert into cdn.slownikistruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(@KsiegowoscID,179,'Tytuł paczki przelewów',179,0);
+		SET @id = SCOPE_IDENTITY()
+	end
+else
+	SELECT @id = SLS_Id FROM CDN.SlownikiStruktura WHERE SLS_Nazwa = 'Tytuł paczki przelewów' and SLS_OId = @KsiegowoscID
+
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Tytuł paczki przelewów' and Slw_WartoscS = 'ZapytanieSQL' and SLW_WersjaNr = 1) 
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,150,'Tytuł paczki przelewów','ZapytanieSQL','',0,0,0,0,0,1,'',0,0,0,'',0,'',0,0,'SELECT TrP_Notatki FROM cdn.TraPlat WHERE {FiltrSQL}','',@id,@Czas,0,@MaxId+1,1);
+END
+ELSE
+BEGIN
+	IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Predefiniowany = 150)
+	BEGIN 
+		select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+		INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,150,'Tytuł paczki przelewów','ZapytanieSQL (XL)','',0,0,0,0,0,1,'',0,0,0,'',0,'',0,0,'SELECT TrP_Notatki FROM cdn.TraPlat WHERE {FiltrSQL}','',@id,@Czas,0,@MaxId+1,1);
+	END	
+END
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Ochrona danych osobowych / Kategorie czynności PDO" hidden="False">
+set nocount on;
+
+declare @OchronaDanychOsobowychID int;
+select @OchronaDanychOsobowychID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Ochrona danych osobowych' and SLS_OId = 0
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Kategorie czynności PDO' and SLS_OId =  @OchronaDanychOsobowychID)
+begin
+	insert into cdn.slownikistruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(@OchronaDanychOsobowychID,180,'Kategorie czynności PDO',180,0);
+end
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Księgowość i Środki trwałe / Dodatkowe kolumny importu wyciągów" hidden="False">
+set nocount on;
+
+declare @KsiegowoscID int;
+select @KsiegowoscID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Księgowość i Środki trwałe' and SLS_OId = 0
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Dodatkowe kolumny importu wyciągów' and SLS_OId = @KsiegowoscID)
+begin
+	insert into cdn.slownikistruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(@KsiegowoscID,181,'Dodatkowe kolumny importu wyciągów',181,0);
+end
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Księgowość i Środki trwałe / Grupy rejestrów k/b" hidden="False">
+set nocount on;
+
+declare @KsiegowoscID int;
+select @KsiegowoscID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Księgowość i Środki trwałe' and SLS_OId = 0
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Grupy rejestrów k/b' and SLS_OId = @KsiegowoscID)
+begin
+	insert into cdn.slownikistruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(@KsiegowoscID,182,'Grupy rejestrów k/b',182,0);
+end
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Inne / Statusy nadzleceń" hidden="False">
+set nocount on;
+
+declare @InneID int;
+select @InneID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Inne' and SLS_OId = 0
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Statusy nadzleceń' and SLS_OId = @InneID)
+begin
+	insert into cdn.slownikistruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(@InneID,183,'Statusy nadzleceń',183,0);
+end
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Inne / Statusy PKJ" hidden="False">
+set nocount on;
+
+declare @InneID int;
+select @InneID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Inne' and SLS_OId = 0
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Statusy PKJ' and SLS_OId = @InneID)
+begin
+	insert into cdn.slownikistruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(@InneID,184,'Statusy PKJ',184,0);
+end
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Inne / Przyczyny odrzucenia" hidden="False">
+set nocount on;
+
+declare @InneID int;
+select @InneID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Inne' and SLS_OId = 0
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Przyczyny odrzucenia' and SLS_OId = @InneID)
+begin
+	insert into cdn.slownikistruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(@InneID,185,'Przyczyny odrzucenia',185,0);
+end
+
+set nocount off;
+</scriptdef>
+</ROOT>

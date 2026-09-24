@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja tabeli Slowniki - kasowanie wyzwalacza Slowniki_UaktualnijStruktureFirmy" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'Slowniki_UaktualnijStruktureFirmy' AND xtype = 'TR')
+  DROP TRIGGER CDN.Slowniki_UaktualnijStruktureFirmy
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza Slowniki_UaktualnijStruktureFirmy" hidden="False">
+CREATE TRIGGER CDN.Slowniki_UaktualnijStruktureFirmy
+  ON CDN.Slowniki
+  FOR UPDATE
+-- jeśli zmieniamy nazwę lokalizacji, to uaktualnia 
+-- odpowiadający mu rekord w strukturze firmy
+AS
+BEGIN
+  IF UPDATE(Slw_WartoscS) AND EXISTS(SELECT 1 FROM INSERTED JOIN CDN.SlownikiStruktura ON INSERTED.SLW_SLSID = SLS_ID WHERE SLS_Predefiniowany = 52)
+    UPDATE CDN.FrmStruktura 
+      SET Frs_Nazwa=INSERTED.Slw_WartoscS 
+      FROM INSERTED JOIN CDN.FrmStruktura ON Frs_GIDTyp=-4272 and Frs_StrTyp=1002 and Frs_GIDNumer=INSERTED.Slw_Id
+      JOIN CDN.SlownikiStruktura ON INSERTED.SLW_SLSID = SLS_ID 
+      WHERE SLS_Predefiniowany = 52;
+END
+</scriptdef>
+<scriptdef name="Konwersja tabeli Slowniki - kasowanie wyzwalacza Slowniki_UstawDomyslny" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'Slowniki_UstawDomyslny' AND xtype = 'TR')
+  DROP TRIGGER CDN.Slowniki_UstawDomyslny
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza Slowniki_UstawDomyslny" hidden="False">
+CREATE TRIGGER CDN.Slowniki_UstawDomyslny
+  ON CDN.Slowniki
+  FOR UPDATE
+-- pilnuje, aby najwyżej jedna wartość w danej kategorii 
+-- mogła być domyślna
+AS
+BEGIN
+  IF UPDATE(Slw_Domyslny)
+  BEGIN
+
+	-- TID: 182314, Na potrzeby różnicowej synchronizacji z Mobile
+	-- Zmiana czasu modyfikacji dla slownika ktory przestaje byc domyslny.
+    UPDATE CDN.Slowniki 
+		SET SLW_CzasModyfikacji = DATEDIFF(s,convert(datetime,'1990-01-01',120),getdate())
+    FROM CDN.Slowniki JOIN INSERTED ON CDN.Slowniki.Slw_kategoria=INSERTED.Slw_kategoria
+    where CDN.Slowniki.Slw_Domyslny=1
+
+	UPDATE CDN.Slowniki
+	SET Slw_Domyslny = CASE WHEN CDN.Slowniki.Slw_WartoscS=INSERTED.Slw_WartoscS AND CDN.Slowniki.SLW_WersjaNr = inserted.SLW_WersjaNr THEN INSERTED.Slw_Domyslny ELSE 0 END
+	FROM inserted
+	JOIN CDN.SlownikiStruktura on inserted.SLW_SLSId = CDN.SlownikiStruktura.SLS_Id
+	JOIN CDN.Slowniki on inserted.SLW_SLSId=CDN.Slowniki.SLW_SLSId 
+		and (inserted.SLW_WartoscS1=CDN.Slowniki.SLW_WartoscS1 or not CDN.SlownikiStruktura.SLS_Predefiniowany=143) -- TID: 164530 Konfigurator produktu, KategoriaDefinicje pytan konfiguratora
+	WHERE CDN.Slowniki.Slw_Domyslny =1
+  END
+END
+</scriptdef>
+<scriptdef name="Konwersja tabeli Slowniki - kasowanie wyzwalacza Slowniki_KolumnyBudzetow" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'Slowniki_KolumnyBudzetow' AND xtype = 'TR')
+  DROP TRIGGER CDN.Slowniki_KolumnyBudzetow
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza Slowniki_KolumnyBudzetow" hidden="False">
+CREATE TRIGGER CDN.Slowniki_KolumnyBudzetow
+  ON CDN.Slowniki
+  FOR INSERT
+AS
+BEGIN
+  ;WITH nums AS
+   (SELECT 1 AS value
+    UNION ALL
+    SELECT value + 1 AS value
+    FROM nums
+    WHERE nums.value &lt; 32)
+INSERT INTO CDN.FrmObiekty(FRO_FRMID,FRO_GIDTyp,FRO_GIDNumer,FRO_GIDLp)
+SELECT 
+	FRS_ID, 4598, SLW_ID, nums.value
+FROM cdn.DokDefinicje 
+JOIN cdn.FrmStruktura ON	Dok_FrsId = FRS_ID
+JOIN nums ON 1=1
+JOIN cdn.SlownikiStruktura ON SLS_Predefiniowany=165
+JOIN inserted ON SLS_Id=SLW_SLSId
+WHERE Dok_GIDTyp=4595 AND Dok_DefZNadrzednego=0
+
+END
+</scriptdef>
+<scriptdef name="Konwersja tabeli Slowniki - kasowanie wyzwalacza Slowniki_AktualizujWersjeZrodla" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'Slowniki_AktualizujWersjeZrodla' AND xtype = 'TR')
+  DROP TRIGGER CDN.Slowniki_AktualizujWersjeZrodla
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza Slowniki_AktualizujWersjeZrodla" hidden="False">
+CREATE TRIGGER CDN.Slowniki_AktualizujWersjeZrodla
+  ON CDN.Slowniki
+  FOR UPDATE
+-- uaktualnia Slw_WartoscS dla pozostałych wersji słownika: Rodzaje zgód dla danych osobowych
+AS
+BEGIN
+  IF UPDATE(Slw_WartoscS)
+  BEGIN
+	  UPDATE CDN.Slowniki 
+      SET Slw_WartoscS=INSERTED.Slw_WartoscS 
+      FROM cdn.Slowniki 
+	  join INSERTED ON INSERTED.SLW_Id = cdn.Slowniki.SLW_WersjaZrodlo
+      JOIN CDN.SlownikiStruktura ON INSERTED.SLW_SLSID = SLS_ID 
+      WHERE SLS_Predefiniowany = 173;
+  END
+
+  IF UPDATE(Slw_Archiwalny)
+  BEGIN
+	update cdn.Slowniki
+	set SLW_Archiwalny = inserted.Slw_Archiwalny, 
+	SLW_Aktywny=CASE inserted.SLW_Archiwalny WHEN 1 THEN 0 ELSE 1 END,
+	SLW_Domyslny=0
+	FROM cdn.Slowniki 
+	JOIN INSERTED on INSERTED.SLW_WersjaZrodlo = cdn.Slowniki.SLW_WersjaZrodlo
+	JOIN CDN.SlownikiStruktura ON INSERTED.SLW_SLSID = SLS_ID 
+    WHERE SLS_Predefiniowany = 173;
+  END
+END
+</scriptdef>
+<scriptdef name="Konwersja tabeli Slowniki - kasowanie wyzwalacza Slowniki_DodatkoweKolumny" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'Slowniki_DodatkoweKolumny' AND xtype = 'TR')
+  DROP TRIGGER CDN.Slowniki_DodatkoweKolumny
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza Slowniki_DodatkoweKolumny" hidden="False">
+CREATE TRIGGER CDN.Slowniki_DodatkoweKolumny
+  ON CDN.Slowniki
+  FOR INSERT,UPDATE
+AS
+BEGIN
+
+	if exists(select * 
+			from inserted i
+			inner join cdn.SlownikiStruktura sls on i.SLW_SLSId = sls.SLS_Id
+			where i.SLW_Aktywny = 1 
+				and i.SLW_WartoscL1 &gt; 0
+				and sls.SLS_Predefiniowany = 181 -- słownik: Dodatkowe kolumny importu wyciągów 
+				and exists(select * from cdn.Slowniki slw where slw.SLW_Id &lt;&gt; i.SLW_Id and slw.SLW_SLSId = i.SLW_SLSId and slw.SLW_WartoscL1 = i.SLW_WartoscL1 and slw.SLW_Aktywny = 1)) 
+	begin
+		raiserror('#CDN_BLAD/##CDN_1=Istnieje juz inny wpis o statusie Aktywne ze wskazaniem na wybraną kolumnę./# [Slowniki_DodatkoweKolumny]', 16, 1)
+		rollback tran
+		return
+	end
+END
+</scriptdef>
+</ROOT>

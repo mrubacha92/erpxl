@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Księgowość i Środki trwałe / Powiązanie kont z zestawieniami" hidden="False">
+set nocount on;
+
+declare @MaxIdSlw int, @Czas int, @id int, @MaxIdSDPK int, @MaxIdSFK int;
+declare @KsiegowoscID int;
+select @KsiegowoscID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Księgowość i Środki trwałe' and SLS_OId = 0
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Powiązanie kont z zestawieniami' and SLS_OId = @KsiegowoscID)
+	begin
+		insert into cdn.slownikistruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(@KsiegowoscID,186,'Powiązanie kont z zestawieniami',186,0);
+		SET @id = SCOPE_IDENTITY()
+	end
+else
+	SELECT @id = SLS_Id FROM CDN.SlownikiStruktura WHERE SLS_Nazwa = 'Powiązanie kont z zestawieniami' and SLS_OId = @KsiegowoscID
+--Typ zestawienia Bilans(1)
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Powiązanie kont z zestawieniami' and Slw_WartoscS = 'Bilans' and SLW_WersjaNr = 1) 
+BEGIN
+	select @MaxIdSlw = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxIdSlw+1,151,'Powiązanie kont z zestawieniami','Bilans','',0,0,0,1,1,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxIdSlw+1,1);
+END
+--Typ konta Aktywa(1)
+IF NOT EXISTS(SELECT * from cdn.SlwDefPowiazaniaKont where SDPK_TypKonta = 1 and SDPK_SlwId = @MaxIdSlw+1) 
+BEGIN
+	select @MaxIdSDPK = isnull(max(SDPK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwDefPowiazaniaKont
+	INSERT INTO CDN.SlwDefPowiazaniaKont(SDPK_TypKonta, SDPK_SlwId)
+	VALUES (1,@MaxIdSlw+1);
+END
+	select @MaxIdSDPK = isnull(max(SDPK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwDefPowiazaniaKont
+IF NOT EXISTS(SELECT * from cdn.SlwFunkcjeKonta where SFK_Operator = 0 and SFK_FunkcjaKonta = 'SDT' and SFK_Znak = 0 and SFK_SDPKId = @MaxIdSDPK+1) 
+BEGIN
+	select @MaxIdSFK = isnull(max(SFK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwFunkcjeKonta
+	INSERT INTO CDN.SlwFunkcjeKonta(SFK_Operator, SFK_FunkcjaKonta, SFK_Znak, SFK_SDPKId)
+	VALUES (0,'SDT',0,@MaxIdSDPK);
+END
+
+IF NOT EXISTS(SELECT * from cdn.SlwFunkcjeKonta where SFK_Operator = 1 and SFK_FunkcjaKonta = 'SCT' and SFK_Znak = 1 and SFK_SDPKId = @MaxIdSDPK+1) 
+BEGIN
+	select @MaxIdSFK = isnull(max(SFK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwFunkcjeKonta
+	INSERT INTO CDN.SlwFunkcjeKonta(SFK_Operator, SFK_FunkcjaKonta, SFK_Znak, SFK_SDPKId)
+	VALUES (1,'SCT',1,@MaxIdSDPK);
+END
+--Typ konta Pasywa(2)
+IF NOT EXISTS(SELECT * from cdn.SlwDefPowiazaniaKont where SDPK_TypKonta = 2 and SDPK_SlwId = @MaxIdSlw+1) 
+BEGIN
+	select @MaxIdSDPK = isnull(max(SDPK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwDefPowiazaniaKont
+	INSERT INTO CDN.SlwDefPowiazaniaKont(SDPK_TypKonta, SDPK_SlwId)
+	VALUES (2,@MaxIdSlw+1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.SlwFunkcjeKonta where SFK_Operator = 0 and SFK_FunkcjaKonta = 'SCT' and SFK_Znak = 0 and SFK_SDPKId = @MaxIdSDPK+1) 
+BEGIN
+	select @MaxIdSFK = isnull(max(SFK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwFunkcjeKonta
+	INSERT INTO CDN.SlwFunkcjeKonta(SFK_Operator, SFK_FunkcjaKonta, SFK_Znak, SFK_SDPKId)
+	VALUES (0,'SCT',0,@MaxIdSDPK+1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.SlwFunkcjeKonta where SFK_Operator = 1 and SFK_FunkcjaKonta = 'SDT' and SFK_Znak = 1 and SFK_SDPKId = @MaxIdSDPK+1) 
+BEGIN
+	select @MaxIdSFK = isnull(max(SFK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwFunkcjeKonta
+	INSERT INTO CDN.SlwFunkcjeKonta(SFK_Operator, SFK_FunkcjaKonta, SFK_Znak, SFK_SDPKId)
+	VALUES (1,'SDT',1,@MaxIdSDPK+1);
+END
+--Typ konta Aktywa-pasywa(5)
+IF NOT EXISTS(SELECT * from cdn.SlwDefPowiazaniaKont where SDPK_TypKonta = 5 and SDPK_SlwId = @MaxIdSlw+1) 
+BEGIN
+	select @MaxIdSDPK = isnull(max(SDPK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwDefPowiazaniaKont
+	INSERT INTO CDN.SlwDefPowiazaniaKont(SDPK_TypKonta, SDPK_SlwId)
+	VALUES (5,@MaxIdSlw+1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.SlwFunkcjeKonta where SFK_Operator = 0 and SFK_FunkcjaKonta = 'SDT' and SFK_Znak = 0 and SFK_SDPKId = @MaxIdSDPK+1) 
+BEGIN
+	select @MaxIdSFK = isnull(max(SFK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwFunkcjeKonta
+	INSERT INTO CDN.SlwFunkcjeKonta(SFK_Operator, SFK_FunkcjaKonta, SFK_Znak, SFK_SDPKId)
+	VALUES (0,'SDT',0,@MaxIdSDPK+1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.SlwFunkcjeKonta where SFK_Operator = 0 and SFK_FunkcjaKonta = 'SCT' and SFK_Znak = 0 and SFK_SDPKId = @MaxIdSDPK+1) 
+BEGIN
+	select @MaxIdSFK = isnull(max(SFK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwFunkcjeKonta
+	INSERT INTO CDN.SlwFunkcjeKonta(SFK_Operator, SFK_FunkcjaKonta, SFK_Znak, SFK_SDPKId)
+	VALUES (0,'SCT',0,@MaxIdSDPK+1);
+END
+--Typ zestawienia rachunek wyników(2)
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Powiązanie kont z zestawieniami' and Slw_WartoscS = 'Rachunek wyników' and SLW_WersjaNr = 1) 
+BEGIN
+	select @MaxIdSlw = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxIdSlw+1,152,'Powiązanie kont z zestawieniami','Rachunek wyników','',0,0,0,2,1,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxIdSlw+1,1);
+END
+--Typ konta Przychody(4)
+IF NOT EXISTS(SELECT * from cdn.SlwDefPowiazaniaKont where SDPK_TypKonta = 4 and SDPK_SlwId = @MaxIdSlw+1) 
+BEGIN
+	select @MaxIdSDPK = isnull(max(SDPK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwDefPowiazaniaKont
+	INSERT INTO CDN.SlwDefPowiazaniaKont(SDPK_TypKonta, SDPK_SlwId)
+	VALUES (4,@MaxIdSlw+1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.SlwFunkcjeKonta where SFK_Operator = 0 and SFK_FunkcjaKonta = 'SCT' and SFK_Znak = 0 and SFK_SDPKId = @MaxIdSDPK+1) 
+BEGIN
+	select @MaxIdSFK = isnull(max(SFK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwFunkcjeKonta
+	INSERT INTO CDN.SlwFunkcjeKonta(SFK_Operator, SFK_FunkcjaKonta, SFK_Znak, SFK_SDPKId)
+	VALUES (0,'SCT',0,@MaxIdSDPK+1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.SlwFunkcjeKonta where SFK_Operator = 1 and SFK_FunkcjaKonta = 'OCT' and SFK_Znak = 0 and SFK_SDPKId = @MaxIdSDPK+1) 
+BEGIN
+	select @MaxIdSFK = isnull(max(SFK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwFunkcjeKonta
+	INSERT INTO CDN.SlwFunkcjeKonta(SFK_Operator, SFK_FunkcjaKonta, SFK_Znak, SFK_SDPKId)
+	VALUES (1,'OCT',0,@MaxIdSDPK+1);
+END
+--Typ konta Koszt(3)
+IF NOT EXISTS(SELECT * from cdn.SlwDefPowiazaniaKont where SDPK_TypKonta = 3 and SDPK_SlwId = @MaxIdSlw+1) 
+BEGIN
+	select @MaxIdSDPK = isnull(max(SDPK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwDefPowiazaniaKont
+	INSERT INTO CDN.SlwDefPowiazaniaKont(SDPK_TypKonta, SDPK_SlwId)
+	VALUES (3,@MaxIdSlw+1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.SlwFunkcjeKonta where SFK_Operator = 0 and SFK_FunkcjaKonta = 'SDT' and SFK_Znak = 0 and SFK_SDPKId = @MaxIdSDPK+1) 
+BEGIN
+	select @MaxIdSFK = isnull(max(SFK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwFunkcjeKonta
+	INSERT INTO CDN.SlwFunkcjeKonta(SFK_Operator, SFK_FunkcjaKonta, SFK_Znak, SFK_SDPKId)
+	VALUES (0,'SDT',0,@MaxIdSDPK+1);
+END
+
+IF NOT EXISTS(SELECT * from cdn.SlwFunkcjeKonta where SFK_Operator = 1 and SFK_FunkcjaKonta = 'ODT' and SFK_Znak = 0 and SFK_SDPKId = @MaxIdSDPK+1) 
+BEGIN
+	select @MaxIdSFK = isnull(max(SFK_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.SlwFunkcjeKonta
+	INSERT INTO CDN.SlwFunkcjeKonta(SFK_Operator, SFK_FunkcjaKonta, SFK_Znak, SFK_SDPKId)
+	VALUES (1,'ODT',0,@MaxIdSDPK+1);
+END
+
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Inne / Typy załączników" hidden="False">
+set nocount on;
+declare @MaxId int, @Czas int, @id int
+SELECT @id = SLS_Id FROM CDN.SlownikiStruktura WHERE SLS_Nazwa = 'Typy załączników' and SLS_OId = 7
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Typy załączników' and Slw_WartoscS = 'Profile POS') 
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id,Slw_Predefiniowany,Slw_Kategoria,Slw_WartoscS,Slw_Nazwa,Slw_WartoscN1,Slw_WartoscN2,Slw_WartoscN3,Slw_WartoscL1,Slw_WartoscL2,SLW_Aktywny,SLW_Konto,SLW_OptimaID,SLW_Domyslny,SLW_WartoscN4,SLW_WartoscS1,SLW_WartoscL3,SLW_WartoscS2,SLW_WartoscL4,SLW_WartoscL5,SLW_WartoscS3,SLW_WartoscS4,SLW_SLSId,SLW_CzasModyfikacji,SLW_Archiwalny,SLW_WersjaZrodlo,SLW_WersjaNr) 
+	VALUES (@MaxId+244,153,'Typy załączników','Profile POS','Layout (*.layout)|*.layout;',0,1,0,0,0,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxId+244,1),
+		   (@MaxId+245,153,'Typy załączników','Wydruki POS','Wydruk (*.xml)|*.xml;',0,1,0,0,0,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxId+245,1)
+END
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabel SlownikiStruktura, Slowniki - Inne / Wynik KJ" hidden="False">
+set nocount on;
+
+declare @MaxId int, @Czas int, @id int;
+
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Wynik KJ' and SLS_OId = 7)
+	begin
+		insert into cdn.slownikistruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(7,187,'Wynik KJ',187,0);
+		SET @id = SCOPE_IDENTITY()
+	end
+else
+	SELECT @id = SLS_Id FROM CDN.SlownikiStruktura WHERE SLS_Nazwa = 'Wynik KJ' and SLS_OId = 7
+--Wynik KJ- Zgodny
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Wynik KJ' and Slw_WartoscS = 'Zgodny' and SLW_WersjaNr = 1) 
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,153,'Wynik KJ','Zgodny','',0,0,0,1,1,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+--Wynik KJ- Niezgodny
+IF NOT EXISTS(SELECT * from cdn.Slowniki where Slw_Kategoria='Wynik KJ' and Slw_WartoscS = 'Niezgodny' and SLW_WersjaNr = 1) 
+BEGIN
+	select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+	INSERT INTO CDN.Slowniki (Slw_Id, Slw_Predefiniowany, Slw_Kategoria, Slw_WartoscS, Slw_Nazwa, Slw_WartoscN1, Slw_WartoscN2, Slw_WartoscN3, Slw_WartoscL1, Slw_WartoscL2, SLW_Aktywny, SLW_Konto, SLW_OptimaID, SLW_Domyslny, SLW_WartoscN4, SLW_WartoscS1, SLW_WartoscL3, SLW_WartoscS2, SLW_WartoscL4, SLW_WartoscL5, SLW_WartoscS3, SLW_WartoscS4, SLW_SLSId, SLW_CzasModyfikacji, SLW_Archiwalny, SLW_WersjaZrodlo, SLW_WersjaNr)
+VALUES (@MaxId+1,154,'Wynik KJ','Niezgodny','',0,0,0,1,1,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxId+1,1);
+END
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabei Slowniki- uaktualnienie zestawu znaków dla języka francuskiego" hidden="False">
+set nocount on;
+
+update cdn.Slowniki set SLW_WartoscL1 = 0, SLW_WartoscS2 = '0000040c' where SLW_WartoscS = 'francuski'
+
+set nocount off;
+</scriptdef>
+</ROOT>

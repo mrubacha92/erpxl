@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Dodanie domyślnych operacji kb dla Split Payment " hidden="True">
+declare @KAOMaxGIDNumer int = 0
+
+if not exists(select 1 from cdn.Operacje where KAO_Kod IN ('SPLIO', 'MPPO') )
+begin
+	select @KAOMaxGIDNumer = max(KAO_GIDNumer) from cdn.Operacje
+	set @KAOMaxGIDNumer = @KAOMaxGIDNumer + 1
+
+	INSERT INTO CDN.operacje 
+		(KAO_GIDTyp,KAO_GIDFirma,KAO_GIDNumer,KAO_GIDLp,KAO_Kod
+		,KAO_Nazwa ,KAO_RP ,KAO_KontoPrzec ,KAO_Typ ,KAO_CiagNumeracji
+		,KAO_RodzajKursu,KAO_NumerKursu,KAO_WplywaNaSrednia,KAO_SCHTyp,KAO_SCHFirma
+		,KAO_SCHNumer,KAO_SCHLp,KAO_RodzajKategorii,KAO_EdycjaKategorii,KAO_DataControllingowa
+		,KAO_DataKsiegowania,KAO_ZalozKonto,KAO_Wyrazenie,KAO_SymbolKonta,KAO_Zaliczka
+		,KAO_Anulowanie,KAO_NieRozliczaj,KAO_Oddzial,KAO_Archiwalne,KAO_Wynagrodzenie
+		,KAO_Zerujaca,KAO_Lokata,KAO_TypDaty,KAO_DniPrzedData,KAO_WycWgKursuUstalonego
+		,KAO_CzasModyfikacji,KAO_SplitPayment) 
+	VALUES (768,1,@KAOMaxGIDNumer,0,'MPPO' ,'Obciążenie Mech. Podz. Płatn.',1,'',2,'' ,3,1,0,0,0 ,0,0,0,0,1 ,0,0,0,0,0 ,0,1,0,0,0 ,0,0,0,1,0 ,0,1)
+end
+
+if not exists(select 1 from cdn.Operacje where KAO_Kod IN ('SPLIU', 'MPPU') )
+begin
+	select @KAOMaxGIDNumer = max(KAO_GIDNumer) from cdn.Operacje
+	set @KAOMaxGIDNumer = @KAOMaxGIDNumer + 1
+
+	INSERT INTO CDN.operacje 
+		(KAO_GIDTyp,KAO_GIDFirma,KAO_GIDNumer,KAO_GIDLp,KAO_Kod
+		,KAO_Nazwa ,KAO_RP ,KAO_KontoPrzec ,KAO_Typ ,KAO_CiagNumeracji
+		,KAO_RodzajKursu,KAO_NumerKursu,KAO_WplywaNaSrednia,KAO_SCHTyp,KAO_SCHFirma
+		,KAO_SCHNumer,KAO_SCHLp,KAO_RodzajKategorii,KAO_EdycjaKategorii,KAO_DataControllingowa
+		,KAO_DataKsiegowania,KAO_ZalozKonto,KAO_Wyrazenie,KAO_SymbolKonta,KAO_Zaliczka
+		,KAO_Anulowanie,KAO_NieRozliczaj,KAO_Oddzial,KAO_Archiwalne,KAO_Wynagrodzenie
+		,KAO_Zerujaca,KAO_Lokata,KAO_TypDaty,KAO_DniPrzedData,KAO_WycWgKursuUstalonego
+		,KAO_CzasModyfikacji,KAO_SplitPayment) 
+	VALUES (768,1,@KAOMaxGIDNumer,0,'MPPU' ,'Uznanie Mech. Podz. Płatn.',2,'',2,'' ,3,1,0,0,0 ,0,0,0,0,1 ,0,0,0,0,0 ,0,1,0,0,0 ,0,0,0,1,0 ,0,1)
+end
+</scriptdef>
+</ROOT>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Dodanie nowych kategorii do tabeli SlownikiStruktura" hidden="False">
+-- Produkcja
+DECLARE @ProdukcjaID int
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Produkcja' and SLS_OId = 0)
+begin
+	insert into CDN.SlownikiStruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(0,188,'Produkcja',188,0);
+end
+SET @ProdukcjaID = SCOPE_IDENTITY()
+
+-- Kontrola jakości
+DECLARE @KontrolaJakosciID int
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Kontrola jakości' and SLS_OId = 0)
+begin
+	insert into CDN.SlownikiStruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(0,189,'Kontrola jakości',189,0);
+end
+SET @KontrolaJakosciID = SCOPE_IDENTITY()
+
+--Produkcja / Narzędziownia
+DECLARE @NarzedziowniaID int
+if not exists(select * from cdn.SlownikiStruktura where SLS_Nazwa = 'Narzędziownia' and SLS_OId = @ProdukcjaID-1)
+begin
+	insert into CDN.SlownikiStruktura (SLS_OId, SLS_Lp, SLS_Nazwa, SLS_Predefiniowany, SLS_WartoscL1) values(@ProdukcjaID,190,'Narzędziownia',190,0);
+end
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Przeniesienie słowników z kategorii Inne do kategorii Produkcja " hidden="False">
+set nocount on;
+DECLARE @ProdukcjaID int
+select @ProdukcjaID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Produkcja' and SLS_OId = 0
+UPDATE cdn.SlownikiStruktura SET SLS_OId = @ProdukcjaID where SLS_Predefiniowany in (82,151,152,158,162,183)
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Przeniesienie słowników z kategorii Inne do kategorii Kontrola jakości " hidden="False">
+set nocount on;
+DECLARE @KontrolaJakosciID int
+select @KontrolaJakosciID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Kontrola jakości' and SLS_OId = 0
+UPDATE cdn.SlownikiStruktura SET SLS_OId = @KontrolaJakosciID where SLS_Predefiniowany in (184,185,187)
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Przeniesienie słowników z kategorii Inne do kategorii Produkcja/Narzędziownia " hidden="False">
+set nocount on;
+DECLARE @NarzedziowniaID int, @ProdukcjaID int
+select @ProdukcjaID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Produkcja' and SLS_OId = 0
+select @NarzedziowniaID=SLS_Id from cdn.SlownikiStruktura where SLS_Nazwa = 'Narzędziownia' and SLS_OId = @ProdukcjaID
+UPDATE cdn.SlownikiStruktura SET SLS_OId = @NarzedziowniaID where SLS_Predefiniowany in (168,169)
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Nowy typ załączników" hidden="False">
+set nocount on;
+DECLARE @MaxId int, @Czas int,@id int;
+SELECT @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) FROM CDN.Slowniki
+SELECT @id = SLS_Id FROM CDN.SlownikiStruktura WHERE SLS_Predefiniowany = 64
+INSERT INTO CDN.Slowniki (Slw_Id,Slw_Predefiniowany,Slw_Kategoria,Slw_WartoscS,Slw_Nazwa,Slw_WartoscN1,Slw_WartoscN2,Slw_WartoscN3,Slw_WartoscL1,Slw_WartoscL2,SLW_Aktywny,SLW_Konto,SLW_OptimaID,SLW_Domyslny,SLW_WartoscN4,SLW_WartoscS1,SLW_WartoscL3,SLW_WartoscS2,SLW_WartoscL4,SLW_WartoscL5,SLW_WartoscS3,SLW_WartoscS4,SLW_SLSId,SLW_CzasModyfikacji,SLW_Archiwalny,SLW_WersjaZrodlo,SLW_WersjaNr) VALUES (@MaxId+92,155,'Typy załączników','Dokument OCR','Pliki graficzne (*.pdf,*.jpg)|*.jpg;*.pdf|Wszystkie pliki (*.*)|*.*',1,1,0,0,0,1,'',0,0,0,'',0,'',0,0,'','',@id,@Czas,0,@MaxId+92,1);
+set nocount off;
+</scriptdef>
+<scriptdef name="Aktualizacja slw_predefiniowany" hidden="False">
+set nocount on;
+UPDATE cdn.Slowniki set SLW_Predefiniowany = 156 where SLW_WartoscS = 'Profile POS'
+UPDATE cdn.Slowniki set SLW_Predefiniowany = 157 where SLW_WartoscS = 'Wydruki POS'
+
+set nocount off;
+</scriptdef>
+</ROOT>
