@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="AtkZrodlo">
+CREATE PROCEDURE CDN.AtkZrodlo
+	@Akcja smallint,
+	@Nazwa varchar(41),
+	@SQL varchar(2049),
+	
+	@ID int = 0,
+	@Nieaktywne smallint = 1
+AS
+SET NOCOUNT ON
+IF @Akcja = 2
+BEGIN
+	DELETE FROM CDN.AtrybutyZrodla WHERE ATZ_ID = @ID
+	IF @@ERROR &lt;&gt; 0
+	BEGIN
+		RAISERROR('Błąd usuwania źródła atrybutów',16,1)
+		RETURN 2
+	END
+	SELECT 0 AS ERROR,1 AS DELSTAT
+END
+ELSE
+BEGIN
+	BEGIN TRAN
+	INSERT INTO CDN.AtrybutyZrodla (AtZ_Nazwa,AtZ_SQL,AtZ_Aktywne,AtZ_Predefiniowane) VALUES (@Nazwa,@SQL,@Nieaktywne,1)
+	IF @@ERROR &lt;&gt; 0
+	BEGIN
+		ROLLBACK TRAN
+		RAISERROR('Błąd dodawania źródła',16,1)
+		RETURN 1
+	END
+	SELECT AtZ_ID,AtZ_Nazwa,AtZ_Aktywne FROM CDN.AtrybutyZrodla WHERE AtZ_ID = (SELECT MAX(AtZ_ID) FROM CDN.AtrybutyZrodla)
+	COMMIT TRAN
+END
+SET NOCOUNT OFF
+</proceduredef>
+</ROOT>

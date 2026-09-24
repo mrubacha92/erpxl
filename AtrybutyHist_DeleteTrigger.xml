@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="TraNag_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.TraNag_DeleteAtrybutyHist
+  ON CDN.TraNag
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.TrN_GIDNumer AND AtH_AtrTyp = deleted.TrN_GIDTyp AND AtH_AtrLp = deleted.TrN_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.TrN_GIDNumer AND AtH_AtrTyp = deleted.TrN_GIDTyp AND AtH_AtrLp = deleted.TrN_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.TrN_GIDNumer AND Atr_AtrTyp = deleted.TrN_GIDTyp AND Atr_AtrLp = deleted.TrN_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.TrN_GIDNumer AND Atr_AtrTyp = deleted.TrN_GIDTyp AND Atr_AtrLp = deleted.TrN_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="TwrKarty_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.TwrKarty_DeleteAtrybutyHist
+  ON CDN.TwrKarty
+  FOR DELETE
+AS
+SET NOCOUNT ON	
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.Twr_GIDNumer AND AtH_AtrTyp = deleted.Twr_GIDTyp AND AtH_AtrLp = deleted.Twr_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.Twr_GIDNumer AND AtH_AtrTyp = deleted.Twr_GIDTyp AND AtH_AtrLp = deleted.Twr_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.Twr_GIDNumer AND Atr_AtrTyp = deleted.Twr_GIDTyp AND Atr_AtrLp = deleted.Twr_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.Twr_GIDNumer AND Atr_AtrTyp = deleted.Twr_GIDTyp AND Atr_AtrLp = deleted.Twr_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="KntKarty_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.KntKarty_DeleteAtrybutyHist
+  ON CDN.KntKarty
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.KnT_GIDNumer AND AtH_AtrTyp = deleted.KnT_GIDTyp AND AtH_AtrLp = deleted.KnT_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.KnT_GIDNumer AND AtH_AtrTyp = deleted.KnT_GIDTyp AND AtH_AtrLp = deleted.KnT_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.KnT_GIDNumer AND Atr_AtrTyp = deleted.KnT_GIDTyp AND Atr_AtrLp = deleted.KnT_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.KnT_GIDNumer AND Atr_AtrTyp = deleted.KnT_GIDTyp AND Atr_AtrLp = deleted.KnT_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="SrtKarty_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.SrtKarty_DeleteAtrybutyHist
+  ON CDN.SrtKarty
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.SrT_GIDNumer AND AtH_AtrTyp = deleted.SrT_GIDTyp AND AtH_AtrLp = deleted.SrT_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.SrT_GIDNumer AND AtH_AtrTyp = deleted.SrT_GIDTyp AND AtH_AtrLp = deleted.SrT_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.SrT_GIDNumer AND Atr_AtrTyp = deleted.SrT_GIDTyp AND Atr_AtrLp = deleted.SrT_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.SrT_GIDNumer AND Atr_AtrTyp = deleted.SrT_GIDTyp AND Atr_AtrLp = deleted.SrT_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="MagNag_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.MagNag_DeleteAtrybutyHist
+  ON CDN.MagNag
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.MaN_GIDNumer AND AtH_AtrTyp = deleted.MaN_GIDTyp AND AtH_AtrLp = deleted.MaN_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.MaN_GIDNumer AND AtH_AtrTyp = deleted.MaN_GIDTyp AND AtH_AtrLp = deleted.MaN_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.MaN_GIDNumer AND Atr_AtrTyp = deleted.MaN_GIDTyp AND Atr_AtrLp = deleted.MaN_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.MaN_GIDNumer AND Atr_AtrTyp = deleted.MaN_GIDTyp AND Atr_AtrLp = deleted.MaN_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="ImpNag_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.ImpNag_DeleteAtrybutyHist
+  ON CDN.ImpNag
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.ImN_GIDNumer AND AtH_AtrTyp = deleted.ImN_GIDTyp AND AtH_AtrLp = deleted.ImN_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.ImN_GIDNumer AND AtH_AtrTyp = deleted.ImN_GIDTyp AND AtH_AtrLp = deleted.ImN_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.ImN_GIDNumer AND Atr_AtrTyp = deleted.ImN_GIDTyp AND Atr_AtrLp = deleted.ImN_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.ImN_GIDNumer AND Atr_AtrTyp = deleted.ImN_GIDTyp AND Atr_AtrLp = deleted.ImN_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="SadNag_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.SadNag_DeleteAtrybutyHist
+  ON CDN.SadNag
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.SaN_GIDNumer AND AtH_AtrTyp = deleted.SaN_GIDTyp AND AtH_AtrLp = deleted.SaN_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.SaN_GIDNumer AND AtH_AtrTyp = deleted.SaN_GIDTyp AND AtH_AtrLp = deleted.SaN_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.SaN_GIDNumer AND Atr_AtrTyp = deleted.SaN_GIDTyp AND Atr_AtrLp = deleted.SaN_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.SaN_GIDNumer AND Atr_AtrTyp = deleted.SaN_GIDTyp AND Atr_AtrLp = deleted.SaN_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="ZamNag_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.ZamNag_DeleteAtrybutyHist
+  ON CDN.ZamNag
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.ZaN_GIDNumer AND AtH_AtrTyp = deleted.ZaN_GIDTyp AND AtH_AtrLp = deleted.ZaN_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.ZaN_GIDNumer AND AtH_AtrTyp = deleted.ZaN_GIDTyp AND AtH_AtrLp = deleted.ZaN_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.ZaN_GIDNumer AND Atr_AtrTyp = deleted.ZaN_GIDTyp AND Atr_AtrLp = deleted.ZaN_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.ZaN_GIDNumer AND Atr_AtrTyp = deleted.ZaN_GIDTyp AND Atr_AtrLp = deleted.ZaN_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="ZlcNag_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.ZlcNag_DeleteAtrybutyHist
+  ON CDN.ZlcNag
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.ZcN_GIDNumer AND AtH_AtrTyp = deleted.ZcN_GIDTyp AND AtH_AtrLp = deleted.ZcN_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.ZcN_GIDNumer AND AtH_AtrTyp = deleted.ZcN_GIDTyp AND AtH_AtrLp = deleted.ZcN_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.ZcN_GIDNumer AND Atr_AtrTyp = deleted.ZcN_GIDTyp AND Atr_AtrLp = deleted.ZcN_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.ZcN_GIDNumer AND Atr_AtrTyp = deleted.ZcN_GIDTyp AND Atr_AtrLp = deleted.ZcN_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="ZlcRemNag_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.ZlcRemNag_DeleteAtrybutyHist
+  ON CDN.ZlcRemNag
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.ZrN_GIDNumer AND AtH_AtrTyp = deleted.ZrN_GIDTyp AND AtH_AtrLp = deleted.ZrN_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.ZrN_GIDNumer AND AtH_AtrTyp = deleted.ZrN_GIDTyp AND AtH_AtrLp = deleted.ZrN_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.ZrN_GIDNumer AND Atr_AtrTyp = deleted.ZrN_GIDTyp AND Atr_AtrLp = deleted.ZrN_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.ZrN_GIDNumer AND Atr_AtrTyp = deleted.ZrN_GIDTyp AND Atr_AtrLp = deleted.ZrN_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="Konta_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.Konta_DeleteAtrybutyHist
+  ON CDN.Konta
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.KKS_GIDNumer AND AtH_AtrTyp = deleted.KKS_GIDTyp AND AtH_AtrLp = deleted.KKS_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.KKS_GIDNumer AND AtH_AtrTyp = deleted.KKS_GIDTyp AND AtH_AtrLp = deleted.KKS_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.KKS_GIDNumer AND Atr_AtrTyp = deleted.KKS_GIDTyp AND Atr_AtrLp = deleted.KKS_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.KKS_GIDNumer AND Atr_AtrTyp = deleted.KKS_GIDTyp AND Atr_AtrLp = deleted.KKS_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="PrcKarty_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.PrcKarty_DeleteAtrybutyHist
+  ON CDN.PrcKarty
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.PrC_GIDNumer AND AtH_AtrTyp = deleted.PrC_GIDTyp AND AtH_AtrLp = deleted.PrC_GIDLp)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.PrC_GIDNumer AND AtH_AtrTyp = deleted.PrC_GIDTyp AND AtH_AtrLp = deleted.PrC_GIDLp
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.PrC_GIDNumer AND Atr_AtrTyp = deleted.PrC_GIDTyp AND Atr_AtrLp = deleted.PrC_GIDLp)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.PrC_GIDNumer AND Atr_AtrTyp = deleted.PrC_GIDTyp AND Atr_AtrLp = deleted.PrC_GIDLp
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="DaneBinarne_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.DaneBinarne_DeleteAtrybutyHist
+  ON CDN.DaneBinarne
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.DAB_ID AND AtH_AtrTyp = 14400)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.DAB_ID AND AtH_AtrTyp = 14400
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.DAB_ID AND Atr_AtrTyp = 14400)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.DAB_ID AND Atr_AtrTyp = 14400
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="ProdTechnologia_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.ProdTechnologia_DeleteAtrybutyHist
+  ON CDN.ProdTechnologia
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.PTE_ID AND AtH_AtrTyp = 14340)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.PTE_ID AND AtH_AtrTyp = 14340
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.PTE_ID AND Atr_AtrTyp = 14340)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.PTE_ID AND Atr_AtrTyp = 14340
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="ProdZlecenia_DeleteAtrybutyHist">
+CREATE TRIGGER CDN.ProdZlecenia_DeleteAtrybutyHist
+  ON CDN.ProdZlecenia
+  FOR DELETE
+AS
+SET NOCOUNT ON
+	if exists(select * FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.PZL_ID AND AtH_AtrTyp = 14343)
+		UPDATE CDN.AtrybutyHist SET AtH_Wartosc = '[*]'+AtH_Wartosc,AtH_AtrTyp = 0,AtH_AtrFirma = 0,AtH_AtrNumer = 0,AtH_AtrLp = 0,AtH_AtrSubLp = 0
+			FROM deleted JOIN CDN.AtrybutyHist ON AtH_AtrNumer = deleted.PZL_ID AND AtH_AtrTyp = 14343
+	if exists(select * FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.PZL_ID AND Atr_AtrTyp = 14343)
+		UPDATE CDN.Atrybuty SET Atr_Wartosc = '[*]'+Atr_Wartosc,Atr_AtrTyp = 0,Atr_AtrFirma = 0,Atr_AtrNumer = 0,Atr_AtrLp = 0,Atr_AtrSubLp = 0
+			FROM deleted JOIN CDN.Atrybuty ON Atr_AtrNumer = deleted.PZL_ID AND Atr_AtrTyp = 14343
+SET NOCOUNT OFF
+</triggerdef>
+</ROOT>

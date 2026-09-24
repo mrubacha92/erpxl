@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="AtkObiekt">
+CREATE PROCEDURE CDN.AtkObiekt
+	@Akcja smallint,
+	@AtOAtkID int,
+	@AtOGIDTyp int,
+	@ATOElement smallint,
+
+	@ATOLp smallint = NULL,
+	@ATOWymagany smallint = -1,
+	@ATOAutomat smallint = -1,
+	@ATOReadOnly smallint = -1,
+	@ATZID int = 0,
+	@ATOAkcja int = 0
+AS
+SET NOCOUNT ON
+IF @AtoAtkID &lt; 1
+BEGIN
+	SELECT 1 AS ERROR
+	RETURN 1
+END
+IF @Akcja = 2
+BEGIN
+	DELETE FROM CDN.AtrybutyObiekty WHERE AtO_AtkID = @AtOAtkID AND AtO_GIDTyp = @AtOGIDTyp AND AtO_Element = @ATOElement
+	IF @@ERROR &lt;&gt; 0
+	BEGIN
+		ROLLBACK TRAN
+		RAISERROR('Błąd usuwania powiązania obiektu z klasą',16,1)
+		RETURN 1
+	END
+	SELECT 0 AS ERROR,1 AS DELSTAT
+END
+ELSE IF @Akcja = 1
+BEGIN
+	IF @ATZID &gt; 0
+	BEGIN
+		IF NOT EXISTS(SELECT AZO_ATZID FROM CDN.AtrybutyZrodlaObiekty WHERE AZO_ATZID = @ATZID AND AZO_ATOGIDTyp = @AtOGIDTyp AND AZO_ATOElement = @ATOElement)
+		BEGIN
+			SELECT 3 AS ERROR
+			RETURN 3
+		END
+	END
+	IF @ATOLp IS NULL
+		SELECT @ATOLp = (ISNULL(MAX(AtO_Lp),0)+10) FROM CDN.AtrybutyObiekty WHERE AtO_AtkID = @AtoATKID
+		INSERT INTO CDN.AtrybutyObiekty (AtO_GIDTyp,AtO_Element,AtO_AtkID,AtO_Lp,AtO_Wymagany,AtO_Automat,AtO_ReadOnly,AtO_ATZID,AtO_Akcja,Ato_Online) 
+			VALUES (@AtOGIDTyp,@ATOElement,@AtOAtkID,@ATOLp,@ATOWymagany,@ATOAutomat,@ATOReadOnly,@ATZID,@ATOAkcja,0)
+	IF @@ERROR &lt;&gt; 0
+	BEGIN
+		ROLLBACK TRAN
+		RAISERROR('Błąd dodawania powiązania obiektu z klasą',16,1)
+		RETURN 1
+	END
+	SELECT @AtOAtkID AS AtO_AtkID,@AtOGIDTyp AS AtO_GIDTyp,@ATOElement AS AtO_Element,@ATOLp AS AtO_LP,@ATOWymagany AS AtO_Wymagany,@ATOAutomat AS AtO_Automat,@ATOReadOnly AS AtO_Automat,@ATZID AS AtO_ATZID,@ATOAkcja AS AtO_Akcja
+END
+ELSE
+BEGIN
+	SELECT 2 AS ERROR
+	RETURN 2
+END
+SET NOCOUNT OFF
+</proceduredef>
+</ROOT>

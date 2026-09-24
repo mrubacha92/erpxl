@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="AtrPobierzWartosc">
+Create function CDN.AtrPobierzWartosc(@OBITyp smallint, @OBINumer int, @OBILp smallint, @OBISubLp smallint, @ATkID int, @TimeStamp int)
+Returns varchar(100)
+as
+Begin
+	Declare @lHistoria int
+	Declare @lOkresowe int
+	Declare @sWynik varchar(100)
+	Declare @data 	int
+
+	if (@timestamp&lt;0)
+		select @data = -@timestamp, @timestamp = 86400 * (@data-69035)
+	else
+		set @data = (@timestamp/86400 + 69035)
+
+	Select @lHistoria = ATK_Historia, @lOkresowe = ATK_Okresowe 
+	from cdn.atrybutyklasy
+	Where Atk_ID = @AtkId
+	
+	if (@lHistoria = 0 and @lOkresowe = 0)
+		select @sWynik = Atr_Wartosc 
+		from cdn.atrybuty 
+		where ATR_OBITyp = @OBITyp and ATR_OBINumer = @OBINumer and ATR_OBILp = @OBILp and ATR_OBISubLp = @OBISubLp and ATR_AtkID = @AtkID 
+	else
+	begin 
+	   if ( @lOkresowe =1)
+		select @sWynik = AtH_Wartosc 
+		from cdn.atrybutyHist 
+		where ATH_OBITyp = @OBITyp and ATH_OBINumer = @OBINumer and ATH_OBILp = @OBILp and ATH_OBISubLp = @OBISubLp and ATH_AtkID = @AtkID 
+		and ATH_TimeStamp&lt;=@data  and  ATH_TimeStampDo&gt;=@data
+		order by ATH_TimeStamp desc
+	   else
+		select @sWynik = AtH_Wartosc 
+		from cdn.atrybutyHist 
+		where ATH_OBITyp = @OBITyp and ATH_OBINumer = @OBINumer and ATH_OBILp = @OBILp and ATH_OBISubLp = @OBISubLp and ATH_AtkID = @AtkID 
+		and ATH_TimeStamp&lt;=@TimeStamp 
+		order by ATH_TimeStamp 
+	End
+
+	return @sWynik
+		
+end
+</functiondef>
+</ROOT>

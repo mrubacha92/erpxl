@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="AtkSkasuj">
+CREATE PROCEDURE CDN.AtkSkasuj
+	@AtkID int
+AS
+SET NOCOUNT ON
+DELETE FROM CDN.AtrybutyKlasy WHERE Atk_ID = @AtkID
+IF @@ERROR &lt;&gt; 0
+BEGIN
+	ROLLBACK TRAN
+	RAISERROR('Błąd kasowania klasy atrybutów',16,1)
+	RETURN 1
+END
+SELECT 0 AS ERROR,1 AS DELSTAT
+SET NOCOUNT OFF
+</proceduredef>
+</ROOT>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="AtkZrodloObiekt">
+CREATE PROCEDURE CDN.AtkZrodloObiekt
+	@Akcja smallint,
+	@AtZID int,
+	@GIDTyp int,
+	@Element smallint
+AS
+SET NOCOUNT ON
+IF @AtZID &lt; 1
+BEGIN
+	SELECT 1 AS ERROR
+	RETURN 1
+END
+IF @Akcja = 2
+BEGIN
+	DELETE FROM CDN.AtrybutyZrodlaObiekty WHERE AZO_ATZID = @AtZID AND AZO_ATOGIDTyp = @GIDTyp AND AZO_ATOElement = @Element
+	IF @@ERROR &lt;&gt; 0
+	BEGIN
+		ROLLBACK TRAN
+		RAISERROR('Błąd usuwania powiązania obiektu ze źródłem',16,1)
+		RETURN 3
+	END
+	SELECT 0 AS ERROR,1 AS DELSTAT
+END
+ELSE IF @Akcja = 1
+BEGIN
+	INSERT INTO CDN.AtrybutyZrodlaObiekty (AZO_ATZID,AZO_ATOGIDTyp,AZO_ATOElement) VALUES (@AtZID,@GIDTyp,@Element)
+	IF @@ERROR &lt;&gt; 0
+	BEGIN
+		ROLLBACK TRAN
+		RAISERROR('Błąd dodawania powiązania obiektu ze źródłem',16,1)
+		RETURN 1
+	END
+	SELECT @AtZID AS AZO_ATZID,@GIDTyp AS AZO_ATOGIDTyp,@Element AS AZO_ATOElement
+END
+ELSE
+BEGIN
+	SELECT 2 AS ERROR
+	RETURN 2
+END
+SET NOCOUNT OFF
+</proceduredef>
+</ROOT>

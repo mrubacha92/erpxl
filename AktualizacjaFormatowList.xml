@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Aktualizacja formatów list" hidden="False">
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('9023:1','9022:1','30589:1','30065:1','30185:1') AND FLS_IDKontrolki = 13 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2900:1','2907:1','2890:1','2909:1','2958:1','2920:1','2901:1','2910:1','2892:1','2922:1','2982:1','2981:1','2976:1','2975:1','2891:1','2993:1') AND FLS_IDKontrolki = 57 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2977:2977','2978:2978','2958:2958') AND FLS_IDKontrolki = 29 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2913:2913','2914:2914','2904:2904','2905:2905') AND FLS_IDKontrolki = 94 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2908:1','2902:1','2925:1','2891:1','2921:1','2911:1','2959:1','2918:1','2983:1','2903:1','2893:1','2912:1','2984:1') AND FLS_IDKontrolki = 98 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2954:1','2950:1','2951:1','2939:1') AND FLS_IDKontrolki = 47 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2955:2955','2952:2952') AND FLS_IDKontrolki = 88 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2926:2926','2927:2927') AND FLS_IDKontrolki = 92 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2910:2910','2901:2901','2892:2892','2917:2917','2912:2912','2903:2903','2893:2893','2896:2896','2895:2895','2919:2919') AND FLS_IDKontrolki = 95 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2951:2951','2953:2953','2897:2897') AND FLS_IDKontrolki = 85 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2930:2930','2931:2931') AND FLS_IDKontrolki = 11 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2933:2933','2957:2957') AND FLS_IDKontrolki = 81 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2996:2996','2997:2997') AND FLS_IDKontrolki = 14 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura = '2997:2997' AND FLS_IDKontrolki = 84 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2968:2968','2969:2969') AND FLS_IDKontrolki = 38 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura = '2929:1' AND FLS_IDKontrolki = 42 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura = '2929:1' AND FLS_IDKontrolki = 43 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura = '2924:1' AND FLS_IDKontrolki = 22 AND FLS_IDFormatu IN (1000,1)
+DELETE FROM CDN.FormatyList WHERE FLS_Procedura IN('2405:2405','2406:2406') AND FLS_IDKontrolki = 6 AND FLS_IDFormatu IN (1000,1)
+</scriptdef>
+</ROOT>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="AtrWartoscDecimal">
+CREATE function CDN.AtrWartoscDecimal(@ObiTyp smallint, @ObiFirma int, @ObiNumer int, @ObiLp smallint, @ObiSubLp smallint,
+	 @Klasa varchar(255), @CzyDomyslna smallint, @WartoscDomyslna decimal(15, 4) = 0) 
+RETURNS decimal(15, 4) 
+AS 
+ 
+
+BEGIN 
+
+  DECLARE @Wartosc VarChar(512), @Domyslna VarChar(512)
+  DECLARE @Wynik Decimal(15,4)
+
+  SELECT @Wartosc = Atr_Wartosc, @Domyslna = AtK_Domyslna 
+  FROM CDN.AtrybutyKlasy 
+  LEFT OUTER JOIN CDN.Atrybuty ON (Atr_AtkID = AtK_ID AND Atr_ObiTyp = @ObiTyp AND AtR_ObiFirma = @ObiFirma AND Atr_ObiNumer = @ObiNumer AND 
+                Atr_ObiLp = @ObiLp AND Atr_ObiSubLp = IsNull(@ObiSubLp, 0)) 
+  WHERE AtK_Nazwa = @Klasa 
+
+  if @Wartosc is not null
+        set @Wynik = CAST(REPLACE(@Wartosc,',','.') AS DECIMAL(15, 4))
+  else
+          if @CzyDomyslna &lt;&gt; 0 and @Domyslna &lt;&gt; ''
+                set @Wynik = CAST(REPLACE(@Domyslna,',','.') AS DECIMAL(15, 4))
+          else
+                set @Wynik = CAST(REPLACE(@WartoscDomyslna,',','.') AS DECIMAL(15, 4))
+  return (@Wynik)
+
+END 
+</functiondef>
+</ROOT>

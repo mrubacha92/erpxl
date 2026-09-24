@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="AtrybutyKlasy_Kasowanie">
+CREATE TRIGGER CDN.AtrybutyKlasy_Kasowanie
+  ON CDN.AtrybutyKlasy
+  FOR DELETE
+AS
+SET NOCOUNT ON
+
+    -- obsługa sprawdzania relacji restrict do tabeli CDN.AtrybutyObiekty
+    IF EXISTS
+       ( SELECT * FROM CDN.AtrybutyObiekty, deleted
+          WHERE
+                deleted.AtK_ID = CDN.AtrybutyObiekty.AtO_AtKId
+       AND ( CDN.AtrybutyObiekty.AtO_AtKID&gt;0)
+       )
+    BEGIN
+      RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą AtrybutyObiekty). ', 16, 1)
+      ROLLBACK TRAN
+      SET NOCOUNT OFF
+      RETURN
+    END
+	IF EXISTS( SELECT * FROM deleted WHERE deleted.AtK_Synchronizowany = 1)
+    BEGIN
+      RAISERROR('#CDN_INFO/##CDN_1=Informacje o klasie atrybutu są współdzielone z oddziałami. Nie można usunąć klasy atrybutu./#',16,1)
+      ROLLBACK TRAN
+      SET NOCOUNT OFF
+      RETURN
+    END
+
+SET NOCOUNT OFF
+</triggerdef>
+<triggerdef name="AtrybutyKomplety_Kasuj">
+CREATE TRIGGER CDN.AtrybutyKomplety_Kasuj
+  ON CDN.AtrybutyKomplety
+  FOR DELETE
+AS
+SET NOCOUNT ON
+
+    -- obsługa sprawdzania relacji restrict do tabeli CDN.AtrybutyObiekty
+    IF EXISTS
+       ( SELECT * FROM CDN.AtrybutyObiekty, deleted
+          WHERE
+                deleted.AKp_Id = - CDN.AtrybutyObiekty.AtO_AtKId
+       AND ( CDN.AtrybutyObiekty.AtO_AtKID&lt;0)
+       )
+    BEGIN
+      RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą AtrybutyObiekty). ', 16, 1)
+      ROLLBACK TRAN
+      SET NOCOUNT OFF
+      RETURN
+    END
+
+
+SET NOCOUNT OFF
+
+</triggerdef>
+<triggerdef name="AtrybutyObiekty_Zmiana">
+CREATE TRIGGER CDN.AtrybutyObiekty_Zmiana
+  ON CDN.AtrybutyObiekty
+  FOR INSERT,UPDATE
+AS
+SET NOCOUNT ON
+
+
+    IF EXISTS (SELECT * FROM inserted WHERE  inserted.AtO_AtKID&lt;0)
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.AtrybutyKomplety ON
+                    inserted.AtO_AtKId = - CDN.AtrybutyKomplety.AKp_Id
+              WHERE CDN.AtrybutyKomplety.AKp_Id IS NULL AND ( inserted.AtO_AtKID&lt;0)
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  AtrybutyKomplety). ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT ON
+          RETURN
+        END
+
+    IF EXISTS (SELECT * FROM inserted WHERE  inserted.AtO_AtKID&gt;0)
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.AtrybutyKlasy ON
+                    inserted.AtO_AtKId = CDN.AtrybutyKlasy.AtK_ID
+              WHERE CDN.AtrybutyKlasy.AtK_ID IS NULL AND ( inserted.AtO_AtKID&gt;0)
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  AtrybutyKlasy). ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT ON
+          RETURN
+        END
+
+SET NOCOUNT OFF
+</triggerdef>
+</ROOT>

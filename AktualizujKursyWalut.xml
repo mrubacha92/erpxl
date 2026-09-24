@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="AktualizujKursyWalut">
+CREATE PROCEDURE CDN.AktualizujKursyWalut
+@Waluta VARCHAR(5),
+@DataAktualizacji DATETIME,
+@NrKursu SMALLINT,
+@KursM DECIMAL(5,0),
+@KursL DECIMAL(7,4),
+@Opis VARCHAR(255)
+AS
+BEGIN
+
+    SET @KursL=@KursL*100
+    SET @KursM=@KursM*100 
+
+    IF NOT EXISTS(SELECT * FROM CDN.WalElem WHERE WaE_symbol=@Waluta AND WaE_Lp=@NrKursu AND CONVERT(CHAR(19),DATEADD(s,WaE_KursTS,'1990-1-1'),120)= CONVERT(CHAR(19),@DataAktualizacji,120))
+        INSERT INTO CDN.WalElem(WaE_Symbol,WaE_KursTS,WaE_Lp,WaE_KursM,WaE_KursL,WaE_OpisKursu) 
+        VALUES (@Waluta,DATEDIFF(s,'1990-1-1',CONVERT(DATETIME,@DataAktualizacji,120)), @NrKursu, @KursM, @KursL, @Opis)
+    ELSE 
+        UPDATE CDN.WalElem 
+        SET WaE_KursTS=DATEDIFF(s,'1990-1-1',CONVERT(DATETIME,@DataAktualizacji,120))
+            ,WaE_KursL=@KursL
+            ,WaE_KursM=@KursM
+            ,WaE_OpisKursu=@Opis
+        WHERE WaE_Symbol=@Waluta AND WaE_Lp=@NrKursu AND CONVERT(CHAR(19),DATEADD(s,WaE_KursTS,'1990-1-1'),120)= CONVERT(CHAR(19),@DataAktualizacji,120)
+
+END
+</proceduredef>
+</ROOT>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="AtrWartoscString">
+CREATE function CDN.AtrWartoscString(@ObiTyp smallint, @ObiFirma int, @ObiNumer int, @ObiLp smallint, @ObiSubLp smallint, @Klasa varchar(255), @CzyDomyslna smallint, @WartoscDomyslna varchar(512) = null) 
+RETURNS varchar(512) 
+AS 
+ 
+
+BEGIN 
+ 
+  DECLARE @Wartosc VarChar(512), @Domyslna VarChar(512) 
+ 
+  SELECT @Wartosc = Atr_Wartosc, @Domyslna = AtK_Domyslna 
+  FROM CDN.AtrybutyKlasy 
+  LEFT OUTER JOIN CDN.Atrybuty ON (Atr_AtkID = AtK_ID AND Atr_ObiTyp = @ObiTyp AND AtR_ObiFirma = @ObiFirma AND Atr_ObiNumer = @ObiNumer AND 
+                Atr_ObiLp = @ObiLp AND Atr_ObiSubLp = IsNull(@ObiSubLp, 0)) 
+  WHERE AtK_Nazwa = @Klasa 
+ 
+  IF @CzyDomyslna &lt;&gt; 0 AND @Wartosc IS NULL 
+    SET @Wartosc = IsNull(@Wartosc, @Domyslna) 
+  return(@Wartosc) 
+END 
+</functiondef>
+</ROOT>
