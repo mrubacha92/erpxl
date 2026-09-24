@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji CDN.KsiKontaWyrazeniaZestawienia" hidden="True">
+if exists(select name from sysobjects where name='KsiKontaWyrazeniaZestawienia' and type='TF')
+	drop function CDN.KsiKontaWyrazeniaZestawienia
+</scriptdef>
+<scriptdef name="Tworzenie funkcji CDN.KsiKontaWyrazeniaZestawienia" hidden="False">
+CREATE FUNCTION cdn.KsiKontaWyrazeniaZestawienia
+(
+  @Wartosc varchar(8000)
+)
+RETURNS @KontaZestawien TABLE
+(
+	Konto varchar(30)
+--	,i1 int, i2 int, i3 int
+)
+AS
+begin
+	
+	declare @pos1 smallint = 0, @pos2 smallint = 0, @posN smallint = 0, @posK smallint = 1, @Konto varchar(30) = '', @delta tinyint = 0, @i smallint = 0 
+
+	while (@posK &gt; 0)
+	begin 
+		set @delta = 0
+	
+		set @pos1 = CHARINDEX('PS0(''',@Wartosc, @posK)
+		set @pos2 = CHARINDEX('DT0(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2
+			--else
+				--break
+		end	
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('CT0(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			--else
+				--break
+		end	
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('ODT(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			--else
+				--break
+		end	
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('OCT(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			--else
+				--break
+		end	
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('KDT(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			--else
+				--break
+		end	
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('KCT(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			--else
+				--break
+		end	
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('PSD(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			--else
+				--break
+		end	
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('SDT(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			--else
+				--break
+		end		
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('SCT(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			--else
+				--break
+		end	
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('DPSD(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 
+			set @delta = 1
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			--else
+				--break
+		end		
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('DSDT(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 
+			set @delta = 1
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			--else
+				--break
+		end	
+		set @pos1 = @posN
+		set @pos2 = CHARINDEX('DSCT(''',@Wartosc, @posK)
+		if @pos2 &lt;&gt; 0 
+			set @delta = 1
+		if @pos2 &lt;&gt; 0 and @pos1 &lt;&gt; 0 
+		begin
+			if @pos1 &lt; @pos2	
+				set @posN = @pos1 
+			else
+				set @posN = @pos2 
+		end
+		else
+		begin
+			if @pos1 &lt;&gt; 0 		
+				set @posN = @pos1 
+			else if @pos2 &lt;&gt; 0
+				set @posN = @pos2 
+			else
+				break
+		end	
+
+		set @i = @i + 1
+		--if @posN = @posK
+			--break
+
+		set @posN = @posN + 5 + @delta
+
+		set @posK = CHARINDEX('''',@Wartosc, @posN+1)		
+		set @Konto = SUBSTRING(@Wartosc, @posN , @posK-@posN)		
+		insert into @KontaZestawien select @Konto
+		--select @Konto, @posN, @posK, @i
+		set @posN = 0
+	end
+
+	return
+end
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji CDN.KsiKontaWyrazeniaZestawienia" hidden="False">
+GRANT SELECT ON CDN.KsiKontaWyrazeniaZestawienia TO CDNRaport
+</scriptdef>
+</ROOT>

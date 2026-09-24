@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportRej">
+CREATE Procedure CDN.MobS_EksportRej
+@CentrumID    INT, -- ID centrum praw struktury firmy 
+@OpeNumer     INT, -- ID mobilnego sprzedawcy
+@TypEksportu  INT  -- Typ eksportu (0 - różnicowy, 1 - pełny)
+AS
+BEGIN
+	SELECT REJ_Id, REJ_OjciecId, REJ_Nazwa, REJ_Opis
+	FROM CDN.Rejony
+	JOIN CDN.KntOpiekun ON KtO_KntNumer=REJ_Id
+	JOIN CDN.OpeKarty ON Ope_PrcNumer=KtO_PrcNumer
+	WHERE KtO_KntTyp=948 AND Ope_GIDNumer=@OpeNumer
+END
+</proceduredef>
+<proceduredef name="MobS_EksportPSp">
+CREATE Procedure CDN.MobS_EksportPSp
+@CentrumID    INT, -- ID centrum praw struktury firmy
+@OpeNumer     INT, -- ID mobilnego sprzedawcy
+@TypEksportu  INT  -- Typ eksportu (0 - różnicowy, 1 - pełny)        
+AS
+BEGIN
+	DECLARE @Dzis INT
+	DECLARE @TimeStamp INT
+    DECLARE @Typ_GrK SMALLINT
+    DECLARE @KnGTyp   SMALLINT
+    DECLARE @TwGTyp   SMALLINT
+    DECLARE @KnGNumer INT
+    DECLARE @TwGNumer INT
+    DECLARE @Rejony TABLE (KtOTyp SMALLINT, KtONumer INT)
+
+    SET @Typ_GrK = -32
+    SELECT @Dzis = DATEDIFF(d,CONVERT(datetime,'18001228',112),CONVERT(datetime,GetDate(),112))
+    SELECT @KnGTyp=PcK_KnGETyp, @KnGNumer=PcK_KnGENumer, @TwGTyp=PcK_TwGTyp, @TwGNumer=PcK_TwGNumer, @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+    
+      
+	INSERT INTO @Rejony SELECT KtO_KntTyp, KtO_KntNumer FROM CDN.OpeKarty JOIN CDN.KntOpiekun ON Ope_PrcNumer=KtO_PrcNumer			 
+	WHERE Ope_GIDNumer=@OpeNumer AND (KtO_KntTyp=948 OR (KtO_KntTyp=32 AND @Dzis BETWEEN KtO_DataOd AND KtO_DataDo));		
+	
+    
+    SELECT DISTINCT PSp_ID,
+			PSp_Nazwa,
+			CDN.TSToDate(PSp_DataOd,0) AS PSp_DataOd,
+			CDN.TSToDate(PSp_DataDo,0) AS PSp_DataDo,
+			PSp_Typ,
+			CDN.TSToDate(PSp_DataUtworzenia,0) AS PSp_DataUtworzenia,
+			PSp_Stan,
+			PSp_Opis,
+			1 As PSp_Aktywny 
+	INTO #TempTable
+	FROM CDN.PlanSprzedazy
+	LEFT JOIN CDN.PlanSprzedazyRej ON PSp_ID=PSR_PSpID
+	WHERE PSp_Stan &lt;&gt; 1 AND PSp_CzasModyfikacji &gt;= CASE WHEN @TypEksportu=0 THEN 0 ELSE 0 END 
+	AND (PSR_RejID IS NULL OR PSR_RejID IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948) )
+	 	
+	--AND PSR_RejID IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948) 	
+	SELECT * FROM #TempTable
+
+    IF @KnGTyp = @Typ_GrK
+    BEGIN
+				  -- Grupy nadrzędne	
+		SELECT PSK_PSpID, PSK_KntTyp, PSK_KntNumer 
+		FROM CDN.PlanSprzedazyKnt
+		JOIN #TempTable ON PSp_ID=PSK_PSpID
+		JOIN CDN.KntLinki ON KnL_GIDTyp=PSK_KntTyp AND KnL_GIDNumer=PSK_KntNumer
+ 		WHERE KnL_GrOTyp=@KnGTyp AND KnL_GrONumer=@KnGNumer
+		UNION ALL -- Grupa
+		SELECT PSK_PSpID, PSK_KntTyp, PSK_KntNumer 
+		FROM CDN.PlanSprzedazyKnt
+		JOIN #TempTable ON PSp_ID=PSK_PSpID
+		WHERE PSK_KntTyp=@KnGTyp AND PSK_KntNumer=@KnGNumer
+		UNION ALL -- Grupy i kontrahenci podrzędni
+		SELECT PSK_PSpID, PSK_KntTyp, PSK_KntNumer 
+		FROM CDN.PlanSprzedazyKnt
+		JOIN #TempTable ON PSp_ID=PSK_PSpID
+		JOIN CDN.KntLinki ON KnL_GrOTyp=PSK_KntTyp AND KnL_GrONumer=PSK_KntNumer
+		WHERE KnL_GIDTyp=@KnGTyp AND KnL_GIDNumer=@KnGNumer
+	END
+	ELSE
+	BEGIN
+				  -- Grupy 
+		SELECT PSK_PSpID, PSK_KntTyp, PSK_KntNumer 
+		FROM CDN.PlanSprzedazyKnt
+		JOIN #TempTable ON PSp_ID=PSK_PSpID
+ 		WHERE PSK_KntTyp=@Typ_GrK
+		UNION ALL -- Kontrahenci opiekuna
+		SELECT PSK_PSpID, PSK_KntTyp, PSK_KntNumer 
+		FROM CDN.PlanSprzedazyKnt
+		JOIN #TempTable ON PSp_ID=PSK_PSpID
+		JOIN CDN.KntKarty ON Knt_GIDTyp=PSK_KntTyp AND Knt_GIDNumer=PSK_KntNumer
+		WHERE Knt_RegionCRM IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948)
+	END
+	
+              -- Grupy nadrzędne	
+	SELECT PST_PSpID, PST_TwrTyp, PST_TwrNumer 
+	FROM CDN.PlanSprzedazyTwr
+	JOIN #TempTable ON PSp_ID=PST_PSpID
+	JOIN CDN.TwrLinki ON TwL_GIDTyp=PST_TwrTyp AND TwL_GIDNumer=PST_TwrNumer
+ 	WHERE TwL_GrOTyp=@TwGTyp AND TwL_GrONumer=@TwGNumer
+	UNION ALL -- Grupa
+	SELECT PST_PSpID, PST_TwrTyp, PST_TwrNumer 
+	FROM CDN.PlanSprzedazyTwr
+	JOIN #TempTable ON PSp_ID=PST_PSpID
+	WHERE PST_TwrTyp=@TwGTyp AND PST_TwrNumer=@TwGNumer
+	UNION ALL -- Grupy i towary podrzędne
+	SELECT PST_PSpID, PST_TwrTyp, PST_TwrNumer 
+	FROM CDN.PlanSprzedazyTwr
+	JOIN #TempTable ON PSp_ID=PST_PSpID
+	JOIN CDN.TwrLinki ON TwL_GrOTyp=PST_TwrTyp AND TwL_GrONumer=PST_TwrNumer
+	WHERE TwL_GIDTyp=@TwGTyp AND TwL_GIDNumer=@TwGNumer
+
+	SELECT PSR_PSpID, PSR_RejID, PSp_Typ AS PSR_Typ, PSR_Wartosc, 0 AS PSR_WartoscSpr, 0 AS PSR_WartoscZam 
+	FROM CDN.PlanSprzedazyRej
+	JOIN #TempTable ON PSp_ID=PSR_PSpID
+	WHERE PSR_RejID IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948) 
+	
+	DROP TABLE #TempTable;
+END
+</proceduredef>
+<proceduredef name="MobS_EksportPSpReal">
+CREATE Procedure CDN.MobS_EksportPSpReal
+@CentrumID    INT, -- ID centrum praw struktury firmy
+@OpeNumer     INT, -- ID mobilnego sprzedawcy
+@TypEksportu  INT  -- Typ eksportu (0 - różnicowy, 1 - pełny)        
+AS
+BEGIN
+	DECLARE @Today DATETIME
+	SET @Today = GETDATE()
+
+	DECLARE @Rejony TABLE (KtOTyp SMALLINT, KtONumer INT)
+	CREATE TABLE #RejonyLinki (RejonID INT,RejOjciecID INT)
+	INSERT INTO #RejonyLinki SELECT * FROM CDN.RejonyLinki()
+
+	INSERT INTO @Rejony
+	SELECT KtO_KntTyp, KtO_KntNumer
+	FROM CDN.KntOpiekun  
+	INNER JOIN CDN.OpeKarty ON Ope_PrcNumer=KtO_PrcNumer
+	WHERE Ope_GIDNumer=@OpeNumer AND KtO_KntTyp=948; 	
+	
+	DECLARE @WalutaSystemowa VARCHAR(4)
+    DECLARE @TSTamp INT
+
+    SELECT @WalutaSystemowa = Kon_Wartosc FROM CDN.Konfig WHERE Kon_Numer = 211
+    SET @TSTamp = DATEDIFF(s,'19900101',GETDATE());
+	
+ 	DECLARE  @PSP_DoWyslania TABLE (PSP_Id int ,PSp_Typ int, PsR_Wartosc DECIMAL(18,2),PSR_RejID INT , PSp_DataOd int,PSp_DataDo int)	 
+	
+	----------------------------------PSP DO WYSLANIA--------------------------------------------
+	INSERT INTO @PSP_DoWyslania
+	SELECT PsP_Id, PsP_Typ, PsR_Wartosc, PSR_RejID, PSp_DataOd, PSp_DataDo
+	FROM 
+		(SELECT PsP_Id, PSp_Typ, PSR_Wartosc, PSR_RejID, PSp_DataOd, PSp_DataDo
+		 FROM CDN.PlanSprzedazy
+		 INNER JOIN CDN.PlanSprzedazyKnt (NOLOCK) ON PSK_PSPID = PSp_ID
+		 INNER JOIN CDN.KntLinki (NOLOCK) ON (KnL_GroTyp = PSK_KntTyp AND KnL_GroNumer = PSK_KntNumer AND PSK_KntTyp = -32) OR (KnL_GIDTyp = PSK_KntTyp AND KnL_GIDNumer = PSK_KntNumer AND PSK_KntTyp = 32)
+		 INNER JOIN CDN.KntKarty (NOLOCK) ON Knt_GIDNumer = KnL_GIDNumer
+		 INNER JOIN CDN.PlanSprzedazyRej (NOLOCK) ON PSR_PSPID = PSp_ID
+		 INNER JOIN #RejonyLinki ON RejOjciecID = PSR_RejID AND RejonID = Knt_RegionCRM								
+		 INNER JOIN @Rejony ON RejonID = KtONumer
+		 GROUP BY PsP_Id,PSp_Typ, PSR_RejID,PSp_DataOd,PSp_DataDo, PSR_Wartosc
+		 ) AS PlanySpr	;
+                       
+                        
+   -------------------------------WYNIK KONCOWY -------------------------------------------------
+   
+  WITH PSPReal_Wyn2 AS(  
+  SELECT CAST(ISNULL(SUM(ZaE_Ilosc),0) as DECIMAL(21,4)) as Ilosc,0 as ZamFak /*zam*/,RejonID,PspId
+  FROM
+  (
+    SELECT ZaE_Ilosc,RejonID, DW.PSP_ID as PspId
+    FROM CDN.PlanSprzedazyKnt (NOLOCK)
+    JOIN @PSP_DoWyslania DW ON DW.PSP_ID = PSK_PSpID and DW.PSP_Typ = 2
+    JOIN CDN.KntLinki (NOLOCK) ON (KnL_GroTyp = PSK_KntTyp AND KnL_GroNumer = PSK_KntNumer AND PSK_KntTyp = -32) OR (KnL_GIDTyp = PSK_KntTyp AND KnL_GIDNumer = PSK_KntNumer AND PSK_KntTyp = 32)
+    JOIN CDN.KntKarty (NOLOCK) ON Knt_GIDNumer = KnL_GIDNumer
+    JOIN CDN.PlanSprzedazyTwr (NOLOCK) ON PST_PSPID = DW.PSP_ID
+    JOIN CDN.TwrLinki (NOLOCK) ON (TwL_GroTyp = PST_TwrTyp AND TwL_GroNumer = PST_TwrNumer AND PST_TwrTyp = -16) OR (TwL_GIDTyp = PST_TwrTyp AND TwL_GIDNumer = PST_TwrNumer AND PST_TwrTyp = 16)
+    CROSS APPLY CDN.PlanySprzedazyRejonyPodrz(DW.PSP_ID)  
+    JOIN CDN.ZamNag (NOLOCK) ON ZaN_KntNumer = KnL_GIDNumer AND ZaN_DataWystawienia BETWEEN DW.PSp_DataOd AND DW.PSp_DataDo AND ZaN_Stan&amp;32 &lt;&gt; 32 AND ZaN_ZamTyp&amp;1024 = 1024
+    JOIN CDN.ZamElem (NOLOCK) ON ZaE_GIDNumer = ZaN_GIDNumer AND ZaE_TwrNumer = TwL_GIDNumer                               
+    WHERE  RejonID = Knt_RegionCRM AND RejonID = DW.PSR_RejID --PSK_PSpID = @PSPID
+    GROUP BY KnL_GIDNumer,TwL_GIDNumer,RejonID,ZaE_GIDNumer,ZaE_GIDLp,ZaE_Ilosc,DW.PSP_ID
+  ) WYN
+  GROUP BY RejonID,PspId
+  
+  union all
+  
+  SELECT CAST(ISNULL(SUM(TrE_Ilosc),0) as DECIMAL(21,4)) as Ilosc,1 as ZamFak /*fak*/,RejonID,PspId 
+  FROM
+  (
+    SELECT TrE_Ilosc,RejonID, DW.PSP_ID as PspId
+    FROM CDN.PlanSprzedazyKnt (NOLOCK)
+    JOIN @PSP_DoWyslania DW ON DW.PSP_ID = PSK_PSpID and DW.PSP_Typ = 2
+    JOIN CDN.KntLinki (NOLOCK) ON (KnL_GroTyp = PSK_KntTyp AND KnL_GroNumer = PSK_KntNumer AND PSK_KntTyp = -32) OR (KnL_GIDTyp = PSK_KntTyp AND KnL_GIDNumer = PSK_KntNumer AND PSK_KntTyp = 32)
+    JOIN CDN.KntKarty (NOLOCK) ON Knt_GIDNumer = KnL_GIDNumer
+    JOIN CDN.PlanSprzedazyTwr (NOLOCK) ON PST_PSPID = DW.PSP_ID
+    JOIN CDN.TwrLinki (NOLOCK) ON (TwL_GroTyp = PST_TwrTyp AND TwL_GroNumer = PST_TwrNumer AND PST_TwrTyp = -16) OR (TwL_GIDTyp = PST_TwrTyp AND TwL_GIDNumer = PST_TwrNumer AND PST_TwrTyp = 16)
+    CROSS APPLY  CDN.PlanySprzedazyRejonyPodrz(DW.PSP_ID) --ON RejonID = Knt_RegionCRM
+    JOIN CDN.TraNag (NOLOCK) ON TrN_KntNumer = KnL_GIDNumer AND TrN_Data2 BETWEEN DW.PSp_DataOd AND DW.PSp_DataDo AND TrN_Stan &lt;&gt; 6 AND TrN_GIDTyp IN (2033,2035,2037,2001,2005,2034)
+    JOIN CDN.TraElem (NOLOCK) ON TrE_GIDNumer = TrN_GIDNumer AND TrE_TwrNumer = TwL_GIDNumer
+    WHERE RejonID = Knt_RegionCRM AND RejonID = DW.PSR_RejID
+    --WHERE PSK_PSpID = @PSPID
+    GROUP BY KnL_GIDNumer,TwL_GIDNumer,RejonID,TrE_GIDNumer,TrE_GIDLp,TrE_Ilosc,DW.PSP_ID
+  ) WYN
+  GROUP BY RejonID,PspId
+  
+  union all
+  
+  SELECT CAST(ISNULL(SUM(ROUND((CASE WHEN ZaE_Waluta &lt;&gt; @WalutaSystemowa THEN CASE WHEN ZaN_TypKursu = 1 THEN CDN.WartoscWWalucieSys(ZaE_WartoscPoRabacie,ZaE_Waluta,ZaE_NrKursu,@TSTamp) 
+																				    WHEN ZaN_TypKursu = 2 THEN ZaE_WartoscPoRabacie*(ZaV_KursL/ZaV_KursM) 
+																					WHEN ZaN_TypKursu = 3 AND ZaN_DataWaznosci&lt;=DATEDIFF(d,CONVERT(DATETIME,'1800-12-28',120),@Today) THEN CDN.WartoscWWalucieSys(ZaE_WartoscPoRabacie,ZaE_Waluta,ZaE_NrKursu,@TSTamp) 
+																					ELSE ZaE_WartoscPoRabacie*(ZaV_KursL/ZaV_KursM) END ELSE ZaE_WartoscPoRabacie END)
+			/(CASE WHEN ZaN_FlagaNB='N' THEN 1 ELSE 1+(ZaE_StawkaPod*0.01) END),2)),0)as DECIMAL(21,4))
+         ,0 as ZamFak,RejonID, PspId
+  FROM
+  (
+    SELECT ZaE_Waluta,ZaN_TypKursu,ZaN_DataWaznosci,ZaE_WartoscPoRabacie,ZaE_NrKursu,ZaV_KursL,ZaV_KursM,RejonID,ZaN_FlagaNB,ZaE_StawkaPod,
+    DW.PSP_ID as PspId
+    FROM CDN.PlanSprzedazyKnt (NOLOCK)
+    JOIN @PSP_DoWyslania DW ON DW.PSP_ID = PSK_PSpID and DW.PSP_Typ = 1
+    JOIN CDN.KntLinki (NOLOCK) ON (KnL_GroTyp = PSK_KntTyp AND KnL_GroNumer = PSK_KntNumer AND PSK_KntTyp = -32) OR (KnL_GIDTyp = PSK_KntTyp AND KnL_GIDNumer = PSK_KntNumer AND PSK_KntTyp = 32)
+    JOIN CDN.KntKarty (NOLOCK) ON Knt_GIDNumer = KnL_GIDNumer
+    JOIN CDN.PlanSprzedazyTwr (NOLOCK) ON PST_PSPID = DW.PSP_ID
+    JOIN CDN.TwrLinki (NOLOCK) ON (TwL_GroTyp = PST_TwrTyp AND TwL_GroNumer = PST_TwrNumer AND PST_TwrTyp = -16) OR (TwL_GIDTyp = PST_TwrTyp AND TwL_GIDNumer = PST_TwrNumer AND PST_TwrTyp = 16)
+    CROSS APPLY  CDN.PlanySprzedazyRejonyPodrz(DW.PSP_ID) --ON RejonID = Knt_RegionCRM
+    JOIN CDN.ZamNag (NOLOCK) ON ZaN_KntNumer = KnL_GIDNumer AND ZaN_DataWystawienia BETWEEN DW.PSp_DataOd AND DW.PSp_DataDo AND ZaN_Stan&amp;32 &lt;&gt; 32 AND ZaN_ZamTyp&amp;1024 = 1024
+    JOIN CDN.ZamElem (NOLOCK) ON ZaE_GIDNumer = ZaN_GIDNumer AND ZaE_TwrNumer = TwL_GIDNumer
+    JOIN CDN.ZamVat (NOLOCK) ON ZaV_GIDNumer = ZaE_GIDNumer
+    WHERE RejonID = Knt_RegionCRM AND RejonID = DW.PSR_RejID
+    --WHERE PSK_PSpID = @PSPID
+    GROUP BY KnL_GIDNumer,TwL_GIDNumer,RejonID,ZaE_GIDNumer,ZaE_GIDLp,ZaE_Ilosc,ZaE_Waluta,
+    ZaN_TypKursu,ZaN_DataWaznosci,ZaE_WartoscPoRabacie,ZaE_NrKursu,
+    ZaV_KursL,ZaV_KursM,ZaN_FlagaNB,ZaE_StawkaPod,DW.PSP_ID
+  ) WYN
+  GROUP BY RejonID,PspId
+                        
+  union all
+  
+  SELECT CAST(ISNULL(SUM(TrE_KsiegowaNetto),0)as DECIMAL(21,4)), 1 as ZamFak,RejonID,  PspId FROM
+  (
+    SELECT TrE_KsiegowaNetto,RejonID, DW.PSP_ID as PspId
+    FROM CDN.PlanSprzedazyKnt (NOLOCK)
+    JOIN @PSP_DoWyslania DW ON DW.PSP_ID = PSK_PSpID and DW.PSP_Typ = 1
+    JOIN CDN.KntLinki (NOLOCK) ON (KnL_GroTyp = PSK_KntTyp AND KnL_GroNumer = PSK_KntNumer AND PSK_KntTyp = -32) OR (KnL_GIDTyp = PSK_KntTyp AND KnL_GIDNumer = PSK_KntNumer AND PSK_KntTyp = 32)
+    JOIN CDN.KntKarty (NOLOCK) ON Knt_GIDNumer = KnL_GIDNumer
+    JOIN CDN.PlanSprzedazyTwr (NOLOCK) ON PST_PSPID = DW.PSP_ID
+    JOIN CDN.TwrLinki (NOLOCK) ON (TwL_GroTyp = PST_TwrTyp AND TwL_GroNumer = PST_TwrNumer AND PST_TwrTyp = -16) OR (TwL_GIDTyp = PST_TwrTyp AND TwL_GIDNumer = PST_TwrNumer AND PST_TwrTyp = 16)
+    CROSS APPLY  CDN.PlanySprzedazyRejonyPodrz(DW.PSP_ID) --ON RejonID = Knt_RegionCRM
+    JOIN CDN.TraNag (NOLOCK) ON TrN_KntNumer = KnL_GIDNumer AND TrN_Data2 BETWEEN DW.PSp_DataOd AND DW.PSp_DataDo AND TrN_Stan &lt;&gt; 6 AND TrN_GIDTyp IN (2033,2035,2037,2001,2005,2034)
+    JOIN CDN.TraElem (NOLOCK) ON TrE_GIDNumer = TrN_GIDNumer AND TrE_TwrNumer = TwL_GIDNumer
+    WHERE RejonID = Knt_RegionCRM AND RejonID = DW.PSR_RejID
+    GROUP BY KnL_GIDNumer,TwL_GIDNumer,RejonID,TrE_GIDNumer,TrE_GIDLp,TrE_KsiegowaNetto,DW.PSP_ID
+  ) WYN
+  GROUP BY RejonID,PspId
+
+ ) --end WITH                        
+                     
+    SELECT TAB1.PsP_Id as PSR_PSpID,TAB1.PSp_Typ as PSR_Typ,COALESCE(PSR_Wartosc,0) AS PSR_Wartosc,
+		   TAB1.PSR_RejID as PSR_RejID,
+		   ISNULL(TAB2.Ilosc, 0) AS PSR_WartoscZam,ISNULL(Tab3.Ilosc, 0)  AS PSR_WartoscSpr		   
+	FROM @PSP_DoWyslania TAB1	
+	left join PSPReal_Wyn2 TAB2 ON TAB2.RejonID = TAB1.PSR_RejID AND TAB2.PspId = TAB1.PSP_Id AND TAB2.ZamFak = 0                        
+	left join PSPReal_Wyn2 TAB3 ON TAB3.RejonID = TAB1.PSR_RejID AND TAB3.PspId = TAB1.PSP_Id AND TAB3.ZamFak = 1                       
+	
+	ORDER BY TAB1.PsP_Id	
+
+	DROP TABLE #RejonyLinki
+	
+END
+</proceduredef>
+</ROOT>

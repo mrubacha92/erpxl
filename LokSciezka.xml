@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="LokSciezka">
+create procedure CDN.LokSciezka
+	@SourceName  VARCHAR(255),
+	@SourceDatabase  VARCHAR(255) ,
+	@p_LokId int,
+	@returns varchar(255) OUTPUT
+as
+begin
+
+	declare @Sciezka varchar(255)
+
+	DECLARE @sql NVARCHAR(4000)
+	DECLARE @params NVARCHAR(4000)
+
+	select @sql = 
+	N'	select @Sciezka=Lok_Kod
+	from ['+@SourceName+'].['+@SourceDatabase +'].CDN.Lokalizacje
+	where Lok_LokId=@p_LokId
+	'		
+	SELECT @params =N'	  @p_LokId int,
+						  @Sciezka varchar(255) OUTPUT'
+	EXEC sp_executesql @sql, @params, @p_LokId,@Sciezka OUTPUT
+
+	if @Sciezka is null or @Sciezka='brak'
+		SET @returns = ''
+	else
+		SET @returns =@Sciezka
+end
+</proceduredef>
+</ROOT>

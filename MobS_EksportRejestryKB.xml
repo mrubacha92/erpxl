@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportKAR">
+CREATE Procedure CDN.MobS_EksportKAR
+@CentrumID    INT -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+AS
+BEGIN
+	declare @rejestrkasowy varchar(10)
+	declare @numerraportu int
+	declare @stanpoczatkowy decimal(15,2)
+	declare @rokraportu smallint
+
+  SET @rokraportu = year(getdate())
+  
+	SELECT TOP 1 @rejestrkasowy=KAR_Seria FROM CDN.FrmObiekty JOIN CDN.Rejestry ON FRO_GIDTyp=KAR_GIDTyp AND FRO_GIDNumer=KAR_GIDNumer 
+	WHERE FRO_FRMID=@CentrumID AND KAR_Typ=1 AND KAR_Oddzial=1
+	
+	SELECT @numerraportu=isnull(max(krp_numer),0)+1 
+	FROM CDN.Raporty 
+	WHERE KRP_Seria=@rejestrkasowy AND KRP_Rok=@rokraportu
+
+	SELECT @stanpoczatkowy=isnull(sum(krp_stanpocz+krp_przychody-krp_rozchody),0)
+	FROM CDN.Raporty
+	WHERE KRP_Seria=@rejestrkasowy 	AND KRP_GIDNumer = (SELECT max(KRP_GIDNumer) from CDN.Raporty where krp_seria=@rejestrkasowy)
+
+	select @rejestrkasowy As Rejestr, 
+				 @numerraportu As NumerRaportu, 
+				 @rokraportu As RokRaportu, 
+				 @stanpoczatkowy As StanPoczatkowy
+	WHERE @rejestrkasowy is not null
+
+END
+</proceduredef>
+</ROOT>

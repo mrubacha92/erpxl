@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportDok">
+CREATE PROCEDURE CDN.MobS_EksportDok
+@CentrumID INT 
+AS
+BEGIN
+	SET NOCOUNT ON
+	UPDATE CDN.TraNag SET TrN_OddDokID=-1
+	FROM CDN.PicoKonfig 
+	JOIN CDN.TraNag ON PcK_MagNumer=TrN_MagDNumer AND TrN_GIDTyp=1604 AND TrN_TrNLp=127 AND TrN_Stan&gt;=3
+	WHERE PcK_CentrumID=@CentrumID AND TrN_OddDokID=0
+	SET NOCOUNT OFF
+
+	--puste dokumenty MMP
+	DECLARE @MMPbezZasobow TABLE 
+	( gidnumer int )
+
+	INSERT INTO @MMPbezZasobow SELECT TrE_Gidnumer FROM
+		(SELECT TrE_GIDNumer,   
+			   TrE_TwrNumer,
+			   sum(TrS_Ilosc) as Ilosc,
+			   TrS_MagNumer,
+			   TrS_DstNumer
+		FROM   CDN.PicoKonfig 
+			   JOIN CDN.TraNag ON PcK_MagNumer=TrN_MagDNumer AND TrN_GIDTyp=1604 AND TrN_TrNLp=127 AND TrN_Stan&gt;=3
+			   JOIN CDN.TraElem ON TrN_GIDNumer=TrE_GIDNumer
+			   JOIN CDN.TraSElem ON TrE_GIDNumer=TrS_GIDNumer AND TrE_GIDLp=TrS_GIDLp
+		WHERE PcK_CentrumID=@CentrumID AND TrN_OddDokID&lt;0
+		GROUP BY TrE_GIDNumer, TrS_MagNumer, TrE_TwrNumer, TrS_DstNumer ) X
+	JOIN CDN.TwrZasoby ON Twz_MagNumer=Trs_MagNumer AND Twz_TwrNumer=Tre_TwrNumer AND Twz_DstNumer=Trs_DstNumer
+	WHERE Ilosc&gt;Twz_IlSpr
+
+	-- Nagłówki dokumentów MMP
+	
+	SELECT * INTO #TempMMPMobile FROM
+    (	
+		SELECT TrN_TrNNumer,
+			   TrN_TrNSeria,
+			   TrN_GIDTyp,
+			   TrN_GIDNumer,
+			   TrN_TrNMiesiac,
+			   CDN.TSToDate(TrN_Data2,0) AS TrN_Data,
+			   PcK_MMInfo As TrN_Bufor
+		FROM   CDN.PicoKonfig 
+			   JOIN CDN.TraNag ON PcK_MagNumer=TrN_MagDNumer AND TrN_GIDTyp=1604 AND TrN_TrNLp=127 AND TrN_Stan&gt;=3
+		WHERE  PcK_CentrumID=@CentrumID AND TrN_OddDokID&lt;0
+		
+		
+	)TempMMPMobile
+
+	SELECT * FROM #TempMMPMobile
+	ORDER BY TrN_GIDNumer
+
+	-- Elementy dokumentów MMP
+	SELECT * INTO #TempMMPposMobile FROM
+    (	
+		SELECT TrE_GIDNumer,
+			   TrE_GIDLp,   
+			   TrE_TwrNumer,
+			   TrE_KosztKsiegowy,
+			   TrE_Ilosc,
+			   TrE_Pozycja,
+			   TrE_GidTyp
+		FROM   CDN.TraElem
+			   INNER JOIN #TempMMPMobile TrN on TrN.Trn_GidNumer = TrE_GIDNumer			  
+		WHERE TrE_GIDNumer NOT IN (SELECT gidnumer FROM @MMPbezZasobow)
+		
+	)TempMMPposMobile
+	
+	SELECT * FROM #TempMMPposMobile 
+	ORDER BY TrE_GIDNumer,TrE_Pozycja
+	
+	-- Subelementy dokumentów MMP
+	SELECT TrS_GIDNumer,   
+		   TrS_GIDLp,
+		   SUM(TrS_Ilosc) AS TrS_Ilosc,
+		   TrS_MagNumer,
+		   TrS_DstNumer,
+		   SUM(TrS_KosztKsiegowy) AS TrS_KosztKsiegowy
+	FROM  CDN.TraSElem
+	      INNER JOIN #TempMMPposMobile TrE ON TrE.TrE_GIDNumer=TrS_GIDNumer AND TrE.TrE_GIDLp=TrS_GIDLp	    	       	
+	GROUP BY TrS_GIDNumer, TrS_GIDLp, TrS_MagNumer, TrS_DstNumer
+	
+/*Atrybuty nagłówków i pozycji dokumentów MMP*/
+	SELECT  Atr_Id , Atr_ObiTyp, Atr_ObiNumer, Atr_ObiLp,
+			CASE WHEN AtK_Typ = 1 THEN  
+					CASE WHEN Atr_Wartosc = 'TAK' THEN 'True'
+					     WHEN Atr_Wartosc = 'NIE' THEN 'False'
+					     ELSE ''
+				    END
+				 WHEN AtK_Format='@d17' THEN 
+				    CASE WHEN CONVERT(int, Atr_Wartosc) = 0 THEN ''
+				         ELSE CONVERT(varchar, CDN.TsToDate(CONVERT(int, Atr_Wartosc), 0), 105)
+				    END
+			     ELSE Atr_Wartosc 
+			END AS Atr_Wartosc, 
+			0 as Atr_WartoscId, 
+			Atr_AtKId		
+	FROM CDN.Atrybuty
+	JOIN  #TempMMPMobile TrN ON Atr_ObiNumer=TrN.TrN_GIDNumer and Atr_ObiTyp = TrN.TrN_GIDTyp and Atr_ObiSubLp = 0
+	JOIN CDN.AtrybutyKlasy ON Atr_AtkId = AtK_ID
+	WHERE AtK_MOBSPrawa &gt; 0 AND AtK_Typ &lt;= 6 	    
+/*Atrybuty koniec*/
+	
+	DROP TABLE #TempMMPMobile
+	DROP TABLE #TempMMPposMobile
+	
+END
+</proceduredef>
+<proceduredef name="MobS_EksportDokRealiz">
+CREATE PROCEDURE CDN.MobS_EksportDokRealiz 
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+DECLARE @canSynchronize BIT
+DECLARE @TimeStamp      INT
+DECLARE @GrOTyp         SMALLINT
+DECLARE @GrONumer       INT 
+
+DECLARE @PcK_PicoID INT,@PcK_TSSynchrPtw INT
+
+SELECT @canSynchronize = isnull(PcK_ExpZanRealizacje,0), @PcK_PicoID=PcK_PicoID
+FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+SELECT @TimeStamp=isnull(PcS_TSSynchrPtw,0) --pobierz czas ostatniej synchronizacji realizacji zamowien
+FROM CDN.PicoTimestamp WHERE PcS_PcKID=@PcK_PicoID AND PcS_OBITyp=14601
+  
+IF @canSynchronize = 1/*wg XL mozna synchronizowac realizacje zamówień z XL do Mobile*/
+BEGIN       
+   
+	UPDATE CDN.PicoTimestamp SET PcS_TSSynchr = DATEDIFF(s,'19900101',GetDate()) --update czas wysyłania realizacji
+	WHERE PcS_PcKID=@PcK_PicoID AND PcS_OBITyp=14601 
+ 	 
+   --historia zmian, czyli pobierz wszystkie zamowienia, ktore przyszły do XL z mobile, a które były modyfikowane od czasu ostatniej synchro 	 
+ 	 --pobierz zmiany na nagłówkach	
+	SELECT ZaN_OddDokID/*id w Mobile*/,ZaN_GIDNumer/*id w ERP*/,
+	case ZaN_Stan
+	when 3 then 1 --potwierdzony
+    when 5 then 2 --w realizacji
+    when 19 then 3 --odrzucony
+    when 21 then 4 --zrealizowany
+    when 35 then 5 --anulowany + potwierdzony   
+    when 37 then 6 -- anulowany + w realizacji
+    when 51 then 7 --zamkniete(anulowane + archiwalne), potwierdzone
+    when 53 then 8 -- zamkniete + w realizacji
+    when 67 then 9 -- skorygowane + potwierdzone
+    when 69 then 10 --skorygowane + w realizacji
+    end as ZaN_Stan,    
+    case when (ZaN_FlagaNB = 'N') 
+         then SUM(ZaE_WartoscPoRabacie) --wartosc w netto
+         else SUM((ZaE_WartoscPoRabacie * 100) / (100 + ZaE_StawkaPod)) --brutto zamien na netto
+    end AS WartoscNetto,    
+    case when ZaN_FlagaNB = 'B' 
+         then SUM(ZaE_WartoscPoRabacie) --wartosc w brutto 
+         else SUM((ZaE_WartoscPoRabacie * (100 + ZaE_StawkaPod) / 100)) --zamien z netto na brutto
+    end AS WartoscBrutto,
+	ZaN_LastMod
+	FROM CDN.ZamNag
+	inner join CDN.ZamElem on ZaE_GIDNumer = ZaN_GIDNumer		
+	WHERE ZaN_Stan &gt;=3/*potwierdzone*/ AND  ZaN_OddDokID&gt;0 
+	AND ZaN_PcKID = @PcK_PicoID	AND ISNULL(ZaN_LastMod,0)&gt;CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END
+	GROUP BY ZaN_OddDokID,ZaN_GIDNumer,ZaN_Stan,ZaN_LastMod,ZaN_FlagaNB;        
+		
+	With TempZaN(ZaN_GIDNumer,ZaN_Stan)
+	AS
+	(SELECT ZaN_GIDNumer,ZaN_Stan
+	 FROM CDN.ZamNag		
+	 WHERE ZaN_Stan &gt;=3/*potwierdzone*/ AND  ZaN_OddDokID&gt;0 AND ZaN_PcKID = @PcK_PicoID		
+	 AND ISNULL(ZaN_LastMod,0)&gt;CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END
+	)	
+	--pobierz wartości(zmiany) z elementów
+	SELECT ZaE_GidNumer, --id zam z ERP
+	isnull(ZaE_OddElemId,0) as ZaE_OddElemId,--id pozycji w oddziale
+	ZaE_GidLp, -- lp. pozycji zam,
+	ZaE_Pozycja, --kolejnosc wyswietlania pozycji zam
+	ZaE_Ilosc, -- ilosc elementu z zam
+	Twr_Jm , --jm z pozycji zamowienia
+	/*ZS zamknięte --&gt; dla wygenerowanych dokumentów FS+WM mamy ilości zrealizowane w TrasElem, na ilosc z FS nie ma rekordów w rezerwacjach
+	               --&gt; dla dokumentów WM mamy ilość w Rez_IloscMag, jesli potem do tego WM zostanie wygenerowany FS, to usunie sie rekord z rezerwacji a wpadnie rekord do trasElem*/
+    case when ((SUM(Rez_Ilosc - Rez_IloscMag - Rez_Zrealizowano - Rez_IloscImp - Rez_IloscSAD - Rez_IloscSSC) is null) and TempZaN.ZaN_Stan &lt;&gt; 51 and TempZaN.ZaN_Stan &lt;&gt; 53 ) then 0 /*brak rez na niezamkniętym ZS ozn. 100% zrealizaowanej ilosci*/
+         when ((SUM(Rez_Ilosc - Rez_IloscMag - Rez_Zrealizowano - Rez_IloscImp - Rez_IloscSAD - Rez_IloscSSC) is not null)
+                and TempZaN.ZaN_Stan &lt;&gt; 51 and TempZaN.ZaN_Stan &lt;&gt; 53
+                ) then SUM(Rez_Ilosc - Rez_IloscMag - Rez_Zrealizowano - Rez_IloscImp - Rez_IloscSAD - Rez_IloscSSC)--dla niezamkniętych ZS patrz wg rezerwacji
+         /*when (TempZaN.ZaN_Stan = 51 or TempZaN.ZaN_Stan = 53) and --zamkniete
+              (SUM(Rez_Ilosc - Rez_IloscMag - Rez_Zrealizowano - Rez_IloscImp - Rez_IloscSAD - Rez_IloscSSC) is null) --brak rezerwacji       
+              then 0  */
+         else (Select ZaE_Ilosc - isnull(SUM(Trs_Ilosc),0) + isnull(SUM(Rez_Ilosc - Rez_IloscMag - Rez_Zrealizowano - Rez_IloscImp - Rez_IloscSAD - Rez_IloscSSC),0) --[ilosc ZS] - [suma z handlowych wystawionych do tego zamowienia] + [ilosc ktora zostala zrealizowana nie przez handlowe, ale magazynowe,które nie sa powiązane z dok handlowym wystawionym do tego zamowienia  ]
+               from CDN.trasElem where Trs_ZlcTyp= 960 and Trs_ZlcNumer = Zae_GidNumer and Trs_ZlcLp= Zae_GidLp                             
+               )                      
+         end as IloscDoRealiz,
+	ZaE_GrupaPod, --  Grupa podatku (A, B, C itd.) 
+	ZaE_StawkaPod, -- Stawka VAT z systemu ERP		
+	ISNULL(Twc_Wartosc,0) As Twc_Wartosc,	--Cena bazowa z zamówienia z systemu ERP, w walucie TO DO 
+	ZaE_CenaKatalogowa,	--Cena początkowa z zamówienia z systemu ERP
+	ZaE_CenaUzgodniona,	--Cena końcowa z zamówienia z systemu ERP
+	ZaE_WartoscPoRabacie,--Wartość końcowa z zamówienia z systemu EPR	
+  isnull((select TOP 1 TrE_CenaPoRabacie * Tre_KursL / Tre_KursM /*w walucie systemowej*/
+      from CDN.TraSElem 
+       inner join CDN.TraElem on TrE_GidNumer = Trs_GidNumer and TrE_GIDTyp=TrS_GIDTyp AND TrE_GIDLp=TrS_GIDLp
+      where TrS_ZlcTyp = 960 AND  TrS_ZlcNumer =ZaE_GIDNumer and TrS_ZlcLp = ZaE_GIDLp   
+     AND ( TrE_GIDTyp = 2033 /*Typ_FS*/ OR TrE_GIDTyp = 2001 /*Typ_WZ*/  OR TrE_GIDTyp = 2037 /*Typ_FSE*/ OR  TrE_GIDTyp = 2005 /*Typ_WZE*/ OR TrE_GIDTyp = 2034 /*Typ_PA*/)
+      order by TrE_TrnTStamp desc),0.00) as LastEndPrice  , --Cena koncowa z ostatnio wystawionego dokumentu handlowego z zamowienia w systemie ERP    
+     ZaE_Twrnumer,	 
+ 	 '' as Remarks,
+ 	 ZaE_JmZ, -- nazwa jednostki pomocniczej
+ 	 ZaE_Ilosc * ISNULL(ZaE_PrzeliczM,1)/ ISNULL(ZaE_PrzeliczL,1) as IloscPomocnicza,
+ 	 ISNULL(CCK_Nazwa,'') as CCK_Nazwa, --nazwa klasy cechy
+ 	 ISNULL(ZaE_Cecha,'') as ZaE_Cecha --cecha 	 	
+   FROM CDN.ZamElem 
+	 join TempZaN on ZAN_GidNumer = ZaE_GidNumer		
+   join CDN.TwrKarty on Twr_GidNumer = ZaE_TwrNumer
+	 left join CDN.TwrCeny on Twc_TwrNumer = ZaE_TwrNumer and TwC_TwrTyp = ZaE_TwrTyp and TwC_Twrlp = Zae_RodzajCenyBazowej
+	 left join CDN.Rezerwacje on Rez_ZrdTyp=ZaE_GIDTyp AND Rez_ZrdNumer=ZaE_GIDNumer AND Rez_ZrdLp= ZaE_GIDLp AND Rez_GIDTyp= 2576 /*Typ_Rez*/
+   left join CDN.CechyKlasy on CCK_GIDNumer = ZaE_CChNumer
+	 group by ZaE_GidNumer,ZaE_OddElemId,ZaE_GidLp, ZaE_Pozycja, ZaE_Ilosc, Twr_Jm, 
+   	 ZaE_GrupaPod, ZaE_StawkaPod,Twc_Wartosc,ZaE_CenaKatalogowa,ZaE_CenaUzgodniona,ZaE_WartoscPoRabacie,ZaE_TwrNumer,
+   	 ZaE_TwrTyp, ZaE_TwrFirma, ZaE_TStamp, ZaE_KntTyp, ZaE_KntFirma, ZaE_KntNumer, ZaE_JmZ,ZaE_PrzeliczM, ZaE_PrzeliczL,
+   	 CCK_Nazwa,ZaE_Cecha,ZaN_Stan,ZaE_GidTyp  --/* LastEndPrice,*/
+
+END
+END
+</proceduredef>
+</ROOT>

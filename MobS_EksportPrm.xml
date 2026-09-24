@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="[MobS_EksportPrm]">
+CREATE PROCEDURE [CDN].[MobS_EksportPrm] 
+@CentrumID    INT, -- ID centrum praw struktury firmy 
+@OpeNumer     INT, -- ID mobilnego sprzedawcy
+@TypEksportu  INT,  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+@RozmiarPaczki INT,
+@NumerPaczki INT
+
+AS
+    DECLARE @Dzis INT
+    DECLARE @TimeStamp INT
+    DECLARE @Typ_GrK SMALLINT
+    DECLARE @PcK_KnGETyp   SMALLINT
+    DECLARE @PcK_KnGENumer INT
+    DECLARE @PcK_TwGTyp   SMALLINT
+    DECLARE @PcK_TwGNumer INT
+    DECLARE @PcK_TSSynchrPrmPtw INT
+    DECLARE @Rejony TABLE (KtOTyp SMALLINT, KtONumer INT)
+    DECLARE @Waluta NVARCHAR(3)  
+    DECLARE @synchroAll BIT
+
+    set @synchroAll = 0 --czy ma byc synchronizacja wszystkich promocji na grupe mobilna
+    --TO DO jesli byla zmiana grupy towarowej na centrum mobilnym, to typEksportu=0 i @PcK_TSSynchrPrmPtw=0 
+    --set @synchroAll=1 i zwroc ta wartosc do Mobile by skasowac najpierw wszystkie promocje
+
+    SET @Typ_GrK = -32
+    SELECT @Dzis = DATEDIFF(d,'18001228',GetDate())
+    SET @TimeStamp = DATEDIFF(s,'19900101',GetDate())
+    SELECT @Waluta = Kon_Wartosc FROM CDN.Konfig WHERE Kon_Numer = 211
+
+    UPDATE CDN.PicoKonfig SET PcK_TSSynchrPrm = @TimeStamp WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4 
+
+    SELECT @PcK_KnGETyp=PcK_KnGETyp, @PcK_KnGENumer=PcK_KnGENumer,@PcK_TwGTyp = PcK_TwGTyp, @PcK_TwGNumer = PcK_TwGNumer,
+           @PcK_TSSynchrPrmPtw = PcK_TSSynchrPrmPtw 
+    FROM CDN.PicoKonfig
+    WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+   
+    IF @PcK_KnGETyp = 944
+    BEGIN
+ 		INSERT INTO @Rejony
+ 		SELECT KtO_KntTyp, KtO_KntNumer
+ 		FROM CDN.OpeKarty
+ 		JOIN CDN.KntOpiekun ON Ope_PrcNumer=KtO_PrcNumer			 
+		WHERE Ope_GIDNumer=@OpeNumer AND (KtO_KntTyp=948 OR (KtO_KntTyp=32 AND @Dzis BETWEEN KtO_DataOd AND KtO_DataDo));
+    END
+    
+    --dot. promocji pakietowych
+    declare @stosujPromocjePakietowe bit	
+	SELECT @stosujPromocjePakietowe = max(ISNULL(Dok_StosujPromocjePakietowe,0))
+	FROM CDN.FrmStruktura 
+	JOIN CDN.DokDefinicje ON Frs_Id=Dok_FrsId AND Dok_GIDTyp IN (2001/*WZ*/,2033/*FS*/,2034/*PA*/,9472/*ZS*/,8960/*OS*/)	
+	WHERE FrS_Id = @CentrumID --15
+    --
+    
+    --CREATE TABLE #tempNoweTowaryDoGrupy(TwrGidNumer int )--towary, ktore od czasu ostatniej synchro promocji zostaly dodane do grupy Mobilnej
+    --CREATE TABLE #tempNoweKntDoGrupy(KntGidNumer int )--kontrahenci, ktorzy od czasu ostatniej synchro promocji zostali dodani do grupy Mobilnej
+
+    CREATE TABLE #tempPrmTowary(PrmID int ) --promocje na przylaczone towary do grupy towary
+    CREATE TABLE #tempPrmKnt(PrmID int ) -- promocje na przylaczonych kontrahentow do grupy kontrahentow
+     
+    CREATE TABLE #tempPlt(Kon_Lp int)
+    CREATE TABLE #tempPRM(Rank int identity(1,1), PRM_Id int PRIMARY KEY,PRM_Akronim varchar(200) null,
+						  PRM_Typ int null,PRM_Stan int null,PRM_DataOd datetime null,PRM_DataDo datetime null, 
+						  PRM_Priorytet int null, PRM_PriorytetLp int null,
+						  PRM_SposobStosowania smallint null, 
+						  PRM_PominPozostale smallint null, 
+						  PRM_Cykliczna int null, PRM_BlokadaCeny tinyint null,
+						  PRM_Uwagi varchar(512) null,
+						  PRM_Pakietowa bit null,
+						  PRM_RodzajPakietu bit null,
+						  PRM_NajwyzszyProg bit null)
+						  
+    CREATE TABLE #tempTwrPRM(TPR_Id int PRIMARY KEY, TPR_PrmId int, TPR_TwrTyp smallint, --towary w promocjach,które sa eksportowane
+                             TPR_TwrNumer int, TPR_LP int, TPR_Typ int,
+                             TPR_Prog decimal(15,4), TPR_FlagaNB varchar(1), TPR_RodzajCeny int,
+                             TPR_Wartosc decimal(15,4))
+    --------------------------------------------------------------------------------------------------------------------------
+    --promocje bezposrednio powiazane z tymi towarami/kontrahentami,ktore zostaly przypiete do grupy mobilnej, wyslij na Mobile.
+    --(Moga to byc promocje ktore byly w Mobile lub ktorych jeszcze nie ma w Mobile).
+    IF (@TypEksportu = 0 and @synchroAll = 0)
+    BEGIN
+		
+		WITH  TempNoweTowaryDoGrupy AS
+		(select His_ObiNumer --as Twr_GidNumer
+		from
+		(select ROW_NUMBER() OVER(PARTITION BY His_ObiNumer ORDER BY HIS_CzasZmianDB DESC) as RowNbr,
+		His_ObiNumer, His_TypZmiany
+		from CDN.HistoriaZmian
+		where His_ObiTyp = 16/*twr*/ 
+			  and His_TabelaId = 21 /*twrGrupy*/ and HIS_Kolumna='TwG_GroNumer'
+			  and (His_StaraWartosc= @PcK_TwGNumer or His_NowaWartosc = @PcK_TwGNumer)/*dodane lub odpiete z grupy mobilnej*/
+			  and His_CzasZmianDB&gt; @PcK_TSSynchrPrmPtw /*zmiana nastapiala po ostatniej synchro promocji*/
+		 )as Tabela
+		 where Tabela.RowNbr = 1 and HIS_TypZmiany = 0/*ostatnia zmiana towaru zwiazana z grupa mobilna bylo przypiecie twr do grupy mobilnej*/
+		) 
+		INSERT into #tempPrmTowary    	
+		SELECT TPR_PrmId
+		FROM CDN.TwrPromocje 
+		INNER JOIN TempNoweTowaryDoGrupy ON TPR_TwrTyp= 16 and  TPR_TwrNumer = tempNoweTowaryDoGrupy.HIS_ObiNumer  
+
+		IF (@PcK_KnGETyp =-32) --knt z grupy
+		BEGIN
+			WITH TempNoweKntDoGrupy AS
+			(select His_ObiNumer  -- KntGidNumer
+			from
+			(select ROW_NUMBER() OVER(PARTITION BY His_ObiNumer ORDER BY HIS_CzasZmianDB DESC) as RowNbr,
+			His_ObiNumer, His_TypZmiany
+			from CDN.HistoriaZmian
+			where His_ObiTyp = 32/*knt*/ 
+				  and His_TabelaId = 11 /*kntGrupy*/ and HIS_Kolumna='KnG_GroNumer'
+				  and (His_StaraWartosc= @PcK_KnGENumer or His_NowaWartosc = @PcK_KnGENumer)/*dodane lub odpiete z grupy mobilnej*/
+				  and His_CzasZmianDB &gt; @PcK_TSSynchrPrmPtw /*zmiana nastapila po ostatniej synchro promocji*/
+			 )as Tabela
+			 where Tabela.RowNbr = 1 and HIS_TypZmiany = 0/*ostatnia zmiana knt zwiazana z grupa mobilna bylo przypiecie knt do grupy mobilnej*/
+		    )  
+			INSERT into #tempPrmKnt    	
+			SELECT KPR_PrmId
+			FROM CDN.KntPromocje 
+			INNER JOIN TempNoweKntDoGrupy ON KPR_KntTyp= 32 and  KPR_KntNumer = TempNoweKntDoGrupy.HIS_ObiNumer  
+		END
+	END
+
+	--#tempPlt-------------------------------------------------------------------------------------------		
+	INSERT INTO #tempPlt
+	SELECT Kon_Lp	
+	FROM CDN.Konfig 
+	JOIN CDN.FrmObiekty ON FRO_GIDTyp=736 AND Kon_Lp=FRO_GIDNumer
+	WHERE FRO_FRMID=@CentrumID AND FRO_DlaDetalu = 1
+
+	INSERT INTO #tempPlt VALUES(-1);
+	--//#tempPlt------------------------------------------------------------------------------------------
+		
+	INSERT INTO	#tempPRM
+	SELECT DISTINCT PRM_Id,
+			PRM_Akronim,
+			PRM_Typ,
+			PRM_Stan,
+			CASE WHEN PRM_DataOd=0 AND PRM_Cykliczna &lt;&gt; 1 THEN NULL ELSE DATEADD(s,PRM_DataOd,'19900101') END As PRM_DataOd, 
+			CASE WHEN PRM_DataDo=2147483647 AND PRM_Cykliczna &lt;&gt; 1 THEN NULL ELSE DATEADD(s,PRM_DataDo,'19900101') END As PRM_DataDo, 
+			CASE WHEN PRM_Typ = 7 THEN 0 ELSE PRM_Priorytet END AS PRM_Priorytet, 
+			PRM_PriorytetLp,
+			PRM_SposobStosowania, 
+			PRM_PominPozostale, 
+			PRM_Cykliczna, 
+			ISNULL(PRM_BlokadaCeny,0) As PRM_BlokadaCeny,
+			PRM_Uwagi,
+			CASE WHEN PRM_Pakietowa = 0 THEN 0 ELSE 1 END,
+			CASE WHEN PRM_RodzajPakietu = 0 THEN 0 ELSE 1 END,
+			PRM_NajwyzszyProg
+	FROM CDN.PrmKarty
+    WHERE PRM_Typ IN (1,2,4,5,7,8) AND PRM_Aktywna = 0 AND PRM_Stan IN (1,3) AND PRM_Dokument IN (0,1) 
+    AND -- jesli nie ma zaznaczonej opcji stosuj promocje pakietowe, to ich nie eksportuj
+    PRM_Pakietowa = CASE WHEN @stosujPromocjePakietowe = 1 then PRM_Pakietowa ELSE 0 END 
+    AND   
+    --wg daty modyfikacji na promocji
+    ((PRM_LastMod &gt;= CASE WHEN (@TypEksportu=0 AND @synchroAll=0) THEN @PcK_TSSynchrPrmPtw ELSE 0 END)
+    OR
+    --lub wg historii zmian mamy twr/knt przylaczone go grupy mobilnej od czasu ostatniej synchro, pobierz promocje na te towary
+    ( @TypEksportu=0 AND @synchroAll=0 AND (PRM_Id in (select PrmID from #tempPrmTowary union select PrmID from #tempPrmKnt))
+    ))	
+	
+	AND ((EXISTS(SELECT * FROM CDN.PltPromocje JOIN #tempPlt ON PPR_PltID=Kon_Lp WHERE PPR_PrmID=PRM_Id)
+        AND PRM_Typ IN (2,5,7)) OR (PRM_Typ NOT IN (5,7)))
+    AND ( (  (     EXISTS(SELECT * FROM CDN.KntPromocje JOIN CDN.KntLinki ON KnL_GIDTyp=KPR_KntTyp AND KnL_GIDNumer=KPR_KntNumer WHERE KPR_PrmID=PRM_Id AND KnL_GrOTyp=@PcK_KnGETyp AND KnL_GrONumer=@PcK_KnGENumer )
+				OR EXISTS(SELECT * FROM CDN.KntPromocje JOIN CDN.KntLinki ON KnL_GrOTyp=KPR_KntTyp AND KnL_GrONumer=KPR_KntNumer WHERE KPR_PrmID=PRM_Id AND KnL_GIDTyp=@PcK_KnGETyp AND KnL_GIDNumer=@PcK_KnGENumer )
+				OR EXISTS(SELECT * FROM CDN.KntPromocje WHERE KPR_PrmID=PRM_Id AND ((KPR_KntTyp=@Typ_GrK AND KPR_KntNumer=0) OR (KPR_KntTyp=@PcK_KnGETyp AND KPR_KntNumer=@PcK_KnGENumer) ))
+				OR EXISTS(SELECT * FROM CDN.KntPromocje JOIN CDN.KntLinki ON KnL_GrOTyp=KPR_KntTyp AND KnL_GrONumer=KPR_KntNumer JOIN CDN.KntKarty ON Knt_GIDTyp=KnL_GIDTyp AND Knt_GIDNumer=KnL_GIDNumer AND KnL_GrOTyp=@Typ_GrK WHERE KPR_PrmID=PRM_Id AND (Knt_RegionCRM IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948) OR Knt_GIDNumer IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=32)))
+                OR EXISTS(SELECT * FROM CDN.KntKarty JOIN CDN.KntPromocje ON Knt_GIDNumer=KPR_KntNumer WHERE KPR_PrmID=PRM_Id AND (Knt_RegionCRM IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948) OR Knt_GIDNumer IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=32)) )
+             )     
+             AND PRM_Typ IN (1,4,5,7)
+          ) 
+          OR PRM_Typ NOT IN (1,4,5,7)
+        )
+	
+     AND ( ( EXISTS( SELECT * FROM CDN.TwrPromocje 
+                    JOIN CDN.TwrLinki ON (TwL_GIDTyp=TPR_TwrTyp AND TwL_GIDNumer=TPR_TwrNumer) OR (TwL_GrOTyp=TPR_TwrTyp AND TwL_GrONumer=TPR_TwrNumer) OR (TPR_TwrTyp=-16 AND TPR_TwrNumer=0) 
+                    WHERE TPR_PrmID=PRM_Id AND ((TwL_GrOTyp=@PcK_TwGTyp AND TwL_GrONumer=@PcK_TwGNumer) OR (TwL_GIDTyp=@PcK_TwGTyp AND TwL_GIDNumer=@PcK_TwGNumer))
+                    AND (rtrim(TPR_Waluta) = rtrim(@Waluta) OR TPR_Waluta = '')
+                    AND
+                    /*tylko taka promocja typu 'CEN', dla ktorej conajmniej jeden z wybranych twr na promocji ma rodzaj ceny zgodny z wybranymi cenami dla oddzialu w strukturze firmy*/
+                     (case when (PRM_Typ = 7 AND (TPR_RodzajCeny = 0 OR TPR_RodzajCeny IN (select Naz_GidLp from CDN.Nazwy 
+																	   inner join CDN.FrmObiekty on Naz_GIDTyp = FRO_GIDTyp and Naz_GIDLp = FRO_GIDLp
+																	   where FRO_GIDTyp = 64/*Cena*/ and FRO_FRMID = @CentrumID
+                                                                       ))
+                                 )then 1 
+                           when (PRM_Typ&lt;&gt;7) then 1 
+                           else 0 
+                      end)=1                                      
+                   ) AND PRM_Typ IN (4,5,7)          
+           )OR (PRM_Typ NOT IN (4,5,7)) 
+        )
+    
+	AND ((EXISTS(SELECT * 
+	             FROM CDN.FrsPromocje
+	             JOIN CDN.FrmLinki ON FPR_FrsId=FRL_GrONumer OR FPR_FrsId=FRL_GIDNumer
+	             WHERE PRM_Id=FPR_PrmId AND FrL_GrOTyp=-4272 AND FrL_GIDTyp=-4272 AND FrL_GIDNumer=@CentrumID)
+	      AND PRM_Typ IN (5,7)) OR (PRM_Typ NOT IN (5,7)))
+	    
+
+	DELETE FROM #tempPRM 
+	WHERE Rank &lt;= @RozmiarPaczki * (@NumerPaczki - 1) OR Rank &gt; @RozmiarPaczki * @NumerPaczki
+
+	
+	SELECT * FROM #tempPRM;
+    INSERT INTO #tempTwrPRM   --towary do promocji 
+	SELECT DISTINCT TPR_Id, TPR_PrmId, TPR_TwrTyp, TPR_TwrNumer, TPR_LP, TPR_Typ, TPR_Prog, TPR_FlagaNB, TPR_RodzajCeny, TPR_Wartosc
+	FROM
+	(
+		SELECT PRM_Typ, TPR_Id, TPR_PrmId, TPR_TwrTyp, TPR_TwrNumer, TPR_LP, TPR_Typ, TPR_Prog, TPR_FlagaNB, TPR_RodzajCeny, TPR_Wartosc, TPR_Waluta
+		FROM CDN.TwrPromocje
+		JOIN #tempPRM ON PRM_Id = TPR_PrmID
+		JOIN CDN.TwrLinki ON TwL_GIDTyp=TPR_TwrTyp AND TwL_GIDNumer=TPR_TwrNumer
+		     AND TwL_GrOTyp=@PcK_TwGTyp AND TwL_GrONumer=@PcK_TwGNumer
+		UNION ALL
+		SELECT PRM_Typ, TPR_Id, TPR_PrmId, TPR_TwrTyp, TPR_TwrNumer, TPR_LP, TPR_Typ, TPR_Prog, TPR_FlagaNB, TPR_RodzajCeny, TPR_Wartosc, TPR_Waluta
+		FROM CDN.TwrPromocje
+		JOIN #tempPRM ON PRM_Id = TPR_PrmID
+		JOIN CDN.TwrLinki ON TwL_GIDTyp=TPR_TwrTyp AND TwL_GIDNumer=TPR_TwrNumer
+		     AND TwL_GIDTyp=@PcK_TwGTyp AND TwL_GIDNumer=@PcK_TwGNumer
+		UNION ALL
+		SELECT PRM_Typ, TPR_Id, TPR_PrmId, TPR_TwrTyp, TPR_TwrNumer, TPR_LP, TPR_Typ, TPR_Prog, TPR_FlagaNB, TPR_RodzajCeny, TPR_Wartosc, TPR_Waluta
+		FROM CDN.TwrPromocje
+		JOIN #tempPRM ON PRM_Id = TPR_PrmID
+		JOIN CDN.TwrLinki ON TwL_GrOTyp=TPR_TwrTyp AND TwL_GrONumer=TPR_TwrNumer
+		     AND TwL_GrOTyp=@PcK_TwGTyp AND TwL_GrONumer=@PcK_TwGNumer
+		UNION ALL
+		SELECT PRM_Typ, TPR_Id, TPR_PrmId, TPR_TwrTyp, TPR_TwrNumer, TPR_LP, TPR_Typ, TPR_Prog, TPR_FlagaNB, TPR_RodzajCeny, TPR_Wartosc, TPR_Waluta
+		FROM CDN.TwrPromocje
+		JOIN #tempPRM ON PRM_Id = TPR_PrmID
+		JOIN CDN.TwrLinki ON TwL_GrOTyp=TPR_TwrTyp AND TwL_GrONumer=TPR_TwrNumer 
+		     AND TwL_GIDTyp=@PcK_TwGTyp AND TwL_GIDNumer=@PcK_TwGNumer
+		UNION ALL
+		SELECT PRM_Typ, TPR_Id, TPR_PrmId, TPR_TwrTyp, TPR_TwrNumer, TPR_LP, TPR_Typ, TPR_Prog, TPR_FlagaNB, TPR_RodzajCeny, TPR_Wartosc, TPR_Waluta
+		FROM CDN.TwrPromocje
+		JOIN #tempPRM ON PRM_Id = TPR_PrmID
+		JOIN CDN.TwrLinki ON TPR_TwrTyp=-16 AND TPR_TwrNumer=0
+		     AND TwL_GrOTyp=@PcK_TwGTyp AND TwL_GrONumer=@PcK_TwGNumer
+		UNION ALL
+		SELECT PRM_Typ, TPR_Id, TPR_PrmId, TPR_TwrTyp, TPR_TwrNumer, TPR_LP, TPR_Typ, TPR_Prog, TPR_FlagaNB, TPR_RodzajCeny, TPR_Wartosc, TPR_Waluta
+		FROM CDN.TwrPromocje
+		JOIN #tempPRM ON PRM_Id = TPR_PrmID
+		JOIN CDN.TwrLinki ON TPR_TwrTyp=-16 AND TPR_TwrNumer=0
+		     AND TwL_GIDTyp=@PcK_TwGTyp AND TwL_GIDNumer=@PcK_TwGNumer
+	) TPR
+	INNER JOIN CDN.TwrKarty ON TPR_TwrNumer=Twr_GIDNumer AND Twr_Typ &lt;&gt; 3 AND Twr_Typ &lt;&gt; 6
+	WHERE (rtrim(TPR_Waluta) = rtrim(@Waluta) OR TPR_Waluta = '')
+	 /*taki twr lub grupa, ktorej rodzaj ceny na promocji pasuje do listy dostepnych cen dla oddzialu*/
+	AND	(case when (PRM_Typ = 7 AND (TPR_RodzajCeny = 0 OR TPR_RodzajCeny IN (select Naz_GidLp from CDN.Nazwy inner join CDN.FrmObiekty on Naz_GIDTyp = FRO_GIDTyp and Naz_GIDLp = FRO_GIDLp
+													   where FRO_GIDTyp = 64/*Cena*/ and FRO_FRMID = @CentrumID))
+                    )then 1 
+              when (PRM_Typ&lt;&gt;7) then 1 
+              else 0 
+              end
+        )=1 
+	
+	SELECT * FROM #tempTwrPRM -- towary do eksportowanych promocji
+	
+    SELECT DISTINCT KPR_Id, KPR_PrmId, KPR_KntTyp, KPR_KntNumer, KPR_Wartosc
+	FROM CDN.KntPromocje 
+	JOIN #tempPRM ON PRM_Id = KPR_PrmId
+	JOIN CDN.KntLinki ON (KnL_GIDTyp=KPR_KntTyp AND KnL_GIDNumer=KPR_KntNumer) OR (KnL_GrOTyp=KPR_KntTyp AND KnL_GrONumer=KPR_KntNumer) OR (KPR_KntTyp=@Typ_GrK AND KPR_KntNumer=0) 
+	WHERE (KnL_GrOTyp=@PcK_KnGETyp AND KnL_GrONumer=@PcK_KnGENumer) OR (KnL_GIDTyp=@PcK_KnGETyp AND KnL_GIDNumer=@PcK_KnGENumer) OR 
+	      (KnL_GIDTyp=32 AND KnL_GIDNumer IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=32)) OR
+	      (KnL_GIDTyp=32 AND KnL_GIDNumer IN (SELECT Knt_GIDNumer FROM CDN.KntKarty WHERE Knt_RegionCRM IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948)))
+	UNION
+	SELECT 0, PRM_Id, -32, 0, 0
+	FROM #tempPRM
+	WHERE PRM_Typ = 2
+			
+	SELECT PPr_ID, PPr_PrmId, PPr_PltID, PPr_TerminMaks, PPr_Wartosc
+	FROM CDN.PltPromocje 
+	JOIN #tempPRM ON PRM_Id = PPr_PrmID
+	JOIN #tempPlt ON PPR_PltID = Kon_Lp
+	
+	SELECT SPD_ID, SPD_PrmID, SPD_SpDLp 
+	FROM CDN.SPDPromocje
+	JOIN #tempPRM ON PRM_Id = SPD_PrmID
+	
+	---------------------------- Promocje Pakietowe----------------------------------------------		
+    IF @stosujPromocjePakietowe =1
+    BEGIN
+      
+		SELECT PRP_ID, PRP_PrmId, PRP_Rodzaj, PRP_Wartosc  --progi promocji
+		FROM CDN.ProgiPromocje
+		INNER JOIN #tempPRM ON PRM_Id = PRP_PrmId 		
+		
+		SELECT PTP_PRPId, PTP_TPRId, PTP_Wartosc --pobierz wartosci towarow w obrebie progow, ale tylko dla towarow w promocji, ktore sa eksportowane
+		FROM CDN.ProgiTwrPromocje
+		--INNER JOIN CDN.ProgiPromocje ON PRP_ID = PTP_PRPId
+		--INNER JOIN #tempPRM ON PRM_Id = PRP_PrmId 
+		INNER JOIN #tempTwrPRM ON TPR_Id = PTP_TPRId		
+		UNION ALL
+		SELECT PTP_PRPId, PTP_TPRId, PTP_Wartosc
+		FROM CDN.ProgiTwrPromocje
+		INNER JOIN CDN.ProgiPromocje ON PRP_ID = PTP_PRPId
+		INNER JOIN #tempPRM ON PRM_Id = PRP_PrmId AND PRM_Typ = 8 -- dla promocji WTR
+		
+		
+		SELECT GPR_ID, GPR_PrmId, GPR_TwrNumer, GPR_Typ, GPR_Wartosc, -- gratisy do wszystkich promocji, ktore eksportujemy
+		GPR_Ilosc, GPR_Waluta, case when GPR_FlagaNB = 'N' then 1 else 0 end as IsNet, GPR_Notatki, GPR_PrPID, GPR_Domyslny
+		FROM CDN.GratisyPromocje
+		INNER JOIN #tempPRM ON PRM_Id =GPR_PrmId
+		INNER JOIN CDN.TwrKarty ON GPR_TwrNumer=Twr_GIDNumer AND Twr_Typ &lt;&gt; 3 AND Twr_Typ &lt;&gt; 6
+    END
+    ELSE
+    BEGIN
+      SELECT PRP_ID, PRP_PrmId, PRP_Rodzaj, PRP_Wartosc  --progi promocji
+		FROM CDN.ProgiPromocje
+		INNER JOIN #tempPRM ON PRM_Id = PRP_PrmId AND PRM_Typ = 8		
+		
+		SELECT PTP_PRPId, PTP_TPRId, PTP_Wartosc 
+		FROM CDN.ProgiTwrPromocje
+		INNER JOIN CDN.ProgiPromocje ON PRP_ID = PTP_PRPId
+		INNER JOIN #tempPRM ON PRM_Id = PRP_PrmId AND PRM_Typ = 8
+		
+		SELECT GPR_ID, GPR_PrmId, GPR_TwrNumer, GPR_Typ, GPR_Wartosc, -- gratisy do wszystkich promocji, ktore eksportujemy
+		GPR_Ilosc, GPR_Waluta, case when GPR_FlagaNB = 'N' then 1 else 0 end as IsNet, GPR_Notatki, GPR_PrPID, GPR_Domyslny
+		FROM CDN.GratisyPromocje
+		INNER JOIN #tempPRM ON PRM_Id =GPR_PrmId AND PRM_Typ = 8	
+    END	
+	----------------------------------------------------------------------------------------
+	
+	-------------------------- Magazyny do promocji-----------------------------------------
+
+	SELECT MPR_ID, MPR_PrmID, MPR_MagNumer 
+	FROM CDN.MagPromocje
+	JOIN #tempPRM ON PRM_Id = MPR_PrmID
+	WHERE MPR_MagNumer = -1 OR MPR_MagNumer in (SELECT MAG_GIDNumer 
+											   FROM CDN.Magazyny
+											   INNER JOIN CDN.FrmStruktura ON MAG_GIDNumer=Frs_MagNumer
+											   WHERE Frs_ID=@CentrumID AND Mag_Pico=1 
+											   UNION ALL
+											   SELECT MAG_GIDNumer
+											   FROM CDN.Magazyny
+											   WHERE Mag_Pico=0)
+	-----------------------------------------------------------------------------------------
+	
+	
+	/*SELECT TwrGidNumer --towary, ktore od czasu ostatniej synchro promocji zostaly dodane do grupy Mobilnej
+	FROM #tempNoweTowaryDoGrupy
+	
+    SELECT KntGidNumer --towary, ktore od czasu ostatniej synchro promocji zostaly dodane do grupy Mobilnej
+	FROM #tempNoweKntDoGrupy -- kontrahenci, ktorzy od czasu ostatniej synchronizacji zostali dodani do grupy Mobilnej*/
+	-----------------------------------------------------------------------------------------------------
+	--towary do usuniecia z grupy mobilnej---------------------------------------------------------------
+   /* IF (@TypEksportu = 0 and @synchroAll = 0) 
+    BEGIN
+	--towary po stronie Mobile beda usuniete z bazy(co z dokumentami?) i z promocji.
+	--Nastepnie promocje bez jakichkolwiek towarow zostana w Mobile usuniete
+	-- twr dodane do grupy/*HIS_TypZmiany = 0*/ , usuniete z grupy mobilnej /*HIS_TypZmiany=2*/
+	select His_ObiNumer --,His_TypZmiany
+	from
+	(
+	select ROW_NUMBER() OVER(PARTITION BY His_ObiNumer ORDER BY HIS_CzasZmianDB DESC) as RowNbr, --select ostatnia zmiana dot. towaru i grupy mobilnej
+	His_ObiNumer, His_TypZmiany
+	from CDN.HistoriaZmian
+	where His_ObiTyp = 16/*twr*/ 
+		  and His_TabelaId = 21 /*twrGrupy*/ and HIS_Kolumna='TwG_GroNumer'
+		  and (His_StaraWartosc= @PcK_TwGNumer or His_NowaWartosc = @PcK_TwGNumer)/*dodane lub odpiete z grupy mobilnej*/
+		  and His_CzasZmianDB&gt; @PcK_TSSynchrPrmPtw /*PcK_TSSynchrPrm ostatnia synchro promocji*/
+	 )as Tabela
+	 where Tabela.RowNbr = 1 and HIS_TypZmiany = 2/*ostatnia zmiana zwiazana z grupa mobilna bylo odwiazane twr z grupy mobilnej*/
+	
+	END
+	ELSE
+	BEGIN
+		select top 0 'A' as His_ObiNumer --returns empty recordset
+	END	*/
+    -----------------------------------------------------------------------------------------------------
+    -----------------------------------------------------------------------------------------------------
+    --kontrahenci do usuniecia z grupy mobilnej----------------------------------------------------------
+    /*IF (@TypEksportu = 0 and @synchroAll = 0) 
+    BEGIN
+	--kontrahenci po stronie Mobile beda usunieci z bazy(co z dokumentami?) i z promocji.
+	--Nastepnie promocje bez jakichkolwiek kontrahentow zostana w Mobile usuniete
+	select His_ObiNumer
+	from
+	(
+	select ROW_NUMBER() OVER(PARTITION BY His_ObiNumer ORDER BY HIS_CzasZmianDB DESC) as RowNbr, --select ostatnia zmiana dot.knt i grupy mobilnej
+	His_ObiNumer, His_TypZmiany
+	from CDN.HistoriaZmian
+	where His_ObiTyp = 32/*knt*/ 
+		  and His_TabelaId = 11 /*kntGrupy*/ and HIS_Kolumna='KnG_GroNumer'
+		  and (His_StaraWartosc= @PcK_KnGENumer or His_NowaWartosc = @PcK_KnGENumer)/*dodane lub odpiete z grupy mobilnej*/
+		  and His_CzasZmianDB&gt; @PcK_TSSynchrPrmPtw /*PcK_TSSynchrPrm ostatnia synchro promocji*/
+	 )as Tabela
+	 where Tabela.RowNbr = 1 and Tabela.His_TypZmiany=2 /*ostatnia(RowNbr=1) zmiana zwiazana z grupa mobilna bylo odwiazane twr z grupy mobilnej*/
+	
+	END
+	ELSE
+	BEGIN
+		select top 0 'A' as His_ObiNumer --returns empty recordset
+	END	*/
+    -----------------------------------------------------------------------------------------------------
+
+    --select @TypEksportu | @synchroAll  --Jesli pelna synchronizacja (np. gdy zmieniono grupe towarow na centrum mobilnym), to zwroc info zeby usunac wszystkie promocje po stronie Mobile
+
+DROP TABLE #tempPRM;
+DROP TABLE #tempPLT;
+DROP TABLE #tempPrmTowary
+DROP TABLE #tempPrmKnt -- knt,ktore zostaly przypiete do grupy mobilnej
+DROP TABLE #tempTwrPRM -- twr,ktore zostaly przypiete do grupy mobilnej
+	
+</proceduredef>
+</ROOT>

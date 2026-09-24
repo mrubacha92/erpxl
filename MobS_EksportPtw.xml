@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportPtw">
+CREATE PROCEDURE CDN.MobS_EksportPtw
+@CentrumID  INT,	-- ID centrum praw struktury firmy 
+@OpeNumer   INT,    -- ID mobilnego sprzedawcy
+@Typ	      TINYINT -- Typ potwierdzenia:	0 - dokumenty, raporty, rozliczenia, kontrahenci 
+					--						1 - potwierdzenia , 
+					--						2 - towary, 
+					--						3 - kontrahenci, 
+					--						4 - grupy, 
+					--						5 - promocje, 
+					--						6 - opisy towarów, 
+					--						7 - ceny towarów, 
+					--						8 - osoby kontrahenta, 
+					--						9 - realizacje dokumentów,
+					--						10- zamienniki towarów
+					--						255 - synchronizacja z pustą/wyczyszczoną bazą
+AS
+BEGIN
+
+	DECLARE @PcK_PicoID INT, @PcK_TSSynchrPtw INT, @TimeStamp INT
+	SELECT @PcK_PicoID=PcK_PicoID, @PcK_TSSynchrPtw=ISNULL(PcK_TSSynchrPtw,0) FROM CDN.PicoKonfig WHERE PcK_CentrumID = @CentrumID AND PcK_Typ=4
+
+	IF @Typ = 255 
+	BEGIN
+		/***** Dokumenty handlowe *****/
+		UPDATE CDN.TraNag SET TrN_OddDokID=0 WHERE TrN_FrsID = @CentrumID AND TrN_Stan&gt;=3 AND TrN_OddDokID&gt;0 
+		/***** Zamówienia *****/
+		UPDATE CDN.ZamNag SET ZaN_OddDokID=0 WHERE ZaN_PcKID = @PcK_PicoID AND ZaN_OddDokID &gt; 0
+		/***** Zamówienia pozycje *****/
+		UPDATE CDN.ZamElem SET ZaE_OddElemID=0
+		FROM CDN.ZamElem JOIN CDN.ZamNag ON ZaE_GIDNumer = ZaN_GIDNumer
+		WHERE ZaN_PcKID = @PcK_PicoID AND ZaE_OddElemID &gt; 0
+		/***** Reklamacje *****/
+		UPDATE CDN.ReklNag SET RLN_ZewnetrznyId=0 WHERE RLN_ZewnetrznySys = @PcK_PicoID AND RLN_ZewnetrznyId &gt; 0
+		/***** Raporty *****/
+		UPDATE CDN.Raporty SET KRP_ZewnetrznyId=0 WHERE KRP_ZewnetrznySys = @PcK_PicoID AND KRP_ZewnetrznyId &gt; 0
+		/***** Zapisy K/B *****/
+		UPDATE CDN.Zapisy SET KAZ_ZewnetrznyId=0
+		FROM CDN.Raporty JOIN CDN.Zapisy ON KRP_GIDNumer=KAZ_KRPNumer
+		WHERE KRP_ZewnetrznySys = @PcK_PicoID AND KAZ_ZewnetrznyId &gt; 0
+		/***** Rozliczenia *****/
+		UPDATE CDN.Rozliczenia SET R2_ZewnetrznyId = 0 WHERE R2_ZewnetrznySys = @PcK_PicoID AND R2_ZewnetrznyId &gt; 0
+		/***** Wizyty *****/
+		UPDATE CDN.CRMWizytyNag SET CWN_ZewnetrznyId = 0
+		FROM CDN.CRMWizytyNag
+		WHERE CWN_ZewnetrznySys = @PcK_PicoID AND CWN_ZewnetrznyId &gt; 0
+		/***** Wydatki *****/
+		UPDATE CDN.WydatkiPracownikow SET WPR_ZewnetrznyId=0 WHERE WPR_ZewnetrznySys = @PcK_PicoID AND WPR_ZewnetrznyId &gt; 0
+		/***** Kontrahenci *****/
+		DELETE CDN.PicoLog WHERE PcL_ObiTyp = 32 AND PcL_PcKID = @PcK_PicoID AND PcL_ObiektID &lt; 0
+		/***** Adresy *****/
+		DELETE CDN.PicoLog WHERE PcL_ObiTyp = 896 AND PcL_PcKID = @PcK_PicoID AND PcL_ObiektID &lt; 0		
+		
+	  Return
+	END
+
+	IF @Typ &gt; 0 
+	BEGIN
+		UPDATE CDN.PicoKonfig SET PcK_TSSynchrPtw     = (CASE WHEN @Typ = 1 THEN PcK_TSSynchr     ELSE PcK_TSSynchrPtw     END),
+		                          PcK_TSSynchrTwrPtw  = (CASE WHEN @Typ = 2 THEN PcK_TSSynchrTwr  ELSE PcK_TSSynchrTwrPtw  END),
+		                          PcK_TSSynchrKntPtw  = (CASE WHEN @Typ = 3 THEN PcK_TSSynchrKnt  ELSE PcK_TSSynchrKntPtw  END),
+		                          PcK_TSSynchrGrupPtw = (CASE WHEN @Typ = 4 THEN PcK_TSSynchrGrup ELSE PcK_TSSynchrGrupPtw END),
+		                          PcK_TSSynchrPrmPtw  = (CASE WHEN @Typ = 5 THEN PcK_TSSynchrPrm  ELSE PcK_TSSynchrPrmPtw  END),
+			                        PcK_TSSynchrTwOPtw  = (CASE WHEN @Typ = 6 THEN PcK_TSSynchrTwO  ELSE PcK_TSSynchrTwOPtw  END),
+			                        PcK_TSSynchrTwCPtw  = (CASE WHEN @Typ = 7 THEN PcK_TSSynchrTwC  ELSE PcK_TSSynchrTwCPtw  END)
+		WHERE PcK_PicoID = @PcK_PicoID;
+		
+		UPDATE CDN.PicoTimestamp SET PcS_TSSynchrPtw=PcS_TSSynchr	WHERE PcS_PcKID = @PcK_PicoID AND 
+		           PcS_OBITyp = (CASE WHEN @Typ = 1  THEN 0     -- Potwierdzenia
+		                              WHEN @Typ = 2  THEN 16    -- Towary
+		                              WHEN @Typ = 3  THEN 32    -- Kontrahenci
+		                              WHEN @Typ = 4  THEN -16   -- Grupy
+		                              WHEN @Typ = 5  THEN 5104  -- Promocje
+		                              WHEN @Typ = 6  THEN -1    -- Opisy towarow
+		                              WHEN @Typ = 7  THEN -1    -- Ceny towarow
+		                              WHEN @Typ = 8  THEN 8211  -- Osoby kontrahenta
+		                              WHEN @Typ = 9  THEN 14601 -- Realizacja zamowien
+														      WHEN @Typ = 10 THEN 14600 -- Zamienniki towarow
+		                        END)
+	END	
+	ELSE
+  BEGIN
+    SET @TimeStamp = DATEDIFF(s,CONVERT(datetime,'1990-01-01',120),CONVERT(datetime,GetDate(),120))
+    UPDATE CDN.PicoKonfig SET PcK_TSSynchr=@TimeStamp WHERE PcK_PicoID = @PcK_PicoID
+    UPDATE CDN.PicoKonfig SET PcK_Stan=2 WHERE PcK_PicoID = @PcK_PicoID AND PcK_Stan &lt; 2
+
+		/***** Dokumenty handlowe *****/
+		SELECT TrN_GIDTyp AS ObiTyp, TrN_GIDNumer AS ObiNumer, TrN_OddDokID AS ZewnetrznyId 
+		FROM   CDN.TraNag
+		WHERE  TrN_FrsID = @CentrumID AND TrN_LastMod &gt; @PcK_TSSynchrPtw AND TrN_Stan&gt;=3 AND TrN_Aktywny=0 AND TrN_OddDokID &gt; 0
+		UNION ALL
+		/***** Zamówienia *****/
+		SELECT CDN.DokMapTypDokumentu(ZaN_GIDTyp,ZaN_ZamTyp,ZaN_Rodzaj) ZaN_GIDTyp, ZaN_GIDNumer, ZaN_OddDokID
+		FROM   CDN.ZamNag
+		WHERE  ZaN_PcKID = @PcK_PicoID AND ZaN_LastMod &gt; @PcK_TSSynchrPtw AND ZaN_OddDokID &gt; 0
+		UNION ALL 
+		/***** Reklamacje *****/
+		SELECT 3584, RLN_ID, RLN_ZewnetrznyId
+		FROM   CDN.ReklNag
+		WHERE  RLN_ZewnetrznySys = @PcK_PicoID AND RLN_CzasModyfikacji &gt; @PcK_TSSynchrPtw AND RLN_ZewnetrznyId &gt; 0
+		UNION ALL 
+		/***** Raporty *****/
+		SELECT KRP_GIDTyp, KRP_GIDNumer, KRP_ZewnetrznyId
+		FROM CDN.Raporty 
+		WHERE KRP_ZewnetrznySys = @PcK_PicoID AND KRP_CzasModyfikacji &gt; @PcK_TSSynchrPtw AND KRP_ZewnetrznyId &gt; 0
+		UNION ALL 
+		/***** Zapisy *****/
+		SELECT KAZ_GIDTyp, KAZ_GIDNumer, KAZ_ZewnetrznyId
+		FROM CDN.Raporty 
+		JOIN CDN.Zapisy ON KRP_GIDNumer=KAZ_KRPNumer
+		WHERE KRP_ZewnetrznySys = @PcK_PicoID AND KRP_CzasModyfikacji &gt; @PcK_TSSynchrPtw AND KAZ_ZewnetrznyId &gt; 0
+		UNION ALL
+		/***** Rozliczenia *****/
+		SELECT 433, R2_ID, R2_ZewnetrznyId
+		FROM CDN.Rozliczenia
+		LEFT OUTER JOIN CDN.TraNag T1 ON R2_Dok1Typ=T1.TrN_GIDTyp AND R2_Dok1Numer=T1.TrN_GIDNumer 
+		LEFT OUTER JOIN CDN.Zapisy Z1 ON R2_Dok1Typ=Z1.KAZ_GIDTyp AND R2_Dok1Numer=Z1.KAZ_GIDNumer 
+		WHERE R2_ZewnetrznySys = @PcK_PicoID AND R2_CzasModyfikacji &gt; @PcK_TSSynchrPtw AND R2_ZewnetrznyId &gt; 0
+		UNION All
+		/***** Wizyty *****/
+		SELECT 4180, CWN_ID, CWN_ZewnetrznyId
+		FROM CDN.CRMWizytyNag
+		WHERE CWN_ZewnetrznySys = @PcK_PicoID AND CWN_CzasModyfikacji &gt; @PcK_TSSynchrPtw AND CWN_ZewnetrznyId &gt; 0
+		UNION All
+		/***** Wydatki *****/
+		SELECT 4183, WPR_ID, WPR_ZewnetrznyId
+		FROM CDN.WydatkiPracownikow
+		WHERE WPR_ZewnetrznySys = @PcK_PicoID AND WPR_ZewnetrznyId &gt; 0
+		UNION All
+		/***** Kontrahenci *****/
+		SELECT 32, Knt_GIDNumer, PcL_ObiektID
+		FROM CDN.KntKarty
+		LEFT OUTER JOIN CDN.PicoLog ON PcL_ObiNumer = Knt_GIDNumer
+		WHERE PcL_PcKID = @PcK_PicoID AND Knt_LastModC &gt; @PcK_TSSynchrPtw AND PcL_ObiTyp = 32
+	  UNION All
+		/***** Adresy *****/
+		SELECT 896, KnA_GIDNumer, PcL_ObiektID
+		FROM CDN.KntAdresy
+		LEFT OUTER JOIN CDN.PicoLog ON PcL_ObiNumer = KnA_GIDNumer
+		WHERE PcL_PcKID = @PcK_PicoID AND KnA_LastModL &gt; @PcK_TSSynchrPtw AND PcL_ObiTyp = 896
+	END
+END
+</proceduredef>
+</ROOT>

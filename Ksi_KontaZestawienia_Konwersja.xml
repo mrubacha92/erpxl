@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Aktualizacja tabeli ZestKSDefKonta" hidden="False">
+
+update cdn.ZestKSDef set ZKD_Wartosc = ZKD_Wartosc
+
+</scriptdef>
+<scriptdef name="Aktualizacja tabeli SISDefinicjeKonta" hidden="False">
+
+update cdn.SISDefinicje set SID_Algorytm = SID_Algorytm
+
+</scriptdef>
+</ROOT>

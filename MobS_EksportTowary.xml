@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportTwr">
+CREATE PROCEDURE CDN.MobS_EksportTwr
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT, -- Typ eksportu (0 - różnicowy, 1 - pełny)
+@PackageSize   INT, -- Rozmiar paczki
+@PackageNumber INT  -- Numer paczki
+AS
+BEGIN
+    DECLARE @Typ_GrT     SMALLINT
+    DECLARE @GrOTyp      SMALLINT
+    DECLARE @GrONumer    INT
+    DECLARE @Stany0Exp   INT
+    DECLARE @TimeStamp   INT
+	DECLARE @MMPbezZasobow TABLE ( gidnumer int )
+	DECLARE @dodatkoweTwr TABLE	( gidnumer int )
+
+    SET @Typ_GrT = -16
+    SET @Stany0Exp=1
+    UPDATE CDN.PicoKonfig SET PcK_TSSynchrTwr = DATEDIFF(s,CONVERT(datetime,'1990-01-01',120),CONVERT(datetime,GetDate(),120)) WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4 
+	SELECT @GrOTyp=PcK_TwGTyp, @GrONumer=PcK_TwGNumer, @TimeStamp=PcK_TSSynchrTwrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	IF ISNULL(@GrOTyp,0) = @Typ_GrT
+	BEGIN
+		INSERT INTO @MMPbezZasobow SELECT TrE_Gidnumer FROM
+		(
+				 SELECT TrE_GIDNumer, TrE_TwrNumer, sum(TrS_Ilosc) as Ilosc, TrS_MagNumer, TrS_DstNumer
+				 FROM   CDN.PicoKonfig
+				 JOIN CDN.TraNag ON PcK_MagNumer=TrN_MagDNumer AND TrN_GIDTyp=1604 AND TrN_TrNLp=127 AND TrN_Stan&gt;=3
+				 JOIN CDN.TraElem ON TrN_GIDNumer=TrE_GIDNumer
+				 JOIN CDN.TraSElem ON TrE_GIDNumer=TrS_GIDNumer AND TrE_GIDLp=TrS_GIDLp
+				 WHERE PcK_CentrumID=@CentrumID AND TrN_OddDokID&lt;=0
+				 GROUP BY TrE_GIDNumer, TrS_MagNumer, TrE_TwrNumer, TrS_DstNumer 
+		) X
+		JOIN CDN.TwrZasoby ON Twz_MagNumer=Trs_MagNumer AND Twz_TwrNumer=Tre_TwrNumer AND Twz_DstNumer=Trs_DstNumer
+		WHERE Ilosc&gt;Twz_IlSpr
+
+		INSERT INTO @dodatkoweTwr SELECT TrE_TwrNumer
+		FROM   CDN.PicoKonfig
+		JOIN CDN.TraNag ON PcK_MagNumer=TrN_MagDNumer AND TrN_GIDTyp=1604 AND TrN_TrNLp=127 AND TrN_Stan&gt;=3
+		JOIN CDN.TraElem ON TrN_GIDNumer=TrE_GIDNumer
+		WHERE PcK_CentrumID=@CentrumID AND TrN_OddDokID&lt;=0 AND TrE_GIDNumer NOT IN (SELECT gidnumer FROM @MMPbezZasobow)
+    END
+
+	SELECT DISTINCT identity(int,1,1) AS Rank, * INTO #TempMobile FROM 
+	(
+			SELECT Twr_GIDNumer,
+				   ISNULL(Twr_Typ,1) As Twr_Typ,
+				   ISNULL(Twr_Kaucja,0) As Twr_Kaucja,
+				   ISNULL(Twr_Archiwalny,0) As Twr_Archiwalny,
+				   ISNULL(Twr_Blokada,0) As Twr_Blokada,
+				   ISNULL(Twr_Nazwa,'') As Twr_Nazwa,
+				   ISNULL(Twr_Kod,'') As Twr_Kod,
+				   ISNULL(Twr_Ean,'') As Twr_Ean,
+				   ISNULL(Twr_Katalog,'') As Twr_Symbol,
+				   ISNULL(Twr_Jm,'szt.') As Twr_Jm,
+				   ISNULL(b.Naz_GIDLp,0) As Twr_JmID,
+				   (CASE WHEN ISNULL(Twr_JMCalkowita,0) = 1 THEN 0 ELSE ISNULL(Twr_JmFormat,4) END) as Twr_JmFormat,
+				   ISNULL(Twr_Sww,'') As Twr_Sww,
+				   ISNULL(Twr_URL,'') As Twr_URL,
+				   (CASE WHEN EXISTS(SELECT FRO_GIDLp FROM CDN.FrmObiekty WHERE FRO_FRMID = @CentrumID AND FRO_GIDTyp = 64 AND FRO_GIDLp = Twr_CenaSpr) THEN Twr_CenaSpr ELSE FRS_CenaDomyslna END) AS Twr_CenaSpr,
+				   ISNULL(Twr_BezRabatu,0) As Twr_BezRabatu,
+				   ISNULL(Twr_MarzaMin,0) As Twr_MarzaMin,
+				   ISNULL(Twr_EdycjaNazwy,0) As Twr_EdycjaNazwy,
+				   ISNULL(Twr_KosztUslugi,0) As Twr_KosztUslugi,
+				   ISNULL(Twr_KosztUTyp,0) As Twr_KosztUTyp,
+				   ISNULL(Twr_GrupaPod,'A') As Twr_GrupaPod,
+				   ISNULL(Twr_GrupaPodSpr,'A') As Twr_GrupaPodSpr,
+				   a.Naz_gidlp As Twr_GrupaPodSprID,
+				   ISNULL(Twr_SKNId,0) As Twr_SKNId,
+				   ISNULL(Twr_PartiaDataW,0) As Twr_PartiaDataW,
+				   ISNULL(Twr_TerminW,0) As Twr_TerminW,
+				   ISNULL(Twr_LastModC,0) As Twr_LastModC,
+				   ISNULL(Twr_CCKNumer,0) As Twr_CCKNumer,
+				   ISNULL(Twr_Waga,0) As Twr_Waga,
+				   ISNULL(Twr_WJm,'') As Twr_WJm,
+				   ISNULL(Twr_PrdNumer,0) As Twr_Producent,
+				   ISNULL(Twr_MarkaId,0) As Twr_Marka,
+				   ISNULL(Twr_Notowania,0) As Twr_KategoriaRynkowa,
+				   ISNULL(TGD_GrONumer,0) AS Twr_GrupaDom				   
+				   FROM CDN.TwrKarty
+				   JOIN CDN.TwrLinki ON Twr_GIDTyp=TwL_GIDTyp AND Twr_GIDNumer=TwL_GIDNumer AND TwL_GrOTyp = @GrOTyp AND TwL_GrONumer = @GrONumer
+				   JOIN CDN.Nazwy a ON  ISNULL(Twr_GrupaPodSpr,'A')=left(rtrim(a.Naz_Nazwa),1) AND
+									    ISNULL(Twr_StawkaPodSpr,22)=CAST(left(rtrim(a.Naz_Nazwa1),5) as decimal(5,2)) AND
+										a.Naz_GIDTyp=624
+				   JOIN CDN.Nazwy b ON Twr_Jm=b.Naz_Nazwa AND b.Naz_GIDTyp=144
+				   JOIN CDN.FrmStruktura ON FrS_ID=@CentrumID
+				   LEFT OUTER JOIN CDN.TwrGrupyDom ON Twr_GIDTyp=TGD_GIDTyp AND Twr_GIDNumer=TGD_GIDNumer				   
+				   WHERE Twr_GIDNumer&gt;0 AND Twr_Aktywna=0 AND Twr_Typ&lt;&gt;3 AND Twr_MobSpr=1 AND 
+				         Twr_LastModC&gt;CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END AND Twr_Archiwalny&lt;CASE WHEN @TypEksportu=0 THEN 2 ELSE 1 END AND
+						(EXISTS(SELECT * FROM CDN.TwrCeny JOIN CDN.PicoKonfig ON PcK_CentrumID = @CentrumID AND PcK_Typ = 4 LEFT OUTER JOIN CDN.FrmObiekty ON FRO_FRMID = PcK_CentrumID AND FRO_GIDTyp = 64 AND FRO_GIDLp = TwC_TwrLp
+								WHERE TwC_TwrNumer=Twr_GIDNumer AND (FRO_GIDLp IS NOT NULL OR (PcK_CenaZakupu = 1 AND TwC_TwrLp = 0 ))))
+				   --(@Stany0Exp = CASE WHEN EXISTS(SELECT * FROM CDN.TwrZasoby JOIN CDN.PicoKonfig ON TwZ_MagNumer=PcK_MagNumer AND PcK_CentrumID = @CentrumID WHERE TwZ_TwrNumer=Twr_GIDNumer) THEN 0 ELSE 1 END OR @Stany0Exp=1)
+			UNION
+			SELECT Twr_GIDNumer,
+				   ISNULL(Twr_Typ,1) As Twr_Typ,
+				   ISNULL(Twr_Kaucja,0) As Twr_Kaucja,
+				   ISNULL(Twr_Archiwalny,0) As Twr_Archiwalny,
+				   ISNULL(Twr_Blokada,0) As Twr_Blokada,
+				   ISNULL(Twr_Nazwa,'') As Twr_Nazwa,
+				   ISNULL(Twr_Kod,'') As Twr_Kod,
+				   ISNULL(Twr_Ean,'') As Twr_Ean,
+				   ISNULL(Twr_Katalog,'') As Twr_Symbol,
+				   ISNULL(Twr_Jm,'szt.') As Twr_Jm,
+				   ISNULL(b.Naz_GIDLp,0) As Twr_JmID,
+				   (CASE WHEN ISNULL(Twr_JMCalkowita,0) = 1 THEN 0 ELSE ISNULL(Twr_JmFormat,4) END) as Twr_JmFormat,
+				   ISNULL(Twr_Sww,'') As Twr_Sww,
+				   ISNULL(Twr_URL,'') As Twr_URL,
+				   (CASE WHEN EXISTS(SELECT FRO_GIDLp FROM CDN.FrmObiekty WHERE FRO_FRMID = @CentrumID AND FRO_GIDTyp = 64 AND FRO_GIDLp = Twr_CenaSpr) THEN Twr_CenaSpr ELSE FRS_CenaDomyslna END) AS Twr_CenaSpr,
+				   ISNULL(Twr_BezRabatu,0) As Twr_BezRabatu,
+				   ISNULL(Twr_MarzaMin,0) As Twr_MarzaMin,
+				   ISNULL(Twr_EdycjaNazwy,0) As Twr_EdycjaNazwy,
+				   ISNULL(Twr_KosztUslugi,0) As Twr_KosztUslugi,
+				   ISNULL(Twr_KosztUTyp,0) As Twr_KosztUTyp,
+				   ISNULL(Twr_GrupaPod,'A') As Twr_GrupaPod,
+				   ISNULL(Twr_GrupaPodSpr,'A') As Twr_GrupaPodSpr,
+				   a.Naz_gidlp As Twr_GrupaPodSprID,
+				   ISNULL(Twr_SKNId,0) As Twr_SKNId,
+				   ISNULL(Twr_PartiaDataW,0) As Twr_PartiaDataW,
+				   ISNULL(Twr_TerminW,0) As Twr_TerminW,
+				   ISNULL(Twr_LastModC,0) As Twr_LastModC,
+				   ISNULL(Twr_CCKNumer,0) As Twr_CCKNumer,
+				   ISNULL(Twr_Waga,0) As Twr_Waga,
+				   ISNULL(Twr_WJm,'') As Twr_WJm,
+				   ISNULL(Twr_PrdNumer,0) As Twr_Producent,
+				   ISNULL(Twr_MarkaId,0) As Twr_Marka,
+				   ISNULL(Twr_Notowania,0) As Twr_KategoriaRynkowa,
+				   ISNULL(TGD_GrONumer,0) AS Twr_GrupaDom				   
+				   FROM CDN.TwrKarty
+				   JOIN CDN.Nazwy a ON  ISNULL(Twr_GrupaPodSpr,'A')=left(rtrim(a.Naz_Nazwa),1) AND
+									    ISNULL(Twr_StawkaPodSpr,22)=CAST(left(rtrim(a.Naz_Nazwa1),5) as decimal(5,2)) AND
+										a.Naz_GIDTyp=624
+				   JOIN CDN.Nazwy b ON Twr_Jm=b.Naz_Nazwa AND b.Naz_GIDTyp=144
+				   JOIN CDN.FrmStruktura ON FrS_ID=@CentrumID
+				   LEFT OUTER JOIN CDN.TwrGrupyDom ON Twr_GIDTyp=TGD_GIDTyp AND Twr_GIDNumer=TGD_GIDNumer				  
+				   WHERE twr_gidnumer in (select gidnumer from @dodatkoweTwr) --AND NOT EXISTS(select * from CDN.TwrLinki where TwL_gidnumer=Twr_GIDNumer AND TwL_GIDTyp=-@Typ_GrT  AND TwL_GrOTyp=@GrOTyp AND TwL_GrONumer=@GrONumer)
+	) TableTmp
+
+	SELECT COUNT(*) FROM #TempMobile
+
+	DELETE FROM #TempMobile 
+	WHERE Rank &lt;= @packageSize * (@packageNumber - 1) OR 
+			Rank &gt; @packageSize * @packageNumber
+
+	SELECT * FROM #TempMobile
+
+/*Jednostki pomocnicze*/
+	SELECT  TwJ_TwrNumer, 
+			Twj_TwrLp, 
+			ISNULL(TwK_Kod, '') As Twj_EAN, 
+			ISNULL(TwJ_JednostkaLog,0) As TwJ_JednostkaLog, 
+			CASE WHEN TwJ_TwrNumer=Twr.Twr_GIDNumer AND TwJ_TwrLp=Twr.Twr_JMDomyslna THEN 1 ELSE 0 END AS TwJ_DomyslnaSpr, 
+			CASE WHEN TwJ_TwrNumer=Twr.Twr_GIDNumer AND TwJ_TwrLp=Twr.Twr_JMDomyslnaZak THEN 1 ELSE 0 END AS TwJ_DomyslnaZak, 
+			Naz_GIDLp AS TwJ_JmID, 
+			TwJ_JmZ AS TwJ_Jm,
+			ISNULL(TwJ_PrzeliczM,1) AS TwJ_PrzeliczM, 
+			ISNULL(TwJ_PrzeliczL,1) AS TwJ_PrzeliczL, 
+			ISNULL(TwJ_Waga,0) AS TwJ_Waga, 
+			ISNULL(TwJ_WJm, '') AS TwJ_WJm,
+			CASE WHEN TwJ_Calkowita = 1 THEN 0 ELSE TwJ_JmFormat END AS TwJ_JmFormat,
+			ISNULL(TwJ_TypJm,1) AS TwJ_TypJm			
+	FROM CDN.TwrJm
+	join CDN.TwrKody on TwK_Jm=TwJ_JmZ and TwK_TwrNumer= TwJ_TwrNumer and TwK_Rodzaj=0 	 
+	JOIN  #TempMobile Tmp ON TwJ_TwrNumer=Tmp.Twr_GIDNumer
+	JOIN CDN.TwrKarty Twr ON TwJ_TwrNumer=Twr.Twr_GIDNumer
+	JOIN CDN.Nazwy ON Naz_GIDTyp=144 AND Naz_Nazwa=TwJ_JmZ
+/*Jednostki pomocnicze koniec*/
+
+
+/*Atrybuty*/
+	SELECT  Atr_Id, 
+			Atr_ObiNumer, 
+			CASE WHEN AtK_Typ = 1 THEN  
+					CASE WHEN Atr_Wartosc = 'TAK' THEN 'True'
+					     WHEN Atr_Wartosc = 'NIE' THEN 'False'
+					     ELSE ''
+				    END
+				 WHEN AtK_Format='@d17' THEN 
+				    CASE WHEN CONVERT(int, Atr_Wartosc) = 0 THEN ''
+				         ELSE CONVERT(varchar, CDN.TsToDate(CONVERT(int, Atr_Wartosc), 0), 105)
+				    END
+			     ELSE Atr_Wartosc 
+			END AS Atr_Wartosc, 
+			0 as Atr_WartoscId, 
+			Atr_AtKId
+	FROM CDN.Atrybuty
+	INNER JOIN  #TempMobile Tmp ON Atr_ObiNumer=Tmp.Twr_GIDNumer and Atr_ObiTyp = 16
+	INNER JOIN CDN.AtrybutyKlasy on Atr_AtkId = AtK_ID
+	where AtK_MOBSPrawa&gt;0 AND AtK_Typ &lt;=6	
+/*Atrybuty koniec*/
+
+
+    SET NOCOUNT ON
+		UPDATE CDN.TwrKarty SET Twr_Oddzialowy = 1 + (Twr_Oddzialowy&amp;2)
+        FROM CDN.TwrKarty Twr JOIN #TempMobile Tmp ON Twr.Twr_GIDNumer=Tmp.Twr_GIDNumer WHERE Twr_Oddzialowy &amp; 1 = 0
+
+		DROP TABLE #TempMobile
+    SET NOCOUNT OFF
+
+END
+</proceduredef>
+<proceduredef name="MobS_EksportTwZ">
+CREATE PROCEDURE CDN.MobS_EksportTwZ
+@CentrumID    INT, -- ID centrum praw struktury firmy
+@TypEksportu  INT  -- Typ eksportu (0 - zasoby bez magazynu PH, 1 - wszystkie zasoby wraz z magazynem PH)
+AS
+BEGIN
+	DECLARE @Typ_GrT SMALLINT
+  SET @Typ_GrT = -16
+  DECLARE @Typ_Twr SMALLINT
+  SET @Typ_Twr = 16
+
+  IF @TypEksportu = 1 
+    BEGIN
+		UPDATE CDN.TraNag SET TrN_OddDokID=1
+		FROM CDN.PicoKonfig 
+		JOIN CDN.TraNag ON PcK_MagNumer=TrN_MagDNumer AND TrN_GIDTyp=1604 AND TrN_TrNLp=127 AND TrN_Stan&gt;=3
+		WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4 AND TrN_OddDokID&lt;1
+	END ;
+	
+	WITH Magazyny(GIDNumer) AS 
+	(SELECT a.Mag_GIDNumer
+	 FROM ( SELECT Mag_GIDNumer FROM CDN.Magazyny JOIN CDN.FrmObiekty ON Mag_GIDNumer=FRO_GIDNumer
+		      WHERE Mag_Pico=0 AND FrO_FRmId=@CentrumID AND Fro_GIDTyp=208 ) a
+	 JOIN ( SELECT Mag_GIDNumer FROM CDN.dokdefinicje join cdn.dokrelacje on Dok_Id=DoR_ID join cdn.magazyny on dor_MSNumer=mag_gidnumer 
+	        WHERE Mag_Pico=0 AND Dok_GIDTyp=9472 and Dok_FrsId=1 and dor_MSTyp=208) b
+	 ON a.Mag_GIDNumer=b.Mag_GIDNumer
+	 JOIN CDN.DokDefinicje ON Dok_GIDTyp=9472 and Dok_FrsId=@CentrumID
+	)				
+	SELECT TwZ_TwrNumer, TwZ_MagNumer, SUM(TwZ_Ilosc) AS TwZ_Ilosc, 0 As TwZ_Wartosc, 0 As TwZ_DstNumer
+	FROM CDN.TwrZasoby
+	JOIN CDN.TwrKarty ON TwZ_TwrNumer=Twr_GIDNumer
+	JOIN Magazyny ON TwZ_MagNumer=GIDNumer
+	JOIN CDN.TwrLinki ON TwL_GIDTyp=@Typ_Twr AND TwZ_TwrNumer=TwL_GIDNumer
+	JOIN CDN.PicoKonfig ON PcK_CentrumID=@CentrumID AND PcK_Typ=4  
+	WHERE Twr_MobSpr=1 AND Twr_Archiwalny&lt;CASE WHEN @TypEksportu=0 THEN 2 ELSE 1 END AND TwL_GrOTyp=@Typ_GrT AND TwL_GrONumer = CASE WHEN PcK_TwGTyp=@Typ_GrT THEN PcK_TwGNumer ELSE 0 END AND TwZ_Ilosc &gt; 0
+	GROUP BY TwZ_TwrNumer,TwZ_MagNumer
+	UNION ALL
+	SELECT TwZ_TwrNumer, 0, SUM(TwZ_Ilosc) AS TwZ_Ilosc, 0 As TwZ_Wartosc, 0 As TwZ_DstNumer
+	FROM CDN.TwrZasoby
+	JOIN CDN.TwrKarty ON TwZ_TwrNumer=Twr_GIDNumer
+	JOIN Magazyny ON TwZ_MagNumer=GIDNumer
+	JOIN CDN.TwrLinki ON TwL_GIDTyp=@Typ_Twr AND TwZ_TwrNumer=TwL_GIDNumer
+	JOIN CDN.PicoKonfig ON PcK_CentrumID=@CentrumID AND PcK_Typ=4  
+	WHERE Twr_MobSpr=1 AND Twr_Archiwalny&lt;CASE WHEN @TypEksportu=0 THEN 2 ELSE 1 END AND TwL_GrOTyp=@Typ_GrT AND TwL_GrONumer = CASE WHEN PcK_TwGTyp=@Typ_GrT THEN PcK_TwGNumer ELSE 0 END AND TwZ_Ilosc &gt; 0 AND
+	      EXISTS(SELECT * FROM CDN.DokDefinicje WHERE  Dok_FrSId = @CentrumID AND Dok_JedenMagazyn=2)
+	GROUP BY TwZ_TwrNumer
+	UNION ALL
+	SELECT TwZ_TwrNumer, TwZ_MagNumer, TwZ_Ilosc, cast(TwZ_KsiegowaNetto/TwZ_IlSpr as decimal(15,2)) as TwZ_Wartosc, TwZ_DstNumer
+	FROM CDN.TwrZasoby
+	JOIN CDN.TwrKarty ON TwZ_TwrNumer=Twr_GIDNumer
+  JOIN CDN.PicoKonfig ON TwZ_MagNumer=PcK_MagNumer AND PcK_CentrumID=@CentrumID AND PcK_Typ=4
+  WHERE Twr_MobSpr=1 AND Twr_Archiwalny&lt;CASE WHEN @TypEksportu=0 THEN 2 ELSE 1 END AND @TypEksportu=1 AND TwZ_IlSpr&gt;0
+	UNION ALL
+	SELECT TwZ_TwrNumer, TwZ_MagNumer, SUM(TwZ_Ilosc) AS TwZ_Ilosc, 0 As TwZ_Wartosc, 0 As TwZ_DstNumer
+	FROM CDN.TwrZasoby
+	JOIN CDN.TwrKarty ON TwZ_TwrNumer=Twr_GIDNumer
+  JOIN CDN.PicoKonfig ON TwZ_MagNumer=PcK_MagNumer AND PcK_CentrumID=@CentrumID AND PcK_Typ=4
+  WHERE Twr_MobSpr=1 AND Twr_Archiwalny&lt;CASE WHEN @TypEksportu=0 THEN 2 ELSE 1 END AND @TypEksportu = 1 AND TwZ_IlSpr&gt;0
+	GROUP BY TwZ_TwrNumer,TwZ_MagNumer
+
+END
+</proceduredef>
+<proceduredef name="MobS_EksportTwO">
+CREATE PROCEDURE CDN.MobS_EksportTwO
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT, -- Typ eksportu (0 - różnicowy, 1 - pełny)
+@PackageSize   INT, -- Rozmiar paczki
+@PackageNumber INT  -- Numer paczki
+AS
+BEGIN
+DECLARE @canSynchronize BIT
+DECLARE @TimeStamp      INT
+DECLARE @GrOTyp         SMALLINT
+DECLARE @GrONumer       INT 
+
+SELECT @canSynchronize = isnull(PcK_ExpTwrOpisy,0) FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+   
+IF @canSynchronize = 1/*wg XL można synchronizować opisy towarów*/
+BEGIN
+	SELECT @TimeStamp=isnull(PcK_TSSynchrTwoPtw,0), @GrOTyp=PcK_TwGTyp, @GrONumer=PcK_TwGNumer
+	FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4                   
+    
+	UPDATE CDN.PicoKonfig SET PcK_TSSynchrTwO = DATEDIFF(s,'19900101',GetDate())
+	WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4    
+ 	 
+	SELECT DISTINCT identity(int,1,1) AS Rank, * INTO #TempMobile FROM 
+	(
+		SELECT Twr_GIDNumer, left(ISNULL(TwO_Opis,''),255) As TwO_Opis, TwO_CzasModyfikacji
+		FROM CDN.TwrKarty
+		JOIN CDN.TwrLinki ON Twr_GIDTyp=TwL_GIDTyp AND Twr_GIDNumer=TwL_GIDNumer AND TwL_GrOTyp=@GrOTyp AND TwL_GrONumer=@GrONumer	   
+		JOIN CDN.TwrOpisy ON Twr_GIDNumer=TwO_TwrNumer AND TwO_Jezyk=0
+		WHERE Twr_GIDNumer&gt;0 AND Twr_Aktywna=0 AND Twr_Typ&lt;&gt;3 AND Twr_MobSpr=1
+		AND LEN(LTRIM(RTRIM(ISNULL(TwO_Opis,''))))&gt;0
+		AND ISNULL(TwO_CzasModyfikacji,0)&gt;CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END             
+	) TempTwO
+
+	SELECT COUNT(*) FROM #TempMobile
+
+	DELETE FROM #TempMobile 
+	WHERE Rank &lt;= @packageSize * (@packageNumber - 1) OR 
+			Rank &gt; @packageSize * @packageNumber
+
+	SELECT * FROM #TempMobile	
+END
+END
+</proceduredef>
+<proceduredef name="MobS_EksportTwC">
+CREATE PROCEDURE CDN.MobS_EksportTwC
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT, -- Typ eksportu (0 - różnicowy, 1 - pełny)
+@PackageSize   INT, -- Rozmiar paczki
+@PackageNumber INT  -- Numer paczki
+AS
+BEGIN
+    DECLARE @Typ_GrT     SMALLINT
+    DECLARE @GrOTyp      SMALLINT
+    DECLARE @GrONumer    INT
+    DECLARE @TimeStamp   INT
+	DECLARE @MMPbezZasobow TABLE ( gidnumer int )
+	DECLARE @dodatkoweTwr TABLE	( gidnumer int )
+
+    SET @Typ_GrT = -16
+    UPDATE CDN.PicoKonfig SET PcK_TSSynchrTwC = DATEDIFF(s,CONVERT(datetime,'1990-01-01',120),CONVERT(datetime,GetDate(),120)) WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4 
+	SELECT @GrOTyp=PcK_TwGTyp, @GrONumer=PcK_TwGNumer, @TimeStamp=PcK_TSSynchrTwCPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	IF ISNULL(@GrOTyp,0) = @Typ_GrT
+	BEGIN
+		INSERT INTO @MMPbezZasobow SELECT TrE_Gidnumer FROM
+		(
+				 SELECT TrE_GIDNumer, TrE_TwrNumer, sum(TrS_Ilosc) as Ilosc, TrS_MagNumer, TrS_DstNumer
+				 FROM   CDN.PicoKonfig
+				 JOIN CDN.TraNag ON PcK_MagNumer=TrN_MagDNumer AND TrN_GIDTyp=1604 AND TrN_TrNLp=127 AND TrN_Stan&gt;=3
+				 JOIN CDN.TraElem ON TrN_GIDNumer=TrE_GIDNumer
+				 JOIN CDN.TraSElem ON TrE_GIDNumer=TrS_GIDNumer AND TrE_GIDLp=TrS_GIDLp
+				 WHERE PcK_CentrumID=@CentrumID AND TrN_OddDokID&lt;=0
+				 GROUP BY TrE_GIDNumer, TrS_MagNumer, TrE_TwrNumer, TrS_DstNumer 
+		) X
+		JOIN CDN.TwrZasoby ON Twz_MagNumer=Trs_MagNumer AND Twz_TwrNumer=Tre_TwrNumer AND Twz_DstNumer=Trs_DstNumer
+		WHERE Ilosc&gt;Twz_IlSpr
+
+		INSERT INTO @dodatkoweTwr SELECT TrE_TwrNumer
+		FROM   CDN.PicoKonfig
+		JOIN CDN.TraNag ON PcK_MagNumer=TrN_MagDNumer AND TrN_GIDTyp=1604 AND TrN_TrNLp=127 AND TrN_Stan&gt;=3
+		JOIN CDN.TraElem ON TrN_GIDNumer=TrE_GIDNumer
+		WHERE PcK_CentrumID=@CentrumID AND TrN_OddDokID&lt;=0 AND TrE_GIDNumer NOT IN (SELECT gidnumer FROM @MMPbezZasobow)
+    END
+
+	DECLARE @TempMobile TABLE ( Rank int identity(1,1), Twr_GIDNumer int, Twr_CenaSpr smallint, Twr_GrupaPodSpr varchar(1), Twr_StawkaPodSpr decimal(5,2))
+
+	INSERT INTO @TempMobile SELECT * FROM 
+	(
+			SELECT Twr_GIDNumer, Twr_CenaSpr, Twr_GrupaPodSpr, Twr_StawkaPodSpr
+				   FROM CDN.TwrKarty
+				   JOIN CDN.TwrLinki ON Twr_GIDTyp=TwL_GIDTyp AND Twr_GIDNumer=TwL_GIDNumer AND TwL_GrOTyp = @GrOTyp AND TwL_GrONumer = @GrONumer
+				   JOIN CDN.Nazwy a ON  ISNULL(Twr_GrupaPodSpr,'A')=left(rtrim(a.Naz_Nazwa),1) AND
+									    ISNULL(Twr_StawkaPodSpr,22)=CAST(left(rtrim(a.Naz_Nazwa1),5) as decimal(5,2)) AND
+										a.Naz_GIDTyp=624
+				   JOIN CDN.Nazwy b ON Twr_Jm=b.Naz_Nazwa AND b.Naz_GIDTyp=144
+				   WHERE Twr_GIDNumer&gt;0 AND Twr_Aktywna=0 AND Twr_Typ&lt;&gt;3 AND Twr_MobSpr=1 AND 
+				         Twr_Archiwalny&lt;CASE WHEN @TypEksportu=0 THEN 2 ELSE 1 END AND
+						(EXISTS(SELECT * FROM CDN.TwrCeny JOIN CDN.PicoKonfig ON PcK_CentrumID = @CentrumID AND PcK_Typ = 4 LEFT OUTER JOIN CDN.FrmObiekty ON FRO_FRMID = PcK_CentrumID AND FRO_GIDTyp = 64 AND FRO_GIDLp = TwC_TwrLp
+								WHERE TwC_TwrNumer=Twr_GIDNumer AND (FRO_GIDLp IS NOT NULL OR (PcK_CenaZakupu = 1 AND TwC_TwrLp = 0)) AND ISNULL(TwC_CzasModyfikacji,0) &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END))
+			UNION
+			SELECT Twr_GIDNumer, Twr_CenaSpr, Twr_GrupaPodSpr, Twr_StawkaPodSpr
+				   FROM CDN.TwrKarty
+				   JOIN CDN.FrmStruktura ON FrS_ID=@CentrumID
+				   WHERE twr_gidnumer in (select gidnumer from @dodatkoweTwr) 
+	) TableTmp
+	ORDER BY Twr_GIDNumer
+
+    declare @typycen table (ErpId int, Nazwa varchar(10), NB varchar(1), Widoczna bit, DomyslnaCentrum bit)
+
+    insert into @typycen 
+	  select Naz_GIDLp As ErpID, rtrim(substring(naz_nazwa,1,10)) As Nazwa, substring(naz_nazwa,11,1) as NB, 1 as Widoczna, CASE WHEN FrS_CenaDomyslna=Naz_GIDLp THEN 1 ELSE 0  END As DomyslnaCentrum 
+      from CDN.FrmStruktura 
+      JOIN CDN.FrmObiekty ON FrS_Id=FRO_FRMID
+      JOIN cdn.nazwy ON Naz_GIDTyp=FRO_GIDTyp and Naz_GIDLp=FRO_GIDLp
+      where FrS_Id=@CentrumID and FRO_GIDTyp=64
+    
+    insert into @typycen 
+      SELECT Dok_CenaBazowa As ErpId, rtrim(substring(naz_nazwa,1,10)) as Nazwa, substring(naz_nazwa,11,1) as NB, 0 as Widoczna, 0 as DomyslnaCentrum
+      FROM CDN.DokDefinicje
+      JOIN CDN.Nazwy on Naz_gidlp=Dok_CenaBazowa and naz_gidtyp=64
+      WHERE Dok_FrsId=@CentrumID AND Dok_GIDTyp IN (2001,2033,2034,8960,9472) AND Dok_CenaBazowa&gt;0 AND Dok_CenaBazowa NOT IN(SELECT ErpId FROM @typycen)
+
+    insert into @typycen (erpid,nazwa,widoczna,domyslnacentrum,nb) values(0,'Zakupu',0,0,'N')
+    
+    select distinct ErpId, Nazwa, Widoczna, DomyslnaCentrum from @typycen
+
+    declare @numerkursu int
+    declare @walutasystemowa int
+    select @numerkursu=kon_wartosc from cdn.konfig where kon_numer=11
+    select @walutasystemowa=wan_id from cdn.konfig join cdn.walnag on Kon_Numer=211 AND rtrim(WaN_Symbol)=rtrim(Kon_Wartosc)
+
+	SELECT DISTINCT identity(int,1,1) AS Rank, * INTO #TempPricesMobile FROM 
+	(
+		SELECT  TwC_TwrNumer,
+				Twc_TwrLp,
+				CASE WHEN Kon_System IS NULL THEN (case when Twc_TwrLp=0 then 1 else 0 end) ELSE 1 END As TwC_WanSys,
+				(case when Twc_TwrLp=0 then @walutasystemowa else wan_id end) as TwC_WanId,
+				(Case when Twr_CenaSpr IN (Select ErpId from @typycen) then case when Twr_CenaSpr=TwC_TwrLp then 1 else 0 end else CASE WHEN TwC_TwrLp = (Select ErpId from @typycen where DomyslnaCentrum = 1) THEN 1 ELSE 0 END END) as TwC_DomyslnaTwr,
+				convert(decimal(15,4),round(isnull((case when Twc_TwrLp&lt;&gt;0 then isnull(wae_kursl,1)/isnull(wae_kursm,1) else 1 end)*(case when nb='N' then twc_wartosc else twc_wartosc/(1+convert(decimal(15,4),rtrim(substring(Naz_Nazwa1,1,5)))/100) end),0),4)) as TwC_Netto,
+				convert(decimal(15,4),round(isnull((case when Twc_TwrLp&lt;&gt;0 then isnull(wae_kursl,1)/isnull(wae_kursm,1) else 1 end)*(case when nb='B' then twc_wartosc else twc_wartosc*(1+convert(decimal(15,4),rtrim(substring(Naz_Nazwa1,1,5)))/100) end),0),4)) as TwC_Brutto,
+				ISNULL(TwC_CzasModyfikacji,0) As TwC_CzasModyfikacji
+		FROM @TempMobile 
+		JOIN cdn.TwrCeny on twc_twrnumer=Twr_GIDNumer
+		JOIN @typycen on erpid=twc_twrlp
+		JOIN cdn.walnag on twc_waluta=wan_symbol
+		left join cdn.walelem on WaN_Symbol=WaE_Symbol and wae_lp=@numerkursu and wae_kursts in (select max(wae_kursts) from cdn.walelem where WaN_Symbol=WaE_Symbol and wae_lp=@numerkursu)
+		JOIN CDN.Nazwy a ON  ISNULL(Twr_GrupaPodSpr,'A')=left(rtrim(a.Naz_Nazwa),1) AND
+							 ISNULL(Twr_StawkaPodSpr,22)=CAST(left(rtrim(a.Naz_Nazwa1),5) as decimal(5,2)) AND
+							 a.Naz_GIDTyp=624
+		LEFT JOIN CDN.Konfig ON Kon_Numer=211 AND rtrim(WaN_Symbol)=rtrim(Kon_Wartosc)
+		WHERE WaN_Id=@walutasystemowa
+	)TablePricesTmp
+	
+	SELECT COUNT(*) FROM #TempPricesMobile
+
+	DELETE FROM #TempPricesMobile 
+	WHERE Rank &lt;= @PackageSize * (@PackageNumber - 1) OR 
+			Rank &gt; @PackageSize * @PackageNumber
+
+	SELECT * FROM #TempPricesMobile
+	
+END
+</proceduredef>
+<proceduredef name="MobS_EksportPrd">
+Create PROCEDURE CDN.MobS_EksportPrd
+@CentrumID    INT,
+@TypEksportu  INT -- Typ eksportu (0 - różnicowy, 1 - pełny)
+AS
+BEGIN
+
+DECLARE @TimeStamp      INT
+DECLARE @GrOTyp         SMALLINT
+DECLARE @GrONumer       INT 
+
+SELECT @TimeStamp= isnull(PcK_TSSynchrTwrPtw,0),@GrOTyp=PcK_TwGTyp,@GrONumer=PcK_TwGNumer
+FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4                     
+ 	 
+SELECT DISTINCT Knt_GIDNumer As Prd_GIDNumer, Knt_Akronim As Prd_Nazwa, Knt_Archiwalny As Prd_Archiwalny 
+FROM CDN.TwrKarty
+JOIN CDN.TwrLinki ON Twr_GIDTyp=TwL_GIDTyp AND Twr_GIDNumer=TwL_GIDNumer AND TwL_GrOTyp = @GrOTyp AND TwL_GrONumer = @GrONumer	   
+JOIN CDN.KntKarty ON Twr_PrdTyp=Knt_GIDTyp AND Twr_PrdNumer=Knt_GIDNumer
+WHERE Twr_GIDNumer&gt;0 AND Twr_Aktywna=0 AND Twr_Typ&lt;&gt;3
+AND ISNULL(Twr_LastModC,0)&gt;CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END             	 	
+END
+</proceduredef>
+<proceduredef name="MobS_EksportTwP">
+CREATE PROCEDURE CDN.MobS_EksportTwP 
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT, -- Typ eksportu (0 - roznicowy, 1 - pelny)
+@PackageSize   INT, -- Rozmiar paczki
+@PackageNumber INT  -- Numer paczki
+AS
+BEGIN
+DECLARE @TimeStamp      INT
+DECLARE @GrOTyp         SMALLINT
+DECLARE @GrONumer       INT 
+
+DECLARE @PcK_PicoID INT,@PcK_TSSynchrPtw INT
+
+SELECT @PcK_PicoID=PcK_PicoID, @GrOTyp=PcK_TwGTyp, @GrONumer=PcK_TwGNumer
+FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4     
+   
+SELECT @TimeStamp=isnull(PcS_TSSynchrPtw,0) --pobierz czas ostatniej synchronizacji zamiennikow
+FROM CDN.PicoTimestamp WHERE PcS_PcKID=@PcK_PicoID AND PcS_OBITyp=14600   
+
+UPDATE CDN.PicoTimestamp SET PcS_TSSynchr = DATEDIFF(s,'19900101',GetDate()) --update czas wysylania zamiennikow
+WHERE PcS_PcKID=@PcK_PicoID AND PcS_OBITyp=14600   
+
+SELECT Lp, TwP_TwrNumer, TwP_ZamNumer , TwP_Warstwa, TwP_PrzeliczL, TwP_PrzeliczM, Zmieniony
+FROM
+(SELECT (Row_Number() over (order by tabela.TwP_TwrNumer)) as Lp, tabela.TwP_TwrNumer, tabela.TwP_ZamNumer ,
+        tabela.TwP_Warstwa, tabela.TwP_PrzeliczL, tabela.TwP_PrzeliczM, tabela.Zmieniony
+FROM 
+	( SELECT TwP_TwrNumer, TwP_ZamNumer , TwP_Warstwa, TwP_PrzeliczL, TwP_PrzeliczM, --jednostronne i obustronne
+	CASE WHEN (TwrA.Twr_LastModC &gt;(CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END))
+	            THEN 1 ELSE 0 END as Zmieniony
+	FROM CDN.TwrPodm
+	JOIN CDN.TwrKarty TwrA on (TwP_TwrNumer = TwrA.Twr_GIDNumer) 
+	JOIN CDN.TwrKarty TwrB on (TwP_ZamNumer = TwrB.Twr_GIDNumer)
+	JOIN CDN.TwrLinki A ON 16 = A.TwL_GIDTyp AND TwP_TwrNumer=A.TwL_GIDNumer AND A.TwL_GrOTyp=@GrOTyp AND A.TwL_GrONumer=@GrONumer	 
+	JOIN CDN.TwrLinki B ON 16 = B.TwL_GIDTyp AND TwP_ZamNumer=B.TwL_GIDNumer AND B.TwL_GrOTyp=@GrOTyp AND B.TwL_GrONumer=@GrONumer
+	WHERE TwP_TwrNumer&lt;&gt;0 and (TwP_Warstwa= 0/*jednostronne*/ or TwP_Warstwa&gt;1/*obustronne*/) 
+	AND TwrA.Twr_Aktywna=0 AND TwrB.Twr_Aktywna=0 AND TwrA.Twr_MobSpr=1 AND TwrB.Twr_MobSpr=1
+	AND ((TwrA.Twr_LastModC&gt;CASE WHEN @TypEksportu = 0 THEN @TimeStamp ELSE 0 END)
+		 OR 
+		 (TwrB.Twr_LastModC&gt;CASE WHEN @TypEksportu = 0 THEN @TimeStamp ELSE 0 END)) 
+	AND TwrA.Twr_Archiwalny&lt;CASE WHEN @TypEksportu = 0 THEN 2 ELSE 1 END
+	AND TwrB.Twr_Archiwalny&lt;CASE WHEN @TypEksportu = 0 THEN 2 ELSE 1 END
+	AND TwP_DokRodzaj IN(1,3) -- 1 - Rozchodowe; 3- Rozchodowe i Przychodowe
+
+	UNION ALL
+
+	SELECT 0, TwP_ZamNumer , TwP_Warstwa, TwP_PrzeliczL, TwP_PrzeliczM,Zmieniony --równoważne
+	FROM
+	(
+	SELECT Twr_Kod,TwP_TwrNumer, TwP_ZamNumer , TwP_Warstwa, TwP_PrzeliczL, TwP_PrzeliczM ,
+	       CASE WHEN (Twr_LastModC &gt;(CASE WHEN @TypEksportu = 0 THEN @TimeStamp ELSE 0 END))
+	            THEN 1 ELSE 0 END as Zmieniony,
+		   COUNT(*) over(partition by TwP_Warstwa) as IloscMobilnychWarstwa, --równoważne, conajmniej 2 z jednej warstwy musza należeć do grupy mobilnej
+		   MAX(Twr_LastModC) over(partition by TwP_Warstwa) as MaxLastModWarstwa 
+	FROM CDN.TwrPodm 
+	JOIN CDN.TwrKarty on (TwP_ZamNumer = Twr_GIDNumer)
+	JOIN CDN.TwrLinki ON 16=TwL_GIDTyp AND TwP_ZamNumer=TwL_GIDNumer AND TwL_GrOTyp=@GrOTyp AND TwL_GrONumer=@GrONumer
+	WHERE (TwP_TwrNumer = 0 AND TwP_Warstwa&gt;1)/*równoważne*/ AND Twr_Aktywna=0 AND Twr_Archiwalny&lt;CASE WHEN @TypEksportu=0 THEN 2 ELSE 1 END
+	      AND TwP_DokRodzaj IN(1,3) -- 1 - Rozchodowe; 3- Rozchodowe i Przychodowe
+	) as tabWarstwy
+	where tabWarstwy.IloscMobilnychWarstwa &gt; 1 AND tabWarstwy.MaxLastModWarstwa&gt;CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END
+
+	) AS tabela
+
+)AS tabela2
+WHERE (Lp &gt; (@packageNumber-1)*@packageSize) and (Lp&lt;= @packageSize * @packageNumber)
+
+END
+</proceduredef>
+</ROOT>

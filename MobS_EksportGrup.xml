@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportGrup">
+CREATE Procedure CDN.MobS_EksportGrup
+@CentrumID     INT, -- ID centrum praw struktury firmy 
+@OpeNumer      INT, -- ID mobilnego sprzedawcy
+@TypEksportu   INT, -- Typ eksportu (0 - różnicowy, 1 - pełny)
+@PackageSize   INT, -- rozmiar paczki
+@PackageNumber INT  -- numer paczki
+AS
+	SET @PackageSize = @PackageSize*2
+	
+    DECLARE @TimeStamp INT
+    DECLARE @Typ_Twr SMALLINT
+    DECLARE @Typ_GrT SMALLINT
+    DECLARE @Typ_Knt SMALLINT
+    DECLARE @Typ_GrK SMALLINT
+
+    SET @Typ_Twr = 16
+    SET @Typ_GrT = -16
+    SET @Typ_Knt = 32
+    SET @Typ_GrK = -32
+    SET @TimeStamp = DATEDIFF(s,CONVERT(datetime,'19900101',112),CONVERT(datetime,GetDate(),112))
+    
+    DECLARE @Rejony TABLE (KtOTyp SMALLINT, KtONumer INT)
+    DECLARE @GrOTyp   SMALLINT
+    DECLARE @GrONumer INT
+    DECLARE @Dzis INT
+    
+    SELECT @Dzis = DATEDIFF(d,CONVERT(datetime,'18001228',112),CONVERT(datetime,GetDate(),112))
+    SELECT @GrOTyp=PcK_KnGETyp, @GrONumer=PcK_KnGENumer FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+     
+    IF @GrOTyp = 944
+    BEGIN
+ 		INSERT INTO @Rejony SELECT KtO_KntTyp, KtO_KntNumer FROM CDN.OpeKarty JOIN CDN.KntOpiekun ON Ope_PrcNumer=KtO_PrcNumer			 
+		WHERE Ope_GIDNumer=@OpeNumer AND (KtO_KntTyp=948 OR (KtO_KntTyp=32 AND @Dzis BETWEEN KtO_DataOd AND KtO_DataDo));
+    END
+
+    UPDATE CDN.PicoKonfig SET PcK_TSSynchrGrup = @TimeStamp WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+        SELECT DISTINCT IDENTITY(INT,1,1) AS Rank,
+                        TwG_GIDTyp,
+                        TwG_GIDNumer,
+                        TwG_GrOTyp,
+                        TwG_GrONumer,
+                        CASE WHEN TwG_GIDTyp=@Typ_GrT THEN TwG_Kod ELSE '' END As TwG_Kod,
+                        CASE WHEN TwG_GIDTyp=@Typ_GrT THEN TwG_Nazwa ELSE '' END As TwG_Nazwa
+      INTO #TempTwG
+        FROM    CDN.TwrGrupy
+                        JOIN CDN.PicoKonfig ON PcK_CentrumID=@CentrumID
+        WHERE (TwG_GIDTyp = @Typ_GrT AND EXISTS(SELECT * FROM CDN.TwrGrupy WHERE TwG_GIDTyp = @Typ_GrT  AND TwG_CzasModyfikacji &gt;= CASE WHEN @TypEksportu = 0 THEN ISNULL(PcK_TSSynchrGrupPTW,0) ELSE 0 END))
+           OR (TwG_GIDTyp = @Typ_Twr AND TwG_GIDNumer &gt; 0 AND ISNULL(TwG_CzasModyfikacji, 0) &gt;= CASE WHEN @TypEksportu = 0 THEN ISNULL(PcK_TSSynchrGrupPTW,0) ELSE 0 END)
+           AND (EXISTS(Select * FROM CDN.TwrLinki where TwL_GIDNumer = TwG_GIDNumer AND TwL_GRONumer = PcK_TwGNumer) OR TwG_GIDTyp = -16)         
+    ORDER BY TwG_GIDTyp, TwG_GIDNumer
+    
+    SELECT COUNT(*) FROM #TempTwG
+
+        DELETE FROM #TempTwG
+        WHERE Rank &lt;= @packageSize * (@packageNumber - 1) OR Rank &gt; @packageSize * @packageNumber
+
+        SELECT * FROM #TempTwG
+
+        SELECT DISTINCT IDENTITY(INT,1,1) AS Rank,
+                        KnG_GIDTyp,
+                        KnG_GIDNumer,
+                        KnG_GrOTyp,
+                        KnG_GrONumer,
+                        CASE WHEN KnG_GIDTyp=@Typ_GrK THEN KnG_Akronim ELSE '' END As KnG_Akronim
+      INTO #TempKnG
+        FROM    CDN.KntGrupy
+                        JOIN CDN.PicoKonfig ON PcK_CentrumID=@CentrumID
+        WHERE (KnG_GIDTyp = @Typ_GrK AND EXISTS(SELECT * FROM CDN.KntGrupy WHERE KnG_GIDTyp = @Typ_GrK  AND KnG_CzasModyfikacji &gt;= CASE WHEN @TypEksportu = 0 THEN ISNULL(PcK_TSSynchrGrupPTW,0) ELSE 0 END ))
+           OR (KnG_GIDTyp = @Typ_Knt AND KnG_GIDNumer &gt; 0 AND ISNULL(KnG_CzasModyfikacji,0) &gt;= CASE WHEN @TypEksportu = 0 THEN ISNULL(PcK_TSSynchrGrupPTW,0)ELSE 0 END )
+           AND 
+            ((
+				EXISTS(Select * FROM CDN.KnTLinki where KnL_GIDNumer = KnG_GIDNumer AND KnL_GRONumer = PcK_KnGENumer)
+				OR EXISTS(SELECT * FROM CDN.KntLinki
+					JOIN CDN.KntKarty ON Knt_GIDTyp=KnL_GIDTyp AND Knt_GIDNumer=KnL_GIDNumer 
+					WHERE KnL_GIDNumer = KnG_GIDNumer AND KnL_GIDTyp = KnG_GIDTyp
+					AND (Knt_RegionCRM IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948)
+					OR Knt_GIDNumer IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=32)
+					 )) )
+           OR KnG_GIDTyp = -32)         
+    ORDER BY KnG_GIDTyp, KnG_GIDNumer
+    
+    SELECT COUNT(*) FROM #TempKnG
+
+    DELETE FROM #TempKnG
+    WHERE Rank &lt;= @packageSize * (@packageNumber - 1) OR Rank &gt; @packageSize * @packageNumber
+
+    SELECT * FROM #TempKnG
+</proceduredef>
+</ROOT>

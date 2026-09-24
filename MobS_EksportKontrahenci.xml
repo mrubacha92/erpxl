@@ -1,0 +1,666 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportKnt">
+CREATE PROCEDURE CDN.MobS_EksportKnt
+@CentrumID     INT, -- ID centrum praw struktury firmy 
+@OpeNumer      INT, -- ID mobilnego sprzedawcy
+@TypEksportu   INT, -- Typ eksportu (0 - różnicowy, 1 - pełny)
+@PackageSize   INT, -- rozmiar paczki
+@PackageNumber INT  -- numer paczki
+AS
+BEGIN
+	DECLARE @Dzis INT
+    DECLARE @TimeStamp INT
+    DECLARE @Typ_GrK SMALLINT
+    DECLARE @GrOTyp   SMALLINT
+    DECLARE @GrONumer INT
+    DECLARE @OpiNumer INT
+    DECLARE @Rejony TABLE (KtOTyp SMALLINT, KtONumer INT)
+      
+    SET @Typ_GrK = -32
+    SELECT @Dzis = DATEDIFF(d,CONVERT(datetime,'18001228',112),CONVERT(datetime,GetDate(),112))
+    UPDATE CDN.PicoKonfig SET PcK_TSSynchrKnt = DATEDIFF(s,CONVERT(datetime,'19900101',112),CONVERT(datetime,GetDate(),112)) WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+    SELECT @GrOTyp=PcK_KnGETyp, @GrONumer=PcK_KnGENumer, @TimeStamp=PcK_TSSynchrKntPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+      
+    IF @GrOTyp = 944
+    BEGIN
+ 			INSERT INTO @Rejony 
+			SELECT KtO_KntTyp, KtO_KntNumer
+			FROM CDN.OpeKarty 
+			JOIN CDN.KntOpiekun ON Ope_PrcNumer=KtO_PrcNumer
+			WHERE Ope_GIDNumer=@OpeNumer AND (KtO_KntTyp=948 OR KtO_KntTyp=32) AND ((KtO_DataOd = 0 AND KtO_DataDo = 0) OR  @Dzis BETWEEN KtO_DataOd AND KtO_DataDo);
+    END
+
+	SELECT DISTINCT identity(int,1,1) AS Rank, * INTO #TempMobile FROM 
+	(
+		SELECT  Knt.Knt_GIDNumer,
+				CASE WHEN Knt.Knt_Typ IN(0,8,16,24) THEN Knt.Knt_Typ ELSE 0 END As Knt_Typ,
+				Knt.Knt_Akronim                    As Knt_Akronim,
+				ISNULL(Knt.Knt_Nazwa1,'')          As Knt_Nazwa1,
+				ISNULL(Knt.Knt_Nazwa2,'')          As Knt_Nazwa2,
+				ISNULL(Knt.Knt_Nazwa3,'')          As Knt_Nazwa3,
+				ISNULL(Knt.Knt_Kodp,'')            As Knt_Kodp,
+				ISNULL(Knt.Knt_Miasto,'')          As Knt_Miasto,
+				ISNULL(Knt.Knt_Wojewodztwo,'')     As Knt_Wojewodztwo,
+				ISNULL(Knt.Knt_Ulica,'')           As Knt_Ulica,
+				ISNULL(Knt.Knt_NipE,'')            As Knt_NipE,
+				ISNULL(Knt.Knt_NipPrefiks,'')      As Knt_NipPrefiks,
+				ISNULL(Knt.Knt_Regon,'')           As Knt_Regon,
+				ISNULL(Knt.Knt_Pesel,'')           As Knt_Pesel,
+				ISNULL(Knt.Knt_Telefon1,'')        As Knt_Telefon1,
+				ISNULL(Knt.Knt_Telefon2,'')        As Knt_Telefon2,
+				ISNULL(Knt.Knt_Fax,'')             As Knt_Fax,
+				ISNULL(Knt.Knt_Email,'')           As Knt_Email,
+				ISNULL(Knt.Knt_URL,'')             As Knt_URL,
+				ISNULL(Knt.Knt_Telex,'')           As Knt_GSM,
+				ISNULL(Knt.Knt_RegionCRM,0)        As Knt_RegionCRM,
+				ISNULL(Knt.Knt_PlatnikVat,0)       As Knt_PlatnikVat,
+				ISNULL(Knt.Knt_Rodzaj,0)           As Knt_Rodzaj,
+				ISNULL(Knt.Knt_Status,1)           As Knt_Status,
+				(CASE WHEN ISNULL(Knt.Knt_BlokadaTransakcji,0)=0 THEN 0 ELSE Knt.Knt_LastTransLockDate END) As Knt_LastTransLockDate,
+				ISNULL(Knt.Knt_MaxDniPoTerminie,0) As Knt_MaxDniPoTerminie,
+				CASE WHEN ISNULL(Knt.Knt_KnPParam,0)=1 THEN (ISNULL(KnP.Knt_FormaPl,10))
+				ELSE ISNULL(Knt.Knt_FormaPl,10)END As Knt_FormaPl,
+				ISNULL(co.Naz_GIDLp,0)             As Knt_CechaOpisId,
+				ISNULL(sd.Naz_GIDLp,0)			       As Knt_SposobDostawyId,
+				ISNULL(Knt.Knt_Cena,0)             As Knt_Cena,
+				CASE WHEN ISNULL(Knt.Knt_KnPParam,0)=1 THEN (ISNULL(KnP.Knt_LimitOkres,10))
+				ELSE ISNULL(Knt.Knt_LimitOkres,0)END        As Knt_LimitOkres,
+				ISNULL(Knt.Knt_Archiwalny,0)                As Knt_Archiwalny,
+				ISNULL(Knt.Knt_KnGNumer,Knt.Knt_GIDNumer)   As Knt_KnGNumer,
+				ISNULL(Knt.Knt_KnPNumer,Knt.Knt_GIDNumer)	As Knt_KnPNumer,
+				ISNULL(Knt.Knt_KnPParam,0)                  As Knt_KnPParam,
+				ISNULL(Knt.Knt_KnANumer,0)                  As Knt_KnANumer,
+				1                                           As Knt_KontrahentTegoPH
+		FROM CDN.KntKarty Knt
+		JOIN CDN.KntKarty KnP ON KnP.Knt_GIDNumer=Knt.Knt_KnPNumer
+		JOIN CDN.KntLinki ON KnL_GIDTyp=Knt.Knt_GIDTyp and KnL_GIDNumer=Knt.Knt_GIDNumer
+		LEFT JOIN CDN.Nazwy co ON co.Naz_GIDTyp = 2720 AND rtrim(co.Naz_Nazwa)=rtrim(Knt.Knt_CechaOpis)
+		LEFT JOIN CDN.Nazwy sd ON sd.Naz_GIDTyp = 976 AND rtrim(sd.Naz_Nazwa)=rtrim(Knt.Knt_SposobDostawy)
+		WHERE Knt.Knt_Aktywna=0 AND Knt.Knt_GIDNumer&gt;0 AND Knt.Knt_LastModC &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END AND Knt.Knt_Archiwalny&lt;CASE WHEN @TypEksportu=0 THEN 2 ELSE 1 END AND
+		  (KnL_GrOTyp=@Typ_GrK AND KnL_GrONumer = CASE WHEN @GrOTyp=@Typ_GrK THEN @GrONumer ELSE 0 END AND
+		  --((Knt.Knt_RegionCRM IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948) OR Knt.Knt_GIDNumer IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=32))OR @GrOTyp=@Typ_GrK))
+			(EXISTS ( SELECT * FROM @Rejony
+					      JOIN CDN.KntRejony ON KnR_KntNumer = Knt.Knt_GIDNumer AND KtONumer = KnR_Rejon
+					      WHERE KtOTyp=948
+					    )
+			OR 
+			EXISTS ( SELECT * FROM @Rejony WHERE KtOTyp=32 AND KtONumer = Knt.Knt_GIDNumer )
+		  OR @GrOTyp=@Typ_GrK
+		  ))
+		UNION
+		SELECT  Knt.Knt_GIDNumer,
+				CASE WHEN Knt.Knt_Typ IN(0,8,16,24) THEN Knt.Knt_Typ ELSE 0 END As Knt_Typ,
+				Knt.Knt_Akronim,
+				ISNULL(Knt.Knt_Nazwa1,'')          As Knt_Nazwa1,
+				ISNULL(Knt.Knt_Nazwa2,'')          As Knt_Nazwa2,
+				ISNULL(Knt.Knt_Nazwa3,'')          As Knt_Nazwa3,
+				ISNULL(Knt.Knt_Kodp,'')            As Knt_Kodp,
+				ISNULL(Knt.Knt_Miasto,'')          As Knt_Miasto,
+				ISNULL(Knt.Knt_Wojewodztwo,'')     As Knt_Wojewodztwo,
+				ISNULL(Knt.Knt_Ulica,'')           As Knt_Ulica,
+				ISNULL(Knt.Knt_NipE,'')            As Knt_NipE,
+				ISNULL(Knt.Knt_NipPrefiks,'')      As Knt_NipPrefiks,
+				ISNULL(Knt.Knt_Regon,'')           As Knt_Regon,
+				ISNULL(Knt.Knt_Pesel,'')           As Knt_Pesel,
+				ISNULL(Knt.Knt_Telefon1,'')        As Knt_Telefon1,
+				ISNULL(Knt.Knt_Telefon2,'')        As Knt_Telefon2,
+				ISNULL(Knt.Knt_Fax,'')             As Knt_Fax,
+				ISNULL(Knt.Knt_Email,'')           As Knt_Email,
+				ISNULL(Knt.Knt_URL,'')             As Knt_URL,
+				ISNULL(Knt.Knt_Telex,'')           As Knt_GSM,
+				ISNULL(Knt.Knt_RegionCRM,0)        As Knt_RegionCRM,
+				ISNULL(Knt.Knt_PlatnikVat,0)       As Knt_PlatnikVat,
+				ISNULL(Knt.Knt_Rodzaj,0)           As Knt_Rodzaj,
+				ISNULL(Knt.Knt_Status,1)           As Knt_Status,
+				(CASE WHEN ISNULL(Knt.Knt_BlokadaTransakcji,0)=0 THEN 0 ELSE Knt.Knt_LastTransLockDate END) As Knt_LastTransLockDate,
+				ISNULL(Knt.Knt_MaxDniPoTerminie,0) As Knt_MaxDniPoTerminie,
+				CASE WHEN ISNULL(Knt.Knt_KnPParam,0)=1 THEN (ISNULL(KnP.Knt_FormaPl,10))
+				ELSE ISNULL(Knt.Knt_FormaPl,10)END As Knt_FormaPl,
+				ISNULL(co.Naz_GIDLp,0)             As Knt_CechaOpisId,
+				ISNULL(sd.Naz_GIDLp,0)             As Knt_SposobDostawyId,
+				ISNULL(Knt.Knt_Cena,0)             As Knt_Cena,
+				CASE WHEN ISNULL(Knt.Knt_KnPParam,0)=1 THEN (ISNULL(KnP.Knt_LimitOkres,10))
+				ELSE ISNULL(Knt.Knt_LimitOkres,0)END        As Knt_LimitOkres,
+				ISNULL(Knt.Knt_Archiwalny,0)                As Knt_Archiwalny,
+				ISNULL(Knt.Knt_KnGNumer,Knt.Knt_GIDNumer)   As Knt_KnGNumer,
+				ISNULL(Knt.Knt_KnPNumer,Knt.Knt_GIDNumer)	As Knt_KnPNumer,
+				ISNULL(Knt.Knt_KnPParam,0)                  As Knt_KnPParam,
+				ISNULL(Knt.Knt_KnANumer,0)                  As Knt_KnANumer,
+				1                                           As Knt_KontrahentTegoPH
+		FROM CDN.KntKarty Knt
+		JOIN CDN.CRMWizytyNag ON Knt.Knt_GIDNumer=CWN_KntNumer
+		JOIN CDN.KntKarty KnP ON KnP.Knt_GIDNumer=Knt.Knt_KnPNumer
+		JOIN CDN.OpeKarty ON CWN_Obsluga=Ope_PrcNumer
+		LEFT JOIN CDN.Nazwy co ON co.Naz_GIDTyp = 2720 AND rtrim(co.Naz_Nazwa)=rtrim(Knt.Knt_CechaOpis)
+		LEFT JOIN CDN.Nazwy sd ON sd.Naz_GIDTyp = 976 AND rtrim(sd.Naz_Nazwa)=rtrim(Knt.Knt_SposobDostawy)
+		WHERE Knt.Knt_GIDNumer&gt;0 AND Ope_GIDNumer=@OpeNumer AND CWN_ZewnetrznyId&lt;=0 AND CWN_Stan=2 		
+	) TableTmp
+
+    /* Kontrahent domyślny na PA */
+    INSERT INTO #TempMobile
+	SELECT DISTINCT KntPA.Knt_GIDNumer,
+					CASE WHEN KntPA.Knt_Typ IN(0,8,16,24) THEN KntPA.Knt_Typ ELSE 0 END As Knt_Typ,
+					KntPA.Knt_Akronim,
+					ISNULL(KntPA.Knt_Nazwa1,'')          As Knt_Nazwa1,
+					ISNULL(KntPA.Knt_Nazwa2,'')          As Knt_Nazwa2,
+					ISNULL(KntPA.Knt_Nazwa3,'')          As Knt_Nazwa3,
+					ISNULL(KntPA.Knt_Kodp,'')            As Knt_Kodp,
+					ISNULL(KntPA.Knt_Miasto,'')          As Knt_Miasto,
+					ISNULL(KntPA.Knt_Wojewodztwo,'')     As Knt_Wojewodztwo,
+					ISNULL(KntPA.Knt_Ulica,'')           As Knt_Ulica,
+					ISNULL(KntPA.Knt_NipE,'')            As Knt_NipE,
+					ISNULL(KntPA.Knt_NipPrefiks,'')      As Knt_NipPrefiks,
+					ISNULL(KntPA.Knt_Regon,'')           As Knt_Regon,
+					ISNULL(KntPA.Knt_Pesel,'')           As Knt_Pesel,
+					ISNULL(KntPA.Knt_Telefon1,'')        As Knt_Telefon1,
+					ISNULL(KntPA.Knt_Telefon2,'')        As Knt_Telefon2,
+					ISNULL(KntPA.Knt_Fax,'')             As Knt_Fax,
+					ISNULL(KntPA.Knt_Email,'')           As Knt_Email,
+					ISNULL(KntPA.Knt_URL,'')             As Knt_URL,
+					ISNULL(KntPA.Knt_Telex,'')           As Knt_GSM,
+					ISNULL(KntPA.Knt_RegionCRM,0)        As Knt_RegionCRM,
+					ISNULL(KntPA.Knt_PlatnikVat,0)       As Knt_PlatnikVat,
+					ISNULL(KntPA.Knt_Rodzaj,0)           As Knt_Rodzaj,
+					ISNULL(KntPA.Knt_Status,1)           As Knt_Status,
+					(CASE WHEN ISNULL(KntPA.Knt_BlokadaTransakcji,0)=0 THEN 0 ELSE KntPA.Knt_LastTransLockDate END) As Knt_LastTransLockDate,
+					ISNULL(KntPA.Knt_MaxDniPoTerminie,0) As Knt_MaxDniPoTerminie,
+					ISNULL(KntPA.Knt_FormaPl,10)         As Knt_FormaPl,
+					ISNULL(co.Naz_GIDLp,0)			     As Knt_CechaOpisId,
+					ISNULL(sd.Naz_GIDLp,0)			     As Knt_SposobDostawyId,
+					ISNULL(KntPA.Knt_Cena,0)             As Knt_Cena,
+					ISNULL(KntPA.Knt_LimitOkres,0)       As Knt_LimitOkres,
+					ISNULL(KntPA.Knt_Archiwalny,0)       As Knt_Archiwalny,
+					ISNULL(KntPA.Knt_KnGNumer,KntPA.Knt_GIDNumer)	As Knt_KnGNumer,
+					ISNULL(KntPA.Knt_KnPNumer,KntPA.Knt_GIDNumer)	As Knt_KnPNumer,
+					ISNULL(KntPA.Knt_KnPParam,0)		     As Knt_KnPParam,
+					ISNULL(KntPA.Knt_KnANumer,0)         As Knt_KnANumer,
+					case when (EXISTS ( SELECT * FROM @Rejony
+                                        JOIN CDN.KntRejony ON KnR_KntNumer = KntPA.Knt_GIDNumer AND KtONumer = KnR_Rejon
+                                        WHERE KtOTyp=948)
+                                        OR EXISTS ( SELECT * FROM @Rejony WHERE KtOTyp=32 AND KtONumer = KntPA.Knt_GIDNumer )--OR @GrOTyp=@Typ_GrK
+                                        OR EXISTS(SELECT * FROM CDN.KntKarty Knt1
+											JOIN CDN.KntLinki ON KnL_GIDTyp=Knt1.Knt_GIDTyp and KnL_GIDNumer=Knt1.Knt_GIDNumer
+											WHERE Knt1.Knt_Aktywna=0 AND Knt1.Knt_GIDNumer&gt;0 AND Knt1.Knt_LastModC &gt;  0 AND Knt1.Knt_Archiwalny&lt; 1 AND
+											KnL_GrOTyp=@Typ_GrK AND KnL_GrONumer = CASE WHEN @GrOTyp=@Typ_GrK THEN @GrONumer ELSE 0 END AND Knt1.Knt_GIDNumer=KntPA.Knt_GIDNumer)
+											OR EXISTS(SELECT * FROM CDN.KntKarty Knt2
+											JOIN CDN.CRMWizytyNag ON Knt2.Knt_GIDNumer=CWN_KntNumer
+											JOIN CDN.OpeKarty ON CWN_Obsluga=Ope_PrcNumer
+											WHERE Knt2.Knt_GIDNumer&gt;0 AND Ope_GIDNumer=@OpeNumer AND CWN_ZewnetrznyId&lt;=0 AND CWN_Stan=2 and Knt2.Knt_GIDNumer=KntPA.Knt_GIDNumer)
+                      ) then 1 else 0 end As Knt_KontrahentTegoPH      								
+	FROM CDN.KntKarty KntPA
+    JOIN CDN.DokDefinicje  ON Dok_KntTyp = 32 AND KntPA.Knt_GIDNumer = Dok_KntNumer
+	LEFT JOIN CDN.Nazwy co ON co.Naz_GIDTyp = 2720 AND rtrim(co.Naz_Nazwa)=rtrim(KntPA.Knt_CechaOpis)
+	LEFT JOIN CDN.Nazwy sd ON sd.Naz_GIDTyp = 976 AND rtrim(sd.Naz_Nazwa)=rtrim(KntPA.Knt_SposobDostawy)
+    WHERE KntPA.Knt_GIDNumer &gt; 0 AND Dok_GIDTyp=2034 AND Dok_FrsId=@CentrumID AND NOT EXISTS (SELECT * FROM #TempMobile WHERE Knt_GIDNumer = KntPA.Knt_GIDNumer)
+	
+	/*Kontrahenci główni*/
+	INSERT INTO #TempMobile
+	SELECT DISTINCT KnG.Knt_GIDNumer,
+					CASE WHEN KnG.Knt_Typ IN(0,8,16,24) THEN KnG.Knt_Typ ELSE 0 END As Knt_Typ,
+					KnG.Knt_Akronim,
+					ISNULL(KnG.Knt_Nazwa1,'')          As Knt_Nazwa1,
+					ISNULL(KnG.Knt_Nazwa2,'')          As Knt_Nazwa2,
+					ISNULL(KnG.Knt_Nazwa3,'')          As Knt_Nazwa3,
+					ISNULL(KnG.Knt_Kodp,'')            As Knt_Kodp,
+					ISNULL(KnG.Knt_Miasto,'')          As Knt_Miasto,
+					ISNULL(KnG.Knt_Wojewodztwo,'')     As Knt_Wojewodztwo,
+					ISNULL(KnG.Knt_Ulica,'')           As Knt_Ulica,
+					ISNULL(KnG.Knt_NipE,'')            As Knt_NipE,
+					ISNULL(KnG.Knt_NipPrefiks,'')      As Knt_NipPrefiks,
+					ISNULL(KnG.Knt_Regon,'')           As Knt_Regon,
+					ISNULL(KnG.Knt_Pesel,'')           As Knt_Pesel,
+					ISNULL(KnG.Knt_Telefon1,'')        As Knt_Telefon1,
+					ISNULL(KnG.Knt_Telefon2,'')        As Knt_Telefon2,
+					ISNULL(KnG.Knt_Fax,'')             As Knt_Fax,
+					ISNULL(KnG.Knt_Email,'')           As Knt_Email,
+					ISNULL(KnG.Knt_URL,'')             As Knt_URL,
+					ISNULL(KnG.Knt_Telex,'')           As Knt_GSM,
+					ISNULL(KnG.Knt_RegionCRM,0)        As Knt_RegionCRM,
+					ISNULL(KnG.Knt_PlatnikVat,0)       As Knt_PlatnikVat,
+					ISNULL(KnG.Knt_Rodzaj,0)           As Knt_Rodzaj,
+					ISNULL(KnG.Knt_Status,1)           As Knt_Status,
+					(CASE WHEN ISNULL(KnG.Knt_BlokadaTransakcji,0)=0 THEN 0 ELSE KnG.Knt_LastTransLockDate END) As Knt_LastTransLockDate,
+					ISNULL(KnG.Knt_MaxDniPoTerminie,0) As Knt_MaxDniPoTerminie,
+					ISNULL(KnG.Knt_FormaPl,10)         As Knt_FormaPl,
+					ISNULL(co.Naz_GIDLp,0)             As Knt_CechaOpisId,
+					ISNULL(sd.Naz_GIDLp,0)             As Knt_SposobDostawyId,
+					ISNULL(KnG.Knt_Cena,0)             As Knt_Cena,
+					ISNULL(KnG.Knt_LimitOkres,0)       As Knt_LimitOkres,
+					ISNULL(KnG.Knt_Archiwalny,0)       As Knt_Archiwalny,
+					ISNULL(KnG.Knt_KnGNumer,KnG.Knt_GIDNumer)	As Knt_KnGNumer,
+					ISNULL(KnG.Knt_KnPNumer,KnG.Knt_GIDNumer)	As Knt_KnPNumer,
+					ISNULL(KnG.Knt_KnPParam,0)	       As Knt_KnPParam,
+					ISNULL(KnG.Knt_KnANumer,0)         As Knt_KnANumer,
+					case when (EXISTS ( SELECT * FROM @Rejony
+					JOIN CDN.KntRejony ON KnR_KntNumer = KnG.Knt_GIDNumer AND KtONumer = KnR_Rejon
+                                        WHERE KtOTyp=948)
+                                        OR EXISTS ( SELECT * FROM @Rejony WHERE KtOTyp=32 AND KtONumer = KnG.Knt_GIDNumer )--OR @GrOTyp=@Typ_GrK
+                                        OR EXISTS(SELECT * FROM CDN.KntKarty Knt1
+										JOIN CDN.KntLinki ON KnL_GIDTyp=Knt1.Knt_GIDTyp and KnL_GIDNumer=Knt1.Knt_GIDNumer
+										WHERE Knt1.Knt_Aktywna=0 AND Knt1.Knt_GIDNumer&gt;0 AND Knt1.Knt_LastModC &gt;  0 AND Knt1.Knt_Archiwalny&lt; 1 AND
+										  KnL_GrOTyp=@Typ_GrK AND KnL_GrONumer = CASE WHEN @GrOTyp=@Typ_GrK THEN @GrONumer ELSE 0 END AND Knt1.Knt_GIDNumer=KnG.Knt_GIDNumer)
+										  OR EXISTS(SELECT * FROM CDN.KntKarty Knt2
+										JOIN CDN.CRMWizytyNag ON Knt2.Knt_GIDNumer=CWN_KntNumer
+										JOIN CDN.OpeKarty ON CWN_Obsluga=Ope_PrcNumer
+										WHERE Knt2.Knt_GIDNumer&gt;0 AND Ope_GIDNumer=@OpeNumer AND CWN_ZewnetrznyId&lt;=0 AND CWN_Stan=2 and Knt2.Knt_GIDNumer=KnG.Knt_GIDNumer)
+						) then 1 else 0 end As Knt_KontrahentTegoPH
+	FROM CDN.KntKarty KnG
+    JOIN #TempMobile Tmp  ON Tmp.Knt_KnGNumer = KnG.Knt_GIDNumer
+	LEFT JOIN CDN.Nazwy co ON co.Naz_GIDTyp = 2720 AND rtrim(co.Naz_Nazwa)=rtrim(KnG.Knt_CechaOpis)
+	LEFT JOIN CDN.Nazwy sd ON sd.Naz_GIDTyp = 976 AND rtrim(sd.Naz_Nazwa)=rtrim(KnG.Knt_SposobDostawy)
+    WHERE NOT EXISTS (SELECT * FROM #TempMobile WHERE Knt_GIDNumer = KnG.Knt_GIDNumer)
+    
+    /*Płatnicy*/
+    INSERT INTO #TempMobile
+	SELECT DISTINCT KnP.Knt_GIDNumer,
+					CASE WHEN KnP.Knt_Typ IN(0,8,16,24) THEN KnP.Knt_Typ ELSE 0 END As Knt_Typ,
+					KnP.Knt_Akronim,
+					ISNULL(KnP.Knt_Nazwa1,'')          As Knt_Nazwa1,
+					ISNULL(KnP.Knt_Nazwa2,'')          As Knt_Nazwa2,
+					ISNULL(KnP.Knt_Nazwa3,'')          As Knt_Nazwa3,
+					ISNULL(KnP.Knt_Kodp,'')            As Knt_Kodp,
+					ISNULL(KnP.Knt_Miasto,'')          As Knt_Miasto,
+					ISNULL(KnP.Knt_Wojewodztwo,'')     As Knt_Wojewodztwo,
+					ISNULL(KnP.Knt_Ulica,'')           As Knt_Ulica,
+					ISNULL(KnP.Knt_NipE,'')            As Knt_NipE,
+					ISNULL(KnP.Knt_NipPrefiks,'')      As Knt_NipPrefiks,
+					ISNULL(KnP.Knt_Regon,'')           As Knt_Regon,
+					ISNULL(KnP.Knt_Pesel,'')           As Knt_Pesel,
+					ISNULL(KnP.Knt_Telefon1,'')        As Knt_Telefon1,
+					ISNULL(KnP.Knt_Telefon2,'')        As Knt_Telefon2,
+					ISNULL(KnP.Knt_Fax,'')             As Knt_Fax,
+					ISNULL(KnP.Knt_Email,'')           As Knt_Email,
+					ISNULL(KnP.Knt_URL,'')             As Knt_URL,
+					ISNULL(KnP.Knt_Telex,'')           As Knt_GSM,
+					ISNULL(KnP.Knt_RegionCRM,0)        As Knt_RegionCRM,
+					ISNULL(KnP.Knt_PlatnikVat,0)       As Knt_PlatnikVat,
+					ISNULL(KnP.Knt_Rodzaj,0)           As Knt_Rodzaj,
+					ISNULL(KnP.Knt_Status,1)           As Knt_Status,
+					(CASE WHEN ISNULL(KnP.Knt_BlokadaTransakcji,0)=0 THEN 0 ELSE KnP.Knt_LastTransLockDate END) As Knt_LastTransLockDate,
+					ISNULL(KnP.Knt_MaxDniPoTerminie,0) As Knt_MaxDniPoTerminie,
+					ISNULL(KnP.Knt_FormaPl,10)         As Knt_FormaPl,
+					ISNULL(co.Naz_GIDLp,0)			   As Knt_CechaOpisId,
+					ISNULL(sd.Naz_GIDLp,0)			   As Knt_SposobDostawyId,
+					ISNULL(KnP.Knt_Cena,0)             As Knt_Cena,
+					ISNULL(KnP.Knt_LimitOkres,0)       As Knt_LimitOkres,
+					ISNULL(KnP.Knt_Archiwalny,0)       As Knt_Archiwalny,
+					ISNULL(KnP.Knt_KnGNumer,KnP.Knt_GIDNumer)	As Knt_KnGNumer,
+					ISNULL(KnP.Knt_KnPNumer,KnP.Knt_GIDNumer)	As Knt_KnPNumer,
+					ISNULL(KnP.Knt_KnPParam,0)		     As Knt_KnPParam,
+			  		ISNULL(KnP.Knt_KnANumer,0)         As Knt_KnANumer,
+					case when (EXISTS ( SELECT * FROM @Rejony
+                                        JOIN CDN.KntRejony ON KnR_KntNumer = KnP.Knt_GIDNumer AND KtONumer = KnR_Rejon
+                                        WHERE KtOTyp=948)
+                                        OR EXISTS ( SELECT * FROM @Rejony WHERE KtOTyp=32 AND KtONumer = KnP.Knt_GIDNumer )--OR @GrOTyp=@Typ_GrK
+                                        OR EXISTS(SELECT * FROM CDN.KntKarty Knt1
+										JOIN CDN.KntLinki ON KnL_GIDTyp=Knt1.Knt_GIDTyp and KnL_GIDNumer=Knt1.Knt_GIDNumer
+										WHERE Knt1.Knt_Aktywna=0 AND Knt1.Knt_GIDNumer&gt;0 AND Knt1.Knt_LastModC &gt;  0 AND Knt1.Knt_Archiwalny&lt; 1 AND
+										  KnL_GrOTyp=@Typ_GrK AND KnL_GrONumer = CASE WHEN @GrOTyp=@Typ_GrK THEN @GrONumer ELSE 0 END AND Knt1.Knt_GIDNumer=KnP.Knt_GIDNumer)
+										  OR EXISTS(SELECT * FROM CDN.KntKarty Knt2
+										JOIN CDN.CRMWizytyNag ON Knt2.Knt_GIDNumer=CWN_KntNumer
+										JOIN CDN.OpeKarty ON CWN_Obsluga=Ope_PrcNumer
+										WHERE Knt2.Knt_GIDNumer&gt;0 AND Ope_GIDNumer=@OpeNumer AND CWN_ZewnetrznyId&lt;=0 AND CWN_Stan=2 and Knt2.Knt_GIDNumer=KnP.Knt_GIDNumer)
+                    ) then 1 else 0 end As Knt_KontrahentTegoPH                                        
+	FROM CDN.KntKarty KnP
+    JOIN #TempMobile Tmp  ON Tmp.Knt_KnPNumer = KnP.Knt_GIDNumer
+	LEFT JOIN CDN.Nazwy co ON co.Naz_GIDTyp = 2720 AND rtrim(co.Naz_Nazwa)=rtrim(KnP.Knt_CechaOpis)
+	LEFT JOIN CDN.Nazwy sd ON sd.Naz_GIDTyp = 976 AND rtrim(sd.Naz_Nazwa)=rtrim(KnP.Knt_SposobDostawy)
+    WHERE NOT EXISTS (SELECT * FROM #TempMobile WHERE Knt_GIDNumer = KnP.Knt_GIDNumer)
+	
+	SELECT COUNT(*) FROM #TempMobile
+	
+	DELETE FROM #TempMobile 
+	WHERE Rank &lt;= @packageSize * (@packageNumber - 1) OR Rank &gt; @packageSize * @packageNumber
+
+	SELECT * FROM #TempMobile
+
+/*Atrybuty*/
+	SELECT  Atr_Id, Atr_ObiNumer,
+			CASE WHEN AtK_Typ = 1 THEN  
+					CASE WHEN Atr_Wartosc = 'TAK' THEN 'True'
+					     WHEN Atr_Wartosc = 'NIE' THEN 'False'
+					     ELSE ''
+				    END
+				 WHEN AtK_Format='@d17' THEN 
+				    CASE WHEN CONVERT(int, Atr_Wartosc) = 0 THEN ''
+				         ELSE CONVERT(varchar, CDN.TsToDate(CONVERT(int, Atr_Wartosc), 0), 105)
+				    END
+			     WHEN Atr_Wartosc = '&lt;Brak&gt;' THEN ''
+			     ELSE Atr_Wartosc 
+			END AS Atr_Wartosc, 
+			0 as Atr_WartoscId, 
+			Atr_AtKId		
+	FROM CDN.Atrybuty
+	JOIN  #TempMobile Tmp ON Atr_ObiNumer=Tmp.Knt_GidNumer AND Atr_ObiTyp = 32
+	JOIN CDN.AtrybutyKlasy ON Atr_AtKId = AtK_ID
+	WHERE Knt_KontrahentTegoPH=1 AND AtK_MOBSPrawa&gt;0 AND AtK_Typ &lt;=6	    	    
+/*Atrybuty koniec*/
+
+    SET NOCOUNT ON
+    --Oznaczenie kontrahentów
+    UPDATE CDN.KntKarty SET Knt_Oddzialowy=1 FROM CDN.KntKarty Knt JOIN #TempMobile Tmp ON Knt.Knt_GIDNumer=Tmp.Knt_GIDNumer WHERE Knt.Knt_Oddzialowy=0
+
+	DROP TABLE #TempMobile
+	SET NOCOUNT OFF
+END
+</proceduredef>
+<proceduredef name="MobS_EksportKnA">
+CREATE PROCEDURE CDN.MobS_EksportKnA
+@CentrumID     INT, -- ID centrum praw struktury firmy 
+@OpeNumer      INT, -- ID mobilnego sprzedawcy
+@TypEksportu   INT, -- Typ eksportu (0 - różnicowy, 1 - pełny)
+@PackageSize   INT, -- rozmiar paczki
+@PackageNumber INT  -- numer paczki
+AS
+BEGIN
+	  DECLARE @Dzis INT
+    DECLARE @TimeStamp INT
+    DECLARE @Typ_GrK SMALLINT
+    DECLARE @GrOTyp   SMALLINT
+    DECLARE @GrONumer INT
+    DECLARE @OpiNumer INT
+    DECLARE @Rejony TABLE (KtOTyp SMALLINT, KtONumer INT)
+      
+    SET @Typ_GrK = -32
+    SELECT @Dzis = DATEDIFF(d,CONVERT(datetime,'18001228',112),CONVERT(datetime,GetDate(),112))
+    UPDATE CDN.PicoKonfig SET PcK_TSSynchrKnt = DATEDIFF(s,CONVERT(datetime,'19900101',112),CONVERT(datetime,GetDate(),112)) WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+    SELECT @GrOTyp=PcK_KnGETyp, @GrONumer=PcK_KnGENumer, @TimeStamp=PcK_TSSynchrKntPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+      
+    IF @GrOTyp = 944
+    BEGIN
+		  INSERT INTO @Rejony
+		  SELECT KtO_KntTyp, KtO_KntNumer
+		  FROM CDN.OpeKarty 
+		  JOIN CDN.KntOpiekun ON Ope_PrcNumer=KtO_PrcNumer
+		  WHERE Ope_GIDNumer=@OpeNumer AND (KtO_KntTyp=948 OR KtO_KntTyp=32) AND ((KtO_DataOd = 0 AND KtO_DataDo = 0) OR @Dzis BETWEEN KtO_DataOd AND KtO_DataDo);
+    END
+
+	SELECT DISTINCT identity(int,1,1) AS Rank, * INTO #TempMobile FROM 
+	(
+		SELECT  KnA_GIDNumer,	KnA_KntNumer,
+				CASE WHEN ISNULL(KnA_Wysylkowy,0)=1 THEN 2 ELSE 1 END As KnA_Typ,
+				ISNULL(KnA_Akronim,'')         As KnA_Akronim,
+				ISNULL(KnA_Nazwa1,'')          As KnA_Nazwa1,
+				ISNULL(KnA_Nazwa2,'')          As KnA_Nazwa2,
+				ISNULL(KnA_Nazwa3,'')          As KnA_Nazwa3,
+				ISNULL(KnA_Kodp,'')            As KnA_Kodp,
+				ISNULL(KnA_Miasto,'')          As KnA_Miasto,
+				ISNULL(KnA_Wojewodztwo,'')     As KnA_Wojewodztwo,
+				ISNULL(KnA_Ulica,'')           As KnA_Ulica,
+				ISNULL(KnA_NipE,'')            As KnA_NipE,
+				ISNULL(KnA_NipPrefiks,'')      As KnA_NipPrefiks,
+				ISNULL(KnA_Regon,'')           As KnA_Regon,
+				ISNULL(KnA_Pesel,'')           As KnA_Pesel,
+				ISNULL(KnA_Telefon1,'')        As KnA_Telefon1,
+				ISNULL(KnA_Telefon2,'')        As KnA_Telefon2,
+				ISNULL(KnA_Fax,'')             As KnA_Fax,
+				ISNULL(KnA_Email,'')           As KnA_Email,
+				ISNULL(KnA_Telex,'')           As KnA_GSM,
+				ISNULL(KnA_RegionCRM,0)        As KnA_RegionCRM,
+				ISNULL(KnA_Domyslny,0)         As KnA_Domyslny,
+				CASE WHEN ISNULL(KnA_DataArc,0)=0 THEN 0 ELSE 1 END  As KnA_Archiwalny
+		FROM CDN.KntKarty 
+		JOIN CDN.KntAdresy ON Knt_GIDNumer=KnA_KntNumer
+		JOIN CDN.KntLinki ON KnL_GIDTyp=Knt_GIDTyp and KnL_GIDNumer=Knt_GIDNumer
+		WHERE KnA_GIDTyp=896 AND Knt_Aktywna=0 AND Knt_GIDNumer&gt;0 AND KnA_LastModL &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END AND 
+				  Knt_Archiwalny&lt;CASE WHEN @TypEksportu=0 THEN 2 ELSE 1 END AND KnA_DataArc&lt;CASE WHEN @TypEksportu=0 THEN 1000000000 ELSE 1 END AND
+		  (KnL_GrOTyp=@Typ_GrK AND KnL_GrONumer = CASE WHEN @GrOTyp=@Typ_GrK THEN @GrONumer ELSE 0 END AND
+		  --((Knt_RegionCRM IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948) OR Knt_GIDNumer IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=32))OR @GrOTyp=@Typ_GrK))
+			(EXISTS ( SELECT * FROM @Rejony
+					   JOIN CDN.KntRejony ON KnR_KntNumer = Knt_GIDNumer AND KtONumer = KnR_Rejon
+					   WHERE KtOTyp=948
+					 )
+			OR 
+			EXISTS ( SELECT * FROM @Rejony WHERE KtOTyp=32 AND KtONumer = Knt_GIDNumer )
+		  OR @GrOTyp=@Typ_GrK
+		  ))
+		UNION
+		SELECT  KnA_GIDNumer,	KnA_KntNumer,
+				CASE WHEN ISNULL(KnA_Wysylkowy,0)=1 THEN 2 ELSE 1 END As KnA_Typ,
+				ISNULL(KnA_Akronim,'')         As KnA_Akronim,
+				ISNULL(KnA_Nazwa1,'')          As KnA_Nazwa1,
+				ISNULL(KnA_Nazwa2,'')          As KnA_Nazwa2,
+				ISNULL(KnA_Nazwa3,'')          As KnA_Nazwa3,
+				ISNULL(KnA_Kodp,'')            As KnA_Kodp,
+				ISNULL(KnA_Miasto,'')          As KnA_Miasto,
+				ISNULL(KnA_Wojewodztwo,'')     As KnA_Wojewodztwo,
+				ISNULL(KnA_Ulica,'')           As KnA_Ulica,
+				ISNULL(KnA_NipE,'')            As KnA_NipE,
+				ISNULL(KnA_NipPrefiks,'')      As KnA_NipPrefiks,
+				ISNULL(KnA_Regon,'')           As KnA_Regon,
+				ISNULL(KnA_Pesel,'')           As KnA_Pesel,
+				ISNULL(KnA_Telefon1,'')        As KnA_Telefon1,
+				ISNULL(KnA_Telefon2,'')        As KnA_Telefon2,
+				ISNULL(KnA_Fax,'')             As KnA_Fax,
+				ISNULL(KnA_Email,'')           As KnA_Email,
+				ISNULL(KnA_Telex,'')           As KnA_GSM,
+				ISNULL(KnA_RegionCRM,0)        As KnA_RegionCRM,
+				ISNULL(KnA_Domyslny,0)         As KnA_Domyslny,
+				CASE WHEN ISNULL(KnA_DataArc,0)=0 THEN 0 ELSE 1 END  As KnA_Archiwalny
+		FROM CDN.KntKarty 
+		JOIN CDN.CRMWizytyNag ON Knt_GIDNumer=CWN_KntNumer
+		JOIN CDN.KntAdresy ON Knt_GIDNumer=KnA_KntNumer
+		JOIN CDN.OpeKarty ON CWN_Obsluga=Ope_PrcNumer
+		WHERE KnA_GIDTyp=896 AND Knt_GIDNumer&gt;0 AND Ope_GIDNumer=@OpeNumer AND CWN_ZewnetrznyId&lt;=0 AND CWN_Stan=2 		
+	) TableTmp
+	
+	SELECT COUNT(*) FROM #TempMobile
+	
+	DELETE FROM #TempMobile 
+	WHERE Rank &lt;= @packageSize * (@packageNumber - 1) OR Rank &gt; @packageSize * @packageNumber
+
+	SELECT * FROM #TempMobile
+
+/*Atrybuty
+	SELECT  Atr_Id, Atr_ObiNumer,
+			CASE WHEN AtK_Typ = 1 THEN  
+					CASE WHEN Atr_Wartosc = 'TAK' THEN 'True'
+					     WHEN Atr_Wartosc = 'NIE' THEN 'False'
+					     ELSE ''
+				    END
+				 WHEN AtK_Format='@d17' THEN 
+				    CASE WHEN CONVERT(int, Atr_Wartosc) = 0 THEN ''
+				         ELSE CONVERT(varchar, CDN.TsToDate(CONVERT(int, Atr_Wartosc), 0), 105)
+				    END
+			     ELSE Atr_Wartosc 
+			END AS Atr_Wartosc, 
+			0 as Atr_WartoscId, 
+			Atr_AtKId		
+	FROM CDN.Atrybuty
+	JOIN  #TempMobile Tmp ON Atr_ObiNumer=Tmp.KnA_GIDNumer AND Atr_ObiTyp = 32
+	JOIN CDN.AtrybutyKlasy ON Atr_AtKId = AtK_ID
+	WHERE Knt_KontrahentTegoPH=1 AND AtK_MOBSPrawa&gt;0 AND AtK_Typ &lt;=6	    	    
+Atrybuty koniec*/
+
+	DROP TABLE #TempMobile
+	SET NOCOUNT OFF
+END
+</proceduredef>
+<proceduredef name="MobS_EksportKntLimityKredyt">
+CREATE Procedure CDN.MobS_EksportKntLimityKredyt
+@CentrumID     INT, -- ID centrum praw struktury firmy 
+@OpeNumer      INT, -- ID mobilnego sprzedawcy
+@TypEksportu   INT, -- Typ eksportu (0 - różnicowy, 1 - pełny)
+@PackageSize   INT, -- rozmiar paczki
+@PackageNumber INT  -- numer paczki
+AS
+BEGIN
+    DECLARE @TimeStamp INT
+    DECLARE @Dzis INT
+    DECLARE @LastSync INT
+    DECLARE @Typ_GrK SMALLINT
+    DECLARE @GrOTyp   SMALLINT
+    DECLARE @GrONumer INT
+    DECLARE @OpiNumer INT
+    DECLARE @Rejony TABLE (KtOTyp SMALLINT, KtONumer INT)
+
+    DECLARE @ZS_LimitUwzglDokBezPlat TINYINT
+    DECLARE @FS_LimitUwzglDokBezPlat TINYINT
+    DECLARE @PA_LimitUwzglDokBezPlat TINYINT
+    DECLARE @WZ_LimitUwzglDokBezPlat TINYINT
+    DECLARE @ZS_LimitUwzglZam TINYINT
+    DECLARE @FS_LimitUwzglZam TINYINT
+    DECLARE @PA_LimitUwzglZam TINYINT
+    DECLARE @WZ_LimitUwzglZam TINYINT
+    declare @wz_prawo smallint
+    declare @zs_prawo smallint
+    declare @fs_prawo smallint
+    declare @pa_prawo smallint
+    
+    DECLARE @ZS_LimitUwzglSaldoKntGlownego TINYINT
+    DECLARE @FS_LimitUwzglSaldoKntGlownego TINYINT
+    DECLARE @PA_LimitUwzglSaldoKntGlownego TINYINT
+    DECLARE @WZ_LimitUwzglSaldoKntGlownego TINYINT
+
+    DECLARE @tolerancjaTermPlat INT
+
+    SET @Typ_GrK = -32
+    SELECT @Dzis = DATEDIFF(d,CONVERT(datetime,'18001228',112),CONVERT(datetime,GetDate(),112))
+    SET @TimeStamp = DATEDIFF(s,CONVERT(datetime,'1990-01-01',120),CONVERT(datetime,GetDate(),120))
+    
+    SELECT @GrOTyp=PcK_KnGETyp, @GrONumer=PcK_KnGENumer, @LastSync=PcK_TSSynchrKntPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+	  INSERT INTO @Rejony 
+		SELECT KtO_KntTyp, KtO_KntNumer
+		FROM CDN.OpeKarty 
+		JOIN CDN.KntOpiekun ON Ope_PrcNumer=KtO_PrcNumer
+		WHERE Ope_GIDNumer=@OpeNumer AND (KtO_KntTyp=948 OR KtO_KntTyp=32) AND ((KtO_DataOd = 0 AND KtO_DataDo = 0) OR  @Dzis BETWEEN KtO_DataOd AND KtO_DataDo);
+    
+    SET @tolerancjaTermPlat = (SELECT isnull(convert(int,kon_wartosc),0) FROM cdn.konfig WHERE kon_numer=9917 and kon_lp=0)
+
+    SELECT @zs_prawo = Dok_KntLimitPrawo, @ZS_LimitUwzglDokBezPlat = Dok_LimitUwzglDokBezPlat, @ZS_LimitUwzglZam = Dok_LimitUwzglZam, @ZS_LimitUwzglSaldoKntGlownego = Dok_LimitUwzglSaldoKntGlownego FROM CDN.DokDefinicje WHERE Dok_FrsId=@CentrumID AND Dok_GIDTyp=9472
+    SELECT @fs_prawo = Dok_KntLimitPrawo, @FS_LimitUwzglDokBezPlat = Dok_LimitUwzglDokBezPlat, @FS_LimitUwzglZam = Dok_LimitUwzglZam, @FS_LimitUwzglSaldoKntGlownego = Dok_LimitUwzglSaldoKntGlownego FROM CDN.DokDefinicje WHERE Dok_FrsId=@CentrumID AND Dok_GIDTyp=2033
+    SELECT @pa_prawo = Dok_KntLimitPrawo, @PA_LimitUwzglDokBezPlat = Dok_LimitUwzglDokBezPlat, @PA_LimitUwzglZam = Dok_LimitUwzglZam, @PA_LimitUwzglSaldoKntGlownego = Dok_LimitUwzglSaldoKntGlownego FROM CDN.DokDefinicje WHERE Dok_FrsId=@CentrumID AND Dok_GIDTyp=2034
+    SELECT @wz_prawo = Dok_KntLimitPrawo, @WZ_LimitUwzglDokBezPlat = Dok_LimitUwzglDokBezPlat, @WZ_LimitUwzglZam = Dok_LimitUwzglZam, @WZ_LimitUwzglSaldoKntGlownego = Dok_LimitUwzglSaldoKntGlownego FROM CDN.DokDefinicje WHERE Dok_FrsId=@CentrumID AND Dok_GIDTyp=2001
+
+    SELECT DISTINCT IDENTITY(INT,1,1) As Rank,
+            Knt_GIDNumer,
+            Knt_LimitTerminowy, /*0-nieograniczony 1-terminowy 2-bezterminowy*/
+            ISNULL(KLK_MaxLimitWart,Knt_MaxLimitWart) as Knt_MaxLimitWart,
+            ISNULL(KLK_MaxLimitWart,Knt_MaxLimitWart)*ISNULL(KLK_LimitPoTerminie,Knt_LimitPoTerminie)/100 as Knt_KwotaDozwolonaPoTerminie,
+            (case when @zs_prawo=2 or Knt_LimitTerminowy=0 then null else ISNULL(KLK_MaxLimitWart,Knt_MaxLimitWart) -Convert(decimal(15,4),CDN.SumaWartosciKredytuKontrahenta(@TimeStamp,Knt_GIDNumer,@ZS_LimitUwzglDokBezPlat,@ZS_LimitUwzglZam,@ZS_LimitUwzglSaldoKntGlownego,0,0)) end) as Knt_KwotaDoWykorzystaniaZS,
+            (case when @fs_prawo=2 or Knt_LimitTerminowy=0 then null else ISNULL(KLK_MaxLimitWart,Knt_MaxLimitWart) -Convert(decimal(15,4),CDN.SumaWartosciKredytuKontrahenta(@TimeStamp,Knt_GIDNumer,@FS_LimitUwzglDokBezPlat,@FS_LimitUwzglZam,@FS_LimitUwzglSaldoKntGlownego,0,0)) end) as Knt_KwotaDoWykorzystaniaFS,
+            (case when @pa_prawo=2 or Knt_LimitTerminowy=0 then null else ISNULL(KLK_MaxLimitWart,Knt_MaxLimitWart) -Convert(decimal(15,4),CDN.SumaWartosciKredytuKontrahenta(@TimeStamp,Knt_GIDNumer,@PA_LimitUwzglDokBezPlat,@PA_LimitUwzglZam,@PA_LimitUwzglSaldoKntGlownego,0,0)) end) as Knt_KwotaDoWykorzystaniaPA,
+            (case when @wz_prawo=2 or Knt_LimitTerminowy=0 then null else ISNULL(KLK_MaxLimitWart,Knt_MaxLimitWart) -Convert(decimal(15,4),CDN.SumaWartosciKredytuKontrahenta(@TimeStamp,Knt_GIDNumer,@WZ_LimitUwzglDokBezPlat,@WZ_LimitUwzglZam,@WZ_LimitUwzglSaldoKntGlownego,0,0)) end) as Knt_KwotaDoWykorzystaniaWZ,
+             case when exists(SELECT * FROM CDN.TraPlat WHERE TrP_KntNumer=Knt_GIDNumer AND TrP_Typ=2 AND TrP_Rozliczona=0 AND TrP_Termin+Knt_MaxDniPoTerminie&lt;@dzis) then 1 else 0 end as Knt_IstniejaPlatnosciPrzeterminowane,
+            (case when @zs_prawo=2 or Knt_LimitTerminowy=0 then null else Convert(decimal(15,4),CDN.SumaWartosciKredytuTerminKontrahenta(@TimeStamp,@tolerancjaTermPlat,Knt_GIDNumer,@ZS_LimitUwzglDokBezPlat,@ZS_LimitUwzglZam,@ZS_LimitUwzglSaldoKntGlownego,0,0)) end) as Knt_KwotaPrzeterminowanaZS,
+            (case when @fs_prawo=2 or Knt_LimitTerminowy=0 then null else Convert(decimal(15,4),CDN.SumaWartosciKredytuTerminKontrahenta(@TimeStamp,@tolerancjaTermPlat,Knt_GIDNumer,@FS_LimitUwzglDokBezPlat,@FS_LimitUwzglZam,@FS_LimitUwzglSaldoKntGlownego,0,0)) end) as Knt_KwotaPrzeterminowanaFS,
+            (case when @pa_prawo=2 or Knt_LimitTerminowy=0 then null else Convert(decimal(15,4),CDN.SumaWartosciKredytuTerminKontrahenta(@TimeStamp,@tolerancjaTermPlat,Knt_GIDNumer,@PA_LimitUwzglDokBezPlat,@PA_LimitUwzglZam,@PA_LimitUwzglSaldoKntGlownego,0,0)) end) as Knt_KwotaPrzeterminowanaPA,
+            (case when @wz_prawo=2 or Knt_LimitTerminowy=0 then null else Convert(decimal(15,4),CDN.SumaWartosciKredytuTerminKontrahenta(@TimeStamp,@tolerancjaTermPlat,Knt_GIDNumer,@WZ_LimitUwzglDokBezPlat,@WZ_LimitUwzglZam,@WZ_LimitUwzglSaldoKntGlownego,0,0)) end) as Knt_KwotaPrzeterminowanaWZ,
+             CASE WHEN Knt_LimitTerminowy = 1 THEN CASE WHEN KLK_DataDo = 0 then null else CDN.TSToDate(KLK_DataDo,0) END ELSE null END AS Knt_DataWygasniecia
+        INTO #TempMobile
+    FROM CDN.KntKarty
+    JOIN CDN.KntLinki ON KnL_GIDTyp=Knt_GIDTyp and KnL_GIDNumer=Knt_GIDNumer
+    LEFT JOIN CDN.KntLimityK on Knt_GIDNumer=KLK_KntNumer and CDN.TSToDate(KLK_DataDo,0)+1&gt;GETDATE() and CDN.TSToDate(KLK_DataOd,0)&lt;GETDATE()
+	WHERE Knt_Aktywna=0 AND Knt_GIDNumer&gt;0 AND Knt_Archiwalny=0 AND
+      --Knt_LastModC &gt; CASE WHEN @TypEksportu=0 THEN @LastSync ELSE 0 END AND
+	  (KnL_GrOTyp=@Typ_GrK AND KnL_GrONumer = CASE WHEN @GrOTyp=@Typ_GrK THEN @GrONumer ELSE 0 END AND
+      --((Knt_RegionCRM IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948) OR Knt_GIDNumer IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=32))OR @GrOTyp=@Typ_GrK))
+		(EXISTS ( SELECT * FROM @Rejony
+					   JOIN CDN.KntRejony ON KnR_KntNumer = Knt_GIDNumer AND KtONumer = KnR_Rejon
+					   WHERE KtOTyp=948
+					 )
+			OR 
+			EXISTS ( SELECT * FROM @Rejony WHERE KtOTyp=32 AND KtONumer = Knt_GIDNumer )
+		  OR @GrOTyp=@Typ_GrK
+		  ))
+		  
+	SELECT COUNT(*) FROM #TempMobile
+
+	DELETE FROM #TempMobile 
+	WHERE Rank &lt;= @packageSize * (@packageNumber - 1) OR Rank &gt; @packageSize * @packageNumber
+
+	SELECT * FROM #TempMobile
+	DROP TABLE #TempMobile
+END
+</proceduredef>
+<proceduredef name="MobS_EksportTrP">
+CREATE PROCEDURE CDN.MobS_EksportTrP
+@CentrumID          INT,
+@OpeNumer           INT,
+@WszystkiePlatnosci BIT
+AS
+SET NOCOUNT ON	
+  	DECLARE @Dzis INT
+    DECLARE @Typ_GrK SMALLINT
+    DECLARE @GrOTyp   SMALLINT
+    DECLARE @GrONumer INT
+    DECLARE @WalutaSys  VARCHAR(3)
+    DECLARE @Rejony TABLE (KtOTyp SMALLINT, KtONumer INT)
+    DECLARE @AllPaym BIT
+    DECLARE @Payables BIT
+	
+	SELECT @AllPaym = ISNULL(PcK_ExpKntPlatnosci,0), @Payables = ISNULL(PcK_ExpKntZobowiazania,0)
+	FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+	
+	if @AllPaym = 1 /*wg XL można pobrać wszystkie płatności*/
+		set @AllPaym = @WszystkiePlatnosci /* ustaw pobieranie nalezności wg flagi w Mobile*/	
+
+    SET @Typ_GrK = -32
+    SELECT @Dzis = DATEDIFF(d,CONVERT(datetime,'18001228',112),CONVERT(datetime,GetDate(),112))
+    SELECT @GrOTyp=PcK_KnGETyp, @GrONumer=PcK_KnGENumer FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+    SELECT @WalutaSys = Kon_Wartosc FROM CDN.Konfig WHERE Kon_Numer=211
+      
+    IF @GrOTyp = 944
+    BEGIN
+  		INSERT INTO @Rejony 
+			SELECT KtO_KntTyp, KtO_KntNumer
+			FROM CDN.OpeKarty 
+			JOIN CDN.KntOpiekun ON Ope_PrcNumer=KtO_PrcNumer
+			WHERE Ope_GIDNumer=@OpeNumer AND (KtO_KntTyp=948 OR KtO_KntTyp=32) AND ((KtO_DataOd = 0 AND KtO_DataDo = 0) OR  @Dzis BETWEEN KtO_DataOd AND KtO_DataDo);
+    END
+
+SET NOCOUNT OFF;
+
+WITH KntKarty (GidNumer) as 
+		( SELECT CWN_KntNumer  --pobranie kontrahentów którzy są związani z wizytami,które posiadają element nalezności
+			 FROM CDN.CRMWizytyNag
+			 JOIN CDN.OpeKarty ON Ope_PrcNumer=CWN_Obsluga
+			 JOIN CDN.CRMWizytyElem ON CWN_Id=CWE_GIDNumer
+			 JOIN CDN.Slowniki ON CWE_RodzajId=SLW_ID AND SLW_Predefiniowany=29
+			 WHERE CWE_GIDTyp=4180 and Ope_GIDNumer=@OpeNumer AND CWN_KntNumer&gt;0 AND CWN_Stan=2 --AND CWN_ZewnetrznyId&lt;=0					
+			UNION
+			SELECT Knt_GIDNumer --pobranie kontrahentów z grupy wybranej na oddziale mobile
+			 FROM CDN.KntKarty 
+			 JOIN CDN.KntLinki ON KnL_GIDTyp=Knt_GIDTyp and KnL_GIDNumer=Knt_GIDNumer
+		   WHERE @AllPaym = 1 and Knt_Aktywna=0 AND Knt_GIDNumer&gt;0 AND
+		   KnL_GrOTyp=@GrOTyp AND KnL_GrONumer = @GrONumer            
+      UNION
+			SELECT Knt_GIDNumer -- pobranie kontrahentów z rejonow opiekuna 
+			 FROM CDN.KntKarty 
+		   WHERE @AllPaym = 1 and Knt_Aktywna=0 AND Knt_GIDNumer&gt;0 AND	       
+	       --(Knt_RegionCRM IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=948) OR Knt_GIDNumer IN (SELECT KtONumer FROM @Rejony WHERE KtOTyp=32))           
+					(EXISTS ( SELECT * FROM @Rejony
+									 JOIN CDN.KntRejony ON KnR_KntNumer = Knt_GIDNumer AND KtONumer = KnR_Rejon
+									 WHERE KtOTyp=948
+								 )
+						OR 
+			      EXISTS ( SELECT * FROM @Rejony WHERE KtOTyp=32 AND KtONumer = Knt_GIDNumer )
+					)
+	    ) 
+	SELECT	DISTINCT 
+			TTV_GIDTyp    As TrP_GIDTyp,
+			TTV_GIDNumer  As TrP_GIDNumer,
+			TTV_GIDLp     As TrP_GIDLp,
+			TTV_Typ       As TrP_Typ,
+			TrN_KntNumer  As TrP_KntNumer,
+			TrN_KnDNumer  As TrP_KnDNumer,
+			TTV_KntNumer  As TrP_KnPNumer,
+			TTV_Dokument  As TrP_Dokument,
+			TTV_FormaNr   As TrP_FormaNr,
+			CDN.TSToDate(TTV_Data,0)   As TrP_Data,
+			CDN.TSToDate(TTV_Termin,0) As TrP_Termin,
+			TTV_Kwota     As TrP_Kwota,
+			TTV_Pozostaje As TrP_Pozostaje,
+			TTV_Waluta    As TrP_Waluta
+	FROM CDN.TrpTrnView
+	JOIN CDN.TraNag ON TTV_GIDTyp=TrN_GIDTyp AND TTV_GIDNumer=TrN_GIDNumer AND TrN_Stan &gt; 2 --AND TrN_FrsId &lt;&gt; @CentrumID
+	JOIN KntKarty ON  (TrN_KntNumer=GIDNumer OR TrN_KnDNumer=GIDNumer OR TTV_KntNumer=GIDNumer)	 
+	WHERE (TTV_GIDTyp IN (2033,2041,2034,2042,2001,2009,2037,2045,2005,2013,2000,2008,1529,1497,2010) AND TTV_Typ=2 OR
+	       TTV_GIDTyp IN (2041,2042,2009,2045,2013,2008,1521,1529,1489,1497,2002,2010) AND TTV_Typ=1 AND @Payables=1)
+	   AND TTV_Rozliczona=0 AND TTV_Waluta=@WalutaSys AND TTV_KntTyp=-@Typ_GrK
+</proceduredef>
+</ROOT>

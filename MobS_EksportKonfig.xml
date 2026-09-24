@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportDokDef">
+CREATE PROCEDURE CDN.MobS_EksportDokDef 
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - różnicowy, 1 - pełny)
+AS
+BEGIN
+
+DECLARE @Format VARCHAR(10)
+SELECT @Format=rtrim(Kon_wartosc) FROM cdn.konfig WHERE Kon_Numer=992
+DECLARE @FormatZapisow varchar(10)
+SET @FormatZapisow = (case when charindex('1',@Format)&gt;0 then '1' else '2' end) + '/' + (case when charindex('3',@Format)&gt;0 then '3' else '4' end)
+
+SELECT mob.Dok_GIDTyp, 
+       rtrim(mob.Dok_Symbol) As Dok_Symbol, 
+       mob.Dok_Nazwa As Dok_Nazwa, 
+       @Format As Dok_FormatNumeru, 
+       mob.Dok_NettoBrutto, 
+       mob.Dok_WystPrawo,
+       mob.Dok_CenyRabatyPrawo, 
+       mob.Dok_NieSprzedawajPonizejMarzy, 
+       mob.Dok_CenaBazowa,
+	   mob.Dok_KntLimitPrawo,
+	   mob.Dok_ZeroweWartosci,
+       CASE WHEN ISNULL(mob.Dok_KntOgolne,0)=1            THEN  1 ELSE 0 END +  -- Kontrahent glowny czy docelowy
+       CASE WHEN ISNULL(mob.Dok_AktualizujPoKnt,0)=1      THEN  2 ELSE 0 END +  -- Czy aktualizowac dane po zmianie kontrahenta
+       CASE WHEN ISNULL(mob.Dok_AktualizujPoDaty,0)=1     THEN  4 ELSE 0 END +  -- Czy aktualizowac dane po zmianie daty 
+       CASE WHEN ISNULL(mob.Dok_AktualizujPoSpDost,0)=1   THEN  8 ELSE 0 END +  -- Czy aktualizowac dane po zmianie sposobu dostawy
+       CASE WHEN ISNULL(mob.Dok_AktualizujPoPlatnosc,0)=1 THEN 16 ELSE 0 END    -- Czy aktualizowac dane po zmianie formy platnosci
+       AS Dok_Flagi,
+	   /* FLAGI - kolumna sluzaca do przechowywania do 8 parametrów typu bool. 	   
+	      OPIS PARAMETROW (Przy dodawaniu nowego prosze dopisac !): 
+	   ================================================================
+	   00000000* -  wartosc kolumny mob.Dok_KntOgolne,
+       0000000*0 -  wartosc kolumny mob.Dok_AktualizujPoKnt
+       000000*00 -  wartosc kolumny mob.Dok_AktualizujPoDaty
+       00000*000 -  wartosc kolumny mob.Dok_AktualizujPoSpDost
+       0000*0000 -  wartosc kolumny mob.Dok_AktualizujPoPlatnosc
+	   000*00000 -
+	   00*000000 -
+	   0*0000000 -
+	   *00000000 -
+	   ================================================================ 
+	   */
+      (CASE WHEN glowne.Dok_GIDTyp IN(2001,2033,2034) THEN glowne.Dok_Platnosci ELSE 0 END) As Dok_Platnosci,
+	   glowne.Dok_LimitUwzglDokBezPlat, 
+	   glowne.Dok_LimitUwzglZam,
+	   CASE WHEN mob.Dok_PoprzednieZaNPrawo= 0 and mob.Dok_PoprzednieTrNPrawo= 0 THEN 0
+	        WHEN mob.Dok_PoprzednieZaNPrawo= 0 and mob.Dok_PoprzednieTrNPrawo= 1 THEN 1
+	        WHEN mob.Dok_PoprzednieZaNPrawo= 1 and mob.Dok_PoprzednieTrNPrawo= 0 THEN 2
+	        WHEN mob.Dok_PoprzednieZaNPrawo= 1 and mob.Dok_PoprzednieTrNPrawo= 1 THEN 3
+	        ELSE 0
+	   END As Dok_Poprzednie,
+	   CASE mob.Dok_GIDTyp 
+	   WHEN 2001 THEN CASE WHEN ISNULL(PcK_AutoPrzyjmijZaplate,0)&amp;4=4 THEN 1 ELSE 0 END 
+	   WHEN 2033 THEN CASE WHEN ISNULL(PcK_AutoPrzyjmijZaplate,0)&amp;1=1 THEN 1 ELSE 0 END 
+	   WHEN 2034 THEN CASE WHEN ISNULL(PcK_AutoPrzyjmijZaplate,0)&amp;2=2 THEN 1 ELSE 0 END 
+	   ELSE 0 END As Dok_AutoPrzyjmijZaplate,
+	   ISNULL(mob.Dok_PowielaniePozycji,1) as Dok_PowielaniePozycji, /*0 zezwalaj, &lt;&gt; 0 blokuj*/
+	   ISNULL(mob.Dok_AktualizujPoMagazynie,1)as Dok_AktualizujPoMagazynie, /*czy zmiana mag na dok ma powodowac przeliczenie promocji na pozycji*/
+	   ISNULL(mob.Dok_StosujPromocjePakietowe,0) as Dok_StosujPromocjePakietowe
+FROM CDN.FrmStruktura
+JOIN CDN.DokDefinicje mob ON Frs_Id=mob.Dok_FrsId AND mob.Dok_GIDTyp IN (2001,2033,2034,1603,1604,9472,3584,4180,8960)
+JOIN CDN.DokDefinicje glowne ON glowne.Dok_FrsId=1 AND glowne.Dok_GIDTyp=mob.Dok_GIDTyp
+JOIN CDN.PicoKonfig ON PcK_CentrumID=FrS_Id AND PcK_Typ=4
+WHERE FrS_Id = @CentrumID 
+UNION ALL
+SELECT 7841, 'KP','Kasa przyjęła', @FormatZapisow, 0, 
+	   case when exists(SELECT * FROM CDN.FrmObiekty JOIN CDN.RejOp ON FRO_GIDTyp=KRO_KARTyp AND FRO_GIDNumer=KRO_KARNumer JOIN CDN.Operacje ON KRO_KAOTyp=KAO_GIDTyp AND KRO_KAONumer=KAO_GIDNumer 
+											WHERE FRO_FRMID=@CentrumID AND FRO_GIDTyp=752 AND KAO_Oddzial = 1 AND KAO_RP=2) 
+					then 1 else 0 end, 
+	   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0
+UNION ALL
+SELECT 7842, 'KW','Kasa wydała', @FormatZapisow, 0, 
+	   case when exists(SELECT * FROM CDN.FrmObiekty JOIN CDN.RejOp ON FRO_GIDTyp=KRO_KARTyp AND FRO_GIDNumer=KRO_KARNumer JOIN CDN.Operacje ON KRO_KAOTyp=KAO_GIDTyp AND KRO_KAONumer=KAO_GIDNumer 
+											WHERE FRO_FRMID=@CentrumID AND FRO_GIDTyp=752 AND KAO_Oddzial = 1 AND KAO_RP=1) 
+					then 1 else 0 end, 
+	   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,1, 0, 0
+
+END
+</proceduredef>
+<proceduredef name="MobS_EksportDokMag">
+CREATE PROCEDURE CDN.MobS_EksportDokMag
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - różnicowy, 1 - pełny)
+AS
+
+  DECLARE @MagFrsID int
+  SET @MagFrsID=(SELECT TOP 1 Frm.Frs_Id FROM CDN.FrsCentra(1,-4272,@CentrumID,0,0) As Centra JOIN CDN.FrmStruktura As Frm ON Centra.Frs_Id = Frm.Frs_Id
+  WHERE FRS_MagazynyZRodzica = 0 OR Frm.Frs_Id = 1)
+
+  SELECT OB_GIDTyp INTO #DokTyp FROM CDN.Obiekty WHERE OB_GIDTyp IN (2001,2033,2034,1603,8960,9472) --(2001,2033,2034,1603,1604,9472,3584,4180,8960,1601,1089,1602)
+
+  IF @MagFrsID = 1
+    SELECT Dok_GIDTyp,
+           MAG_GIDNumer,
+	       Dok_MagZNumer As MAG_Domyslny
+    FROM   CDN.DokRelacje 
+           JOIN CDN.DokDefinicje ON Dok_Id=DoR_Id 
+           JOIN CDN.Magazyny ON MAG_GIDTyp=DoR_MSTyp and MAG_GIDNumer=DoR_MSNumer 
+           JOIN #DokTyp ON Dok_GIDTyp=OB_GIDTyp
+    WHERE MAG_Pico=0 AND Dok_FrsId=1
+    ORDER BY Dok_GIDTyp
+  ELSE
+    SELECT Dok.Dok_GIDTyp,
+           FRO_GIDNumer AS MAG_GIDNumer,
+	       Dok.Dok_MagZNumer As MAG_Domyslny
+    FROM   CDN.FrmStruktura 
+           JOIN CDN.DokDefinicje Dok ON Frs_Id = Dok.Dok_FrsId 
+           JOIN #DokTyp ON Dok.Dok_GIDTyp=OB_GIDTyp
+           JOIN CDN.FrmObiekty ON FrO_FRmId=Frs_ID AND FRO_GIDTyp = 208
+           JOIN CDN.Magazyny ON MAG_GIDTyp=Fro_GIDTyp and MAG_GIDNumer=Fro_GIDNumer
+           JOIN CDN.DokDefinicje RootDok ON RootDok.Dok_FrsID=1 AND RootDok.Dok_GIDTyp = Dok.Dok_GIDTyp
+           JOIN CDN.DokRelacje ON DoR_id = RootDok.Dok_ID AND DoR_MSTyp=208
+    WHERE  FrS_Id = @CentrumID AND Fro_GIDNumer=DoR_MSNumer AND ((OB_GIDTyp IN (2001,2033,2034,1603) AND MAG_Pico=1) OR (OB_GIDTyp IN (8960,9472) AND MAG_Pico=0))
+    UNION ALL
+    SELECT Dok.Dok_GIDTyp,
+           0 AS MAG_GIDNumer,
+	       Dok.Dok_MagZNumer As MAG_Domyslny
+    FROM   CDN.FrmStruktura 
+           JOIN CDN.DokDefinicje Dok ON Frs_Id = Dok.Dok_FrsId 
+           JOIN #DokTyp ON Dok.Dok_GIDTyp=OB_GIDTyp
+    WHERE  FrS_Id = @CentrumID AND Dok.Dok_JedenMagazyn=2
+    ORDER BY Dok.Dok_GIDTyp
+</proceduredef>
+<proceduredef name="MobS_EksportDokSer">
+CREATE PROCEDURE CDN.MobS_EksportDokSer
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - różnicowy, 1 - pełny)
+AS
+
+  DECLARE @SerFrsID int
+  SET @SerFrsID=(SELECT TOP 1 Frm.Frs_Id FROM CDN.FrsCentra(1,-4272,@CentrumID,0,0) As Centra JOIN CDN.FrmStruktura As Frm ON Centra.Frs_Id = Frm.Frs_Id
+  WHERE FRS_SerieZRodzica = 0 OR Frm.Frs_Id = 1)
+
+  IF @SerFrsID = 1
+    SELECT Dok_GIDTyp,
+           SER_GIDNumer,
+	       Dok_SerNumer As SER_Domyslna
+    FROM   CDN.DokRelacje 
+           JOIN CDN.DokDefinicje ON Dok_Id=DoR_Id 
+           JOIN CDN.Serie ON SER_GIDTyp=DoR_MSTyp and SER_GIDNumer=DoR_MSNumer 
+    WHERE SER_Oddzial=0 AND Dok_FrsId=1 AND Dok_GIDTyp IN (2001,2033,2034,1603,1604,9472,3584,4180,8960,1601,1089,1602)
+    ORDER BY Dok_GIDTyp
+  ELSE
+    SELECT Dok.Dok_GIDTyp,
+           FRO_GIDNumer AS SER_GIDNumer,
+	       Dok.Dok_SerNumer As SER_Domyslna
+    FROM   CDN.FrmStruktura 
+           JOIN CDN.DokDefinicje Dok ON Frs_Id = Dok.Dok_FrsId AND Dok.Dok_GIDTyp IN (2001,2033,2034,1603,1604,9472,3584,4180,8960,1601,1089,1602)
+           JOIN CDN.FrmObiekty ON FrO_FRmId=Frs_ID AND FRO_GIDTyp = 272
+           JOIN CDN.DokDefinicje RootDok ON RootDok.Dok_FrsID=1 AND RootDok.Dok_GIDTyp = Dok.Dok_GIDTyp
+           JOIN CDN.DokRelacje ON DoR_id = RootDok.Dok_ID AND DoR_MSTyp=272
+    WHERE  FrS_Id = @CentrumID AND Fro_GIDNumer=DoR_MSNumer
+    ORDER BY Dok.Dok_GIDTyp
+</proceduredef>
+<proceduredef name="MobS_EksportKonfig">
+CREATE PROCEDURE CDN.MobS_EksportKonfig (@CentrumID INT)
+AS
+BEGIN
+
+DECLARE @Slownik TABLE (Klucz NVARCHAR(100), Wartosc NVARCHAR(256))
+
+	INSERT INTO @Slownik
+	SELECT 'MarginCountType', CONVERT(NVARCHAR(100),RTRIM(Kon_Wartosc)) 
+	FROM CDN.Konfig WHERE Kon_Numer=12
+
+	INSERT INTO @Slownik --czy synchronizować nalezności
+	SELECT 'SynchReceivables', CONVERT(NVARCHAR(100),ISNULL(PcK_ExpKntPlatnosci,0))
+	FROM CDN.PicoKonfig
+	WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	INSERT INTO @Slownik --czy synchronizować zobowiązania
+	SELECT 'SynchPayables', CONVERT(NVARCHAR(100),ISNULL(PcK_ExpKntZobowiazania,0)) 
+	FROM CDN.PicoKonfig
+	WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	INSERT INTO @Slownik
+	SELECT 'SynchDescriptions',CONVERT(NVARCHAR(100),ISNULL(PcK_ExpTwrOpisy,0)) 
+	FROM CDN.PicoKonfig
+	WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	INSERT INTO @Slownik
+	SELECT 'ReleaseAllResources',CONVERT(NVARCHAR(100),ISNULL(PcK_AutoWydanieWszystkichZasobow,0)) 
+	FROM CDN.PicoKonfig
+	WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	INSERT INTO @Slownik
+	SELECT 'ItemsRootGroupId',CONVERT(NVARCHAR(100),ISNULL(PcK_TwGNumer,0)) 
+	FROM CDN.PicoKonfig
+	WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4	
+	
+	INSERT INTO @Slownik
+  SELECT 'ReceiptDefaultContractorId',CONVERT(NVARCHAR(100),CASE WHEN Dok_KntTyp=0 THEN -1 ELSE ISNULL(Dok_KntNumer,0)END) 
+	FROM CDN.DokDefinicje
+	WHERE Dok_GIDTyp=2034 AND Dok_FrsId=@CentrumID
+	
+	INSERT INTO @Slownik
+	SELECT 'DiscountsStructure', CONVERT(NVARCHAR(100),RTRIM(Kon_Wartosc)) 
+	FROM CDN.Konfig WHERE Kon_Numer=9980
+
+	INSERT INTO @Slownik
+	SELECT 'DiscountsCounting', N'1' 
+	
+  INSERT INTO @Slownik
+  SELECT 'UseSubstitutes', CONVERT(NVARCHAR(100), ISNULL(PcK_ExpTwrZamienniki,0))
+  FROM CDN.PicoKonfig
+	WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+	
+	INSERT INTO @Slownik
+	SELECT 'BundleDiscountCalculateType', CONVERT(NVARCHAR(100),RTRIM(Kon_Wartosc)) 
+	FROM CDN.Konfig WHERE Kon_Numer=987
+		
+	SELECT * FROM @Slownik
+END
+</proceduredef>
+</ROOT>

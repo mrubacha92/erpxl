@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportNumeryDok">
+CREATE PROCEDURE CDN.MobS_EksportNumeryDok
+@CentrumID INT
+AS
+BEGIN
+	declare @RejestrKasowy varchar(20) 
+	create table #kasa(Rejestr varchar(20) COLLATE Polish_CI_AS, nrRap int, rokRap smallint, Stan decimal(15,4))
+	insert into #kasa exec cdn.mobs_eksportkar @CentrumID
+	select @RejestrKasowy = Rejestr from #kasa
+	drop table #kasa
+
+	declare @numery table (TrN_TrNNumer int, TrN_TrNTyp int, TrN_TrNRok int, TrN_TrNMiesiac int, TrN_TrNSeria int)
+	declare @data datetime
+	set @data=getdate()
+
+	if exists(select * from cdn.konfig where kon_numer=992 and (charindex('6',Kon_wartosc)&gt;0 or charindex('7',Kon_wartosc)&gt;0))
+	BEGIN
+		INSERT INTO @numery
+		SELECT isnull(max(TrN_TrNNumer),0)+1 as TrN_TrNNumer, TrN_GIDTyp as TrN_TrNTyp, TrN_TrNRok, TrN_TrNMiesiac, SER_GIDNumer as TrN_TrNSeria
+		FROM CDN.TraNag
+		JOIN CDN.Serie on trn_trnseria=ser_nazwa
+		JOIN CDN.FrmObiekty ON SER_GIDNumer=FrO_GIDNumer
+		WHERE TrN_TrNLp=127 and fro_frmid=@CentrumID and fro_gidtyp=272
+			and trn_trnrok*100+trn_trnmiesiac&lt;=year(@data)*100+month(@data)
+			and trn_trnrok*100+trn_trnmiesiac&gt;=(year(@data)-1)*100+month(@data)
+			and trn_gidtyp in (2001,2033,2034,1603,1604)
+		GROUP BY trn_gidtyp,trn_trnrok,trn_trnmiesiac,ser_gidnumer
+		UNION ALL
+		SELECT isnull(max(RLN_Numer),0)+1 as TrN_TrNNumer, RLN_Typ as TrN_TrNTyp,RLN_Rok as TrN_TrNRok	,RLN_Miesiac as TrN_TrnMiesiac,ser_gidnumer as TRN_TrNSeria
+		FROM CDN.ReklNag
+		JOIN CDN.serie on Rln_Seria = Ser_Nazwa
+		JOIN CDN.frmobiekty on ser_gidnumer=fro_gidnumer
+		WHERE RLN_Lp=127 and fro_frmid=@CentrumID and fro_gidtyp=272
+			and RLN_Rok*100+RLN_Miesiac&lt;=year(@data)*100+month(@data)
+			and RLN_Rok*100+RLN_Miesiac&gt;=(year(@data)-1)*100+month(@data)
+			and RLN_Typ = 3584
+		GROUP BY RLN_Typ,RLN_Rok,RLN_Miesiac, ser_gidnumer
+		UNION ALL
+		SELECT isnull(max(zan_zamnumer),0) + 1 AS TrN_TrNNumer	,cdn.dokmaptypdokumentu(zan_gidtyp, zan_zamtyp, zan_rodzaj) As TrN_TrNTyp,zan_zamrok As TrN_TrNRok,zan_zammiesiac as TrN_TrNMiesiac,ser_gidnumer As TrN_TrNSeria
+		FROM CDN.ZamNag
+		JOIN CDN.serie on zan_zamseria=ser_nazwa
+		JOIN CDN.frmobiekty on ser_gidnumer=fro_gidnumer
+		WHERE fro_frmid=@CentrumID and fro_gidtyp=272 and zan_zamrok*100+zan_zammiesiac&lt;=year(@data)*100+month(@data)
+			and zan_zamrok*100+zan_zammiesiac&gt;=(year(@data)-1)*100+month(@data)
+			and cdn.dokmaptypdokumentu(zan_gidtyp, zan_zamtyp, zan_rodzaj) IN (8960,9472)
+		GROUP BY cdn.dokmaptypdokumentu(zan_gidtyp, zan_zamtyp, zan_rodzaj),zan_zamrok,zan_zammiesiac,ser_gidnumer
+		UNION ALL
+		SELECT isnull(max(CWN_Numer),0) + 1, 4180, CWN_Rok, CWN_Miesiac, SER_GIDNumer
+		FROM CDN.CRMWizytyNag
+		JOIN CDN.Serie on CWN_Seria=SER_Nazwa
+		JOIN CDN.FrmObiekty on SER_GIDNumer=fro_gidnumer
+		WHERE FRO_FRMID=@CentrumID and FRO_GIDTyp=272 AND CWN_Rok*100+CWN_Miesiac&lt;=year(@data)*100+month(@data)
+		GROUP BY CWN_Rok,CWN_Miesiac,SER_GIDNumer
+	END
+	ELSE
+	BEGIN
+		INSERT INTO @numery
+		SELECT isnull(max(trn_trnnumer),0)+1 as TrN_TrNNumer, trn_gidtyp as TrN_TrNTyp, TrN_TrNRok, 0 as TrN_TrNMiesiac, SER_GIDNumer as TrN_TrNSeria
+		from cdn.tranag
+		join cdn.serie on trn_trnseria=ser_nazwa
+		join cdn.frmobiekty on ser_gidnumer=fro_gidnumer
+		where trn_trnlp=127 and fro_frmid=@CentrumID and fro_gidtyp=272 and trn_trnrok in (year(@data), year(@data)-1)
+			and trn_gidtyp in (2001,2033,2034,1603,1604)
+		group by trn_gidtyp,trn_trnrok,ser_gidnumer
+		UNION ALL
+		Select isnull(max(RLN_Numer),0)+1 as TrN_TrNNumer, RLN_Typ as TrN_TrNTyp, RLN_Rok as TrN_TrNRok, 0 as TrN_TrnMiesiac, ser_gidnumer as TRN_TrNSeria
+		from CDN.ReklNag
+		join cdn.serie on Rln_Seria = Ser_Nazwa
+		join cdn.frmobiekty on ser_gidnumer=fro_gidnumer
+		where RLN_Lp=127 and fro_frmid=@CentrumID and fro_gidtyp=272 and RLN_Rok in (year(@data), year(@data)-1)
+			and RLN_Typ = 3584
+		group by RLN_Typ,RLN_Rok,SER_GIDNumer
+		UNION ALL
+		select isnull(max(zan_zamnumer),0) + 1 AS TrN_TrNNumer, cdn.dokmaptypdokumentu(zan_gidtyp, zan_zamtyp, zan_rodzaj) As TrN_TrNTyp, zan_zamrok As TrN_TrNRok, 0 as TrN_TrNMiesiac, ser_gidnumer As TrN_TrNSeria
+		from cdn.zamnag
+		join cdn.serie on zan_zamseria=ser_nazwa
+		join cdn.frmobiekty on ser_gidnumer=fro_gidnumer
+		where fro_frmid=@CentrumID and fro_gidtyp=272 and zan_zamrok in (year(@data), year(@data)-1)
+			and cdn.dokmaptypdokumentu(zan_gidtyp, zan_zamtyp, zan_rodzaj) IN (8960,9472)
+		group by cdn.dokmaptypdokumentu(zan_gidtyp, zan_zamtyp, zan_rodzaj),zan_zamrok,ser_gidnumer
+		UNION ALL
+		SELECT isnull(max(CWN_Numer),0) + 1, 4180, CWN_Rok, 0 As CWN_Miesiac, SER_GIDNumer
+		FROM CDN.CRMWizytyNag
+		JOIN CDN.Serie on CWN_Seria=SER_Nazwa
+		JOIN CDN.FrmObiekty on SER_GIDNumer=fro_gidnumer
+		WHERE FRO_FRMID=@CentrumID and FRO_GIDTyp=272 AND CWN_Rok*100+CWN_Miesiac&lt;=year(@data)*100+month(@data)
+		GROUP BY CWN_Rok,SER_GIDNumer
+	end
+	
+	select * from @numery
+	UNION ALL
+	SELECT
+		isnull(max(cast(substring(KAZ_NumerDokumentu,4,charindex('/',kaz_numerdokumentu)-4) as integer)),0)+1 as TrN_TrNNumer
+		,7841 as TrN_TrNTyp
+		,year(@data) as TrN_TrNRok
+		,0 as TrN_TrNMiesiac
+		,-1 as TrN_TrNSeria
+	from cdn.raporty
+	join cdn.zapisy on KRP_GIDNumer=KAZ_KRPNumer
+	where krp_seria=@RejestrKasowy and charindex('KP-',KAZ_NumerDokumentu)&gt;0 and krp_rok=year(@data)
+	union
+	select
+		isnull(max(cast(substring(KAZ_NumerDokumentu,4,charindex('/',kaz_numerdokumentu)-4) as integer)),0)+1 as TrN_TrNNumer
+		,7842 as TrN_TrNTyp
+		,year(@data) as TrN_TrNRok
+		,0 as TrN_TrNRok
+		,-1 as TrN_TrNSeria
+	from cdn.raporty
+	join cdn.zapisy on KRP_GIDNumer=KAZ_KRPNumer
+	where krp_seria=@RejestrKasowy and charindex('KW-',KAZ_NumerDokumentu)&gt;0 and krp_rok=year(@data)
+END
+</proceduredef>
+</ROOT>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportSsN">
+CREATE PROCEDURE CDN.MobS_EksportSsN
+@CentrumID  INT,
+@OpeNumer   INT
+AS
+	-- Naglowki
+	SELECT SsN_GIDNumer, SsN_TStampDataStop, SsN_Streszczenie, SsN_Opis 
+	FROM CDN.OpeKarty 
+	JOIN CDN.CRMWizytyNag ON Ope_PrcNumer=CWN_Obsluga
+	JOIN CDN.CRMWizytyElem ON CWE_GIDTyp=4180 AND CWN_Id=CWE_GIDNumer
+	JOIN CDN.CRMWizytyElemObiekty ON CWE_GIDNumer=CWO_CWENumer AND CWE_GIDLp=CWO_CWELp
+	JOIN CDN.Slowniki ON CWE_RodzajId=SLW_ID AND SLW_Predefiniowany=28
+	JOIN CDN.SrsNag ON SsN_GIDTyp=CWO_ObiTyp AND SsN_GIDNumer=CWO_ObiNumer
+	WHERE Ope_GIDNumer=@OpeNumer AND CWN_Aktywny=0 AND CWN_ZewnetrznyId&lt;=0 AND CWN_Stan=2 
+
+	-- Elementy
+	SELECT SsE_GIDNumer, SsE_GIDLp, SsE_GIDLp As SsE_ElementLp, SsE_ElementTyp, SsE_OpeStartNumer As SsE_OpeNumer, 1 As SsE_KnSNumer, SsE_Tytul, SsE_Opis
+	FROM CDN.OpeKarty 
+	JOIN CDN.CRMWizytyNag ON Ope_PrcNumer=CWN_Obsluga
+	JOIN CDN.CRMWizytyElem ON CWE_GIDTyp=4180 AND CWN_Id=CWE_GIDNumer
+	JOIN CDN.CRMWizytyElemObiekty ON CWE_GIDNumer=CWO_CWENumer AND CWE_GIDLp=CWO_CWELp
+	JOIN CDN.Slowniki ON CWE_RodzajId=SLW_ID AND SLW_Predefiniowany=28
+	JOIN CDN.SrsNag ON SsN_GIDTyp=CWO_ObiTyp AND SsN_GIDNumer=CWO_ObiNumer 
+	JOIN CDN.SrsElem ON SsN_GIDTyp=SsE_GIDTyp AND SsN_GIDNumer=SsE_GIDNumer AND SsE_GIDLp=SsE_GIDLp
+	WHERE Ope_GIDNumer=@OpeNumer AND CWN_Aktywny=0 AND CWN_ZewnetrznyId&lt;=0 AND CWN_Stan=2 
+	
+	SELECT SsE_GIDNumer, SsE_GIDLp, SsE_OpeStartNumer As SsE_OpeNumer, 0 As SsE_KnSNumer, SsE_Tytul, SsE_Opis, SsE_DataWykonania
+	FROM CDN.OpeKarty 
+	JOIN CDN.CRMWizytyNag ON Ope_PrcNumer=CWN_Obsluga
+	JOIN CDN.CRMWizytyElem ON CWE_GIDTyp=4180 AND CWN_Id=CWE_GIDNumer
+	JOIN CDN.CRMWizytyElemObiekty ON CWE_GIDNumer=CWO_CWENumer AND CWE_GIDLp=CWO_CWELp
+	JOIN CDN.Slowniki ON CWE_RodzajId=SLW_ID AND SLW_Predefiniowany=32
+	JOIN CDN.SrsElem ON SsE_GIDTyp=CWO_ObiTyp AND SsE_GIDNumer=CWO_ObiNumer AND SsE_GIDLp=CWO_ObiLp AND SsE_ElementTyp=2
+	WHERE Ope_GIDNumer=@OpeNumer AND CWN_Aktywny=0 AND CWN_ZewnetrznyId&lt;=0 AND CWN_Stan=2 
+</proceduredef>
+</ROOT>

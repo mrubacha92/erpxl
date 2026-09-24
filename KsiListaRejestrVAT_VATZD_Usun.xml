@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury KsiListaRejestrVAT_VATZD" hidden="True">
+if exists (select name from sysobjects where name = 'KsiListaRejestrVAT_VATZD' and type = 'P')
+  drop procedure CDN.KsiListaRejestrVAT_VATZD;
+</scriptdef>
+</ROOT>

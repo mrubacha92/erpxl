@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportCech">
+CREATE PROCEDURE CDN.MobS_EksportCech
+@CentrumID    INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu  INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+    SELECT  CCK_GIDNumer, 
+			CCK_Nazwa, 
+			ISNULL(CCK_Zamknieta,0) As CCK_Zamknieta,
+			1 As CCK_Aktywna
+    FROM CDN.CechyKlasy
+    ORDER BY 1
+    
+    SELECT CCh_GIDNumer, CCh_GIDLp, CCh_Cecha, CCh_Opis,  1 as CCh_Aktywna/*w XL pole niewykorzystywane*/  
+    FROM CDN.Cechy
+    ORDER BY 1, 2
+</proceduredef>
+<proceduredef name="MobS_EksportCechTran">
+CREATE PROCEDURE CDN.MobS_EksportCechTran
+@CentrumID    INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu  INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+	if @TypEksportu = 0
+		SELECT @TypEksportu = CASE WHEN PcK_TSSynchrPtw &gt; (SELECT cast(Kon_Wartosc As int) FROM CDN.Konfig WHERE Kon_Numer=2125) THEN 0 ELSE 1 END FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+    SELECT  Naz_GIDLp, 
+			Naz_Nazwa, 
+			1 As Naz_Aktywna
+    FROM CDN.Nazwy
+	WHERE Naz_GIDTyp=2720 AND @TypEksportu = 1
+</proceduredef>
+<proceduredef name="MobS_EksportFormyPlat">
+CREATE Procedure CDN.MobS_EksportFormyPlat 
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - róznicowy, 1 - pelny)
+AS
+
+if @TypEksportu = 0
+BEGIN
+		SELECT @TypEksportu = CASE 
+		WHEN (PcK_TSSynchrPtw &gt; (SELECT cast(Kon_Wartosc As int) FROM CDN.Konfig WHERE Kon_Numer=2125)) AND (PcK_TSSynchrPtw &gt; ISNULL(Frs_CzasModyfikacji,0))
+		THEN 0 ELSE 1 END 
+		FROM CDN.PicoKonfig 
+		JOIN  CDN.FrmStruktura ON Frs_ID=PcK_CentrumID
+		WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+END
+
+SELECT Kon_Lp,
+       LTRIM(RTRIM(LEFT(Kon_Wartosc,20))) Kon_FormaPl,
+       SUBSTRING(Kon_Wartosc,21,10) Kon_FormaPlRabat,
+       SUBSTRING(Kon_Wartosc,31,3) Kon_FormaPlTermin,
+	   ISNULL(FRO_DlaDetalu,0) Kon_Dostepna
+FROM   CDN.Konfig 
+LEFT OUTER JOIN (SELECT FRO_FRMID,FRO_GIDNumer,FRO_DlaDetalu FROM CDN.FrmObiekty WHERE FRO_GIDTyp=736 AND FRO_FRMID=@CentrumID) FrmObiekty ON Kon_Lp=FRO_GIDNumer
+WHERE Kon_Numer=736 AND @TypEksportu = 1
+ORDER BY Kon_Lp
+     
+</proceduredef>
+<proceduredef name="MobS_EksportFrm">
+CREATE Procedure CDN.MobS_EksportFrm
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+	if @TypEksportu = 0
+		SELECT @TypEksportu = CASE 
+		WHEN PcK_TSSynchrPtw &gt; (SELECT cast(Kon_Wartosc As int) FROM CDN.Konfig WHERE Kon_Numer=2125) AND PcK_TSSynchrPtw &gt; ISNULL(Frs_CzasModyfikacji,0)
+		THEN 0 ELSE 1 END 
+		FROM CDN.PicoKonfig 
+		JOIN  CDN.FrmStruktura ON Frs_ID=PcK_CentrumID
+		WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	SELECT 	Frm_GidNumer,
+			Frm_Nazwa1,
+			Frm_Nazwa2,
+			Frm_Nazwa3,
+			Frm_NipPrefiks,
+			Frm_NIP,
+			Frm_KodP, 
+			Frm_Miasto, 
+			Frm_Ulica,
+			Frm_Adres1,
+			Frm_Telefon1,  
+			Frm_Email,
+			LTRIM(RTRIM(ISNULL(Bnk_Nazwa,''))) As Frm_BnkNazwa,
+			LTRIM(RTRIM(ISNULL(KAR_NrRachunku,''))) as Frm_NrRachunku
+	FROM    CDN.FrmStruktura 
+	JOIN CDN.Firma ON Frm_GIDNumer=FRS_FrmNumer
+	LEFT JOIN CDN.Rejestry ON FRS_KARNumer=KAR_GIDNumer
+	LEFT JOIN CDN.Banki ON  KAR_BNKNumer = Bnk_GIDNumer
+	WHERE   FrS_Id=@CentrumID AND @TypEksportu = 1
+     
+</proceduredef>
+<proceduredef name="MobS_EksportJM">
+CREATE Procedure CDN.MobS_EksportJM
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+	if @TypEksportu = 0
+		SELECT @TypEksportu = CASE WHEN PcK_TSSynchrPtw &gt; (SELECT cast(Kon_Wartosc As int) FROM CDN.Konfig WHERE Kon_Numer=2125) THEN 0 ELSE 1 END FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	SELECT MIN(Naz_GIDLp) As Naz_GIDLp,
+		   RTRIM(LTRIM(Naz_Nazwa)) As Naz_Nazwa,
+		   MIN(Naz_Opis) As Naz_Opis 
+	FROM cdn.nazwy WHERE naz_gidtyp = 144 AND @TypEksportu = 1
+	GROUP BY RTRIM(LTRIM(Naz_Nazwa))
+	ORDER BY 1
+END
+</proceduredef>
+<proceduredef name="MobS_EksportMag">
+CREATE PROCEDURE CDN.MobS_EksportMag
+@CentrumID    INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu  INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp = PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	SELECT 	MAG_GIDNumer, 
+			MAG_Nazwa,
+			MAG_Kod,
+			CASE WHEN MAG_GIDNumer=isnull(Frs_MagNumer,1) THEN 1 ELSE 0 END As MAG_Domyslny,
+			CASE WHEN MAG_Zablokowany&gt;0 THEN 1 ELSE 0 END As MAG_Zablokowany
+	FROM  CDN.Magazyny
+	JOIN  CDN.FrmStruktura ON MAG_GIDNumer=Frs_MagNumer
+	WHERE Frs_ID=@CentrumID AND Mag_Pico=1 AND (ISNULL(MAG_CzasModyfikacji,0) &gt;= CASE WHEN @TypEksportu=1 THEN 0 ELSE @TimeStamp END OR ISNULL(Frs_CzasModyfikacji,1) &gt; CASE WHEN @TypEksportu=1 THEN 0 ELSE @TimeStamp END)
+	UNION ALL
+	SELECT 	MAG_GIDNumer, 
+			MAG_Nazwa,
+			MAG_Kod,
+			0 As MAG_Domyslny,
+			CASE WHEN MAG_Zablokowany&gt;0 THEN 1 ELSE 0 END As MAG_Zablokowany
+	FROM  CDN.Magazyny
+	WHERE Mag_Pico=0 AND ISNULL(MAG_CzasModyfikacji,0) &gt;= CASE WHEN @TypEksportu=1 THEN 0 ELSE @TimeStamp END
+	UNION ALL
+	SELECT 	0 As MAG_GIDNumer, 
+			'' As MAG_Nazwa,
+			'&lt;W centrali&gt;' As MAG_Kod,
+			0 As MAG_Domyslny,
+			0 As MAG_Zablokowany
+	WHERE EXISTS(SELECT * FROM CDN.DokDefinicje WHERE Dok_FrsId = @CentrumID AND Dok_JedenMagazyn=2 AND ISNULL(Dok_CzasModyfikacji,0) &gt;= CASE WHEN @TypEksportu=1 THEN 0 ELSE @TimeStamp END)
+</proceduredef>
+<proceduredef name="MobS_EksportOpe">
+CREATE Procedure CDN.MobS_EksportOpe
+@CentrumID    INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu  INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp = PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	SELECT Ope_Ident, Ope_WidziCenyZakupu
+	FROM CDN.FrmStruktura
+	JOIN CDN.FrmLinki ON FrL_GrOTyp=FrS_GIDTyp AND FrL_GrONumer=FrS_GIDNumer AND FrL_GIDTyp=128
+	JOIN CDN.OpeKarty ON FrL_GIDNumer = Ope_GIDNUmer
+	WHERE FRS_ID = @CentrumID AND ISNULL(Ope_CzasModyfikacji,0) &gt; CASE WHEN @TypEksportu=1 THEN -1 ELSE @TimeStamp END
+	
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSaM">
+CREATE PROCEDURE CDN.MobS_EksportSaM
+@CentrumID    INT, -- ID centrum praw struktury firmy 
+@OpeNumer     INT, -- ID mobilnego sprzedawcy
+@TypEksportu  INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	SELECT SaM_Id,
+		   SaM_NrRej,
+		   RTRIM(SUBSTRING(LTRIM(ISNULL(SLW_WartoscS,'')), 1, 20) + ' ' + ISNULL(SaM_Model,'')) As SaM_Nazwa,
+		   ISNULL(SaM_RokProd,0) As SaM_RokProd,
+		   ISNULL(Ope_GIDNumer,0) As SaM_DomyslnyPrc,
+		   1 As SaM_Aktywny
+	FROM CDN.Samochody 
+	LEFT JOIN CDN.OpeKarty ON Ope_PrcNumer = SaM_KierNumer AND Ope_GIDNumer=@OpeNumer
+	LEFT JOIN CDN.Slowniki ON Sam_Marka = SLW_ID
+	WHERE SaM_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSer">
+CREATE Procedure CDN.MobS_EksportSer
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	SELECT  SER_GIDNumer, rtrim(SER_Nazwa)as SER_Nazwa 
+	FROM    CDN.Serie
+	WHERE   SER_CzasModyfikacji &gt;= CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+     
+</proceduredef>
+<proceduredef name="MobS_EksportSlwAnt">
+CREATE PROCEDURE CDN.MobS_EksportSlwAnt
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+	AS
+BEGIN
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	-- Grupy pytan
+	SELECT	SLW_ID, Rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny
+	FROM	CDN.SlownikiStruktura 
+	JOIN    CDN.Slowniki ON SLS_Id=SLW_SLSId
+	WHERE	SLS_Predefiniowany = 81 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+
+	--Rodzaje odpowiedzi
+	SELECT	S2.SLS_ID, Rtrim(S2.SLS_Nazwa) AS SLS_Nazwa, 1 AS SLS_Aktywny 
+	FROM	CDN.SlownikiStruktura S1
+	JOIN    CDN.SlownikiStruktura S2 ON S1.SLS_Id=S2.SLS_OId
+	WHERE	S1.SLS_Predefiniowany = 59 AND 
+			EXISTS( SELECT * FROM CDN.Slowniki S3
+					WHERE	S2.SLS_ID = S3.SLW_SLSID AND S3.SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+				  )			
+	
+	SELECT	SLW_SLSID, SLW_ID, Rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny
+	FROM	CDN.SlownikiStruktura S1
+	JOIN    CDN.SlownikiStruktura S2 ON S1.SLS_Id=S2.SLS_OId
+	JOIN    CDN.Slowniki ON S2.SLS_ID=SLW_SLSID
+	WHERE	S1.SLS_Predefiniowany = 59 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSlwEkspozTwr">
+CREATE PROCEDURE CDN.MobS_EksportSlwEkspozTwr
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - różnicowy, 1 - pełny)
+AS
+BEGIN
+  DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	--Ekspozycje
+	SELECT  SLW_ID, Rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny
+	FROM	CDN.SlownikiStruktura 
+	JOIN  CDN.Slowniki ON SLS_Id=SLW_SLSId
+	WHERE	SLS_Predefiniowany = 120 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSlwKategorieRynk">
+CREATE PROCEDURE CDN.MobS_EksportSlwKategorieRynk
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	SELECT	SLW_ID, Rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny
+	FROM	CDN.SlownikiStruktura 
+	JOIN    CDN.Slowniki ON SLS_ID=SLW_SLSID
+	WHERE	SLS_Predefiniowany = 49 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END
+	ORDER BY SLW_ID 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSlwMarkaTwr">
+CREATE PROCEDURE CDN.MobS_EksportSlwMarkaTwr
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	SELECT	SLW_ID, Rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny
+	FROM	CDN.SlownikiStruktura 
+	JOIN    CDN.Slowniki ON SLS_ID=SLW_SLSID
+	WHERE	SLS_Predefiniowany = 105 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END
+	ORDER BY SLW_ID 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSlwRekl">
+CREATE PROCEDURE CDN.MobS_EksportSlwRekl
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	-- zadania reklamujacego
+	SELECT	SLW_ID, Rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny
+	FROM	CDN.SlownikiStruktura 
+	JOIN    CDN.Slowniki ON SLS_ID=SLW_SLSID
+	WHERE	SLS_Predefiniowany = 65 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSlwStatusKnt">
+CREATE PROCEDURE CDN.MobS_EksportSlwStatusKnt
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	--Statusy kontrahentow
+	SELECT	SLW_ID, rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny, SLW_Domyslny
+	FROM	CDN.SlownikiStruktura 
+	JOIN    CDN.Slowniki ON SLS_Id=SLW_SLSId
+	WHERE	SLS_Predefiniowany = 14 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSlwTypyPrzej">
+CREATE PROCEDURE CDN.MobS_EksportSlwTypyPrzej
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	--Typy przejazdów
+	SELECT	SLW_ID, Rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny
+	FROM	CDN.SlownikiStruktura 
+	JOIN    CDN.Slowniki ON SLS_Id=SLW_SLSId
+	WHERE	SLS_Predefiniowany = 40 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSlwTypyWizyt">
+CREATE PROCEDURE CDN.MobS_EksportSlwTypyWizyt
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+    DECLARE @TimeStamp   INT
+    SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+    --Typy wizyt
+    SELECT SLW_ID, Rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny
+    FROM  CDN.SlownikiStruktura 
+    JOIN  CDN.Slowniki ON SLS_Id=SLW_SLSId
+    WHERE SLS_Predefiniowany = 96 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSlwWH">
+CREATE PROCEDURE CDN.MobS_EksportSlwWH
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	-- Powod niewykonania wizyty
+	SELECT	SLW_ID, Rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny
+	FROM	CDN.SlownikiStruktura 
+	JOIN    CDN.Slowniki ON SLS_Id=SLW_SLSId
+	WHERE	SLS_Predefiniowany = 100 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSlwWPR">
+CREATE PROCEDURE CDN.MobS_EksportSlwWPR
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+BEGIN
+    DECLARE @TimeStamp   INT
+	SELECT @TimeStamp=PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+	-- Rodzaje wydatkow
+	SELECT	SLW_ID, Rtrim(SLW_WartoscS) AS SLW_Nazwa, SLW_Aktywny
+	FROM	CDN.SlownikiStruktura 
+	JOIN    CDN.Slowniki ON SLS_Id=SLW_SLSId
+	WHERE	SLS_Predefiniowany = 99 AND SLW_CzasModyfikacji &gt; CASE WHEN @TypEksportu=0 THEN @TimeStamp ELSE 0 END 
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSposobyDst">
+CREATE Procedure CDN.MobS_EksportSposobyDst
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+
+	if @TypEksportu = 0
+		SELECT @TypEksportu = CASE WHEN PcK_TSSynchrPtw &gt; (SELECT cast(Kon_Wartosc As int) FROM CDN.Konfig WHERE Kon_Numer=2125) THEN 0 ELSE 1 END FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+	
+	SELECT	Naz_GIDLp, Naz_Nazwa, 1 As Naz_Aktywny
+	FROM	CDN.Nazwy 
+	WHERE	Naz_GIDTyp = 976 AND @TypEksportu = 1
+</proceduredef>
+<proceduredef name="MobS_EksportStawkiVat">
+CREATE Procedure CDN.MobS_EksportStawkiVat
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+	if @TypEksportu = 0
+		SELECT @TypEksportu = CASE WHEN PcK_TSSynchrPtw &gt; (SELECT cast(Kon_Wartosc As int) FROM CDN.Konfig WHERE Kon_Numer=2125) THEN 0 ELSE 1 END FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+	
+	SELECT Naz_GIDLp, left(ltrim(Naz_Nazwa),1) As Naz_Nazwa, rtrim(substring(Naz_Nazwa1,1,5)) As Naz_Nazwa1
+	FROM CDN.Nazwy  
+	WHERE Naz_GIDTyp=624 AND @TypEksportu = 1
+</proceduredef>
+<proceduredef name="MobS_EksportWal">
+CREATE Procedure CDN.MobS_EksportWal
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu   INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+	SELECT WaN_Id, rtrim(WaN_Symbol) As WaN_Symbol, CASE WHEN Kon_System IS NULL THEN 0 ELSE 1 END As WaN_Systemowa 
+	FROM   CDN.WalNag
+	LEFT JOIN CDN.Konfig ON Kon_Numer=211 AND rtrim(WaN_Symbol)=rtrim(Kon_Wartosc)
+</proceduredef>
+<proceduredef name="MobS_EksportAtr">
+CREATE PROCEDURE CDN.MobS_EksportAtr
+@CentrumID    INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu  INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+
+DECLARE @TimeStamp   INT
+SELECT @TimeStamp = PcK_TSSynchrPtw FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+
+SELECT * INTO #TempAtk FROM
+(
+	SELECT	AtK_ID, Atk_Nazwa,
+			CASE WHEN AtK_Typ=6 THEN 0
+			     WHEN AtK_Format = '@d17'  THEN 5			     
+			     WHEN AtK_Format = '@n7.2' THEN 2
+			     WHEN AtK_Format = '@n9.4' THEN 3
+			     WHEN SUBSTRING(Atk_Format,1,2)='@n' AND SUBSTRING(Atk_Format,LEN(Atk_Format)-1,2)='.0' THEN 1
+			     WHEN SUBSTRING(Atk_Format,1,2)='@n' THEN 3
+				 ELSE 0
+			END AS AtK_Format,
+			CASE WHEN AtK_Format='@d17' and AtK_Typ &lt;&gt; 4 THEN 5 
+				 WHEN AtK_Typ=6 THEN 2 
+				 ELSE AtK_Typ 
+			END AS Atk_Typ, 
+			CASE WHEN AtK_Format='@d17' THEN 
+					CASE WHEN CONVERT(int, AtK_Domyslna) = 0 THEN ''
+						 ELSE CONVERT(varchar, CDN.TsToDate(CONVERT(int, AtK_Domyslna), 0), 105)
+					END
+				WHEN AtK_Typ = 1 THEN  
+					CASE WHEN AtK_Domyslna = 'TAK' THEN 'True'
+						 WHEN AtK_Domyslna = 'NIE' THEN 'False'
+						 ELSE ''
+					END
+				ELSE AtK_Domyslna 
+			END AS AtK_Domyslna,
+	        0 as AtK_DomyslnaId,
+	        case when Atk_MobsPrawa = 2 then 0 else 1 end as Atk_Odczyt,
+			case when AtK_Nieaktywny = 0 then 1 else 0 end as AtK_Aktywny, 
+			AtK_Wymagany,
+			AtK_Automat,
+			case when AtK_Format='@d17' and AtK_Typ = 4 then 1 else AtK_Zamknieta end as AtK_Zamknieta
+from CDN.AtrybutyKlasy
+where AtK_MOBSPrawa&gt;0 AND Atk_Typ &lt;=6 AND AtK_CzasModyfikacji &gt;= CASE WHEN @TypEksportu = 0 then @TimeStamp ELSE 0 END
+)TmpTable
+
+select * from #TempAtk
+/*select [TmpAtk].AtK_ID as Id,TmpAtk.Atk_Nazwa as Name
+from  #TempAtk TmpAtk 
+where [TmpAtk].ValueTypeId = 4*/
+
+SELECT	AtW_ID, 
+		AtW_AtKId,
+		CASE WHEN AtK_Format = 5 THEN 
+			CASE WHEN CONVERT(int, AtW_Wartosc) = 0 THEN ''
+				 ELSE CONVERT(varchar, CDN.TsToDate(CONVERT(int, AtW_Wartosc), 0), 105)
+			END
+			ELSE AtW_Wartosc 
+		END AS AtW_Wartosc
+FROM CDN.AtrybutyWartosci
+JOIN  #TempAtk TmpAtk ON TmpAtk.AtK_ID = AtW_AtKId
+WHERE [TmpAtk].Atk_Typ = 4
+
+select AtO_AtKId, 
+case 
+ --HEADERS
+ when Ato_GidTyp = 16    and AtO_Element = 0 then 1 /*TWR*/
+ when Ato_GidTyp = 32    and AtO_Element = 0 then 10 /*KNT*/
+ when Ato_GidTyp = 1089  and AtO_Element = 0 then 100 /*PM*/
+ when Ato_GidTyp = 1601  and AtO_Element = 0 then 101 /*WM*/
+ when Ato_GidTyp = 1602  and AtO_Element = 0 then 102 /*MP*/
+ when Ato_GidTyp = 8960  and AtO_Element = 0 then 103 /*OS*/
+ when Ato_GidTyp = 9472  and AtO_Element = 0 then 104 /*ZS*/
+ when Ato_GidTyp = 2034  and AtO_Element = 0 then 105 /*PA*/
+ when Ato_GidTyp = 2033  and AtO_Element = 0 then 106 /*FS*/
+ when Ato_GidTyp = 2001  and AtO_Element = 0 then 107 /*WZ*/
+ when Ato_GidTyp = 3584  and AtO_Element = 0 then 108 /*RLS*/
+ when Ato_GidTyp = 1603  and AtO_Element = 0 then 109 /*MMW*/
+ when Ato_GidTyp = 1604  and AtO_Element = 0 then 110 /*MMP*/
+ when Ato_GidTyp = 14450 and AtO_Element = 0 then 111 /*PSP*/
+ when Ato_GidTyp = 8209  and AtO_Element = 0 then 112 /*KP i KW, Plt*/
+ when Ato_GidTyp = 4180  and AtO_Element = 0 then 113 /*WH*/
+ --POSITIONS
+ when Ato_GidTyp = 1089  and AtO_Element = 1 then 200 /*pozycja PM*/
+ when Ato_GidTyp = 1601  and AtO_Element = 1 then 201 /*pozycja WM*/
+ when Ato_GidTyp = 1602  and AtO_Element = 1 then 202 /*pozycja MP*/
+ when Ato_GidTyp = 8960  and AtO_Element = 1 then 203 /*pozycja OS*/
+ when Ato_GidTyp = 9472  and AtO_Element = 1 then 204 /*pozycja ZS*/
+ when Ato_GidTyp = 2034  and AtO_Element = 1 then 205 /*pozycja PA*/
+ when Ato_GidTyp = 2033  and AtO_Element = 1 then 206 /*pozycja FS*/
+ when Ato_GidTyp = 2001  and AtO_Element = 1 then 207 /*pozycja WZ*/
+
+ when Ato_GidTyp = 1603  and AtO_Element = 1 then 209 /*pozycja MMW*/
+ when Ato_GidTyp = 1604  and AtO_Element = 1 then 210 /*pozycja MMP*/
+
+ when Ato_GidTyp = 4180  and AtO_Element = 1 then 213 /*Conversation*/
+ else 0
+ end  as AtO_ObiTyp, 
+ case when AtO_Wymagany = -1 then TmpAtk.AtK_Wymagany else AtO_Wymagany end as AtO_Wymagany,
+ case when AtO_Automat = -1 then TmpAtk.AtK_Automat else ato_automat end as AtO_Automat
+FROM #TempAtk TmpAtk 
+JOIN 
+( SELECT AtO_AtKId, Ato_GidTyp, AtO_Element, AtO_Wymagany, AtO_Automat FROM CDN.AtrybutyObiekty
+  UNION 
+  SELECT AKl_AtKId, Ato_GidTyp, AtO_Element, AtO_Wymagany, AtO_Automat FROM CDN.AtrybutyObiekty JOIN CDN.AtrKompletyLinki ON -AtO_AtKId=AKl_AKpID
+) AtO on TmpAtk.AtK_ID=AtO_AtKId
+where AtO_AtKId&gt;0 and AtO_Element &lt; 2/*tylko naglówki lub pozycje*/
+
+drop table #TempAtk
+</proceduredef>
+<proceduredef name="[MobS_EksportObiUsun]">
+CREATE PROCEDURE [CDN].[MobS_EksportObiUsun]
+@CentrumID     INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@ObiTyp		   INT  -- typ obiektow, do usuniecia 16 - twr, 32 - knt	
+AS
+BEGIN
+  --Procedura zwraca id obiektów ktore zostaly odwiazane z grup mobilnych i ktore powinny byc usuniete po stronie Mobile
+  --wywolywane tylko podczas roznicowej synchronizacji obiektow
+
+    DECLARE @PcK_ObiTyp   SMALLINT
+    DECLARE @PcK_ObiNumer INT
+    DECLARE @PcK_TSSynchrObiPtw INT --ostatnia synchro obiektow tego typu
+    
+    SELECT @PcK_ObiTyp = CASE WHEN @ObiTyp = 16 then PcK_TwGTyp  
+		  			          WHEN @ObiTyp = 32 then PcK_KnGETyp 
+							  ELSE -1
+						 END,
+	     @PcK_ObiNumer = CASE WHEN @ObiTyp = 16 then PcK_TwGNumer  
+							  WHEN @ObiTyp = 32 then PcK_KnGENumer 
+							  ELSE -1
+					     END,
+    @PcK_TSSynchrObiPtw= CASE WHEN @ObiTyp = 16 THEN PcK_TSSynchrTwrPtw  
+					          WHEN @ObiTyp = 32 THEN PcK_TSSynchrKntPtw 
+					          ELSE -1
+				         END
+    FROM CDN.PicoKonfig
+    WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+    
+    SELECT His_ObiNumer
+        FROM
+        (
+        SELECT ROW_NUMBER() OVER(PARTITION BY His_ObiNumer ORDER BY HIS_CzasZmianDB DESC) AS RowNbr, --select ostatnia zmiana dot. towaru i grupy mobilnej
+        His_ObiNumer, His_TypZmiany
+        FROM CDN.HistoriaZmian
+        WHERE His_ObiTyp = @ObiTyp
+                  and ((His_TabelaId = CASE WHEN @ObiTyp = 16 THEN 21
+                                            WHEN @ObiTyp = 32 THEN 11
+                                            ELSE 0
+                                       END
+                  and HIS_Kolumna=   CASE WHEN @ObiTyp = 16 THEN 'TwG_GroNumer'
+                                          WHEN @ObiTyp = 32 THEN 'KnG_GroNumer'
+                                          ELSE '0'
+                                     END
+                  and (His_StaraWartosc= CONVERT(VARCHAR,@PcK_ObiNumer) or His_NowaWartosc = CONVERT(VARCHAR,@PcK_ObiNumer)))/*dodane lub odpiete z grupy mobilnej*/
+                  OR (His_TabelaId=10 and @ObiTyp = 32 and HIS_Kolumna='Knt_RegionCRM'))
+                  and His_CzasZmianDB&gt; @PcK_TSSynchrObiPtw
+         )AS Tabela
+         WHERE Tabela.RowNbr = 1 and HIS_TypZmiany in (1,2) /*ostatnia zmiana obiektu zwiazana z grupa mobilna bylo odwiazane obiektu z tej grupy*/
+		
+END
+</proceduredef>
+<proceduredef name="MobS_EksportSlwRabKolor">
+CREATE PROCEDURE CDN.MobS_EksportSlwRabKolor
+@CentrumID    INT, -- ID centrum praw struktury firmy - id mobilnego sprzedawcy
+@TypEksportu  INT  -- Typ eksportu (0 - roznicowy, 1 - pelny)
+AS
+if @TypEksportu = 0
+                SELECT @TypEksportu = CASE WHEN PcK_TSSynchrPtw &gt; (SELECT cast(Kon_Wartosc As int) FROM CDN.Konfig WHERE Kon_Numer=2125) THEN 0 ELSE 1 END FROM CDN.PicoKonfig WHERE PcK_CentrumID=@CentrumID AND PcK_Typ=4
+    SELECT SLW_WartoscN1,SLW_WartoscN2,SLW_WartoscL1,SLW_WartoscL2,* FROM cdn.slowniki 
+	JOIN  CDN.SlownikiStruktura ON SLS_Id=SLW_SLSId
+    WHERE SLS_Predefiniowany =127
+   
+</proceduredef>
+</ROOT>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobS_EksportAnt">
+CREATE PROCEDURE CDN.MobS_EksportAnt
+@CentrumID    INT, -- ID centrum praw struktury firmy 
+@OpeNumer     INT  -- ID mobilnego sprzedawcy
+AS
+
+  SELECT CWO_ObiNumer As CWA_AntId
+  INTO #AnkietyWizyty
+	FROM CDN.OpeKarty 
+	JOIN CDN.CRMWizytyNag ON Ope_PrcNumer=CWN_Obsluga
+	JOIN CDN.CRMWizytyElem ON CWE_GIDTyp=4180 AND CWN_Id=CWE_GIDNumer
+	JOIN CDN.CRMWizytyElemObiekty ON CWE_GidNumer=CWO_CWENumer AND CWE_GidLp=CWO_CWELp AND CWE_GidTyp=CWO_CWETyp AND CWO_ObiTyp=14460
+  LEFT JOIN CDN.CRMWizytyAnkiety ON CWO_CWETyp=CWA_CWETyp AND CWO_CWENumer=CWA_CWENumer AND CWO_CWELp=CWA_CWELp 
+	WHERE Ope_GIDNumer=@OpeNumer AND CWN_Aktywny=0 AND CWN_KntNumer&gt;0 AND CWN_ZewnetrznyId&lt;=0 AND CWN_Stan=2 
+	GROUP BY CWO_ObiNumer
+
+  SELECT CWO_ObiNumer As CWA_AntId
+  INTO #AnkietyWzorce
+  FROM CDN.CRMWzorceWizyt
+	JOIN CDN.PicoKonfig ON PcK_CentrumID=@CentrumID
+	JOIN CDN.PicoRelacje ON PcR_ID = PcK_PicoID AND PcR_OBINumer = CWW_Id AND PcR_OBITyp = 4181
+	JOIN CDN.CRMWizytyElem ON CWE_GIDTyp=4181 AND CWW_Id=CWE_GIDNumer
+	JOIN CDN.CRMWizytyElemObiekty ON CWE_GidNumer=CWO_CWENumer AND CWE_GidLp=CWO_CWELp AND CWE_GidTyp=CWO_CWETyp AND CWO_ObiTyp=14460
+  LEFT JOIN CDN.CRMWizytyAnkiety ON CWO_CWETyp=CWA_CWETyp AND CWO_CWENumer=CWA_CWENumer AND CWO_CWELp=CWA_CWELp
+	GROUP BY CWO_ObiNumer
+	
+  SELECT ANT_Id, ANT_Kod, ANT_Nazwa 
+	FROM #AnkietyWizyty
+	JOIN CDN.Ankiety ON CWA_AntId=Ant_Id
+	UNION 
+  SELECT ANT_Id, ANT_Kod, ANT_Nazwa
+	FROM #AnkietyWzorce
+	JOIN CDN.Ankiety ON CWA_AntId=Ant_Id
+
+	-- Pytania
+  SELECT DISTINCT PYT_Id, PYT_GrupaId, PYT_Tresc, PYT_Otwarte, PYT_RodpId, PYT_Aktywne
+	FROM #AnkietyWizyty tmpAnt
+  JOIN CDN.CRMWizytyAnkiety wizAnt ON tmpAnt.CWA_AntId=wizAnt.CWA_AntId
+  JOIN CDN.PytaniaZadania ON CWA_ZadId=PYZ_ZadId
+  JOIN CDN.Pytania ON PYZ_PytId=PYT_Id
+  UNION
+  SELECT DISTINCT PYT_Id, PYT_GrupaId, PYT_Tresc, PYT_Otwarte, PYT_RodpId, PYT_Aktywne
+	FROM #AnkietyWzorce 
+  JOIN CDN.PytaniaAnkiety ON PAN_AntId=CWA_AntId
+  JOIN CDN.Pytania ON PAN_PytId=PYT_Id
+
+			
+</proceduredef>
+</ROOT>

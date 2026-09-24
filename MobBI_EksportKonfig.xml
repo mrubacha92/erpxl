@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="MobBI_EksportKonfig">
+CREATE PROCEDURE CDN.MobBI_EksportKonfig
+  @OpeIdent nvarchar(8)
+AS 
+    DECLARE @UserAccount varchar(100)
+    SELECT @UserAccount = CASE WHEN ISNULL(Ope_NTKonto,'')='' THEN Prc_NTKonto ELSE Ope_NTKonto END FROM CDN.OpeKarty LEFT JOIN CDN.PrcKarty ON Ope_PrcNumer = Prc_GIDNumer WHERE Ope_Ident = @OpeIdent
+	DECLARE @MetaDb varchar(100)
+    SELECT @MetaDb = Kon_Wartosc FROM CDN.Konfig WHERE Kon_Numer = 5005
+	DECLARE @MetaSrv varchar(100)
+    SELECT @MetaSrv = Kon_Wartosc FROM CDN.Konfig WHERE Kon_Numer = 5011
+
+    SELECT @MetaSrv As MetaServer, @MetaDb As MetaDatabase, @UserAccount As UserAccount
+</proceduredef>
+</ROOT>
