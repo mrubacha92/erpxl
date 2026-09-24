@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="WMRPotomne">
+CREATE PROCEDURE CDN.WMRPotomne(@ID INT) AS
+BEGIN
+  DECLARE @c int
+  CREATE TABLE #potomne (WMR_ID INT UNIQUE)
+  INSERT INTO #potomne SELECT A.WMR_ID FROM cdn.Wymiary AS A join cdn.Wymiary AS B ON B.Wmr_Id=A.Wmr_ParId AND B.Wmr_ID=@ID
+  SET @c=0
+  WHILE @c&lt;&gt;(SELECT COUNT(*) FROM #potomne)
+  BEGIN
+    SET @c=(SELECT COUNT(*) FROM #potomne)
+    insert into #potomne select A.Wmr_ID from cdn.Wymiary as A join cdn.Wymiary as B ON B.Wmr_Id=A.Wmr_ParId JOIN #potomne ON  B.Wmr_ID=#potomne.Wmr_ID AND NOT EXISTS(SELECT * FROM #potomne WHERE #potomne.Wmr_ID=A.Wmr_ID)
+  END
+  SELECT Wmr_ID FROM #potomne
+  DROP TABLE #potomne
+END
+</proceduredef>
+</ROOT>

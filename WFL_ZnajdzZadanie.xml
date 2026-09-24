@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="WFL_ZnajdzZadanie">
+CREATE FUNCTION CDN.WFL_ZnajdzZadanie(@p_WDPID integer, @p_WDSID integer, @p_PRCTyp smallint, @p_PRCNumer integer, @p_DataWSekundach integer, @p_FrSId integer=0)
+returns integer
+as 
+begin
+	Declare @zadanie integer		
+
+	Select top 1 @zadanie = WDZ_ID
+	From CDN.WF_DEFZadania (NOLOCK) join CDN.WF_DefOpiekun  (NOLOCK) on WDZ_ID = WDO_WDZID
+	Where WDZ_WDPID = @p_WDPID and WDZ_WDSID = @p_WDSID  and CDN.WFL_JestOpiekunemPracownika(@p_PrcTyp,@p_PRCNumer, WDO_OPITyp,WDO_OPINumer, @p_DataWSekundach/86400 + 69035, @p_DataWSekundach/86400 + 69035,@p_FrSId)&lt;&gt;0 --TFS 233768
+	Order by WDZ_LP
+	return @zadanie
+end
+</functiondef>
+</ROOT>

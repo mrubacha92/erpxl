@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="WmrRodzice">
+CREATE PROCEDURE CDN.WmrRodzice(@ID INT) AS
+BEGIN
+  DECLARE @c int
+  CREATE TABLE #rodzice (WMR_ID INT UNIQUE,Poziom INT)
+  INSERT INTO #rodzice SELECT B.WMR_ID,1 FROM cdn.Wymiary AS A join cdn.Wymiary AS B ON B.Wmr_Id=A.Wmr_ParId AND A.Wmr_ID=@ID
+  SET @c=0
+  WHILE @c&lt;&gt;(SELECT COUNT(*) FROM #rodzice)
+  BEGIN
+    SET @c=(SELECT COUNT(*) FROM #rodzice)
+    insert into #rodzice select B.Wmr_Id,#rodzice.Poziom+1 from cdn.Wymiary as A join cdn.Wymiary as B ON 
+ B.Wmr_Id=A.Wmr_ParId JOIN #rodzice ON A.Wmr_ID=#rodzice.Wmr_ID
+ AND NOT EXISTS(SELECT * FROM #rodzice WHERE #rodzice.Wmr_ID=B.Wmr_ID)
+  END
+  SELECT Wmr_ID,Poziom FROM #rodzice
+  DROP TABLE #rodzice
+END
+</proceduredef>
+</ROOT>

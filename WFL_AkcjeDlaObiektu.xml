@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="WFL_AkcjeDlaObiektu">
+CREATE PROCEDURE  cdn.WFL_AkcjeDlaObiektu (
+@Obi_GIDTyp smallint, --GIDTyp obiektu
+@Obi_GIDNumer int, --GIDNumer obiektu
+@Obi_GIDLp smallint, --GIDLp obiektu
+@Ope_GIDNumer int, --GIDNumer operatora 
+@InniOper smallint, --czy uwzgledniac innych operatorow pracownika danego operatora
+@DataOd int, --data waznosci struktury
+@DataDo int
+)
+as
+begin
+
+declare @WDPID int
+declare @WDSID int
+
+	--zwraca aktywne zadanie dla obiektu
+	select top 1 @WDPID = WFP_WDPID, @WDSID = WFZ_WDSID
+	from (cdn.WF_Procesy
+		inner join cdn.WF_Zadania
+		on WFP_ID = WFZ_WfPID and
+			WFP_ObiTyp = @Obi_GIDTyp and
+			WFP_ObiNumer = @Obi_GIDNumer and
+			WFP_ObiLp = @Obi_GIDLp and
+			isnull(WFZ_DataZamkniecia,0) = 0)
+		inner join cdn.WFL_Opiekunowie(0, @Ope_GIDNumer, 0, @InniOper, @DataOd, @DataDo)
+		on WFZ_OpiTyp = Frs_GIDTyp and WFZ_OpiNumer = Frs_GIDNumer
+
+
+	
+	exec cdn.WFL_AkcjeStatusu @WDPID, @WDSID, @Ope_GIDNumer, @InniOper, @DataOd, @DataDo
+	
+end
+</proceduredef>
+</ROOT>

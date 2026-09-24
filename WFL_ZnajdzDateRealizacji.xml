@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="WFL_ZnajdzDateRealizacji">
+create function CDN.WFL_ZnajdzDateRealizacji(@p_DataRealizacji integer, @p_CzasRealizacji integer, @p_OPITyp smallint, @p_OPINumer integer)
+returns integer
+as
+begin
+	Declare @lReturn integer
+	Declare @lDataZamkniecia integer
+
+	set @lDataZamkniecia = 0
+	Set @lReturn = @p_Datarealizacji	
+
+	if (@p_CzasRealizacji = 0)
+		return @lReturn
+
+	if (@p_OpiTyp &lt;0 ) -- opiekunem centrum/oddział
+		return @lReturn
+
+
+	select top 1 @lReturn = a.wfz_DataRealizacji + a.WFZ_CzasRealizacji
+	from 
+	( select WFZ_DataRealizacji,WFZ_CzasRealizacji,wfz_DataZamkniecia, wfz_OpiNumer, WFZ_OpiTyp   
+	  from cdn.wf_zadania 
+	  union 
+	  select @p_DataRealizacji - @p_CzasRealizacji as WFZ_DataRealizacji,@p_CzasRealizacji as WFZ_CzasRealizacji,@lDataZamkniecia as wfz_DataZamkniecia, @p_OPINumer as wfz_OpiNumer, @p_OPITyp as WFZ_OpiTyp 
+	) as a
+	where a.wfz_dataZamkniecia = @lDataZamkniecia and a.WFZ_OPINumer = @p_OPINumer and a.WFZ_OPITyp = @p_OPITyp  
+	and a.WFZ_CzasRealizacji &lt;&gt;0
+	and   (a.wfz_DataRealizacji + a.WFZ_CzasRealizacji ) &gt;= @p_DataRealizacji 
+	and  not exists( 
+		select * from cdn.wf_zadania b
+		where b.wfz_dataZamkniecia = @lDataZamkniecia and b.WFZ_OPINumer = @p_OPINumer and a.WFZ_OPITyp = @p_OPITyp 
+		and  b.WFZ_CzasRealizacji &lt;&gt;0 
+		and b.wfz_datarealizacji&gt;a.wfz_datarealizacji
+		and   (a.wfz_DataRealizacji + a.WFZ_CzasRealizacji + @p_CzasRealizacji) &gt;=  b.wfz_dataRealizacji 
+		)
+	order by wfz_DataZamkniecia, wfz_OpiNumer, WFZ_OpiTyp, WFZ_DataRealizacji
+	
+	return (@lReturn)		
+
+end
+</functiondef>
+</ROOT>

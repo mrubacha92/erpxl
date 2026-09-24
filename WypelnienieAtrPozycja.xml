@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Wypełnienie pola Atr_Pozycja" hidden="False">
+UPDATE CDN.Atrybuty SET Atr_Pozycja = AR.Atr_Pozycja
+FROM CDN.Atrybuty A
+JOIN (SELECT RANK() OVER(PARTITION BY Atr_ObiTyp,Atr_ObiNumer,Atr_ObiLp,Atr_ObiSubLp ORDER BY Atr_ID) AS Atr_Pozycja,Atr_ID FROM CDN.Atrybuty) AR
+ON AR.Atr_ID = A.Atr_ID
+WHERE A.Atr_Pozycja = 0
+</scriptdef>
+</ROOT>
