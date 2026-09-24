@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="Dostawy_DeleteOrphaned_TwrPartie">
+CREATE TRIGGER CDN.Dostawy_DeleteOrphaned_TwrPartie
+  ON CDN.Dostawy
+  FOR DELETE
+AS
+SET NOCOUNT ON
+
+    -- obsługa kaskadowego kasowania wierszy z tabeli CDN.TwrPartie
+    DELETE CDN.TwrPartie
+    FROM CDN.TwrPartie join deleted on CDN.TwrPartie.Tpa_ID = deleted.Dst_TpaID
+    WHERE
+	      TPa_WMS = 0 and
+          not exists (select dst_gidnumer from cdn.dostawy
+          where Dst_TPaId = CDN.TwrPartie.TpA_Id) and
+          not exists (select int_tpaid from cdn.inwtwr
+          where int_TPaId = CDN.twrpartie.TpA_Id) and
+          not exists (select mae_tpaid from cdn.magelem
+          where mae_TPaId = CDN.twrpartie.TpA_Id)
+
+SET NOCOUNT OFF
+
+</triggerdef>
+<triggerdef name="[MagElem_DeleteOrphaned_TwrPartie]">
+CREATE TRIGGER [CDN].[MagElem_DeleteOrphaned_TwrPartie]
+  ON [CDN].[MagElem]
+  FOR DELETE
+AS
+SET NOCOUNT ON
+
+    -- obsługa kaskadowego kasowania wierszy z tabeli CDN.TwrPartie
+    DELETE CDN.TwrPartie
+    FROM CDN.TwrPartie join deleted on CDN.TwrPartie.Tpa_ID = deleted.MaE_TpaID
+    WHERE
+	      TPa_WMS = 0 and
+          not exists (select dst_gidnumer from cdn.dostawy
+          where Dst_TPaId = CDN.TwrPartie.TpA_Id) and
+          not exists (select int_tpaid from cdn.inwtwr
+          where int_TPaId = CDN.twrpartie.TpA_Id) and
+          not exists (select mae_tpaid from cdn.magelem
+          where mae_TPaId = CDN.twrpartie.TpA_Id)
+
+SET NOCOUNT OFF
+
+</triggerdef>
+</ROOT>

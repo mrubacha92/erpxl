@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:24:12 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="KatGrupyTwr" ident="37e14bfa-e7d3-4203-946c-d2d639b74047" prefix="KGT" filename="'Towary.cdn\!KatGrupyTwr'" options=""
+  description="Kategorie towarów iMall24" longdescription="" owner="Connect_DSN3" glbx="3" nosql="No"
+  aliases="">
+  <columns>
+    <column ident="d092b011-2d32-4f49-bf41-bf559a4f9e4a" clarionname="KGT:Id" sqlname="KGT_Id" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator grupy" longdescription="" options="SQL_IDENTITY"
+      picture="@n-14" initial="" justification.type="R" justification.indent="2"
+      header="Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="9aee37a2-2d1d-4f36-8a47-3e2cec7d6c3a" clarionname="KGT:OjciecId" sqlname="KGT_OjciecId" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator grupy nadrzędnej" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="2"
+      header="Ojciec Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="782f1f6f-cc44-44e5-a1a2-efc8323cafe2" clarionname="KGT:IdM" sqlname="KGT_IdM" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator kategorii z iMall24" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="2"
+      header="Id M" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="509d82ec-cfdd-4a26-a240-c7c4f8702985" clarionname="KGT:Nazwa" sqlname="KGT_Nazwa" type="CSTRING" clariontype="CSTRING(101)" sqltype="VARCHAR(100)"
+      size="101" places="0" description="Nazwa grupy" longdescription="" options=""
+      picture="@s100" initial="" justification.type="L" justification.indent="2"
+      header="Nazwa" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="611a4383-561b-48dd-8b1a-5ad24d8d72db" clarionname="KGT:CzasModyfikacji" sqlname="KGT_CzasModyfikacji" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Data ostatniej modyfikacji grupy" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="2"
+      header="Czas Modyfikacji" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="d98e656c-4831-48b0-8296-dda61ce1f1fd" clarionname="KGT:Primary" sqlname="KGTPrimary" description="Klucz główny" longdescription="" options="" primary="Yes" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="Yes" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="d092b011-2d32-4f49-bf41-bf559a4f9e4a" clarionname="KGT:Id" sqlname="KGT_Id" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="211b0851-934b-48e9-9449-ce374cea527b" clarionname="KGT:KeyNazwa" sqlname="KGTNazwa" description="wg nazwy" longdescription="" options="" primary="No" unique="No" casesensitive="No"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="509d82ec-cfdd-4a26-a240-c7c4f8702985" clarionname="KGT:Nazwa" sqlname="KGT_Nazwa" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+    <relation type="1:MANY" onupdate="" ondelete="RESTRICT"
+        options="SQL_SETNULL()"
+        comments="" nosql="No" setnull="Yes"
+        conditional=""
+        parent="KatGrupyTwr" primaryname="KGT:Primary" primarysqlname="KGTPrimary" parenthandler="KatGrupyTwr_DeleteHandler" parentlink="KatGrupyTwr"
+        child="TwrAplikacje" foreignname="TAP:KeyGrupaiMall" foreignsqlname="TAPGrupaiMall" childhandler="TwrAplikacje_InsertUpdateHandler" childlink="TwrAplikacje">
+      <relationcolumn
+        parentident="d092b011-2d32-4f49-bf41-bf559a4f9e4a" parentname="KGT:Id" parentsqlname="KGT_Id"
+        childident="9425a4e7-2" childname="TAP:GrupaiMall" childsqlname="TAP_GrupaiMall" isinsqlprimary="Yes" />
+    </relation>
+  
+  </relations>
+</table>
+</ROOT>

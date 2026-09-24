@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="KasujZestawienia">
+CREATE  PROCEDURE CDN.KasujZestawienia(@GIDNumer INT)
+ AS
+BEGIN
+
+
+delete cdn.ZestKSWyniki where ZKW_ZKENumer = @GIDNumer
+delete cdn.ZestKSDef where ZKD_GIDNumer = @GIDNumer
+delete cdn.ZestKSElem where ZKE_GIDNumer = @GIDNumer
+delete cdn.ZestKSNag where ZKN_GIDNumer = @GIDNumer
+delete cdn.ZestKSZmienne where ZKZ_GIDNumer IN 
+(select ZKO_GIDNumer from cdn.ZestKSWidok where ZKO_ZKNTyp = 2784 AND ZKO_ZKNNumer = @GIDNumer)
+delete cdn.ZestKSKolumny where ZKK_GIDNumer IN 
+(select ZKO_GIDNumer from cdn.ZestKSWidok where ZKO_ZKNTyp = 2784 AND ZKO_ZKNNumer = @GIDNumer)
+delete cdn.ZestKSWidok where ZKO_ZKNTyp = 2784 AND ZKO_ZKNNumer = @GIDNumer
+
+END
+
+</proceduredef>
+</ROOT>
