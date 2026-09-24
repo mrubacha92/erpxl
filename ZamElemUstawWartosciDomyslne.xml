@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Ustawianie wartości domyślnej dla ZaE_IloscMin w tabeli ZamElem" hidden="True">
+IF NOT EXISTS(select 1 from sys.objects where name = 'DF_ZaE_IloscMin')
+	ALTER TABLE CDN.ZamElem ADD CONSTRAINT DF_ZaE_IloscMin DEFAULT (0) FOR ZaE_IloscMin
+</scriptdef>
+<scriptdef name="Ustawianie wartości domyślnej dla ZaE_IloscMax w tabeli ZamElem" hidden="False">
+IF NOT EXISTS(select 1 from sys.objects where name = 'DF_ZaE_IloscMax')
+	ALTER TABLE CDN.ZamElem ADD CONSTRAINT DF_ZaE_IloscMax DEFAULT (0) FOR ZaE_IloscMax
+</scriptdef>
+<scriptdef name="Ustawianie wartości domyślnej dla ZaE_PakietId w tabeli ZamElem" hidden="False">
+IF NOT EXISTS(select 1 from sys.objects where name = 'DF_ZaE_PakietId')
+	ALTER TABLE CDN.ZamElem ADD CONSTRAINT DF_ZaE_PakietId DEFAULT (0) FOR ZaE_PakietId
+</scriptdef>
+<scriptdef name="Ustawianie wartości domyślnej dla ZaE_Gratis w tabeli ZamElem" hidden="False">
+IF NOT EXISTS(select 1 from sys.objects where name = 'DF_ZaE_Gratis')
+	ALTER TABLE CDN.ZamElem ADD CONSTRAINT DF_ZaE_Gratis DEFAULT (0) FOR ZaE_Gratis
+</scriptdef>
+</ROOT>

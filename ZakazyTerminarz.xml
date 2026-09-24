@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Zmiana zakazów dotyczących terminarzy" hidden="False">
+set nocount on;
+
+	update cdn.OpeZakazy set OpZ_ProcID = 30073 where OpZ_ProcID = 30784 and OpZ_OpeNumer NOT IN (select Opz_OpeNumer from cdn.OpeZakazy where OpZ_ProcID = 30073)
+
+	update cdn.StaZakazy set StZ_ProcID = 30073 where StZ_ProcID = 30784 and StZ_StaNumer NOT IN (select StZ_StaNumer from cdn.StaZakazy where StZ_ProcID = 30073)
+
+set nocount off;
+</scriptdef>
+</ROOT>

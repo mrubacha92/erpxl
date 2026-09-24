@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie typu tabelarycznego PytaniaAnkietyTable" hidden="False">
+IF EXISTS (SELECT * FROM sys.types WHERE is_table_type = 1 AND name = 'PytaniaAnkietyTable')
+BEGIN
+	IF EXISTS (SELECT * FROM sys.procedures WHERE name = 'XLNowaAnkieta')
+		DROP PROCEDURE CDN.XLNowaAnkieta;
+	IF EXISTS (SELECT * FROM sys.procedures WHERE name = 'XLModyfikujAnkiete')
+		DROP PROCEDURE CDN.XLModyfikujAnkiete;
+
+   DROP TYPE CDN.PytaniaAnkietyTable
+END
+</scriptdef>
+<scriptdef name="Tworzenie typu tabelarycznego PytaniaAnkietyTable" hidden="False">
+CREATE TYPE CDN.PytaniaAnkietyTable AS TABLE(	
+	PYTId INT NOT NULL,
+	PYTWaga DECIMAL(5,2) NULL,	
+	Opis VARCHAR(255) NULL,
+	Pozycja SMALLINT NULL
+)
+</scriptdef>
+<scriptdef name="Przyznanie praw do typu tabelarycznego PytaniaAnkietyTable" hidden="False">
+GRANT EXECUTE ON TYPE::CDN.PytaniaAnkietyTable TO CDNRaport
+</scriptdef>
+</ROOT>

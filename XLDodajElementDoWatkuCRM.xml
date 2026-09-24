@@ -1,0 +1,841 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury XLDodajElementDoWatkuCRM" hidden="True">
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[CDN].[XLDodajElementDoWatkuCRM]') AND type in (N'P', N'PC'))
+DROP PROCEDURE [CDN].[XLDodajElementDoWatkuCRM]
+</scriptdef>
+<scriptdef name="Tworzenie procedury XLDodajElementDoWatkuCRM" hidden="False">
+-----------------------------------------------------------------------------------------------------
+--Opis:
+--      Procedura dodaje pozycje konwersacji lub zadanie do wątku konwersacji.
+--Uwagi:
+--      BY DODAĆ POZYCJĘ LUB ZADANIE DO KONKRETNEGO WĄTKU:
+--      należy uzupełnić @SsNNumer (numer wątku z SsN_GIDLp &lt;&gt; -1), gdy jest to wątek dla knt w etapie
+--      to Akwizytor uzupełni się z tego wątku osoba też jeśli nie przekazano żadnej innej do @AkwOsobaLp.
+--      BY DODAĆ ZADANIE DO KONKRETNEGO KONTRAHENTA:
+--      należy uzupełnić @ElementTyp = 2 (zadanie) oraz @KntNumer i @KntLp = 0 i @KntOsobaLp (gdy chcemy dodać do jakiejś
+--      konkretnej osoby). Gdy chcemy ustalić parametry na podstawie wzorca to przekazujemy poprwane CdzID
+--      (nie zostaną nadpisane poprawnie wypełnione parametry opcjonalne) @SsNNumer = 0 (wątek jest
+--      dodawany automatycznie z SsN_GIDLp = -1)
+--      BY DODAĆ ZADANIE DO KONKRETNEGO KONTRAHENTA W ETAPIE:
+--      należy uzupełnić @ElementTyp = 2 (zadanie) oraz @KntNumer i @KntLp opdowiednie i @KntOsobaLp (gdy chcemy dodać do jakiejś
+--      konkretnej osoby innej niż ta z kontrahenta w etapie) oraz CkeNumer i CkeLp (konkretny etap). Sprawdzany jest wpis w
+--      CrmKntEtapy czy istenieje dany knt w danym etapie (z tej tabeli pobierany jest Akwizytor i osoby jeśli
+--      nie przekazano @KntOsobaLp i @AkwOsobaLp). Gdy chcemy ustalić parametry na podstawie wzorca to
+--      przekazujemy poprwane CdzId (nie zostaną nadpisane poprawnie wypełnione parametry opcjonalne)
+--      @SsNNumer = 0 (wątek jest dodawany automatycznie z SsN_GIDLp = -1)
+--      Gdy przekazano @OpeStartNumer = 0 to będzie ustalany operator na podstawie @OpeStartIdent, gdy są oba to
+--      pierwszeństwo ma @OpeStartNumer. Gdy @CdzId &lt; 0 oznacza, że zadanie zostało wygenerowane automatycznie
+--      na podstawie wzorca zadania z etapu (zostanie wpisane cdzid do sse)
+
+--      Ujemne wartości zwracane to numery błędów, dodatnie to Lp dodanego elementu.
+--ToDo: 
+--Modyfikacje:	29-07-2011 TS usunięcie nazw transakcji, bo są ignorowane, gdy jest to zagnieżdżona transakacja
+--				29-07-2011 TS dodanie parametru opcjonalnego @IgnorujTransakcje, który powinien być wykorzystywany w przypadku, gdy mam zwewnętrzną transakcje	
+--				25-04-2019 TS dodanie parametru opcjonalnego @CalyDzien dla MOS
+
+CREATE PROCEDURE [CDN].[XLDodajElementDoWatkuCRM]
+
+--parametry wymagane
+
+        @Tytul                          varchar(80),
+		@ElementTyp                 smallint,
+        @OpeStartNumer          int,
+
+
+--parametry wymagane wybiórczo (któryś z tych parametrów musi być poprawnie uzupełniony - czyt.opis)
+
+        @SsNNumer                       int output,
+        @KntNumer                       int,
+        @KntLp                          smallint,
+        @KntOsobaLp                     int,
+        @CkeNumer                       int,
+        @CkeLp                          smallint,
+        @CdzID                          int,
+
+
+--parametry opcjonalne
+
+        @OpePTyp                        smallint = NULL,
+        @OpePNumer                      int = NULL,
+        @OpeWNumer                      int = NULL,
+        @DataWykonania          int = NULL,
+        @CzasKonsultacji        int = NULL,
+        @CzasDodatkowy          int = NULL,
+        @TStampDataStart        int = NULL,
+        @RodzajZadania          tinyint = NULL,
+        @Priorytet                      tinyint = NULL,
+        @FlagaStatusu           tinyint = NULL,
+        @TSPrzypomnienie        int = NULL,
+        @Odleglosc                      decimal(10,2) = NULL,
+        @AkwOsobaLp                     smallint = NULL,
+        @TStampTerminOd         int = NULL,
+        @TStampTerminDo         int = NULL,
+        @Terminarz                      tinyint = NULL,
+        @CzasPlanowanyJedn      tinyint = NULL,
+        @CzasPrzypomnieniaJedn  tinyint = NULL,
+        @TypId                          int = NULL, -- rodzaj kontaktu
+        @Opis                           varchar(5000)= NULL,
+        @OpeStartIdent          varchar(8) = NULL,
+        @IgnorujBledy           tinyint = NULL, --by nie robiło raiserror przy błędzie
+        @IgnorujSelecty         tinyint = NULL, --by nie robiło selecta na koniec
+        @IgnorujTransakcje      tinyint = NULL, --by nie zakładało transakcji
+		@CalyDzien				tinyint = NULL
+
+AS
+
+--deklaracje zmiennych
+
+declare @GIDFirma                       int
+declare @GIDLp                          smallint
+declare @SsEElementLp           smallint
+declare @AkwTyp                         smallint
+declare @AkwFirma                       int
+declare @AkwNumer                       int
+declare @AkwLp                          smallint
+declare @Prowadzacy                     tinyint
+declare @ProwadzacyOpe          int
+declare @ProwadzacyFrS          int
+declare @CekId                          int
+declare @Now                            int
+declare @ZadKod                         varchar(40)
+declare @ZadId                          int
+declare @ZadObiTyp                      smallint
+declare @ZadObiNumer            int
+declare @ZadAuto                        tinyint
+declare @Przypomnienie          tinyint
+declare @CzasPrzypom            int
+declare @CzasPlanowany          int
+
+SET NOCOUNT ON
+
+--ustawienie zmiennych
+
+select @GIDFirma = frs_GIDFirma from cdn.frmstruktura where frs_id = 1
+
+set @SsEElementLp = 0
+
+set @ZadAuto = 0
+
+if @CdzID &lt; 0
+        select @CdzID = @CdzID*(-1), @ZadAuto = 1
+
+select @Now = datediff(s,'19900101',getdate())
+
+
+--ustawienie parametrow wymaganych, gdy są nullami
+
+if @Tytul is null
+        set @Tytul = ''
+if @ElementTyp is null
+        set @ElementTyp = 0
+if @OpeStartNumer is null
+        set @OpeStartNumer = 0
+if @SsNNumer is null
+        set @SsNNumer = 0
+if @KntNumer is null
+        set @KntNumer = 0
+if @KntLp is null
+        set @KntLp = 0
+if @KntOsobaLp is null
+        set @KntOsobaLp = 0
+if @CkeNumer is null
+        set @CkeNumer = 0
+if @CkeLp is null
+        set @CkeLp = 0
+if @CdzID is null
+        set @CdzID = 0
+
+if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+	BEGIN TRAN
+
+--sprwadzenie wątku konwersacji
+
+if exists(select * from cdn.SrsNag where SsN_GIDNumer = @SsNNumer and SsN_GIDLp &lt;&gt; -1) and @SsNNumer &lt;&gt; 0
+        begin
+                select @GIDLp = isnull((select max(SsE_GIDLp)+ 1 from cdn.SrsElem where SsE_GIDNumer = @SsNNumer),1)
+                select @KntNumer = SsN_KntNumer, @KntOsobaLp = case when @KntOsobaLp = 0 then SsN_OsobaLp
+                else @KntOsobaLp end, @CkeNumer = 0, @CkeLp = 0, @CdzID = 0, @KntLp = SsN_KntLp
+                from cdn.srsnag where SsN_GIDNumer = @SsNNumer
+                select @KntNumer =ISNULL(@KntNumer,0), @KntLp=ISNULL(@KntLp,0)
+        end
+else
+        if @SsNNumer &lt;&gt; 0
+                begin
+						if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+								rollback tran
+                        if @IgnorujBledy is null
+                                raiserror('Błędny wątek konwersacji - (-8)',16,1)
+                        return -8
+                end
+
+
+--sprawdzenie czy istnieje wzorzec zadania
+
+if @CdzId &lt;&gt; 0 and not exists(select * from cdn.CrmDefZadania where CDZ_Id = @CdzId) and @SsNNumer = 0
+        begin
+				if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+						rollback tran
+                if @IgnorujBledy is null
+                        raiserror('Nie znaleziono wzorca zadania - (-5)',16,1)
+                return -5
+        end
+
+
+--sprawdzenie tytułu
+
+if (@Tytul is null or @Tytul = '') and @CdzId = 0
+        begin
+				if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+						rollback tran
+                if @IgnorujBledy is null
+                        raiserror('Nie podano tytułu elementu konwersacji - (-2)',16,1)
+                return -2
+        end
+
+
+--sprawdzenie czy istnieje operator rozpoczynający
+
+if not exists (select * from cdn.opekarty where Ope_GIDNumer = @OpeStartNumer and Ope_Zablokowane &lt;&gt; 1)
+        begin
+                if @OpeStartIdent is not null and exists(select * from cdn.opekarty where Ope_Ident = @OpeStartIdent and Ope_Zablokowane &lt;&gt; 1)
+                        select @OpeStartNumer = Ope_GIDNumer from cdn.opekarty where Ope_Ident = @OpeStartIdent
+                else
+                        begin
+								if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+										rollback tran
+                                if @IgnorujBledy is null
+                                        raiserror('Nie znaleziono operatora - (-3)',16,1)
+                                return -3
+                        end
+        end
+
+
+--sprawdzenie typu elementu
+
+if @ElementTyp is null or @ElementTyp not in (1,2)
+        begin
+				if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+						rollback tran
+                if @IgnorujBledy is null
+                        raiserror('Zły typ elementu - (-7)',16,1)
+                return -7
+        end
+
+if @ElementTyp = 1
+        select @CkeNumer = 0, @CkeLp = 0, @CdzID = 0
+
+
+--sprawdzenie czy istenieje knt lub knt w etapie
+
+if @SsNNumer = 0 and @CkeNumer = 0 and @CkeLp = 0 and not exists(select * from cdn.KntKarty where
+Knt_GIDNumer = @KntNumer)
+        begin
+				if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+					rollback tran
+                if @IgnorujBledy is null
+                        raiserror('Nie znaleziono kontrahenta - (-1)',16,1)
+                return -1
+        end
+
+if @SsNNumer = 0 and @CkeNumer &lt;&gt; 0 and @CkeLp &lt;&gt; 0 and not exists(select * from cdn.CrmKntEtapy where
+CEK_CKENumer = @CkeNumer and CEK_CKELp = @CkeLp and CEK_KntNumer = @KntNumer and CEK_KntLp = @KntLp
+and CEK_Status in (0,1))
+        begin
+				if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+					rollback tran
+                if @IgnorujBledy is null
+                        raiserror('Nie znaleziono aktywnego kontrahenta w etapie - (-4)',16,1)
+                return -4
+        end
+
+
+--sprawdzenie czy wątek zakończony
+
+if @SsNNumer &lt;&gt; 0 and exists(select * from cdn.SrsNag where SsN_GIDNumer = @SsNNumer and SsN_TStampDataStop &lt;&gt; 0)
+        begin
+				if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+					rollback tran
+                if @IgnorujBledy is null
+                        raiserror('Wątek jest zakończony - (-6)',16,1)
+                return -6
+        end
+
+
+--sprawdzenie czy istnieje operator prowadzący
+
+if @OpePTyp is null or @OpePNumer is null or @OpePTyp not in (128, 4272) or
+( @OpePTyp = 128 and not exists (select * from cdn.opekarty where Ope_GIDNumer = @OpePNumer and Ope_Zablokowane &lt;&gt; 1)) or
+( @OpePTyp = 4272 and not exists (select * from cdn.frmstruktura where FrS_ID = @OpePNumer and FrS_Archiwalny = 0))
+        select @OpePNumer = 0, @OpePTyp = 0
+
+
+--sprawdzenie czasu konsultacji
+
+if @CzasKonsultacji is null or @CzasKonsultacji &lt; 0 or @ElementTyp = 2
+        set @CzasKonsultacji = 0
+if @CzasDodatkowy is null or @CzasDodatkowy &lt; 0 or @ElementTyp = 2
+        set @CzasDodatkowy = 0
+
+
+--sprawdzenie daty rozpoczęcia
+
+if @TStampDataStart is null or @TStampDataStart &lt; 1
+        select @TStampDataStart = DATEDIFF(s,'19900101',GETDATE())
+
+/* data elementu może być wcześniejsza niż data wątku
+if (@SsNNumer &lt;&gt; 0 and exists(select * from cdn.SrsNag where SsN_GIDNumer = @SsNNumer and
+                                                                @TStampDataStart &lt; SsN_TStampDataStart))
+        select @TStampDataStart = SsN_TStampDataStart from cdn.SrsNag where SsN_GIDNumer = @SsNNumer*/
+
+
+--sprawdzenie czy element zakończony
+
+if @FlagaStatusu is null or @FlagaStatusu &lt;&gt; 1
+	begin
+        set @FlagaStatusu = 0
+        set @DataWykonania = 0
+        set @OpeWNumer = 0
+	end
+
+if (@DataWykonania is not null or @DataWykonania &lt; @TStampDataStart ) and @FlagaStatusu = 1
+        set @DataWykonania = @TStampDataStart
+
+if @FlagaStatusu = 1 and ( @OpeWNumer is null or not exists (select * from cdn.opekarty where
+                                                                                                                         ope_GIDNumer = @OpeWNumer and Ope_Zablokowane &lt;&gt; 1))
+        select @OpeWNumer = @OpeStartNumer
+
+
+--sprawdzenie akwizytora
+
+if @SsNNumer &lt;&gt; 0
+        select @AkwTyp = SsN_AkwTyp, @AkwNumer = SsN_AkwNumer, @AkwFirma = SsN_AkwFirma, @AkwLp = SsN_AkwLp
+        from cdn.SrsNag where SsN_GIDNumer = @SsNNumer
+else
+        if @CkeLp &lt;&gt; 0 and @CkeNumer &lt;&gt; 0
+                        select @CekId = CEK_Id,@AkwTyp = CEK_AkwTyp, @AkwNumer = CEK_AkwNumer, @AkwFirma = CEK_AkwFirma, @AkwLp = CEK_AkwLp
+                        from cdn.CrmKntEtapy where CEK_KntNumer = @KntNumer and CEK_KntLp = @KntLp and
+                        CEK_CkeLp = @CkeLp and CEK_CkeNumer = @CkeNumer
+
+
+if @AkwTyp is null or @AkwTyp = 0
+        set @AkwOsobaLp = 0
+
+
+--SsE_Terminarz
+
+if @Terminarz is null or @Terminarz not in (0,1,2) or @ElementTyp = 1
+        set @Terminarz = 0
+
+
+--SsE_RodzajZadania
+
+if @RodzajZadania is null or @RodzajZadania not in (1,2) or @ElementTyp = 1
+        set @RodzajZadania = 0
+
+
+--SsE_Priorytet
+
+if @Priorytet is null or @ElementTyp = 1 or @Priorytet &lt; 0 or @Priorytet &gt; 255
+        set @Priorytet = 0
+
+
+--SsE_TSPrzypomnienie
+
+if @TSPrzypomnienie is null or @TSPrzypomnienie &lt; 0 or @ElementTyp = 1 or @Terminarz = 0 or
+@TSPrzypomnienie &gt; @TStampTerminOd
+        set @TSPrzypomnienie = 0
+
+
+--SsE_Odleglosc
+
+if @Odleglosc is null or @RodzajZadania &lt;&gt; 2 or @ElementTyp = 1 or @Odleglosc &lt; 0
+        set @Odleglosc = 0
+
+
+--SsE_TStampTerminOd i SsE_TStampTerminDo
+
+if @ElementTyp = 1 or @TStampTerminOd is null or @TStampTerminDo is null
+        select @TStampTerminOd = 0, @TStampTerminDo = 0
+if @TStampTerminOd &gt; @TStampTerminDo
+        set @TStampTerminDo = @TStampTerminOd
+
+
+--SsE_CzasPlanowanyJedn
+
+if @ElementTyp = 1
+        set @CzasPlanowanyJedn = 0
+else
+        if @CzasPlanowanyJedn is null or @CzasPlanowanyJedn not in (1,2,3,4)
+                set @CzasPlanowanyJedn = 0
+
+
+--SsE_CzasPrzypomnieniaJedn
+
+if @ElementTyp = 1
+        set @CzasPrzypomnieniaJedn = 0
+else
+        if @CzasPrzypomnieniaJedn is null or @CzasPrzypomnieniaJedn not in (1,2,3,4) or @Terminarz = 0
+                set @CzasPrzypomnieniaJedn = 0
+
+
+--SsE_TypId - Rodzaj kontaktu
+
+--not exists(select * from cdn.Slowniki where Slw_Kategoria = 'Rodzaj kontaktu' and Slw_ID = @TypId)
+if @TypId is null or not exists(select * from CDN.SlownikiStruktura join CDN.Slowniki on SLW_SLSId = SLS_Id
+                                                                where SLW_ID = @TypId and SLS_Predefiniowany = 79)
+        select @TypId = 0
+
+
+--Ustalenie wartości pól na podstawie wzorca
+
+if  @CdzID &lt;&gt; 0
+        begin
+                select
+                @Tytul = case when @Tytul = '' then CDZ_Tytul else @Tytul end,
+                @Priorytet = case when @Priorytet = 0 then CDZ_Priorytet else @Priorytet end,
+                @TypId = case when @TypId = 0 then CDZ_TypId else @TypId end,
+                @RodzajZadania = case when @RodzajZadania = 0 then CDZ_Rodzaj else @RodzajZadania end,
+                @Opis = case when @Opis = '' then CDZ_Opis else @Opis end,
+                @Terminarz = case when @Terminarz = 0 then CDZ_Terminarz else @Terminarz  end,
+                @TStampTerminOd = case when @TStampTerminOd = 0 then CDZ_TerminZadania * 86400 + @TStampDataStart else @TStampTerminOd end,
+                @TStampTerminDo = case when @TStampTerminDo = 0 then CDZ_CzasPlanowany + @TStampTerminOd else @TStampTerminDo end,
+                @CzasPlanowanyJedn = case when @CzasPlanowanyJedn = 0 and CDZ_CzasPlanowanyJedn &lt;&gt; 0 then CDZ_CzasPlanowanyJedn else 1 end,
+                @TSPrzypomnienie = case when @TSPrzypomnienie = 0 then @TStampTerminOd - CDZ_CzasPrzypomnienia else @TSPrzypomnienie end,
+                @CzasPrzypomnieniaJedn = case when @CzasPrzypomnieniaJedn = 0 then CDZ_CzasPrzypomnieniaJedn else @CzasPrzypomnieniaJedn end,
+                @Prowadzacy = CDZ_Obsluga,
+                @ProwadzacyOpe = CDZ_OpeONumer,
+                @ProwadzacyFrS = CDZ_FrsId,
+				@CalyDzien = isnull(@CalyDzien, CDZ_CalyDzien)
+                from cdn.CrmDefZadania where CDZ_ID = @CdzId
+
+                select @Tytul = ISNULL(@Tytul,'Zadanie'),@Priorytet=ISNULL(@Priorytet,0),@TypId=ISNULL(@TypId,0),@RodzajZadania=ISNULL(@RodzajZadania,0),
+                                @Opis=ISNULL(@Opis,''),@Terminarz=ISNULL(@Terminarz,0),@TStampTerminOd=ISNULL(@TStampTerminOd,0),@TStampTerminDo=ISNULL(@TStampTerminDo,@TStampTerminOd),
+                                @CzasPlanowanyJedn=ISNULL(@CzasPlanowanyJedn,1),@TSPrzypomnienie=ISNULL(@TSPrzypomnienie,0),@CzasPrzypomnieniaJedn=ISNULL(@CzasPrzypomnieniaJedn ,0),
+                                @Prowadzacy=ISNULL(@Prowadzacy,0),@ProwadzacyOpe=ISNULL(@ProwadzacyOpe,0),@ProwadzacyFrS=ISNULL(@ProwadzacyFrS,0)
+
+        end
+
+--CDZ_Obsluga   TINYINT 1- prowadzący, 2- odpowiedzialny, 3- operator/centrum
+if @OpePNumer = 0 and @OpePTyp = 0 and @CdzID &lt;&gt; 0 and @Prowadzacy in (1,2,3)
+        if @Prowadzacy = 1 and @CkeNumer &lt;&gt; 0 and @CkeLp &lt;&gt; 0
+                begin
+                        select @OpePTyp = Cek_OpeTyp, @OpePNumer = CEK_OpeNumer from cdn.CrmKntEtapy where
+                        CEK_CKENumer = @CkeNumer and CEK_CKELp = @CkeLp and CEK_KntNumer = @KntNumer and CEK_KntLp = @KntLp
+                        select @OpePTyp=ISNULL(@OpePTyp,0),@OpePNumer=ISNULL(@OpePNumer,0)
+                end
+        else
+                if @Prowadzacy = 2 and @CkeNumer &lt;&gt; 0 and @CkeLp &lt;&gt; 0
+                        begin
+                                select @OpePTyp = Cek_OpeTypA, @OpePNumer =Cek_OpeNumerA from cdn.CrmKntEtapy where
+                                CEK_CKENumer = @CkeNumer and CEK_CKELp = @CkeLp and CEK_KntNumer = @KntNumer and CEK_KntLp = @KntLp
+                                select @OpePTyp=ISNULL(@OpePTyp,0),@OpePNumer=ISNULL(@OpePNumer,0)
+                        end
+                else
+                        if @Prowadzacy = 3
+                                if @ProwadzacyOpe &lt;&gt; 0
+                                        select @OpePNumer = @ProwadzacyOpe, @OpePTyp = 128
+                                else
+                                        if @ProwadzacyFrS &lt;&gt; 0
+                                                select @OpePNumer = @ProwadzacyFrS, @OpePTyp = 4272
+
+
+if @TypId = 0
+        select @TypId = isnull((select top 1 Slw_ID from CDN.SlownikiStruktura join CDN.Slowniki on
+        SLW_SLSId = SLS_Id where SLS_Predefiniowany = 79 and Slw_Domyslny = 1),0)
+
+
+--Insert wątek automatyczny
+
+
+if @SsNNumer = 0
+begin
+        insert into cdn.SrsNag(
+        SsN_GIDTyp,
+        SsN_GIDFirma,
+        SsN_GIDLp,
+        --wymagane
+        SsN_Streszczenie,
+        SsN_KntTyp,
+        SsN_KntFirma,
+        SsN_KntNumer,
+        SsN_KntLp,
+        SsN_OpeTyp,
+        SsN_OpeFirma,
+        SsN_OpeNumer,
+        SsN_OpeLp,
+        SsN_OpeStartTyp,
+        SsN_OpeStartFirma,
+        SsN_OpeStartNumer,
+        SsN_OpeStartLp,
+        --opcjonalne
+        SsN_OsobaLp,
+        SsN_AkwOsobaLp,
+        SsN_Rodzaj,
+        SsN_Oplata,
+        SsN_TStampDataStart,
+        SsN_Priorytet,
+        SsN_TwXTyp,
+        SsN_TwXFirma,
+        SsN_TwXNumer,
+        SsN_TwXLp,
+        SsN_TrnTyp,
+        SsN_TrnFirma,
+        SsN_TrnNumer,
+        SsN_TrnLp,
+        SsN_Opis,
+        --reszta
+        SsN_AkwTyp,
+        SsN_AkwFirma,
+        SsN_AkwNumer,
+        SsN_AkwLp,
+        SsN_RokMiesiac,
+        SsN_TStampDataStop,
+        SsN_OpeStopTyp,
+        SsN_OpeStopFirma,
+        SsN_OpeStopNumer,
+        SsN_OpeStopLp,
+        --zerowe i puste
+        SsN_ArtTyp,
+        SsN_ArtFirma,
+        SsN_ArtNumer,
+        SsN_ArtLp,
+        SsN_Wersja,
+        SsN_Atrybut1,
+        SsN_Format1,
+        SsN_Wartosc1,
+        SsN_Atrybut2,
+        SsN_Format2,
+        SsN_Wartosc2,
+        SsN_Atrybut3,
+        SsN_Format3,
+        SsN_Wartosc3
+        )values(
+        339, --SsN_GIDTyp
+        @GIDFirma,
+        -1, --SsN_GIDLp
+        --wymagane
+        '',--@Streszczenie,
+        32,--@KntTyp,
+        @GIDFirma,--@KntFirma,
+        @KntNumer,
+        @KntLp,
+        0,--@OpeTyp,
+        0,--@OpeFirma,
+        0,--@OpeNumer,
+        0,--@OpeLp,
+        0,--@OpeStartTyp,
+        0,--@OpeStartFirma,
+        0,--@OpeStartNumer,
+        0,--@OpeStartLp,
+        --opcjonalne
+        0,--isnull(@OsobaLp,0),
+        0,--isnull(@AkwOsobaLp,0),
+        0,--@Rodzaj,
+        0,--@Oplata,
+        0,--@TStampDataStart,
+        0,--@Priorytet,
+        0,--@TwXTyp,
+        0,--@TwXFirma,
+        0,--@TwXNumer,
+        0,--@TwXLp,
+        0,--@TrnTyp,
+        0,--@TrnFirma,
+        0,--@TrnNumer,
+        0,--@TrnLp,
+        '',--@Opis,
+        --reszta
+        0,--isnull(@AkwTyp,0),
+        0,--isnull(@AkwFirma,0),
+        0,--isnull(@AkwNumer,0),
+        0,--isnull(@AkwLp,0),
+        0,--isnull(@RokMiesiac,0),
+        0, --@TStampDataStop, --zakończenie wątku będzie możliwe tylko w ZamknijWatekCRM
+        0, --@OpeStopTyp, --zakończenie wątku będzie możliwe tylko w ZamknijWatekCRM
+        0, --@OpeStopFirma, --zakończenie wątku będzie możliwe tylko w ZamknijWatekCRM
+        0, --@OpeStopNumer, --zakończenie wątku będzie możliwe tylko w ZamknijWatekCRM
+        0, --@OpeStopLp, --zakończenie wątku będzie możliwe tylko w ZamknijWatekCRM
+        --zerowe i puste
+        0, --isnull(@ArtTyp,0),
+        0, --isnull(@ArtFirma,0),
+        0, --isnull(@ArtNumer,0),
+        0, --isnull(@ArtLp,0),
+        '', --isnull(@Wersja,''),
+        '', --isnull(@Atrybut1,''),
+        0, --isnull(@Format1,0),
+        '', --isnull(@Wartosc1,''),
+        '', --isnull(@Atrybut2,''),
+        0, --isnull(@Format2,0),
+        '', --isnull(@Wartosc2,''),
+        '', --isnull(@Atrybut3,''),
+        0, --isnull(@Format3,0),
+        '' --isnull(@Wartosc3,'')
+        )
+
+        if @@error &lt;&gt; 0
+                begin
+						if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+							ROLLBACK TRAN
+                        if @IgnorujBledy is null
+                                RAISERROR ('Błąd podczas dodawania wątku konwersacji - (-33)', 16, 1)
+                        return -33
+                end
+
+        select @SsNNumer = SCOPE_IDENTITY()
+        if @@error &lt;&gt; 0
+                begin
+						if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+							ROLLBACK TRAN
+                        if @IgnorujBledy is null
+                                RAISERROR ('Błąd podczas pobierania numeru wątku konwersacji - (-45)',16,1)
+                        return -45
+                end
+
+        select @GIDLp = 1
+end
+
+
+--Przywiązanie wątka do kontrahenta w etapie
+
+if @CekId &lt;&gt; 0
+        insert into cdn.CRMKontrahenciWatki     (CKW_SsNNumer, CKW_CekID) values (@SsNNumer, @CekId)
+
+if @@error &lt;&gt; 0
+        begin
+				if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+						ROLLBACK TRAN
+                if @IgnorujBledy is null
+                        RAISERROR ('Błąd podczas wiązania wątku konwersacji z kontrahentem w etapie - (-34)', 16, 1)
+                return -34
+        end
+
+
+
+
+--Insert element
+
+
+insert into cdn.SrsElem(
+SsE_GIDTyp,
+SsE_GIDFirma,
+SsE_GIDLp,
+SsE_ElementLp,
+--wymagane
+SsE_GIDNumer,
+SsE_Tytul,
+SsE_ElementTyp,
+SsE_OpeStartTyp,
+SsE_OpeStartFirma,
+SsE_OpeStartNumer,
+SsE_OpeStartLp,
+--opcjonalne
+SsE_OpePTyp,
+SsE_OpePNumer,
+SsE_OpeWNumer,
+SsE_DataWykonania,
+SsE_CzasKonsultacji,
+SsE_CzasDodatkowy,
+SsE_TStampDataStart,
+SsE_RodzajZadania,
+SsE_Priorytet,
+SsE_FlagaStatusu,
+SsE_TSPrzypomnienie,
+SsE_Odleglosc,
+SsE_AkwOsobaLp,
+SsE_TStampTerminOd,
+SsE_TStampTerminDo,
+SsE_Terminarz,
+SsE_CzasPlanowanyJedn,
+SsE_CzasPrzypomnieniaJedn,
+SsE_CdzID,
+SsE_CkeNumer,
+SsE_CkeLp,
+SsE_TypId,
+--reszta
+SsE_AkwTyp,
+SsE_AkwFirma,
+SsE_AkwNumer,
+SsE_AkwLp,
+SsE_TStampDataChange,
+SsE_OpeChangeTyp,
+SsE_OpeChangeFirma,
+SsE_OpeChangeNumer,
+SsE_OpeChangeLp,
+SsE_Opis,
+SsE_CalyDzien
+)values(
+339,
+@GIDFirma,
+@GIDLp,
+@SsEElementLp,
+--wymagane
+@SsNNumer,
+@Tytul,
+@ElementTyp,
+128,--@OpeStartTyp,
+@GIDFirma,--@OpeStartFirma,
+@OpeStartNumer,
+0,--@OpeStartLp,
+--opcjonalne
+case when @OpePTyp = 0 then 128 else @OpePTyp end,
+case when @OpePNumer = 0 then @OpeStartNumer else @OpePNumer end,
+@OpeWNumer,
+@DataWykonania,
+@CzasKonsultacji,
+@CzasDodatkowy,
+@TStampDataStart,
+case when @RodzajZadania = 0 and @ElementTyp = 2  then 1 else @RodzajZadania end ,
+@Priorytet,
+@FlagaStatusu,
+@TSPrzypomnienie,
+@Odleglosc,
+isnull(@AkwOsobaLp,0),
+case when @TStampTerminOd = 0 then @TStampDataStart else  @TStampTerminOd end,
+case when @TStampTerminDo = 0 then @TStampDataStart else  @TStampTerminDo end,
+@Terminarz,
+case when @CzasPlanowanyJedn = 0 then 1 else @CzasPlanowanyJedn end,
+@CzasPrzypomnieniaJedn,
+case when @ZadAuto=1 then @CdzID else 0 end,--@CdzID, -- cdzid jest tylko dla zadan generwoanych automatycznie
+@CkeNumer,
+@CkeLp,
+@TypId,
+--reszta
+isnull(@AkwTyp,0),
+isnull(@AkwFirma,0),
+isnull(@AkwNumer,0),
+isnull(@AkwLp,0),
+@TStampDataStart,
+128,--@OpeStartTyp,
+@GIDFirma,--@OpeStartFirma,
+@OpeStartNumer,
+0,--@OpeStartLp,
+isnull(@Opis,''),
+isnull(@CalyDzien,0)
+)
+
+if @@error &lt;&gt; 0  
+begin
+				if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+						ROLLBACK TRAN
+                if @IgnorujBledy is null
+                        RAISERROR ('Błąd podczas dodawania elementu konwersacji - (-35)', 16, 1)
+                return -35
+end
+
+
+--Powiązanie elementu z kontrahentem i osobą
+
+insert into cdn.CRMSrsKontrahenci(CSK_SseNumer,CSK_SseLp,CSK_KnSNumer,CSK_KnSLp)values(@SsNNumer,@GIDLp,@KntNumer,@KntOsobaLp)
+
+if @@error &lt;&gt; 0
+        begin
+				if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+						ROLLBACK TRAN
+                if @IgnorujBledy is null
+                        RAISERROR ('Błąd podczas wiązania elementu konwersacji z kontrahentem - (-36)', 16, 1)
+                return -36
+        end
+
+if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+	COMMIT TRAN
+
+if @IgnorujSelecty is null
+        select GIDNumer = @SsNNumer, GIDLp = @GIDLp, GIDTyp = 339, GIDFirma = @GIDFirma
+
+--Dodanie obiektów ze wzorca
+if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+	begin tran
+if @CdzId &lt;&gt; 0
+        begin
+                insert into cdn.crmzadaniaobiekty
+                (CZO_CdzID,CZO_SsENumer,CZO_SsELp,CZO_ObiTyp,CZO_ObiNumer,CZO_DataUtworzenia)
+                select 0,@SsNNumer,@GIDLp,CZO_ObiTyp,CZO_ObiNumer,@Now
+                from cdn.crmzadaniaobiekty
+                where czo_cdzid = @CdzID
+        end
+
+if @@error &lt;&gt; 0
+        begin
+				if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+						rollback tran
+				if @IgnorujBledy is null						
+						raiserror('Błąd podczas dodawania obiektów z wzorca zadania - (-37)', 16, 1)
+                return -37
+        end
+        
+if @IgnorujTransakcje is null or @IgnorujTransakcje = 0
+	commit tran
+
+
+--Generwoanie zadań terminarza
+
+-- MSm TID: 174570 begin
+if @OpePTyp = 0
+        set @OpePTyp = 128
+if @OpePNumer = 0
+        set @OpePNumer = @OpeStartNumer
+-- TID: 174570 end
+
+if @Terminarz in (1,2) and @ElementTyp = 2
+        begin
+                if @TSPrzypomnienie = 0
+                        select @Przypomnienie = 0, @CzasPrzypom = 0
+                else
+                        select @Przypomnienie = 1, @CzasPrzypom = @TStampTerminOd - @TSPrzypomnienie
+
+                set @CzasPlanowany = @TStampTerminDo - @TStampTerminOd
+                set @ZadKod = 'Zadanie'
+
+                if @CdzId &gt; 0 --zadania na podstawie wzorca - możemy od razu dodać obiekty
+                        begin
+                                if @ZadAuto = 1 --zadanie etapu wygenerowane automatycznie, do zadania takiego nie dodajemy pracownika operatora jako obiekty
+                                        begin
+                                                if @CekId &lt;&gt; 0 --zadanie auto dla knt w etapie
+                                                        select @ZadKod = 'Zadanie etapu: '+Knt_Akronim+'/'+CKN_Kod+'/'+CKE_Kod from CDN.CRMKntEtapy
+                                                        join CDN.KntKarty on CEK_ID = @CekId and CEK_KntNumer = Knt_GIDNumer
+                                                        join CDN.CRMKampNag on CEK_CKENumer = CKN_GIDNumer
+                                                        join CDN.CRMKampEtapy on CEK_CKENumer = CKE_GIDNumer and CEK_CKELp = CKE_GIDLp
+
+                                                exec @ZadId = CDN.XLNoweZadanieTERMINARZ @Kod=@ZadKod,@Nazwa=@Tytul,@OpeTyp=@OpePTyp,@OpeNumer=@OpePNumer,@ObiTyp=0,@ObiNumer=0,
+                                                @ZrdTyp=339,@ZrdNumer=@SsNNumer,@ZrdLp=@GIDLp,@Przypomnienie=@Przypomnienie,@CzasPrzypomnienia=@CzasPrzypom,@CzasPrzypomnieniaJedn=@CzasPrzypomnieniaJedn,
+                                                @TerminOd=@TStampTerminOd,@Opis=@Opis,@CzasPlanowanyJedn=@CzasPlanowanyJedn, @CzasPlanowany=@CzasPlanowany
+                                        end
+                                else --zadanie na podstawie wzorca, dodajemy prc z ope jako obiekt
+                                        begin
+                                                exec @ZadId = CDN.XLNoweZadanieTERMINARZ @Kod=@ZadKod,@Nazwa=@Tytul,@OpeTyp=@OpePTyp,@OpeNumer=@OpePNumer,@ObiTyp=0,@ObiNumer=0,
+                                                @ZrdTyp=339,@ZrdNumer=@SsNNumer,@ZrdLp=@GIDLp,@Przypomnienie=@Przypomnienie,@CzasPrzypomnienia=@CzasPrzypom,@CzasPrzypomnieniaJedn=@CzasPrzypomnieniaJedn,
+                                                @TerminOd=@TStampTerminOd,@Opis=@Opis,@CzasPlanowanyJedn=@CzasPlanowanyJedn, @CzasPlanowany=@CzasPlanowany, @OpePrcJakoObiekt=1
+                                        end
+                                if @ZadId &gt; 0 -- dodanie obiektów
+                                        begin
+                                                declare cursorZadObiekty cursor fast_forward for
+                                                        select CZO_ObiTyp,CZO_ObiNumer from cdn.CrmZadaniaObiekty where CZO_CDZId = @CdzId
+                                                open cursorZadObiekty
+                                                        while 1=1
+                                                        begin
+                                                                fetch NEXT from cursorZadObiekty into @ZadObiTyp, @ZadObiNumer
+                                                                if @@fetch_status &lt;&gt; 0 break
+                                                                execute CDN.XLDodajObiektDoZadaniaTERMINARZ @ZadId=@ZadId, @ObiTyp = @ZadObiTyp,@ObiNumer = @ZadObiNumer
+                                                        end
+                                                close cursorZadObiekty
+                                                deallocate cursorZadObiekty
+                                        end
+                        end
+                else --zwykłe zadania
+                        begin
+                                exec @ZadId = CDN.XLNoweZadanieTERMINARZ @Kod=@ZadKod,@Nazwa=@Tytul,@OpeTyp=@OpePTyp,@OpeNumer=@OpePNumer,@ObiTyp=0,@ObiNumer=0,
+                                                @ZrdTyp=339,@ZrdNumer=@SsNNumer,@ZrdLp=@GIDLp,@Przypomnienie=@Przypomnienie,@CzasPrzypomnienia=@CzasPrzypom,@CzasPrzypomnieniaJedn=@CzasPrzypomnieniaJedn,
+                                                @TerminOd=@TStampTerminOd,@Opis=@Opis,@CzasPlanowanyJedn=@CzasPlanowanyJedn, @CzasPlanowany=@CzasPlanowany, @OpePrcJakoObiekt=1
+                        end
+        end
+
+SET NOCOUNT OFF
+RETURN @GIDLp
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury XLDodajElementDoWatkuCRM" hidden="False">
+GRANT EXECUTE ON CDN.XLDodajElementDoWatkuCRM TO CDNRaport
+</scriptdef>
+</ROOT>

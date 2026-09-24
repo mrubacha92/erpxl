@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie przestarzałych zakazów operatora" hidden="False">
+set nocount on;
+delete from cdn.OpeZakazy where OpZ_ProcId in(3060,8646,8650,8651,9520,28000,30186,30188,30190,30196,30197,30198,30201,30202,30204,
+30205,30207,30209,30210,30211,30219,30220,30221,30242,30243)
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Usuwanie przestarzałych zakazów stanowiskowych" hidden="False">
+set nocount on;
+delete from cdn.StaZakazy where StZ_ProcId in(3060,8646,8650,8651,9520,28000,30186,30188,30190,30196,30197,30198,30201,30202,30204,
+30205,30207,30209,30210,30211,30219,30220,30221,30242,30243)
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Podział zakazu edycji okresu retro na operatorach" hidden="False">
+set nocount on;
+	insert into cdn.OpeZakazy select [OpZ_OpeTyp], [OpZ_OpeFirma], [OpZ_OpeNumer], [OpZ_OpeLp], 30814, [OpZ_MaskaFormy], [OpZ_MaskaFormyAtr], [OpZ_MaskaFormyExp] from cdn.OpeZakazy where opz_procid = 30537
+set nocount off;
+</scriptdef>
+<scriptdef name="Podział zakazu edycji okresu retro na wzorcach operatorow" hidden="False">
+set nocount on;
+	insert into cdn.StaZakazy select [StZ_StaTyp], [StZ_StaFirma], [StZ_StaNumer], [StZ_StaLp], 30814, [StZ_MaskaFormy], [StZ_MaskaFormyAtr], [StZ_MaskaFormyExp] from cdn.StaZakazy where StZ_ProcID = 30537
+set nocount off;
+</scriptdef>
+</ROOT>

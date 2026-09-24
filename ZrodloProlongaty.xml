@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji ZrodloProlongaty" hidden="True">
+IF EXISTS (SELECT Name,xtype FROM sysobjects WHERE Name='ZrodloProlongaty' AND xtype in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+ drop function CDN.ZrodloProlongaty;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji ZrodloProlongaty" hidden="False">
+CREATE FUNCTION [CDN].[ZrodloProlongaty] (@prle_id int,@prle_lp int)
+RETURNS @wynik TABLE (
+        Typ int,
+        Numer int,
+		Lp int
+	)
+AS
+BEGIN
+        declare @trpNumer int,@trpTyp int,@trpLp int
+		while(1=1)
+		begin
+			select @trpNumer = 0, @trpTyp = 0
+			select @trpNumer = prle_zrdnumer,  @trpTyp = prle_zrdtyp, @trpLp = prle_zrdlp from CDN.ProlongElem where prle_prlnid = @prle_id and PRLE_Lp = @prle_lp 
+			IF not @trpTyp in (7942,7943) break
+			select @prle_lp = trp_prlelp,@prle_id = TrP_GIDNumer from CDN.TraPlat where @trpNumer = trp_gidnumer and @trpTyp = trp_gidtyp and @trpLp = trp_gidlp
+			IF @prle_lp=0 break
+		end
+		insert into @wynik select @trpTyp,@trpNumer,@trpLp
+        RETURN
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji ZrodloProlongaty" hidden="False">
+GRANT SELECT ON CDN.ZrodloProlongaty TO CDNRaport
+</scriptdef>
+</ROOT>

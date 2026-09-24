@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="YMD">
+CREATE FUNCTION CDN.YMD( @Year INT, @Month INT, @Day INT ) 
+RETURNS DATETIME
+AS
+BEGIN
+  RETURN CONVERT( DATETIME, CAST(@Year AS VARCHAR(4))+'.'+CAST(@Month AS VARCHAR(2))+'.'+CAST(@Day AS VARCHAR(2)),102)
+END 
+</functiondef>
+</ROOT>
