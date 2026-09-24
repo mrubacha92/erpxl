@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:26:45 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="TwrAplikacje" ident="14945fab-9334-47d5-99b1-82855610e8b7" prefix="TAP" filename="'Towary.Cdn\!TwrAplikacje'" options=""
+  description="Dodatkowe dane towarów dla aplikacji zewnetrznych" longdescription="" owner="Connect_DSN3" glbx="3" nosql="No"
+  aliases="TwrAplikacjeAlias1 (TAP1)">
+  <columns>
+    <column ident="34e41f66-995d-4ef9-a592-db5e7ef845bd" clarionname="TAP:ObiNumer" sqlname="TAP_ObiNumer" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Numer towaru lub grupy towarowej" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="TwrNumer" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="45c5e71e-2e70-426a-b8ed-d3116429f7ac" clarionname="TAP:ObiTyp" sqlname="TAP_ObiTyp" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="Typ (towar lub grupa towarowa)" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Obi Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="9a19a525-a5f4-4582-86c4-94b6c9ce5591" clarionname="TAP:iMall" sqlname="TAP_iMall" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Czy towar będzie wysyłany do wszystko.pl" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="iMall 24" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="9425a4e7-21b9-494d-852f-7cf097fe9e3f" clarionname="TAP:GrupaiMall" sqlname="TAP_GrupaiMall" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="ID grupy z wszystko.pl, która przypisana jest do towaru (KGT_Id)" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Grupa iMall" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="458525d1-e184-4cc1-bd6b-4554959c6b5e" clarionname="TAP:Status" sqlname="TAP_Status" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Status towaru" longdescription="Określa czy towar jest: zapowiedzią, dostępny (w regularnej sprzedaży), dostępny za zamówienie, niedostępny - możliwe wartości: 0, 1, 2, 3." options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Status" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="853e9928-d402-44a9-acc5-37da8ed13b13" clarionname="TAP:Dostepnosc" sqlname="TAP_Dostepnosc" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Określa czas w jakim towar będzie dostępny w sklepie" longdescription="- możliwe wartości:  0, 1, 2, 3, 4, 5, 6, 7." options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Dostepnosc" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="603e329c-1fae-449e-8757-6affc12f0daa" clarionname="TAP:KontrolaStanow" sqlname="TAP_KontrolaStanow" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Określa czy kontrolowane będą stany towarowe dla towaru" longdescription="możliwe wartości: 0, 1" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Nie kontroluj stanów" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="08550f77-ec0b-4d2e-ae10-29d99ad86712" clarionname="TAP:PodlegaRabatowaniu" sqlname="TAP_PodlegaRabatowaniu" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Określa czy towar podlega rabatowaniu" longdescription="możliwe wartości: 0, 1." options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Podlega rabatowaniu" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="a37716a3-f3fc-4098-9614-308db87caca3" clarionname="TAP:IndywKosztDst" sqlname="TAP_IndywKosztDst" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Indywidualny koszt dostawy" longdescription="możliwe wartości: 0, 1." options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Indywidualny koszt dostawy" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="76c2e969-549f-47fc-92a8-0a2b35d8e6ee" clarionname="TAP:Flagi" sqlname="TAP_Flagi" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Flagi bitowe jakie można przypisać do towaru" longdescription="2 - Nowość,
+4 - Promocja,
+8 - Produkt z gazetki,
+16 - Produkt polecany,
+32 - Wyprzedaż,
+64 - Super jakość,
+128 - Super cena,
+256 - Najlepiej oceniany,
+512 - Rekomendacja sprzedawcy." options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Flagi" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="a71a903d-429a-48e4-bdec-a6934d6d9399" clarionname="TAP:CzasModyfikacji" sqlname="TAP_CzasModyfikacji" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Czas ostatniej modyfikacji" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Czas Modyfikacji" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="99efa14e-de4f-43be-98d8-4bb13a5be94e" clarionname="TAP:KosztDstWartosc" sqlname="TAP_KosztDstWartosc" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype="DECIMAL(15,2)"
+      size="15" places="2" description="Wartość kosztu dostawy" longdescription="" options=""
+      picture="@n-21.2" initial="" justification.type="R" justification.indent="2"
+      header="Koszt dostawy" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="6e190bda-54d2-4a32-bc6f-5caa0b9f6cb3" clarionname="TAP:GrupaeSklep" sqlname="TAp_GrupaeSklep" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Grupa domyślna e-Sklep" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Grupa domyślna" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="88a1362c-b514-42c8-bdbf-314b0f301869" clarionname="TAP:ZapowiedzDataOd" sqlname="TAp_ZapowiedzDataOd" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Od kiedy towar dostępny w sklepie, gdy zapowiedziany" longdescription="" options=""
+      picture="@d17b" initial="" justification.type="L" justification.indent="0"
+      header="Dostępny od" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="4d9124b7-7029-45d0-a9a5-288330bba8ed" clarionname="TAP:TwrNadrzedny" sqlname="TAp_TwrNadrzedny" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Numer towaru nadrzędnego" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Towar nadrzędny" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="8090f4a9-6f4f-4dfa-9c26-db061bca10ff" clarionname="TAP:Primary" sqlname="TAPPrimary" description="wg obiektu" longdescription="" options="" primary="Yes" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="34e41f66-995d-4ef9-a592-db5e7ef845bd" clarionname="TAP:ObiNumer" sqlname="TAP_ObiNumer" nosql="No"/>
+         <indexcolumn ident="45c5e71e-2e70-426a-b8ed-d3116429f7ac" clarionname="TAP:ObiTyp" sqlname="TAP_ObiTyp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="79c58b67-9c1c-4e82-811d-dbdc9a87c1f4" clarionname="TAP:KeyGrupaiMall" sqlname="TAPGrupaiMall" description="wg grupy iMall" longdescription="" options="" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="9425a4e7-21b9-494d-852f-7cf097fe9e3f" clarionname="TAP:GrupaiMall" sqlname="TAP_GrupaiMall" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="119c1963-91ac-4905-b4a7-0c4f97267583" clarionname="TAP:KeyGrupaeSklep" sqlname="TApGrupaeSklep" description="wg grupy domyślnej e-Sklep" longdescription="" options="NO_SQL()" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="45c5e71e-2e70-426a-b8ed-d3116429f7ac" clarionname="TAP:ObiTyp" sqlname="TAP_ObiTyp" nosql="No"/>
+         <indexcolumn ident="34e41f66-995d-4ef9-a592-db5e7ef845bd" clarionname="TAP:ObiNumer" sqlname="TAP_ObiNumer" nosql="No"/>
+         <indexcolumn ident="6e190bda-54d2-4a32-bc6f-5caa0b9f6cb3" clarionname="TAP:GrupaeSklep" sqlname="TAp_GrupaeSklep" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="fa402f09-72f4-4877-a8c9-8e82fd27e132" clarionname="TAP:KeyTwrNadrzedny" sqlname="TApTwrNadrzedny" description="wg towaru nadrzędnego" longdescription="" options="NO_SQL()" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="4d9124b7-7029-45d0-a9a5-288330bba8ed" clarionname="TAP:TwrNadrzedny" sqlname="TAp_TwrNadrzedny" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+    <relation type="MANY:1" onupdate="" ondelete="CASCADE"
+        options="SQL_CONDITIONAL(#R#Twr_GIDTyp=16)"
+        comments="" nosql="No" setnull="No"
+        conditional="#R#Twr_GIDTyp=16"
+        parent="TwrKarty" primaryname="Twr:PrimaryWithType" primarysqlname="Primary" parenthandler="TwrKarty_DeleteHandler" parentlink="TwrKarty"
+        child="TwrAplikacje" foreignname="TAP:Primary" foreignsqlname="TAPPrimary" childhandler="TwrAplikacje_InsertUpdateHandler" childlink="TwrAplikacje">
+      <relationcolumn
+        parentident="a143913a-7" parentname="Twr:GIDTyp" parentsqlname="Twr_GIDTyp"
+        childident="45c5e71e-2e70-426a-b8ed-d3116429f7ac" childname="TAP:ObiTyp" childsqlname="TAP_ObiTyp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="a2f6f0fe-d" parentname="Twr:GIDNumer" parentsqlname="Twr_GIDNumer"
+        childident="34e41f66-995d-4ef9-a592-db5e7ef845bd" childname="TAP:ObiNumer" childsqlname="TAP_ObiNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="CASCADE"
+        options="SQL_CONDITIONAL(#R#TwW_GrpTyp=-16)"
+        comments="" nosql="No" setnull="No"
+        conditional="#R#TwW_GrpTyp=-16"
+        parent="TwrWzorce" primaryname="TwW:KeyGrupa" primarysqlname="TwWGrupa" parenthandler="TwrWzorce_DeleteHandler" parentlink="TwrWzorce"
+        child="TwrAplikacje" foreignname="TAP:Primary" foreignsqlname="TAPPrimary" childhandler="TwrAplikacje_InsertUpdateHandler" childlink="TwrAplikacje">
+      <relationcolumn
+        parentident="17a27859-3" parentname="TwW:GrpTyp" parentsqlname="TwW_GrpTyp"
+        childident="45c5e71e-2e70-426a-b8ed-d3116429f7ac" childname="TAP:ObiTyp" childsqlname="TAP_ObiTyp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="c099a3bd-8" parentname="TwW:GrpNumer" parentsqlname="TwW_GrpNumer"
+        childident="34e41f66-995d-4ef9-a592-db5e7ef845bd" childname="TAP:ObiNumer" childsqlname="TAP_ObiNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="RESTRICT"
+        options="SQL_SETNULL()"
+        comments="" nosql="No" setnull="Yes"
+        conditional=""
+        parent="KatGrupyTwr" primaryname="KGT:Primary" primarysqlname="KGTPrimary" parenthandler="KatGrupyTwr_DeleteHandler" parentlink="KatGrupyTwr"
+        child="TwrAplikacje" foreignname="TAP:KeyGrupaiMall" foreignsqlname="TAPGrupaiMall" childhandler="TwrAplikacje_InsertUpdateHandler" childlink="TwrAplikacje">
+      <relationcolumn
+        parentident="d092b011-2" parentname="KGT:Id" parentsqlname="KGT_Id"
+        childident="9425a4e7-21b9-494d-852f-7cf097fe9e3f" childname="TAP:GrupaiMall" childsqlname="TAP_GrupaiMall" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="RESTRICT"
+        options="SQL_CONDITIONAL(#P#TAP_GrupaeSklep&gt;0),WARNING_DELETE(Nie można usunąć elementu z grupy domyślnej dla aplikacji zewnętrznej.;;)"
+        comments="" nosql="No" setnull="No"
+        conditional="TAP_GrupaeSklep&gt;0"
+        parent="TwrGrupy" primaryname="TwG:Primary" primarysqlname="TwGPrimary" parenthandler="TwrGrupy_DeleteHandler" parentlink="TwrGrupy"
+        child="TwrAplikacje" foreignname="TAP:KeyGrupaeSklep" foreignsqlname="TApGrupaeSklep" childhandler="TwrAplikacje_InsertUpdateHandler" childlink="TwrAplikacje">
+      <relationcolumn
+        parentident="df475ba8-0" parentname="TwG:GIDTyp" parentsqlname="TwG_GIDTyp"
+        childident="45c5e71e-2e70-426a-b8ed-d3116429f7ac" childname="TAP:ObiTyp" childsqlname="TAP_ObiTyp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="76cbb11d-e" parentname="TwG:GIDNumer" parentsqlname="TwG_GIDNumer"
+        childident="34e41f66-995d-4ef9-a592-db5e7ef845bd" childname="TAP:ObiNumer" childsqlname="TAP_ObiNumer" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="bac96685-7" parentname="TwG:GrOTyp" parentsqlname="TwG_GrOTyp"
+        childident="" childname="" childsqlname="" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="d404b188-4" parentname="TwG:GrONumer" parentsqlname="TwG_GrONumer"
+        childident="6e190bda-54d2-4a32-bc6f-5caa0b9f6cb3" childname="TAP:GrupaeSklep" childsqlname="TAp_GrupaeSklep" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="RESTRICT"
+        options="SQL_SETNULL(),WARNING_DELETE(Nie można usunąć towaru, ponieważ jest ustawiony jako nadrzędny.;;)"
+        comments="" nosql="No" setnull="Yes"
+        conditional=""
+        parent="TwrKartyAlias" primaryname="TwrA:Primary" primarysqlname="TwrPrimary" parenthandler="TwrKartyAlias_DeleteHandler" parentlink="TwrKarty"
+        child="TwrAplikacje" foreignname="TAP:KeyTwrNadrzedny" foreignsqlname="TApTwrNadrzedny" childhandler="TwrAplikacje_InsertUpdateHandler" childlink="TwrAplikacje">
+      <relationcolumn
+        parentident="a2f6f0fe-d" parentname="TwrA:GIDNumer" parentsqlname="Twr_GIDNumer"
+        childident="4d9124b7-7029-45d0-a9a5-288330bba8ed" childname="TAP:TwrNadrzedny" childsqlname="TAp_TwrNadrzedny" isinsqlprimary="Yes" />
+    </relation>
+  
+  </relations>
+</table>
+</ROOT>

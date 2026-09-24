@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<foreigndef name="AnW_AnZTypCheckType">
+ALTER TABLE CDN.AnWyniki DROP CONSTRAINT AnW_AnZTypCheckType
+</foreigndef>
+<foreigndef name="AnW_AnZTypCheckType CHECK(AnW_AnZTyp=928)">
+ALTER TABLE CDN.AnWyniki ADD CONSTRAINT AnW_AnZTypCheckType CHECK(AnW_AnZTyp=928)
+</foreigndef>
+<foreigndef name="BwS_KatTypCheckType">
+ALTER TABLE CDN.BwSubskrypcje DROP CONSTRAINT BwS_KatTypCheckType
+</foreigndef>
+<foreigndef name="BwS_KatTypCheckType CHECK(BwS_KatTyp=2464)">
+ALTER TABLE CDN.BwSubskrypcje ADD CONSTRAINT BwS_KatTypCheckType CHECK(BwS_KatTyp=2464)
+</foreigndef>
+<foreigndef name="BwR_ArtTypCheckType">
+ALTER TABLE CDN.BwRelacje DROP CONSTRAINT BwR_ArtTypCheckType
+</foreigndef>
+<foreigndef name="BwR_ArtTypCheckType CHECK(BwR_ArtTyp=2456)">
+ALTER TABLE CDN.BwRelacje ADD CONSTRAINT BwR_ArtTypCheckType CHECK(BwR_ArtTyp=2456)
+</foreigndef>
+<foreigndef name="BwL_ArtTypCheckType">
+ALTER TABLE CDN.BwSlowa DROP CONSTRAINT BwL_ArtTypCheckType
+</foreigndef>
+<foreigndef name="BwL_ArtTypCheckType CHECK(BwL_ArtTyp=2456)">
+ALTER TABLE CDN.BwSlowa ADD CONSTRAINT BwL_ArtTypCheckType CHECK(BwL_ArtTyp=2456)
+</foreigndef>
+<foreigndef name="CCh_GIDTypCheckType">
+ALTER TABLE CDN.Cechy DROP CONSTRAINT CCh_GIDTypCheckType
+</foreigndef>
+<foreigndef name="CCh_GIDTypCheckType CHECK(CCh_GIDTyp=192)">
+ALTER TABLE CDN.Cechy ADD CONSTRAINT CCh_GIDTypCheckType CHECK(CCh_GIDTyp=192)
+</foreigndef>
+<foreigndef name="DsO_DstTypCheckType">
+ALTER TABLE CDN.DstOpisy DROP CONSTRAINT DsO_DstTypCheckType
+</foreigndef>
+<foreigndef name="DsO_DstTypCheckType CHECK(DsO_DstTyp=160)">
+ALTER TABLE CDN.DstOpisy ADD CONSTRAINT DsO_DstTypCheckType CHECK(DsO_DstTyp=160)
+</foreigndef>
+<foreigndef name="ImE_GIDTypCheckType">
+ALTER TABLE CDN.ImpElem DROP CONSTRAINT ImE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="ImE_GIDTypCheckType CHECK(ImE_GIDTyp IN (3344,3352))">
+ALTER TABLE CDN.ImpElem ADD CONSTRAINT ImE_GIDTypCheckType CHECK(ImE_GIDTyp IN (3344,3352))
+</foreigndef>
+<foreigndef name="InM_MagTypCheckType">
+ALTER TABLE CDN.InwMag DROP CONSTRAINT InM_MagTypCheckType
+</foreigndef>
+<foreigndef name="InM_MagTypCheckType CHECK(InM_MagTyp=208)">
+ALTER TABLE CDN.InwMag ADD CONSTRAINT InM_MagTypCheckType CHECK(InM_MagTyp=208)
+</foreigndef>
+<foreigndef name="KnA_KntTypCheckType">
+ALTER TABLE CDN.KntAdresy DROP CONSTRAINT KnA_KntTypCheckType
+</foreigndef>
+<foreigndef name="KnA_KntTypCheckType CHECK(KnA_KntTyp=32)">
+ALTER TABLE CDN.KntAdresy ADD CONSTRAINT KnA_KntTypCheckType CHECK(KnA_KntTyp=32)
+</foreigndef>
+<foreigndef name="KLS_KntTypCheckType">
+ALTER TABLE CDN.KntLimityS DROP CONSTRAINT KLS_KntTypCheckType
+</foreigndef>
+<foreigndef name="KLS_KntTypCheckType CHECK(KLS_KntTyp=32)">
+ALTER TABLE CDN.KntLimityS ADD CONSTRAINT KLS_KntTypCheckType CHECK(KLS_KntTyp=32)
+</foreigndef>
+<foreigndef name="SsN_KntTypCheckType">
+ALTER TABLE CDN.SrsNag DROP CONSTRAINT SsN_KntTypCheckType
+</foreigndef>
+<foreigndef name="SsN_KntTypCheckType CHECK(SsN_KntTyp=32)">
+ALTER TABLE CDN.SrsNag ADD CONSTRAINT SsN_KntTypCheckType CHECK(SsN_KntTyp=32)
+</foreigndef>
+<foreigndef name="KTw_KntTypCheckType">
+ALTER TABLE CDN.KntTowary DROP CONSTRAINT KTw_KntTypCheckType
+</foreigndef>
+<foreigndef name="KTw_KntTypCheckType CHECK(KTw_KntTyp=32)">
+ALTER TABLE CDN.KntTowary ADD CONSTRAINT KTw_KntTypCheckType CHECK(KTw_KntTyp=32)
+</foreigndef>
+<foreigndef name="KnS_KntTypCheckType">
+ALTER TABLE CDN.KntOsoby DROP CONSTRAINT KnS_KntTypCheckType
+</foreigndef>
+<foreigndef name="KnS_KntTypCheckType CHECK(KnS_KntTyp=32)">
+ALTER TABLE CDN.KntOsoby ADD CONSTRAINT KnS_KntTypCheckType CHECK(KnS_KntTyp=32)
+</foreigndef>
+<foreigndef name="KnK_KntTypCheckType">
+ALTER TABLE CDN.KntKontakty DROP CONSTRAINT KnK_KntTypCheckType
+</foreigndef>
+<foreigndef name="KnK_KntTypCheckType CHECK(KnK_KntTyp=32)">
+ALTER TABLE CDN.KntKontakty ADD CONSTRAINT KnK_KntTypCheckType CHECK(KnK_KntTyp=32)
+</foreigndef>
+<foreigndef name="KnO_KntTypCheckType">
+ALTER TABLE CDN.KntOpisy DROP CONSTRAINT KnO_KntTypCheckType
+</foreigndef>
+<foreigndef name="KnO_KntTypCheckType CHECK(KnO_KntTyp=32)">
+ALTER TABLE CDN.KntOpisy ADD CONSTRAINT KnO_KntTypCheckType CHECK(KnO_KntTyp=32)
+</foreigndef>
+<foreigndef name="KnK_OpeTypCheckType">
+ALTER TABLE CDN.KntKontakty DROP CONSTRAINT KnK_OpeTypCheckType
+</foreigndef>
+<foreigndef name="KnK_OpeTypCheckType CHECK(KnK_OpeTyp=128)">
+ALTER TABLE CDN.KntKontakty ADD CONSTRAINT KnK_OpeTypCheckType CHECK(KnK_OpeTyp=128)
+</foreigndef>
+<foreigndef name="KTw_TwrTypCheckType">
+ALTER TABLE CDN.KntTowary DROP CONSTRAINT KTw_TwrTypCheckType
+</foreigndef>
+<foreigndef name="KTw_TwrTypCheckType CHECK(KTw_TwrTyp=16)">
+ALTER TABLE CDN.KntTowary ADD CONSTRAINT KTw_TwrTypCheckType CHECK(KTw_TwrTyp=16)
+</foreigndef>
+<foreigndef name="KSE_GIDTypCheckType">
+ALTER TABLE CDN.KsoElem DROP CONSTRAINT KSE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="KSE_GIDTypCheckType CHECK(KSE_GIDTyp=2752 )">
+ALTER TABLE CDN.KsoElem ADD CONSTRAINT KSE_GIDTypCheckType CHECK(KSE_GIDTyp=2752 )
+</foreigndef>
+<foreigndef name="MgW_MagTypCheckType">
+ALTER TABLE CDN.MagWybor DROP CONSTRAINT MgW_MagTypCheckType
+</foreigndef>
+<foreigndef name="MgW_MagTypCheckType CHECK(MgW_MagTyp=208)">
+ALTER TABLE CDN.MagWybor ADD CONSTRAINT MgW_MagTypCheckType CHECK(MgW_MagTyp=208)
+</foreigndef>
+<foreigndef name="ReM_MagTypCheckType">
+ALTER TABLE CDN.RezMagazyny DROP CONSTRAINT ReM_MagTypCheckType
+</foreigndef>
+<foreigndef name="ReM_MagTypCheckType CHECK(ReM_MagTyp=208)">
+ALTER TABLE CDN.RezMagazyny ADD CONSTRAINT ReM_MagTypCheckType CHECK(ReM_MagTyp=208)
+</foreigndef>
+<foreigndef name="TwZ_MagTypCheckType">
+ALTER TABLE CDN.TwrZasoby DROP CONSTRAINT TwZ_MagTypCheckType
+</foreigndef>
+<foreigndef name="TwZ_MagTypCheckType CHECK(TwZ_MagTyp=208)">
+ALTER TABLE CDN.TwrZasoby ADD CONSTRAINT TwZ_MagTypCheckType CHECK(TwZ_MagTyp=208)
+</foreigndef>
+<foreigndef name="MDE_GIDTypCheckType">
+ALTER TABLE CDN.MemDokElem DROP CONSTRAINT MDE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="MDE_GIDTypCheckType CHECK(MDE_GIDTyp=4128)">
+ALTER TABLE CDN.MemDokElem ADD CONSTRAINT MDE_GIDTypCheckType CHECK(MDE_GIDTyp=4128)
+</foreigndef>
+<foreigndef name="MEE_GIDTypCheckType">
+ALTER TABLE CDN.MemElem DROP CONSTRAINT MEE_GIDTypCheckType
+
+</foreigndef>
+<foreigndef name="NtE_GIDTypCheckType">
+ALTER TABLE CDN.NtsElem DROP CONSTRAINT NtE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="NtE_GIDTypCheckType CHECK(NtE_GIDTyp=320)">
+ALTER TABLE CDN.NtsElem ADD CONSTRAINT NtE_GIDTypCheckType CHECK(NtE_GIDTyp=320)
+</foreigndef>
+<foreigndef name="NtN_OpeTypCheckType">
+ALTER TABLE CDN.NtsNag DROP CONSTRAINT NtN_OpeTypCheckType
+</foreigndef>
+<foreigndef name="NtN_OpeTypCheckType CHECK(NtN_OpeTyp=128)">
+ALTER TABLE CDN.NtsNag ADD CONSTRAINT NtN_OpeTypCheckType CHECK(NtN_OpeTyp=128)
+</foreigndef>
+<foreigndef name="OpC_OpeTypCheckType">
+ALTER TABLE CDN.OpeCentra DROP CONSTRAINT OpC_OpeTypCheckType
+</foreigndef>
+<foreigndef name="OpC_OpeTypCheckType CHECK(OpC_OpeTyp=128)">
+ALTER TABLE CDN.OpeCentra ADD CONSTRAINT OpC_OpeTypCheckType CHECK(OpC_OpeTyp=128)
+</foreigndef>
+<foreigndef name="OSG_OpeTypCheckType">
+ALTER TABLE CDN.OpeSkillGrupa DROP CONSTRAINT OSG_OpeTypCheckType
+</foreigndef>
+<foreigndef name="OSG_OpeTypCheckType CHECK(OSG_OpeTyp=128)">
+ALTER TABLE CDN.OpeSkillGrupa ADD CONSTRAINT OSG_OpeTypCheckType CHECK(OSG_OpeTyp=128)
+</foreigndef>
+<foreigndef name="OpZ_OpeTypCheckType">
+ALTER TABLE CDN.OpeZakazy DROP CONSTRAINT OpZ_OpeTypCheckType
+</foreigndef>
+<foreigndef name="OpZ_OpeTypCheckType CHECK(OpZ_OpeTyp=128)">
+ALTER TABLE CDN.OpeZakazy ADD CONSTRAINT OpZ_OpeTypCheckType CHECK(OpZ_OpeTyp=128)
+</foreigndef>
+<foreigndef name="ZWE_OpeTypCheckType">
+ALTER TABLE CDN.ZlecWewElem DROP CONSTRAINT ZWE_OpeTypCheckType
+</foreigndef>
+<foreigndef name="ZWE_OpeTypCheckType CHECK(ZWE_OpeTyp=128)">
+ALTER TABLE CDN.ZlecWewElem ADD CONSTRAINT ZWE_OpeTypCheckType CHECK(ZWE_OpeTyp=128)
+</foreigndef>
+<foreigndef name="OpO_OpeTypCheckType">
+ALTER TABLE CDN.OpeOpisy DROP CONSTRAINT OpO_OpeTypCheckType
+</foreigndef>
+<foreigndef name="OpO_OpeTypCheckType CHECK(OpO_OpeTyp=128)">
+ALTER TABLE CDN.OpeOpisy ADD CONSTRAINT OpO_OpeTypCheckType CHECK(OpO_OpeTyp=128)
+</foreigndef>
+<foreigndef name="KAZ_KAOTypCheckType">
+ALTER TABLE CDN.Zapisy DROP CONSTRAINT KAZ_KAOTypCheckType
+</foreigndef>
+<foreigndef name="KAZ_KAOTypCheckType CHECK(KAZ_KAOTyp=768)">
+ALTER TABLE CDN.Zapisy ADD CONSTRAINT KAZ_KAOTypCheckType CHECK(KAZ_KAOTyp=768)
+</foreigndef>
+<foreigndef name="KRO_KAOTypCheckType">
+ALTER TABLE CDN.RejOp DROP CONSTRAINT KRO_KAOTypCheckType
+</foreigndef>
+<foreigndef name="KRO_KAOTypCheckType CHECK(KRO_KAOTyp=768)">
+ALTER TABLE CDN.RejOp ADD CONSTRAINT KRO_KAOTypCheckType CHECK(KRO_KAOTyp=768)
+</foreigndef>
+<foreigndef name="PIE_GIDTypCheckType">
+ALTER TABLE CDN.PIKElem DROP CONSTRAINT PIE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="PDE_GIDTypCheckType">
+ALTER TABLE CDN.PodzielnikElem DROP CONSTRAINT PDE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="PDE_GIDTypCheckType CHECK(PDE_GIDTyp=7168)">
+ALTER TABLE CDN.PodzielnikElem ADD CONSTRAINT PDE_GIDTypCheckType CHECK(PDE_GIDTyp=7168)
+</foreigndef>
+<foreigndef name="PDP_PdnTypCheckType">
+ALTER TABLE CDN.PodzielnikPrac DROP CONSTRAINT PDP_PdnTypCheckType
+</foreigndef>
+<foreigndef name="PDP_PdnTypCheckType CHECK(PDP_PdnTyp=7168)">
+ALTER TABLE CDN.PodzielnikPrac ADD CONSTRAINT PDP_PdnTypCheckType CHECK(PDP_PdnTyp=7168)
+</foreigndef>
+<foreigndef name="PDZ_PdNTypCheckType">
+ALTER TABLE CDN.PodzielnikZElem DROP CONSTRAINT PDZ_PdNTypCheckType
+</foreigndef>
+<foreigndef name="PDZ_PdNTypCheckType CHECK(PDZ_PdNTyp=7168)">
+ALTER TABLE CDN.PodzielnikZElem ADD CONSTRAINT PDZ_PdNTypCheckType CHECK(PDZ_PdNTyp=7168)
+</foreigndef>
+<foreigndef name="PDP_PrcTypCheckType">
+ALTER TABLE CDN.PodzielnikPrac DROP CONSTRAINT PDP_PrcTypCheckType
+</foreigndef>
+<foreigndef name="PDP_PrcTypCheckType CHECK(PDP_PrcTyp=944)">
+ALTER TABLE CDN.PodzielnikPrac ADD CONSTRAINT PDP_PrcTypCheckType CHECK(PDP_PrcTyp=944)
+</foreigndef>
+<foreigndef name="PRW_GIDTypCheckType">
+ALTER TABLE CDN.PrcWarunki DROP CONSTRAINT PRW_GIDTypCheckType
+</foreigndef>
+<foreigndef name="PRW_GIDTypCheckType CHECK(PRW_GIDTyp=944)">
+ALTER TABLE CDN.PrcWarunki ADD CONSTRAINT PRW_GIDTypCheckType CHECK(PRW_GIDTyp=944)
+</foreigndef>
+<foreigndef name="ReE_GIDTypCheckType">
+ALTER TABLE CDN.RecElem DROP CONSTRAINT ReE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="ReE_GIDTypCheckType CHECK(ReE_GIDTyp=112)">
+ALTER TABLE CDN.RecElem ADD CONSTRAINT ReE_GIDTypCheckType CHECK(ReE_GIDTyp=112)
+</foreigndef>
+<foreigndef name="ReN_TwrTypCheckType">
+ALTER TABLE CDN.RecNag DROP CONSTRAINT ReN_TwrTypCheckType
+</foreigndef>
+<foreigndef name="ReN_TwrTypCheckType CHECK(ReN_TwrTyp=16)">
+ALTER TABLE CDN.RecNag ADD CONSTRAINT ReN_TwrTypCheckType CHECK(ReN_TwrTyp=16)
+</foreigndef>
+<foreigndef name="KRO_KARTypCheckType">
+ALTER TABLE CDN.RejOp DROP CONSTRAINT KRO_KARTypCheckType
+</foreigndef>
+<foreigndef name="KRO_KARTypCheckType CHECK(KRO_KARTyp=752)">
+ALTER TABLE CDN.RejOp ADD CONSTRAINT KRO_KARTypCheckType CHECK(KRO_KARTyp=752)
+</foreigndef>
+<foreigndef name="SZ_SCTypCheckType">
+ALTER TABLE CDN.SCZasoby DROP CONSTRAINT SZ_SCTypCheckType
+</foreigndef>
+<foreigndef name="SZ_SCTypCheckType CHECK(SZ_SCTyp=336)">
+ALTER TABLE CDN.SCZasoby ADD CONSTRAINT SZ_SCTypCheckType CHECK(SZ_SCTyp=336)
+</foreigndef>
+<foreigndef name="SIW_GIDTypCheckType">
+ALTER TABLE CDN.SISWartosci DROP CONSTRAINT SIW_GIDTypCheckType
+</foreigndef>
+<foreigndef name="SIW_GIDTypCheckType CHECK(SIW_GIDTyp=2736)">
+ALTER TABLE CDN.SISWartosci ADD CONSTRAINT SIW_GIDTypCheckType CHECK(SIW_GIDTyp=2736)
+</foreigndef>
+<foreigndef name="Skc_TwrTypCheckType">
+ALTER TABLE CDN.SkladnikiCelne DROP CONSTRAINT Skc_TwrTypCheckType
+</foreigndef>
+<foreigndef name="Skc_TwrTypCheckType CHECK(Skc_TwrTyp=16)">
+ALTER TABLE CDN.SkladnikiCelne ADD CONSTRAINT Skc_TwrTypCheckType CHECK(Skc_TwrTyp=16)
+</foreigndef>
+<foreigndef name="SsE_GIDTypCheckType">
+ALTER TABLE CDN.SrsElem DROP CONSTRAINT SsE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="SsE_GIDTypCheckType CHECK(SsE_GIDTyp=339)">
+ALTER TABLE CDN.SrsElem ADD CONSTRAINT SsE_GIDTypCheckType CHECK(SsE_GIDTyp=339)
+</foreigndef>
+<foreigndef name="SsI_RejTypCheckType">
+ALTER TABLE CDN.SrsInstalacje DROP CONSTRAINT SsI_RejTypCheckType
+</foreigndef>
+<foreigndef name="SsI_RejTypCheckType CHECK(SsI_RejTyp=2608)">
+ALTER TABLE CDN.SrsInstalacje ADD CONSTRAINT SsI_RejTypCheckType CHECK(SsI_RejTyp=2608)
+</foreigndef>
+<foreigndef name="SEZ_GIDTypCheckType">
+ALTER TABLE CDN.SrtSezon DROP CONSTRAINT SEZ_GIDTypCheckType
+</foreigndef>
+<foreigndef name="SEZ_GIDTypCheckType CHECK(SEZ_GIDTyp=368)">
+ALTER TABLE CDN.SrtSezon ADD CONSTRAINT SEZ_GIDTypCheckType CHECK(SEZ_GIDTyp=368)
+</foreigndef>
+<foreigndef name="SrO_SrtTypCheckType">
+ALTER TABLE CDN.SrtOpisy DROP CONSTRAINT SrO_SrtTypCheckType
+</foreigndef>
+<foreigndef name="SrO_SrtTypCheckType CHECK(SrO_SrtTyp=368)">
+ALTER TABLE CDN.SrtOpisy ADD CONSTRAINT SrO_SrtTypCheckType CHECK(SrO_SrtTyp=368)
+</foreigndef>
+<foreigndef name="SrK_SrtTypCheckType">
+ALTER TABLE CDN.SrtKwoty DROP CONSTRAINT SrK_SrtTypCheckType
+</foreigndef>
+<foreigndef name="SrK_SrtTypCheckType CHECK(SrK_SrtTyp=368)">
+ALTER TABLE CDN.SrtKwoty ADD CONSTRAINT SrK_SrtTypCheckType CHECK(SrK_SrtTyp=368)
+</foreigndef>
+<foreigndef name="StO_StaTypCheckType">
+ALTER TABLE CDN.StaOpisy DROP CONSTRAINT StO_StaTypCheckType
+</foreigndef>
+<foreigndef name="StO_StaTypCheckType CHECK(StO_StaTyp=224)">
+ALTER TABLE CDN.StaOpisy ADD CONSTRAINT StO_StaTypCheckType CHECK(StO_StaTyp=224)
+</foreigndef>
+<foreigndef name="StZ_StaTypCheckType">
+ALTER TABLE CDN.StaZakazy DROP CONSTRAINT StZ_StaTypCheckType
+</foreigndef>
+<foreigndef name="StZ_StaTypCheckType CHECK(StZ_StaTyp=224)">
+ALTER TABLE CDN.StaZakazy ADD CONSTRAINT StZ_StaTypCheckType CHECK(StZ_StaTyp=224)
+</foreigndef>
+<foreigndef name="StK_StaTypCheckType">
+ALTER TABLE CDN.StaKonfig DROP CONSTRAINT StK_StaTypCheckType
+</foreigndef>
+<foreigndef name="StK_StaTypCheckType CHECK(StK_StaTyp=224)">
+ALTER TABLE CDN.StaKonfig ADD CONSTRAINT StK_StaTypCheckType CHECK(StK_StaTyp=224)
+</foreigndef>
+<foreigndef name="TwC_TwrTypCheckType">
+ALTER TABLE CDN.TwrCeny DROP CONSTRAINT TwC_TwrTypCheckType
+</foreigndef>
+<foreigndef name="TwC_TwrTypCheckType CHECK(TwC_TwrTyp=16)">
+ALTER TABLE CDN.TwrCeny ADD CONSTRAINT TwC_TwrTypCheckType CHECK(TwC_TwrTyp=16)
+</foreigndef>
+<foreigndef name="TWD_TwrTypCheckType">
+ALTER TABLE CDN.TwrDost DROP CONSTRAINT TWD_TwrTypCheckType
+</foreigndef>
+<foreigndef name="TWD_TwrTypCheckType CHECK(TWD_TwrTyp=16)">
+ALTER TABLE CDN.TwrDost ADD CONSTRAINT TWD_TwrTypCheckType CHECK(TWD_TwrTyp=16)
+</foreigndef>
+<foreigndef name="TwJ_TwrTypCheckType">
+ALTER TABLE CDN.TwrJm DROP CONSTRAINT TwJ_TwrTypCheckType
+</foreigndef>
+<foreigndef name="TwJ_TwrTypCheckType CHECK(TwJ_TwrTyp=16)">
+ALTER TABLE CDN.TwrJm ADD CONSTRAINT TwJ_TwrTypCheckType CHECK(TwJ_TwrTyp=16)
+</foreigndef>
+<foreigndef name="Tpm_TwrTypCheckType">
+ALTER TABLE CDN.TwrParMag DROP CONSTRAINT Tpm_TwrTypCheckType
+</foreigndef>
+<foreigndef name="Tpm_TwrTypCheckType CHECK(Tpm_TwrTyp=16)">
+ALTER TABLE CDN.TwrParMag ADD CONSTRAINT Tpm_TwrTypCheckType CHECK(Tpm_TwrTyp=16)
+</foreigndef>
+<foreigndef name="TwO_TwrTypCheckType">
+ALTER TABLE CDN.TwrOpisy DROP CONSTRAINT TwO_TwrTypCheckType
+</foreigndef>
+<foreigndef name="TwO_TwrTypCheckType CHECK(TwO_TwrTyp=16)">
+ALTER TABLE CDN.TwrOpisy ADD CONSTRAINT TwO_TwrTypCheckType CHECK(TwO_TwrTyp=16)
+</foreigndef>
+<foreigndef name="URO_GIDTypCheckType">
+ALTER TABLE CDN.UrzedyOpisy DROP CONSTRAINT URO_GIDTypCheckType
+</foreigndef>
+<foreigndef name="URO_GIDTypCheckType CHECK(URO_GIDTyp=4304)">
+ALTER TABLE CDN.UrzedyOpisy ADD CONSTRAINT URO_GIDTypCheckType CHECK(URO_GIDTyp=4304)
+</foreigndef>
+<foreigndef name="WyK_WysTypCheckType">
+ALTER TABLE CDN.WysKoszty DROP CONSTRAINT WyK_WysTypCheckType
+</foreigndef>
+<foreigndef name="WyK_WysTypCheckType CHECK(WyK_WysTyp=337)">
+ALTER TABLE CDN.WysKoszty ADD CONSTRAINT WyK_WysTypCheckType CHECK(WyK_WysTyp=337)
+</foreigndef>
+<foreigndef name="ZRU_ZRNTypCheckType">
+ALTER TABLE CDN.ZRNKartyPracyUsl DROP CONSTRAINT ZRU_ZRNTypCheckType
+</foreigndef>
+<foreigndef name="ZRU_ZRNTypCheckType CHECK(ZRU_ZRNTyp=4347)">
+ALTER TABLE CDN.ZRNKartyPracyUsl ADD CONSTRAINT ZRU_ZRNTypCheckType CHECK(ZRU_ZRNTyp=4347)
+</foreigndef>
+<foreigndef name="ZRP_ZRNTypCheckType">
+ALTER TABLE CDN.ZRNKartyPracyPrc DROP CONSTRAINT ZRP_ZRNTypCheckType
+</foreigndef>
+<foreigndef name="ZRP_ZRNTypCheckType CHECK(ZRP_ZRNTyp=4347)">
+ALTER TABLE CDN.ZRNKartyPracyPrc ADD CONSTRAINT ZRP_ZRNTypCheckType CHECK(ZRP_ZRNTyp=4347)
+</foreigndef>
+<foreigndef name="ZPE_GIDTypCheckType">
+ALTER TABLE CDN.ZRNPlanyElem DROP CONSTRAINT ZPE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="ZPE_GIDTypCheckType CHECK(ZPE_GIDTyp=6912)">
+ALTER TABLE CDN.ZRNPlanyElem ADD CONSTRAINT ZPE_GIDTypCheckType CHECK(ZPE_GIDTyp=6912)
+</foreigndef>
+<foreigndef name="ZnO_ZamTypCheckType">
+ALTER TABLE CDN.ZaNOpisy DROP CONSTRAINT ZnO_ZamTypCheckType
+</foreigndef>
+<foreigndef name="ZnO_ZamTypCheckType CHECK(ZnO_ZamTyp=960)">
+ALTER TABLE CDN.ZaNOpisy ADD CONSTRAINT ZnO_ZamTypCheckType CHECK(ZnO_ZamTyp=960)
+</foreigndef>
+<foreigndef name="ZaE_GIDTypCheckType">
+ALTER TABLE CDN.ZamElem DROP CONSTRAINT ZaE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="ZaE_GIDTypCheckType CHECK(ZaE_GIDTyp=960)">
+ALTER TABLE CDN.ZamElem ADD CONSTRAINT ZaE_GIDTypCheckType CHECK(ZaE_GIDTyp=960)
+</foreigndef>
+<foreigndef name="ZaV_GIDTypCheckType">
+ALTER TABLE CDN.ZamVat DROP CONSTRAINT ZaV_GIDTypCheckType
+</foreigndef>
+<foreigndef name="ZaV_GIDTypCheckType CHECK(ZaV_GIDTyp=960)">
+ALTER TABLE CDN.ZamVat ADD CONSTRAINT ZaV_GIDTypCheckType CHECK(ZaV_GIDTyp=960)
+</foreigndef>
+<foreigndef name="ZaP_GIDTypCheckType">
+ALTER TABLE CDN.ZamPlat DROP CONSTRAINT ZaP_GIDTypCheckType
+</foreigndef>
+<foreigndef name="ZaP_GIDTypCheckType CHECK(ZaP_GIDTyp=960)">
+ALTER TABLE CDN.ZamPlat ADD CONSTRAINT ZaP_GIDTypCheckType CHECK(ZaP_GIDTyp=960)
+</foreigndef>
+<foreigndef name="ZKE_GIDTypCheckType">
+ALTER TABLE CDN.ZestKSElem DROP CONSTRAINT ZKE_GIDTypCheckType
+</foreigndef>
+<foreigndef name="ZKE_GIDTypCheckType CHECK(ZKE_GIDTyp=2784)">
+ALTER TABLE CDN.ZestKSElem ADD CONSTRAINT ZKE_GIDTypCheckType CHECK(ZKE_GIDTyp=2784)
+</foreigndef>
+<foreigndef name="ZKK_GIDTypCheckType">
+ALTER TABLE CDN.ZestKSKolumny DROP CONSTRAINT ZKK_GIDTypCheckType
+</foreigndef>
+<foreigndef name="ZKK_GIDTypCheckType CHECK(ZKK_GIDTyp=2800)">
+ALTER TABLE CDN.ZestKSKolumny ADD CONSTRAINT ZKK_GIDTypCheckType CHECK(ZKK_GIDTyp=2800)
+</foreigndef>
+<foreigndef name="ZKZ_GIDTypCheckType">
+ALTER TABLE CDN.ZestKSZmienne DROP CONSTRAINT ZKZ_GIDTypCheckType
+</foreigndef>
+<foreigndef name="ZKZ_GIDTypCheckType CHECK(ZKZ_GIDTyp=2800)">
+ALTER TABLE CDN.ZestKSZmienne ADD CONSTRAINT ZKZ_GIDTypCheckType CHECK(ZKZ_GIDTyp=2800)
+</foreigndef>
+</ROOT>
