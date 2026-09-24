@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja pól ze stawkami tabeli CDN.Sent z 2018.2.1" hidden="False">
+SET NOCOUNT ON;
+if exists (select * from sys.columns where  object_id = OBJECT_ID(N'CDN.Sent') and name = 'SnT_StawkaVatWdr') and exists (select * from sys.columns where  object_id = OBJECT_ID(N'CDN.Sent') and name = 'SnT_FlagaVatWdr')
+begin
+	declare @sql varchar(100)
+
+	set @sql = 'update CDN.Sent set SnT_StawkaVat = SnT_StawkaVatWdr, SnT_FlagaVat = SnT_FlagaVatWdr'
+	exec(@sql)
+
+	set @sql = 'alter table CDN.Sent drop column SnT_StawkaVatWdr, SnT_FlagaVatWdr'
+	exec(@sql)
+end
+SET NOCOUNT OFF;
+</scriptdef>
+</ROOT>

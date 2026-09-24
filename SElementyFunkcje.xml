@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury i funkcji ZwrocDaneSElementyNag" hidden="True">
+IF EXISTS (
+		SELECT *
+		FROM sys.objects
+		WHERE object_id = OBJECT_ID(N'[CDN].[ZwrocDaneSElementyNag]')
+			AND type IN (
+				N'P'
+				, N'PC'
+				)
+		)
+	DROP PROCEDURE [CDN].ZwrocDaneSElementyNag
+
+IF EXISTS (
+		SELECT *
+		FROM sys.objects
+		WHERE object_id = OBJECT_ID(N'[CDN].[ZwrocDaneSElementyNag]')
+			AND type IN (
+				N'FN'
+				, N'IF'
+				, N'TF'
+				, N'FS'
+				, N'FT'
+				)
+		)
+	DROP FUNCTION [CDN].ZwrocDaneSElementyNag
+</scriptdef>
+<scriptdef name="Tworzenie funkcji tabelarycznej ZwrocDaneSElementyNag" hidden="False">
+-- =============================================
+-- Author: Tomasz Sęk
+-- Create date: 2017-03-28
+-- Description: 
+-- =============================================
+CREATE FUNCTION [CDN].[ZwrocDaneSElementyNag] (
+	@p_TrETyp INT
+	, @p_TrENumer INT
+	, @p_TrELp INT
+	)
+RETURNS TABLE
+AS
+RETURN (
+		SELECT sum(CASE 
+					WHEN @p_TrETyp= 2005 /*WZE*/
+						THEN korektyElem.TrE_WartoscPoRabacie
+					ELSE korektyElem.TrE_KsiegowaNetto
+					END) WartoscPoKorekcie
+			, isnull(sum(CASE 
+						WHEN @p_TrETyp = 2005
+							THEN 0--korektyElem.TrE_WartoscPoRabacie
+						WHEN naglowkowy.TrN_SpiTyp &gt; 0
+							THEN korektyElem.TrE_KsiegowaNetto						
+						ELSE 0
+						END), 0) WartoscZafakturowana
+			, sum(korektySubElem.IloscPoKorekcie) IloscPoKorekcie
+			, isnull(sum(CASE 
+						WHEN naglowkowy.TrN_SpiTyp &gt; 0
+							THEN korektySubElem.IloscPoKorekcie
+						ELSE 0
+						END), 0) IloscZafakturowana
+		FROM cdn.TraElem korektyElem
+		INNER JOIN cdn.TraNag naglowkowy
+			ON naglowkowy.TrN_GIDNumer = korektyElem.TrE_GIDNumer
+		INNER JOIN (
+			SELECT sum(korektySubElem.TrS_Ilosc) IloscPoKorekcie
+				, TrS_GIDNumer
+				, TrS_GIDLp
+			FROM cdn.TrasElem korektySubElem
+			WHERE korektySubElem.TrS_ZwrNumer = @p_TrENumer
+				AND korektySubElem.TrS_ZwrLp = @p_TrELp
+			GROUP BY TrS_GIDNumer
+				, TrS_GIDLp
+			) korektySubElem
+			ON korektySubElem.TrS_GIDNumer = korektyElem.TrE_GIDNumer
+				AND korektySubElem.TrS_GIDLp = korektyElem.TrE_GIDLp
+		)
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji tabelarycznej ZwrocDaneSElementyNag" hidden="False">
+GRANT SELECT
+	ON CDN.ZwrocDaneSElementyNag
+	TO CDNRaport
+</scriptdef>
+<scriptdef name="Kasowanie procedury i funkcji ZwrocDaneSElementyElem" hidden="True">
+IF EXISTS (
+		SELECT *
+		FROM sys.objects
+		WHERE object_id = OBJECT_ID(N'[CDN].[ZwrocDaneSElementyElem]')
+			AND type IN (
+				N'P'
+				, N'PC'
+				)
+		)
+	DROP PROCEDURE [CDN].ZwrocDaneSElementyElem
+
+IF EXISTS (
+		SELECT *
+		FROM sys.objects
+		WHERE object_id = OBJECT_ID(N'[CDN].[ZwrocDaneSElementyElem]')
+			AND type IN (
+				N'FN'
+				, N'IF'
+				, N'TF'
+				, N'FS'
+				, N'FT'
+				)
+		)
+	DROP FUNCTION [CDN].ZwrocDaneSElementyElem
+</scriptdef>
+<scriptdef name="Tworzenie funkcji tabelarycznej ZwrocDaneSElementyElem" hidden="False">
+-- =============================================
+-- Author: Tomasz Sęk
+-- Create date: 2017-03-28
+-- Description: 
+-- =============================================
+CREATE FUNCTION [CDN].[ZwrocDaneSElementyElem] (
+	@p_TrETyp INT
+	, @p_TrENumer INT
+	, @p_TrELp INT
+	)
+RETURNS TABLE
+AS
+RETURN (
+		SELECT isnull(sum(korektySubElemSpietego.TrS_Ilosc), 0) IloscZafakturowanaElem
+			, cast(CASE 
+					WHEN isnull(sum(korektyElem.TrE_Ilosc), 1) = 0
+						THEN 0
+					ELSE isnull(sum(korektySubElemSpietego.TrS_Ilosc), 0) * isnull(sum(CASE 
+									WHEN @p_TrETyp =2005
+										THEN korektyElem.TrE_WartoscPoRabacie
+									ELSE korektyElem.TrE_KsiegowaNetto
+									END), 0) / isnull(sum(korektyElem.TrE_Ilosc), 1)
+					END AS DECIMAL(15, 2)) WartoscZafakturowanaElem
+		FROM cdn.TraSElem korektySubElemSpietego
+		INNER JOIN cdn.TraSElem subElemSpiety
+			ON korektySubElemSpietego.TrS_ZwrNumer = subElemSpiety.TrS_GIDNumer
+				AND korektySubElemSpietego.TrS_ZwrLp = subElemSpiety.TrS_GIDLp
+				AND korektySubElemSpietego.TrS_SubZwrLp = subElemSpiety.TrS_SubGIDLp
+		INNER JOIN cdn.TraElem korektyElem
+			ON korektySubElemSpietego.TrS_GIDNumer = korektyElem.TrE_GIDNumer
+				AND korektySubElemSpietego.TrS_GIDLp = korektyElem.TrE_GIDLp
+		WHERE subElemSpiety.TrS_SpiNumer = @p_TrENumer
+			AND subElemSpiety.TrS_SpiLp = @p_TrELp
+		)
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji tabelarycznej ZwrocDaneSElementyElem" hidden="False">
+GRANT SELECT
+	ON CDN.ZwrocDaneSElementyElem
+	TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie funkcji CDN.ZwrocDaneSElementy_IloscPoKorekcie" hidden="True">
+IF EXISTS (
+		SELECT NAME
+		FROM sysobjects
+		WHERE NAME = 'ZwrocDaneSElementy_IloscPoKorekcie'
+			AND type = 'FN'
+		)
+	DROP FUNCTION CDN.ZwrocDaneSElementy_IloscPoKorekcie;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji ZwrocDaneSElementy_IloscPoKorekcie" hidden="False">
+-- =============================================
+-- Author: Tomasz Sęk
+-- Create date: 2017-03-29
+-- Description: Przesiadka na funkcję skalarną dla kursora
+-- =============================================
+CREATE FUNCTION CDN.ZwrocDaneSElementy_IloscPoKorekcie (
+	@p_TrETyp INT
+	, @p_TrENumer INT
+	, @p_TrELp INT
+	, @p_TrEIlosc DECIMAL(15, 4)
+	)
+RETURNS DECIMAL(15, 4)
+AS
+BEGIN
+	RETURN (
+			SELECT isnull(IloscPoKorekcie, @p_TrEIlosc)
+			FROM cdn.ZwrocDaneSElementyNag(@p_TrETyp, @p_TrENumer, @p_TrELp)
+			)
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ZwrocDaneSElementy_IloscPoKorekcie" hidden="False">
+GRANT EXECUTE
+	ON CDN.ZwrocDaneSElementy_IloscPoKorekcie
+	TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie funkcji CDN.ZwrocDaneSElementy_IloscZafakturowana" hidden="True">
+IF EXISTS (
+		SELECT NAME
+		FROM sysobjects
+		WHERE NAME = 'ZwrocDaneSElementy_IloscZafakturowana'
+			AND type = 'FN'
+		)
+	DROP FUNCTION CDN.ZwrocDaneSElementy_IloscZafakturowana;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji ZwrocDaneSElementy_IloscZafakturowana" hidden="False">
+-- =============================================
+-- Author: Tomasz Sęk
+-- Create date: 2017-03-29
+-- Description: Przesiadka na funkcję skalarną dla kursora
+-- =============================================
+CREATE FUNCTION CDN.ZwrocDaneSElementy_IloscZafakturowana (
+	@p_TrETyp INT
+	, @p_TrENumer INT
+	, @p_TrELp INT
+	)
+RETURNS DECIMAL(15, 4)
+AS
+BEGIN
+	RETURN (
+			SELECT IloscZafakturowana
+			FROM cdn.ZwrocDaneSElementyNag(@p_TrETyp, @p_TrENumer, @p_TrELp)
+			) + (
+			SELECT IloscZafakturowanaElem
+			FROM cdn.ZwrocDaneSElementyElem(@p_TrETyp, @p_TrENumer, @p_TrELp)
+			)
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ZwrocDaneSElementy_IloscZafakturowana" hidden="False">
+GRANT EXECUTE
+	ON CDN.ZwrocDaneSElementy_IloscZafakturowana
+	TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie funkcji CDN.ZwrocDaneSElementy_IloscNieZafakturowana" hidden="True">
+IF EXISTS (
+		SELECT NAME
+		FROM sysobjects
+		WHERE NAME = 'ZwrocDaneSElementy_IloscNieZafakturowana'
+			AND type = 'FN'
+		)
+	DROP FUNCTION CDN.ZwrocDaneSElementy_IloscNieZafakturowana;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji ZwrocDaneSElementy_IloscNieZafakturowana" hidden="False">
+-- =============================================
+-- Author: Tomasz Sęk
+-- Create date: 2017-03-29
+-- Description: Przesiadka na funkcję skalarną dla kursora
+-- =============================================
+CREATE FUNCTION CDN.ZwrocDaneSElementy_IloscNieZafakturowana (
+	@p_TrETyp INT
+	, @p_TrENumer INT
+	, @p_TrELp INT
+	, @p_TrEIlosc DECIMAL(15, 4)
+	)
+RETURNS DECIMAL(15, 4)
+AS
+BEGIN
+	RETURN (
+			SELECT isnull(IloscPoKorekcie, @p_TrEIlosc) - IloscZafakturowana
+			FROM cdn.ZwrocDaneSElementyNag(@p_TrETyp, @p_TrENumer, @p_TrELp)
+			) - (
+			SELECT IloscZafakturowanaElem
+			FROM cdn.ZwrocDaneSElementyElem(@p_TrETyp, @p_TrENumer, @p_TrELp)
+			)
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ZwrocDaneSElementy_IloscNieZafakturowana" hidden="False">
+GRANT EXECUTE
+	ON CDN.ZwrocDaneSElementy_IloscNieZafakturowana
+	TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie funkcji CDN.ZwrocDaneSElementy_CenaPoKorekcie" hidden="True">
+IF EXISTS (
+		SELECT NAME
+		FROM sysobjects
+		WHERE NAME = 'ZwrocDaneSElementy_CenaPoKorekcie'
+			AND type = 'FN'
+		)
+	DROP FUNCTION CDN.ZwrocDaneSElementy_CenaPoKorekcie;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji ZwrocDaneSElementy_CenaPoKorekcie" hidden="False">
+-- =============================================
+-- Author: Tomasz Sęk
+-- Create date: 2017-04-06
+-- Description: Przesiadka na funkcję skalarną dla kursora
+-- =============================================
+CREATE FUNCTION CDN.ZwrocDaneSElementy_CenaPoKorekcie (
+	@p_TrETyp INT
+	, @p_TrENumer INT
+	, @p_TrELp INT
+	)
+RETURNS DECIMAL(15, 4)
+AS
+BEGIN
+	RETURN (
+			--SELECT cast(CASE 
+			--			WHEN isnull(IloscPoKorekcie, @p_TrEIlosc) = 0
+			--				THEN 0
+			--			ELSE WartoscPoKorekcie / isnull(IloscPoKorekcie, @p_TrEIlosc)
+			--			END AS DECIMAL(15, 4))
+			--FROM cdn.ZwrocDaneSElementyNag(@p_TrENumer, @p_TrELp)
+			--Bug #341724: [Spinacze elementów] (s)Elementy - niepoprawna cena po korekcie (wartość po korekcie/ilość mimo że nie wygenerowano korekty)
+			SELECT TOP 1 CASE 
+					WHEN TrE_FlagaNB = 'B'
+						THEN TrE_Cena * 100 / (100 + TrE_StawkaPod)
+					ELSE TrE_Cena
+					END
+			FROM cdn.TraElem
+			INNER JOIN cdn.TrasElem
+				ON TrE_GIDNumer = TrS_GIDNumer
+					AND TrE_GIDLp = TrS_GIDLp
+			WHERE TrS_ZwrNumer = @p_TrENumer
+				AND TrS_ZwrLp = @p_TrELp
+				AND TrS_GIDTyp &lt;&gt; 2003 --Bug #398782: Funkcja [CDN].[ZwrocDaneSElementy_CenaPoKorekcie] niepotrzebnie uwzględnia dokumenty KK
+			ORDER BY TrS_GIDNumer DESC
+				, TrS_GIDLp
+			)
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ZwrocDaneSElementy_CenaPoKorekcie" hidden="False">
+GRANT EXECUTE
+	ON CDN.ZwrocDaneSElementy_CenaPoKorekcie
+	TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie funkcji CDN.ZwrocDaneSElementy_WartoscPoKorekcie" hidden="True">
+IF EXISTS (
+		SELECT NAME
+		FROM sysobjects
+		WHERE NAME = 'ZwrocDaneSElementy_WartoscPoKorekcie'
+			AND type = 'FN'
+		)
+	DROP FUNCTION CDN.ZwrocDaneSElementy_WartoscPoKorekcie;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji ZwrocDaneSElementy_WartoscPoKorekcie" hidden="False">
+-- =============================================
+-- Author: Tomasz Sęk
+-- Create date: 2017-04-06
+-- Description: Przesiadka na funkcję skalarną dla kursora
+-- =============================================
+CREATE FUNCTION CDN.ZwrocDaneSElementy_WartoscPoKorekcie (
+	@p_TrETyp INT
+	, @p_TrENumer INT
+	, @p_TrELp INT
+	)
+RETURNS DECIMAL(15, 4)
+AS
+BEGIN
+	RETURN (
+			SELECT WartoscPoKorekcie
+			FROM cdn.ZwrocDaneSElementyNag(@p_TrETyp, @p_TrENumer, @p_TrELp)
+			)
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ZwrocDaneSElementy_WartoscPoKorekcie" hidden="False">
+GRANT EXECUTE
+	ON CDN.ZwrocDaneSElementy_WartoscPoKorekcie
+	TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie funkcji CDN.ZwrocDaneSElementy_WartoscZafakturowana" hidden="True">
+IF EXISTS (
+		SELECT NAME
+		FROM sysobjects
+		WHERE NAME = 'ZwrocDaneSElementy_WartoscZafakturowana'
+			AND type = 'FN'
+		)
+	DROP FUNCTION CDN.ZwrocDaneSElementy_WartoscZafakturowana;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji ZwrocDaneSElementy_WartoscZafakturowana" hidden="False">
+-- =============================================
+-- Author: Tomasz Sęk
+-- Create date: 2017-04-06
+-- Description: Przesiadka na funkcję skalarną dla kursora
+-- =============================================
+CREATE FUNCTION CDN.ZwrocDaneSElementy_WartoscZafakturowana (
+	@p_TrETyp INT
+	, @p_TrENumer INT
+	, @p_TrELp INT
+	)
+RETURNS DECIMAL(15, 4)
+AS
+BEGIN
+	RETURN (
+			SELECT WartoscZafakturowana
+			FROM cdn.ZwrocDaneSElementyNag(@p_TrETyp, @p_TrENumer, @p_TrELp)
+			) + (
+			SELECT WartoscZafakturowanaElem
+			FROM cdn.ZwrocDaneSElementyElem(@p_TrETyp, @p_TrENumer, @p_TrELp)
+			)
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ZwrocDaneSElementy_WartoscZafakturowana" hidden="False">
+GRANT EXECUTE
+	ON CDN.ZwrocDaneSElementy_WartoscZafakturowana
+	TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie funkcji CDN.ZwrocDaneSElementy_WartoscNieZafakturowana" hidden="True">
+IF EXISTS (
+		SELECT NAME
+		FROM sysobjects
+		WHERE NAME = 'ZwrocDaneSElementy_WartoscNieZafakturowana'
+			AND type = 'FN'
+		)
+	DROP FUNCTION CDN.ZwrocDaneSElementy_WartoscNieZafakturowana;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji ZwrocDaneSElementy_WartoscNieZafakturowana" hidden="False">
+-- =============================================
+-- Author: Tomasz Sęk
+-- Create date: 2017-03-06
+-- Description: Przesiadka na funkcję skalarną dla kursora
+-- =============================================
+CREATE FUNCTION CDN.ZwrocDaneSElementy_WartoscNieZafakturowana (
+	@p_TrETyp INT
+	, @p_TrENumer INT
+	, @p_TrELp INT
+	)
+RETURNS DECIMAL(15, 4)
+AS
+BEGIN
+	RETURN (
+			SELECT WartoscPoKorekcie - WartoscZafakturowana
+			FROM cdn.ZwrocDaneSElementyNag(@p_TrETyp, @p_TrENumer, @p_TrELp)
+			) - (
+			SELECT WartoscZafakturowanaElem
+			FROM cdn.ZwrocDaneSElementyElem(@p_TrETyp, @p_TrENumer, @p_TrELp)
+			)
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ZwrocDaneSElementy_WartoscNieZafakturowana" hidden="False">
+GRANT EXECUTE
+	ON CDN.ZwrocDaneSElementy_WartoscNieZafakturowana
+	TO CDNRaport
+</scriptdef>
+</ROOT>
