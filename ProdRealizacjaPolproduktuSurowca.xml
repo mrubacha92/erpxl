@@ -1,0 +1,1272 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury CDN.ProdRealizacjaPolproduktuSurowca" hidden="True">
+IF exists(select * from sysobjects where name='ProdRealizacjaPolproduktuSurowca' and type='P') 
+	DROP PROCEDURE CDN.ProdRealizacjaPolproduktuSurowca
+</scriptdef>
+<scriptdef name="Tworzenie procedury CDN.ProdRealizacjaPolproduktuSurowca" hidden="False">
+CREATE PROCEDURE CDN.ProdRealizacjaPolproduktuSurowca @PZAIDAktualny int, @RealizacjaID int, @Ilosc decimal(11,4), @PCZID int, @PTZID int, @TechnologiaZasob int, @TypZasobu int, 
+@Proces int, 	@Oddzial int, @DodajNadmiarowe int,@IloscMin DECIMAL(11,4),@FirmaId INT,@OpeNr INT,@IloscPom DECIMAL(11,4) = NULL, @PTEKopiujZalaczniki TINYINT
+AS
+begin
+
+declare @PZAPlanowany int, @PZAIlosc decimal(11,4), @PZAAktualnyIlosc decimal(11,4),@PZAZwiazanyIlosc decimal(11,4),@IloscZwiaz DECIMAL(11,4)
+declare @PZAIDWykonany int, @PZAIDPlanowany int, @PZPIlosc decimal(11,4),@PZAIDWykonanyO int
+declare @PZAID_Insert int
+declare @BrakPowiazan tinyint = 0
+DECLARE @IloscPocz DECIMAL(11,4)
+DECLARE @IloscZapamietana DECIMAL(11,4)
+
+DECLARE @IloscPomTemp DECIMAL(11,4)
+
+DECLARE @Proporcja DECIMAL(11,8)
+
+SET @Proporcja = @IloscPom/@Ilosc
+DECLARE @PTZDodanego INT
+
+
+DECLARE @OperacjaPolproduktySurowceID INT, @OperacjaPolproduktyWytworzoneID INT,@PZAID_Insert2 int
+
+
+IF @TypZasobu IN(0,4)
+	SELECT @OperacjaPolproduktyWytworzoneID = PCZ_Realizuje FROM CDN.ProdCzynnosci WHERE PCZ_Id = @RealizacjaID
+ELSE
+	SELECT @OperacjaPolproduktySurowceID = PCZ_Realizuje FROM CDN.ProdCzynnosci WHERE PCZ_Id = @RealizacjaID
+
+	SET @IloscPocz = @Ilosc
+	
+	declare powiazania_cursor cursor fast_forward for
+	select PZP_PZAIDWykonany, PZP_PZAIDPlanowany, PZP_Ilosc,
+		   case when @TypZasobu = 0 
+					then S.PZA_Planowany 
+					else P.PZA_Planowany
+		   end PZA_Planowany,
+		   case when @TypZasobu = 0
+					then S.PZA_Ilosc
+					else P.PZA_Ilosc	--zasób może być już z czymś związany dlatego trzeba pomniejszyć ilość o ilość wynikającą z powiązań
+		   end Ilosc, case when @TypZasobu &gt; 0 THEN isnull(Zwiazane.IloscZwiazana,0) ELSE 0 END IloscZwiazana
+	from cdn.ProdZwiazanePolprodukty 
+	join cdn.ProdZasoby P on P.PZA_ID = PZP_PZAIDWykonany
+	join cdn.ProdZasoby S on S.PZA_ID = PZP_PZAIDPlanowany
+	left join
+	(
+		select sum(PZA_Ilosc) IloscZwiazana, PZA_Zasob from cdn.ProdZasoby
+		group by PZA_Zasob 
+	) Zwiazane on Zwiazane.PZA_Zasob = P.PZA_Id
+	where (PZP_PZAIDWykonany = @PZAIDAktualny and @TypZasobu = 0) or (PZP_PZAIDPlanowany = @PZAIDAktualny and @TypZasobu = 1)
+
+
+	open powiazania_cursor
+	fetch next from powiazania_cursor into @PZAIDWykonany, @PZAIDPlanowany, @PZPIlosc, @PZAPlanowany, @PZAZwiazanyIlosc,@IloscZwiaz
+	
+    
+	if @@FETCH_STATUS &lt;&gt; 0
+		set @BrakPowiazan = 1
+
+	while @@FETCH_STATUS = 0 and @Ilosc &gt; 0 
+	begin
+		if @PZAIlosc &lt;= 0
+		begin
+			fetch next from powiazania_cursor into @PZAIDWykonany, @PZAIDPlanowany, @PZPIlosc, @PZAPlanowany, @PZAZwiazanyIlosc,@IloscZwiaz
+			continue
+		end
+
+		SET @IloscZapamietana = @Ilosc
+		IF @Ilosc &gt; @PZPIlosc
+			SET @Ilosc = @PZPIlosc
+
+		IF @TypZasobu &gt; 0 
+			SET @PZAIlosc = @PZAZwiazanyIlosc - @IloscZwiaz
+		ELSE
+			SET @PZAIlosc = @PZAZwiazanyIlosc
+
+		SET @PZAAktualnyIlosc = -1
+		SELECT @PZAAktualnyIlosc = PZA_Ilosc FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 1
+
+		if @Ilosc &lt; @PZAIlosc	--trzeba rozbić
+		begin			
+			--najpierw zmniejszamy ilość na ProdZasobie związanym
+			IF @PZAZwiazanyIlosc &gt; @Ilosc
+			BEGIN
+				update cdn.ProdZasoby set PZA_Ilosc = PZA_Ilosc - @Ilosc,
+					PZA_IloscPom = ((PZA_Ilosc - @Ilosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END,
+					PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+					OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN (PZA_Ilosc - @Ilosc) 
+						ELSE ((PZA_Ilosc - @Ilosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END) * PZA_Cena ,1)
+					ELSE ((PZA_Ilosc - @Ilosc) * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END
+				FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+				LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+				where (@TypZasobu = 0 AND PZA_ID = @PZAIDPlanowany) OR (@TypZasobu = 1 AND PZA_Id = @PZAIDWykonany)
+
+				--następnie robimy insert nowego z odpowiednią ilością (@Ilosc) 
+				if @TypZasobu = 0 and @PZAPlanowany = 1
+					exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = @PZAIDPlanowany, @PTZID = null, @PCZID = null, @Ilosc = @Ilosc, @TypZasobu = null, 
+						@Planowany = null, @ZasobDoZwiazania = null,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+				else if @TypZasobu = 1
+					exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = @PZAIDWykonany, @PTZID = null, @PCZID = null, @Ilosc = @Ilosc, @TypZasobu = null, 
+						@Planowany = null, @ZasobDoZwiazania = null,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+
+				--następnie modyfikujemy powiązanie w ProdZwiazanePolprodukty
+				update cdn.ProdZwiazanePolprodukty set PZP_Ilosc = PZP_Ilosc - @Ilosc where PZP_PZAIDPlanowany = @PZAIDPlanowany and PZP_PZAIDWykonany = @PZAIDWykonany
+				delete from cdn.ProdZwiazanePolprodukty where PZP_PZAIDPlanowany = @PZAIDPlanowany and PZP_PZAIDWykonany = @PZAIDWykonany AND PZP_Ilosc = 0
+			END
+			ELSE
+			BEGIN
+				IF @TypZasobu = 0 
+					SET @PZAId_Insert = @PZAIDPlanowany
+				ELSE
+					SET @PZAID_Insert = @PZAIDWykonany
+			END		
+
+			set @PZAIDWykonanyO = @PZAIDWykonany
+
+			-- i na ProdZasobie aktualnym
+			IF @PZAAktualnyIlosc &gt; @Ilosc OR @PZAAktualnyIlosc = -1
+			BEGIN
+				IF @PZAAktualnyIlosc &lt;&gt; -1
+				BEGIN
+					update cdn.ProdZasoby set PZA_Ilosc = PZA_Ilosc - @Ilosc,
+					PZA_IloscPom = ((PZA_Ilosc - @Ilosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END,
+					PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+					OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN (PZA_Ilosc - @Ilosc) 
+						ELSE ((PZA_Ilosc - @Ilosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END) * PZA_Cena,2)
+						ELSE ((PZA_Ilosc - @Ilosc) * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END
+					FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+					LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+					where (@TypZasobu = 0 AND PZA_ID = @PZAIDWykonany) OR (@TypZasobu = 1 AND PZA_Id = @PZAIDPlanowany)
+				END
+				--na koniec dodajemy nowy ProdZasob realizowany
+				
+				if @PZAPlanowany = 1
+				begin
+					set @PZAIDWykonany = @PZAID_Insert 
+					SET @IloscPomTemp = @Proporcja * @Ilosc
+					exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = @PZAIDAktualny, @PTZID = null, @PCZID = @RealizacjaID, @Ilosc = @Ilosc, 
+						@TypZasobu = @TypZasobu, @Planowany = 0, @ZasobDoZwiazania = 0,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @IloscPom	= @IloscPomTemp,
+						@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+				end
+				else
+				BEGIN
+					--dodanie ProdZasobu realizowanego
+					if @TypZasobu = 0
+					begin
+						--najpierw dodajemy ProdZasob dla produktu realizowanego
+						SET @IloscPomTemp = @Proporcja * @Ilosc
+						exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = @PZAIDAktualny, @PTZID = null, @PCZID = @RealizacjaID, @Ilosc = @Ilosc, 
+							@TypZasobu = @TypZasobu, @Planowany = 0, @ZasobDoZwiazania = 0,@FirmaId = @FirmaId, @OpeNr = @OpeNr,@IloscPom = @IloscPomTemp, 
+							@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+						--następnie dodajemy rekord dla powiązanego surowca (rekord rozbity na dwa) który powinien być związany z wyżej dodanym ProdZasobem
+						IF @PZAZwiazanyIlosc &gt; @Ilosc
+							exec @PZAID_Insert2 = CDN.ProdZasoby_Insert @PZAID = @PZAIDPlanowany, @PTZID = null, @PCZID = null, @Ilosc = @Ilosc, @TypZasobu = null, 
+								@Planowany = null, @ZasobDoZwiazania = @PZAID_Insert,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+						ELSE
+							SET @PZAID_Insert2 = @PZAIDWykonany					
+					end
+					else
+					begin
+						set @PZAID_Insert2 = @PZAID_Insert
+						SET @IloscPomTemp = @Proporcja * @Ilosc
+						exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = @PZAIDAktualny, @PTZID = null, @PCZID = @RealizacjaID, @Ilosc = @Ilosc, 
+							@TypZasobu = @TypZasobu, @Planowany = 0, 
+							@ZasobDoZwiazania = @PZAID_Insert,@FirmaId = @FirmaId, @OpeNr = @OpeNr,@IloscPom = @IloscPomTemp, @PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+					end
+				END
+			END
+			ELSE
+			BEGIN
+				IF @PZAPlanowany &gt; 0 OR @TypZasobu = 0
+				BEGIN
+					IF @Ilosc &gt; @PZAAktualnyIlosc
+					BEGIN
+						UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @Ilosc,
+						PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+						( @Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END,
+						PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+						OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @Ilosc 
+						ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+						( @Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END END) * PZA_Cena,2)
+						ELSE (@Ilosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+							PZA_TypZasobu = @TypZasobu
+						FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+						LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+						WHERE PZA_Id = @PZAIDAktualny
+						IF @PTEKopiujZalaczniki = 1
+						BEGIN
+							SET @PTZDodanego = 0
+							SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+							IF @PTZDodanego &gt; 0 
+							BEGIN
+								EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny	
+							END
+						END	
+					END
+					ELSE 
+					BEGIN
+						UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,
+						PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+						FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+						IF @PTEKopiujZalaczniki = 1
+						BEGIN
+							SET @PTZDodanego = 0
+							SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+							IF @PTZDodanego &gt; 0 
+							BEGIN
+								EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+							END
+						END	
+					END
+						
+				END
+				ELSE
+				BEGIN
+					IF @Ilosc &gt; @PZAAktualnyIlosc
+					BEGIN
+						UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @Ilosc,
+						PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+						(@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END,
+						PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+						OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @Ilosc
+						ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+						(@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END END) * PZA_Cena,0)
+						ELSE (@Ilosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+						PZA_TypZasobu = @TypZasobu,PZA_Zasob = @PZAId_Insert
+						FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+						LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+						WHERE PZA_Id = @PZAIDAktualny
+						
+						IF @PTEKopiujZalaczniki = 1
+						BEGIN
+							SET @PTZDodanego = 0
+							SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+							IF @PTZDodanego &gt; 0 
+							BEGIN
+								EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+							END
+						END	
+					END
+					ELSE 
+					BEGIN
+						UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,PZA_Zasob = @PZAId_Insert,
+						PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+						FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+						IF @PTEKopiujZalaczniki = 1
+						BEGIN
+							SET @PTZDodanego = 0
+							SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+							IF @PTZDodanego &gt; 0 
+							BEGIN
+								EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+							END
+						END	
+					END
+				END
+
+				if @PZAPlanowany = 1
+					begin
+						set @PZAIDWykonany = @PZAID_Insert
+						SET @PZAID_Insert = @PZAIDAktualny
+					end
+				ELSE
+					BEGIN
+					IF @TypZasobu = 0
+						BEGIN
+							SET @PZAID_Insert = @PZAIDWykonany
+							IF @PZAZwiazanyIlosc &gt; @Ilosc
+								exec @PZAID_Insert2 = CDN.ProdZasoby_Insert @PZAID = @PZAIDPlanowany, @PTZID = null, @PCZID = null, @Ilosc = @Ilosc, @TypZasobu = null, 
+									@Planowany = null, @ZasobDoZwiazania = @PZAID_Insert,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+							ELSE
+							BEGIN
+								SET @PZAID_Insert2 = @PZAIDPlanowany	
+								UPDATE CDN.ProdZasoby SET PZA_Zasob = @PZAIDWykonany WHERE PZA_Id = @PZAIDPlanowany	
+							END		
+						END
+					ELSE
+						BEGIN
+							set @PZAID_Insert2 = @PZAID_Insert
+							SET @PZAID_Insert = @PZAIDPlanowany
+						END
+					END
+			END	
+
+
+			if @PZAPlanowany = 1
+				begin	
+					if @TypZasobu = 0				
+					begin
+						IF NOT EXISTS(SELECT * FROM CDN.ProdZwiazanePolprodukty WHERE PZP_PZAIDWykonany = @PZAID_Insert AND PZP_PZAIDPlanowany = @PZAIDWykonany)
+							insert into cdn.ProdZwiazanePolprodukty(PZP_PZAIDWykonany,PZP_PZAIDPlanowany,PZP_Ilosc)
+							values(@PZAID_Insert,@PZAIDWykonany,@Ilosc)	
+							--w przypadku gdy wiążemy się z półproduktem planowanym nie wiążemy się przez PZA_Zasob, powiązanie powinno być przez ProdZwiazanePolprodukty
+						select @OperacjaPolproduktySurowceID = PZA_Czynnosc FROM CDN.ProdZasoby where PZA_Id = @PZAIDWykonany
+					end
+					else
+					begin
+						IF NOT EXISTS(SELECT * FROM CDN.ProdZwiazanePolprodukty WHERE PZP_PZAIDWykonany = @PZAIDWykonany AND PZP_PZAIDPlanowany = @PZAID_Insert)
+							insert into cdn.ProdZwiazanePolprodukty(PZP_PZAIDWykonany,PZP_PZAIDPlanowany,PZP_Ilosc) values(@PZAIDWykonany,@PZAID_Insert,@Ilosc)	
+							--w przypadku gdy wiążemy się z półproduktem planowanym nie wiążemy się przez PZA_Zasob, powiązanie powinno być przez ProdZwiazanePolprodukty
+						select @OperacjaPolproduktyWytworzoneID = PZA_Czynnosc FROM CDN.ProdZasoby where PZA_Id = @PZAIDWykonany
+					end
+
+					if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+						insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+				end
+				else
+					--dodanie ProdZasobu realizowanego
+					if @TypZasobu = 0
+					begin
+						select @OperacjaPolproduktySurowceID = PCZ_Realizuje FROM CDN.ProdZasoby JOIN cdn.ProdCzynnosci ON PCZ_Id = PZA_Czynnosc where PZA_Id = @PZAID_Insert2
+						if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID 
+						and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+							insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+					end
+					else
+					begin
+
+						select @OperacjaPolproduktyWytworzoneID = PCZ_Realizuje FROM CDN.ProdZasoby JOIN cdn.ProdCzynnosci ON PCZ_Id = PZA_Czynnosc 
+							where PZA_Id = @PZAID_Insert2
+						if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID 
+							and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+							insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+					end
+
+			--set @Ilosc = 0
+			SET @IloscZapamietana = @IloscZapamietana - @Ilosc
+				SET @Ilosc = @IloscZapamietana
+			/*if exists(select * from cdn.ProdZasoby where PZA_Ilosc &lt;= 0 and PZA_ID in (@PZAIDWykonanyO,@PZAIDPlanowany))
+				delete from cdn.ProdZasoby where PZA_ID in (@PZAIDWykonanyO,@PZAIDPlanowany) and PZA_Ilosc &lt;=0*/
+		end
+		else
+		begin
+			if @PZAPlanowany = 1
+			begin
+				--dodajemy nowy zasób
+				IF @PZAAktualnyIlosc &gt; @PZAIlosc OR @PZAAktualnyIlosc = -1
+				BEGIN
+					SET @IloscPomTemp = @Proporcja * @PZAIlosc
+					exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = @PZAIDAktualny, @PTZID = null, @PCZID = @RealizacjaID, @Ilosc = @PZAIlosc, 
+						@TypZasobu = @TypZasobu, @Planowany = 0, @ZasobDoZwiazania = 0,@FirmaId = @FirmaId, @OpeNr = @OpeNr,@IloscPom = @IloscPomTemp,
+						@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+						--zmniejszamy ilość i jeśli ilość jest zerowa usuwamy zasób
+					IF @PZAAktualnyIlosc &lt;&gt; -1
+					BEGIN
+						update cdn.ProdZasoby set PZA_Ilosc = PZA_Ilosc - @PZAIlosc,
+						PZA_IloscPom = ((PZA_Ilosc - @PZAIlosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END,
+						PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+						OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN PZA_Ilosc - @PZAIlosc
+						ELSE ((PZA_Ilosc - @PZAIlosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END) * PZA_Cena ,2)
+						ELSE ((PZA_Ilosc - @PZAIlosc) * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END
+						FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+						LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc where PZA_ID = @PZAIDAktualny
+					END
+				END
+				ELSE
+				BEGIN
+					IF @PZAIlosc &gt; @PZAAktualnyIlosc
+					BEGIN	
+						UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @PZAIlosc,
+						PZA_IloscPom =  CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+						(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END,
+						PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+						OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @PZAIlosc
+						ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+						(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END END) * PZA_Cena ,2)
+						ELSE (@PZAIlosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+							PZA_TypZasobu = @TypZasobu
+						FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+						LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+						WHERE PZA_Id = @PZAIDAktualny
+						IF @PTEKopiujZalaczniki = 1
+						BEGIN
+							SET @PTZDodanego = 0
+							SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+							IF @PTZDodanego &gt; 0 
+							BEGIN
+								EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+							END
+						END	
+					END
+					ELSE
+					BEGIN
+						UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,
+						PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+						FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+
+						IF @PTEKopiujZalaczniki = 1
+						BEGIN
+							SET @PTZDodanego = 0
+							SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+							IF @PTZDodanego &gt; 0 
+							BEGIN
+								EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny										
+							END
+						END	
+					END
+
+					SET @PZAID_Insert = @PZAIDAktualny
+				END
+				--następnie przepinamy powiązanie
+				if @TypZasobu = 0
+				begin
+					update cdn.ProdZwiazanePolprodukty set PZP_PZAIDWykonany = @PZAID_Insert where PZP_PZAIDPlanowany = @PZAIDPlanowany and PZP_PZAIDWykonany = @PZAIDWykonany
+					select @OperacjaPolproduktySurowceID = PZA_Czynnosc FROM CDN.ProdZasoby where PZA_Id = @PZAIDPlanowany
+				end
+				else
+				begin
+					update cdn.ProdZwiazanePolprodukty set PZP_PZAIDPlanowany = @PZAID_Insert where PZP_PZAIDPlanowany = @PZAIDPlanowany and PZP_PZAIDWykonany = @PZAIDWykonany
+					select @OperacjaPolproduktyWytworzoneID = PZA_Czynnosc FROM CDN.ProdZasoby where PZA_Id = @PZAIDWykonany
+				end
+
+				if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+						insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+
+				--set @Ilosc = @Ilosc - @PZAIlosc
+				SET @IloscZapamietana = @IloscZapamietana - @PZAIlosc
+				SET @Ilosc = @IloscZapamietana
+			end
+			else
+			begin				
+				--w zmiennej @Ilosc pozostaje ilość co powinno spowodować że na końcu zostanie dodany niezwiązany (lub związany z czymś innym) ProdZasob na tą pozostałą ilość
+				IF @PZAAktualnyIlosc &gt; @PZAIlosc OR @PZAAktualnyIlosc = -1
+				BEGIN
+					if @TypZasobu = 0
+					begin
+						SET @IloscPomTemp = @Proporcja * @PZAIlosc
+						exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = @PZAIDAktualny, @PTZID = null, @PCZID = @RealizacjaID, @Ilosc = @PZAIlosc, 
+							@TypZasobu = @TypZasobu, @Planowany = 0,@ZasobDoZwiazania = 0,@FirmaId = @FirmaId, @OpeNr = @OpeNr,@IloscPom = @IloscPomTemp, 
+							@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+						select @OperacjaPolproduktySurowceID = PCZ_Realizuje FROM CDN.ProdZasoby JOIN cdn.ProdCzynnosci ON PCZ_Id = PZA_Czynnosc where PZA_Id = @PZAIDPlanowany
+					end
+					else
+					begin
+						SET @IloscPomTemp = @Proporcja * @PZAIlosc
+						exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = @PZAIDAktualny, @PTZID = null, @PCZID = @RealizacjaID, @Ilosc = @PZAIlosc, 
+							@TypZasobu = @TypZasobu, @Planowany = 0, @ZasobDoZwiazania = @PZAIDWykonany,@FirmaId = @FirmaId, @OpeNr = @OpeNr,@IloscPom = @IloscPomTemp,
+							@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+						select @OperacjaPolproduktyWytworzoneID = PCZ_Realizuje FROM CDN.ProdZasoby JOIN cdn.ProdCzynnosci ON PCZ_Id = PZA_Czynnosc where PZA_Id = @PZAIDWykonany
+					end
+					if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+							insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+
+					IF @PZAAktualnyIlosc &lt;&gt; -1
+						update cdn.ProdZasoby set PZA_Ilosc = PZA_Ilosc - @PZAIlosc,
+						PZA_IloscPom = (( PZA_Ilosc - @PZAIlosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END,
+						PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+						OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN PZA_Ilosc - @PZAIlosc
+						ELSE (( PZA_Ilosc - @PZAIlosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END) * PZA_Cena ,2)
+						ELSE (( PZA_Ilosc - @PZAIlosc) * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END
+						FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+						LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc where PZA_ID = @PZAIDAktualny
+				END
+				ELSE
+				BEGIN
+					IF @TypZasobu &lt;&gt; 0
+						IF @PZAIlosc &gt; @PZAAktualnyIlosc
+						BEGIN	
+							UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @PZAIlosc,
+							PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+							(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END,
+							PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+							OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @PZAIlosc
+							ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+							(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END END) * PZA_Cena ,2)
+							ELSE (@PZAIlosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+								PZA_TypZasobu = @TypZasobu,PZA_Zasob = @PZAIDWykonany
+							FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+							LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+							WHERE PZA_Id = @PZAIDAktualny
+							IF @PTEKopiujZalaczniki = 1
+							BEGIN
+								SET @PTZDodanego = 0
+								SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+								IF @PTZDodanego &gt; 0 
+								BEGIN
+									EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny								
+								END
+							END	
+						END
+						ELSE
+						BEGIN
+							UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,PZA_Zasob = @PZAIDWykonany,
+							PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+							FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+							IF @PTEKopiujZalaczniki = 1
+							BEGIN
+								SET @PTZDodanego = 0
+								SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+								IF @PTZDodanego &gt; 0 
+								BEGIN
+									EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny								
+								END
+							END	
+						END
+					ELSE
+					BEGIN
+						IF @PZAIlosc &gt; @PZAAktualnyIlosc
+						BEGIN	
+								UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @PZAIlosc,
+								PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+								(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END,
+								PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+								OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @PZAIlosc
+								ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+								(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END END) * PZA_Cena ,2)
+								ELSE (@PZAIlosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+									PZA_TypZasobu = @TypZasobu
+								FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+								LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+								 WHERE PZA_Id = @PZAIDAktualny
+								 IF @PTEKopiujZalaczniki = 1
+								BEGIN
+									SET @PTZDodanego = 0
+									SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+									IF @PTZDodanego &gt; 0 
+									BEGIN
+										EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny										
+									END
+								END	
+							END
+							ELSE
+							BEGIN
+								UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,
+								PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+								FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+
+								IF @PTEKopiujZalaczniki = 1
+								BEGIN
+									SET @PTZDodanego = 0
+									SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+									IF @PTZDodanego &gt; 0 
+									BEGIN
+										EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny								
+									END
+								END	
+							END
+					END
+					SET @PZAID_Insert = @PZAIDAktualny
+				END
+
+				if @TypZasobu = 0
+					begin
+						update CDN.ProdZasoby set PZA_Zasob = @PZAID_Insert where PZA_ID = @PZAIDPlanowany
+						select @OperacjaPolproduktySurowceID = PCZ_Realizuje FROM CDN.ProdZasoby JOIN cdn.ProdCzynnosci ON PCZ_Id = PZA_Czynnosc where PZA_Id = @PZAIDPlanowany
+					end
+				else
+					begin
+						select @OperacjaPolproduktyWytworzoneID = PCZ_Realizuje FROM CDN.ProdZasoby JOIN cdn.ProdCzynnosci ON PCZ_Id = PZA_Czynnosc where PZA_Id = @PZAIDWykonany
+					end
+				if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+						insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+
+				delete from cdn.ProdZwiazanePolprodukty where PZP_PZAIDPlanowany = @PZAIDPlanowany and PZP_PZAIDWykonany = @PZAIDWykonany
+
+				--set @Ilosc = @Ilosc - @PZAIlosc
+				SET @IloscZapamietana = @IloscZapamietana - @PZAIlosc
+				SET @Ilosc = @IloscZapamietana
+			end
+		end
+		
+		fetch next from powiazania_cursor into @PZAIDWykonany, @PZAIDPlanowany, @PZPIlosc, @PZAPlanowany, @PZAZwiazanyIlosc,@IloscZwiaz
+	end
+
+	close powiazania_cursor 
+	deallocate powiazania_cursor
+
+	--jeśli została jeszcze jakaś ilość do realizacji to wrzucamy ProdZasob (dla tego ProdZasobu powinniśmy poszukać możliwości powiązania z czymś)
+	--powinien być tutaj też kursor na wypadek gdyby dało się zrobić wiele powiązań, wtedy też byłoby wiele nowych wpisów do ProdZasoby
+	if @Ilosc &gt; 0--and (@DodajNadmiarowe = 1 or @BrakPowiazan = 1)
+	begin
+		declare @PZAID_DoZwiazania int
+
+		if @TypZasobu = 1 
+			declare WiazaniePozostalych_cursor cursor fast_forward for
+			Select 
+				Z_PROD.PZA_Id, 
+				Z_PROD.PZA_Ilosc - 
+				( IsNull(sum(p2.PZA_Ilosc),0)+  
+					IsNull( 
+							(Select Sum(Trs_Ilosc) from cdn.traselem 
+								inner join CDN.TraElem on TrE_GIDTyp=TrS_GIDTyp AND TrE_GIDNumer=TrS_GIDNumer AND TrE_GIDLp=TrS_GIDLp 
+								where Trs_ZlcTyp =14346 and TRS_ZlcNumer = Z_PROD.PZA_ID and Z_Prod.PZA_TwrNumer = Tre_TwrNumer),0) +
+					isnull(ZwiazanePolprodukty.IloscZwiazanychPP,0)
+				)  as IloscDoZwiazania,Z_PROD.PZA_Planowany Planowany, Z_PROD.PZA_Ilosc IloscPZA
+			from CDN.ProdZasoby Z_PROD (NOLOCK)  
+			join CDN.ProdTechnologiaZasoby (NOLOCK) on Z_PROD.PZA_Technologiazasob = PTZ_ID  
+			left outer join CDN.prodZasoby p2 (NOLOCK) on Z_PROD.PZA_ID= p2.PZA_Zasob  
+			inner join CDN.ProdCzynnosci on Pcz_Id = Z_PROD.PZA_Czynnosc  
+			left join
+			(
+				select sum(PZP_Ilosc) IloscZwiazanychPP,PZP_PZAIDWykonany from cdn.ProdZwiazanePolprodukty
+				where PZP_PZAIDPlanowany &lt;&gt; @PZAIDAktualny
+				group by PZP_PZAIDWykonany
+			) ZwiazanePolprodukty on ZwiazanePolprodukty.PZP_PZAIDWykonany = Z_PROD.PZA_Id
+			where PTZ_ID = @TechnologiaZasob and not Z_PROD.PZA_Czynnosc=@PCZID /*and Z_PROD.PZA_Planowany = 0*/ and ((Z_PROD.PZA_Planowany = 1 AND PTZ_TypZasobu = 0) OR 
+				(Z_PROD.PZA_Planowany = 0 AND Z_PROD.PZA_TypZasobu = 0)) AND
+					(
+						(PTZ_ZrodloZasobu = 0 and PCZ_Proces = @Proces) or
+						(PTZ_ZrodloZasobu = 1 and exists(Select * from Cdn.ProdProcesy P_PROD (NOLOCK) join CDN.ProdProcesy P_SUR on P_Sur.PPC_Id = @Proces where P_PROD.PPC_Zlecenie = P_SUR.PPC_Zlecenie and PCZ_Proces = P_PROD.PPC_Id)) or
+						(PTZ_ZrodloZasobu = 2 and (PCZ_Oddzial=0 or PCZ_Oddzial=@Oddzial)) or
+						PTZ_ZrodloZasobu = 3
+					)
+			Group by  Z_PROD.PZA_Id, PTZ_Kod,Z_PROD.PZA_Ilosc, Z_PROD.PZA_TwrNumer, Z_PROD.PZA_Koszt,PCZ_TerminZakonczenia, Z_PROD.PZA_Id, ZwiazanePolprodukty.IloscZwiazanychPP,Z_Prod.PZA_Planowany
+			Having Z_PROD.PZA_Ilosc - 
+			( 
+				IsNull(sum(p2.PZA_Ilosc),0)+  
+				IsNull( (Select Sum(Trs_Ilosc) from cdn.traselem inner join CDN.TraElem on TrE_GIDTyp=TrS_GIDTyp AND TrE_GIDNumer=TrS_GIDNumer AND TrE_GIDLp=TrS_GIDLp  
+				where Trs_ZlcTyp =14346 and TRS_ZlcNumer = Z_PROD.PZA_ID  and Z_Prod.PZA_TwrNumer = Tre_TwrNumer),0)+
+				isnull((select sum(Mas_Ilosc) from cdn.MagSElem inner join cdn.MagElem on MaE_GIDNumer = MaS_GIDNumer and MaS_GIDLp = MaE_GIDLp
+				where MaS_ZlcTyp = 14346 and MaS_ZlcNumer = Z_PROD.PZA_Id and Z_PROD.PZA_TwrNumer = MaE_TwrNumer and (Mas_ZrdTyp not in (1616, 1617))),0)+
+				isnull(ZwiazanePolprodukty.IloscZwiazanychPP,0)
+			)  &gt;0 
+			Order by PCZ_TerminZakonczenia, Z_PROD.PZA_Id
+		else
+			declare WiazaniePozostalych_cursor cursor fast_forward for
+			Select Z_Sur.PZA_Id, Z_Sur.PZA_Ilosc - (
+				IsNull( (Select Sum(Trs_Ilosc) from cdn.traselem inner join CDN.TraElem on TrE_GIDTyp=TrS_GIDTyp AND TrE_GIDNumer=TrS_GIDNumer AND TrE_GIDLp=TrS_GIDLp  
+				where Trs_ZlcTyp =14346 and TRS_ZlcNumer = Z_Sur.PZA_ID  and Z_Sur.PZA_TwrNumer = Tre_TwrNumer),0)+
+				isnull(ZwiazanePolprodukty.IloscZwiazanychPP,0)
+			) Ilosc,PZA_Planowany,Z_Sur.PZA_Ilosc
+			from CDN.ProdZasoby Z_Sur (NOLOCK) 
+			join CDN.ProdTechnologiaZasoby (NOLOCK) on Z_Sur.PZA_Technologiazasob = PTZ_ID
+			inner join CDN.ProdCzynnosci c on c.PCZ_Id = Z_Sur.PZA_Czynnosc
+			--inner join CDN.ProdProcesy p on p.PPC_Id = c.PCZ_Proces
+			inner join CDN.ProdZlecenia z on z.PZL_Id = C.PCZ_PZLId--p.PPC_Zlecenie	
+			left join
+			(
+				select sum(PZP_Ilosc) IloscZwiazanychPP,PZP_PZAIDPlanowany from cdn.ProdZwiazanePolprodukty
+				where PZP_PZAIDWykonany &lt;&gt; @PZAIDAktualny
+				group by PZP_PZAIDPlanowany
+			) ZwiazanePolprodukty on ZwiazanePolprodukty.PZP_PZAIDPlanowany = Z_Sur.PZA_Id		
+			where PTZ_TechnologiaZasob = @PTZID and PZA_Zasob = 0 /*and PZA_Planowany = 0*/ AND ((Z_Sur.PZA_Planowany = 1 AND PTZ_TypZasobu = 1) OR 
+				(Z_Sur.PZA_Planowany = 0 AND Z_Sur.PZA_TypZasobu = 1)) and z.PZL_DataZamkniecia =0 and not Z_Sur.PZA_Czynnosc=@RealizacjaID and
+							(
+								(PTZ_ZrodloZasobu = 0 and PCZ_Proces = @Proces) or
+								(PTZ_ZrodloZasobu = 1 and exists(Select * from Cdn.ProdProcesy P_PROD (NOLOCK) join CDN.ProdProcesy P_SUR on P_Sur.PPC_Id = @Proces where P_PROD.PPC_Zlecenie = P_SUR.PPC_Zlecenie and PCZ_Proces = P_PROD.PPC_Id)) or
+								(PTZ_ZrodloZasobu = 2 and (PCZ_Oddzial=0 or PCZ_Oddzial=@Oddzial)) or
+								 PTZ_ZrodloZasobu = 3
+							)
+			Group by  Z_Sur.PZA_Id, PTZ_Kod,Z_Sur.PZA_Ilosc, Z_Sur.PZA_TwrNumer, Z_Sur.PZA_Koszt,PCZ_TerminZakonczenia, Z_Sur.PZA_Id, ZwiazanePolprodukty.IloscZwiazanychPP,PTZ_TypZasobu,PZA_Planowany
+			HAVING Z_Sur.PZA_Ilosc -
+			(
+				IsNull( (Select Sum(Trs_Ilosc) from cdn.traselem inner join CDN.TraElem on TrE_GIDTyp=TrS_GIDTyp AND TrE_GIDNumer=TrS_GIDNumer AND TrE_GIDLp=TrS_GIDLp  
+				where Trs_ZlcTyp =14346 and TRS_ZlcNumer = Z_Sur.PZA_ID  and Z_Sur.PZA_TwrNumer = Tre_TwrNumer),0)+
+				isnull((select sum(Mas_Ilosc) from cdn.MagSElem inner join cdn.MagElem on MaE_GIDNumer = MaS_GIDNumer and MaS_GIDLp = MaE_GIDLp
+				where MaS_ZlcTyp = 14346 and MaS_ZlcNumer = Z_Sur.PZA_Id and Z_Sur.PZA_TwrNumer = MaE_TwrNumer and (Mas_ZrdTyp not in (1616, 1617))),0)+
+				isnull(ZwiazanePolprodukty.IloscZwiazanychPP,0)
+			) &gt; 0
+
+		
+		open WiazaniePozostalych_cursor
+		fetch next from WiazaniePozostalych_cursor into @PZAID_DoZwiazania, @PZAIlosc,@PZAPlanowany,@PZAZwiazanyIlosc
+
+		while @@FETCH_STATUS = 0 and @Ilosc &gt; 0
+		begin
+			if @PZAIlosc &lt;= 0
+			begin
+				fetch next from WiazaniePozostalych_cursor into @PZAID_DoZwiazania, @PZAIlosc,@PZAPlanowany,@PZAZwiazanyIlosc
+				continue
+			end
+			SET @PZAAktualnyIlosc = -1
+			SELECT @PZAAktualnyIlosc = PZA_Ilosc FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny
+
+			if @Ilosc &lt; @PZAIlosc	--trzeba rozbić
+				begin	
+					IF @PZAAktualnyIlosc &gt; @Ilosc OR @PZAAktualnyIlosc = -1
+					BEGIN			
+					--najpierw zmniejszamy ilość na ProdZasobie aktualnym i ProdZasobie związanym
+					IF @PZAAktualnyIlosc &lt;&gt; -1
+						BEGIN
+							update cdn.ProdZasoby set PZA_Ilosc = PZA_Ilosc - @Ilosc,
+								PZA_IloscPom = ((PZA_Ilosc - @Ilosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END,
+								PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+								OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN (PZA_Ilosc - @Ilosc)
+								ELSE ((PZA_Ilosc - @Ilosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END) * PZA_Cena ,2)
+								ELSE ((PZA_Ilosc - @Ilosc) * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END
+							FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+							LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  where PZA_ID = @PZAIdAktualny
+						END
+					
+						EXEC CDN.ProdAktualizujRez @PZAId = @PZAIDAktualny
+					END
+
+					IF @PZAZwiazanyIlosc &gt; @Ilosc
+					BEGIN
+						update cdn.ProdZasoby set PZA_Ilosc = PZA_Ilosc - @Ilosc,
+							PZA_IloscPom = ((PZA_Ilosc - @Ilosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END,
+								PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+								OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN (PZA_Ilosc - @Ilosc)
+								ELSE ((PZA_Ilosc - @Ilosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END) * PZA_Cena ,2)
+								ELSE ((PZA_Ilosc - @Ilosc) * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END
+						FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+						LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  where PZA_ID = @PZAID_DoZwiazania
+
+						EXEC CDN.ProdAktualizujRez @PZAId = @PZAId_DoZwiazania
+
+						--następnie robimy insert nowego z odpowiednią ilością (@Ilosc)
+						
+						if ((@TypZasobu = 0 and @PZAPlanowany = 1) OR @TypZasobu = 1)
+							exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = @PZAID_DoZwiazania, @PTZID = null, @PCZID = null, @Ilosc = @Ilosc,
+								 @TypZasobu = null, @Planowany = null, @ZasobDoZwiazania = null,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+						ELSE
+							if ((@TypZasobu = 0 and @PZAPlanowany = 1) OR @TypZasobu = 1)
+								SET @PZAID_Insert = @PZAID_DoZwiazania
+					END	
+					
+					--na koniec dodajemy nowy ProdZasob realizowany
+					if @PZAPlanowany = 1
+					begin
+						set @PZAIDWykonany = @PZAID_Insert
+						IF @PZAAktualnyIlosc &gt; @Ilosc OR @PZAAktualnyIlosc = -1
+						BEGIN
+							SET @IloscPomTemp = @Proporcja * @Ilosc
+							exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = null, @PTZID = @PTZID, @PCZID = @RealizacjaID, @Ilosc = @Ilosc, 
+								@TypZasobu = null, @Planowany = 0,@ZasobDoZwiazania = 0,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @IloscPom = @IloscPomTemp, 
+								@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+						END
+						ELSE
+						BEGIN
+							SET @PZAId_Insert = @PZAIDAktualny
+							IF @Ilosc &gt; @PZAAktualnyIlosc 
+							BEGIN
+								UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @Ilosc,
+								PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+								(@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END,
+								PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND( (CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+								OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @Ilosc
+								ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+								(@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END END) * PZA_Cena ,2)
+								ELSE (@Ilosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+									PZA_TypZasobu = @TypZasobu
+								FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+								LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+								 WHERE PZA_Id = @PZAIDAktualny
+
+								IF @PTEKopiujZalaczniki = 1
+								BEGIN
+									SET @PTZDodanego = 0
+									SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+									IF @PTZDodanego &gt; 0 
+									BEGIN
+										EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny								
+									END
+								END	
+							END
+							ELSE
+							BEGIN
+								UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,
+								PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+								FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+
+								IF @PTEKopiujZalaczniki = 1
+								BEGIN
+									SET @PTZDodanego = 0
+									SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+									IF @PTZDodanego &gt; 0 
+									BEGIN
+										EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny										
+									END
+								END	
+							END
+						END
+
+						if @TypZasobu = 0
+						begin
+							IF NOT EXISTS(SELECT * FROM CDN.ProdZwiazanePolprodukty WHERE PZP_PZAIDWykonany = @PZAID_Insert AND PZP_PZAIDPlanowany = @PZAIDWykonany)
+								insert into cdn.ProdZwiazanePolprodukty(PZP_PZAIdWykonany,PZP_PZAIdPlanowany,PZP_Ilosc) values(@PZAID_Insert,@PZAIDWykonany,@Ilosc)	
+								--w przypadku gdy wiążemy się z półproduktem planowanym nie wiążemy się przez PZA_Zasob, powiązanie powinno być przez ProdZwiazanePolprodukty
+							select @OperacjaPolproduktySurowceID = PZA_Czynnosc FROM CDN.ProdZasoby where PZA_Id = @PZAIDWykonany
+						end
+						else
+						begin
+							IF NOT EXISTS(SELECT * FROM CDN.ProdZwiazanePolprodukty WHERE PZP_PZAIDWykonany = @PZAIDWykonany AND PZP_PZAIDPlanowany = @PZAID_Insert)
+								insert into cdn.ProdZwiazanePolprodukty(PZP_PZAIdWykonany,PZP_PZAIdPlanowany,PZP_Ilosc) values(@PZAIDWykonany,@PZAID_Insert,@Ilosc)	
+								--w przypadku gdy wiążemy się z półproduktem planowanym nie wiążemy się przez PZA_Zasob, powiązanie powinno być przez ProdZwiazanePolprodukty
+							select @OperacjaPolproduktyWytworzoneID = PZA_Czynnosc FROM CDN.ProdZasoby where PZA_Id = @PZAIDWykonany
+						end
+						if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID 
+							and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+							insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+					end
+					else
+						--dodanie ProdZasobu realizowanego
+						if @TypZasobu = 0
+						begin
+							IF @PZAAktualnyIlosc &gt; @Ilosc OR @PZAAktualnyIlosc = -1
+							BEGIN
+								--najpierw dodajemy ProdZasob dla produktu realizowanego
+								SET @IloscPomTemp = @Proporcja * @Ilosc
+								exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = null, @PTZID = @PTZID, @PCZID = @RealizacjaID, @Ilosc = @Ilosc, 
+									@TypZasobu = null, @Planowany = 0,@ZasobDoZwiazania = 0,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @IloscPom = @IloscPomTemp, 
+									@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+							END
+							ELSE
+							BEGIN
+								SET @PZAId_Insert = @PZAIDAktualny
+								IF @Ilosc &gt; @PZAAktualnyIlosc
+								BEGIN	
+									UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @Ilosc,
+									PZA_IloscPom =CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+									(@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END,
+									PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+									OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @Ilosc
+									ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+									(@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END END) * PZA_Cena ,2)
+									ELSE (@Ilosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+										PZA_TypZasobu = @TypZasobu
+									FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+									LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+									 WHERE PZA_Id = @PZAIDAktualny
+									 IF @PTEKopiujZalaczniki = 1
+									BEGIN
+										SET @PTZDodanego = 0
+										SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+										IF @PTZDodanego &gt; 0 
+										BEGIN
+											EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+										END
+									END	
+								END
+								ELSE
+								BEGIN
+									UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,
+									PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+									FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+
+									IF @PTEKopiujZalaczniki = 1
+									BEGIN
+										SET @PTZDodanego = 0
+										SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+										IF @PTZDodanego &gt; 0 
+										BEGIN
+											EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny										
+										END
+									END	
+								END
+							END
+
+							IF @PZAZwiazanyIlosc &gt; @Ilosc
+							--następnie dodajemy rekord dla powiązanego surowca (rekord rozbity na dwa) który powinien być związany z wyżej dodanym ProdZasobem
+								exec @PZAID_Insert2 = CDN.ProdZasoby_Insert @PZAID = @PZAID_DoZwiazania, @PTZID = null, @PCZID = null, @Ilosc = @Ilosc, 
+									@TypZasobu = null, @Planowany = null,@ZasobDoZwiazania = @PZAID_Insert,@FirmaId = @FirmaId, @OpeNr = @OpeNr, 
+									@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+							ELSE
+							BEGIN
+								SET @PZAID_Insert2 = @PZAID_DoZwiazania								
+								UPDATE CDN.ProdZasoby SET PZA_Zasob = @PZAID_Insert WHERE PZA_Id = @PZAID_DoZwiazania
+							END
+
+							select @OperacjaPolproduktySurowceID = PCZ_Realizuje FROM CDN.ProdZasoby JOIN cdn.ProdCzynnosci ON PCZ_Id = PZA_Czynnosc 
+								where PZA_Id = @PZAID_Insert2
+							if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID 
+								and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+								insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+							end
+						else
+						begin
+							set @PZAIDWykonany = @PZAID_Insert
+							IF @PZAAktualnyIlosc &gt; @Ilosc OR @PZAAktualnyIlosc = -1
+							BEGIN
+								SET @IloscPomTemp = @Proporcja * @Ilosc
+								exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = null, @PTZID = @PTZID, @PCZID = @RealizacjaID, @Ilosc = @Ilosc, 
+									@TypZasobu = null, @Planowany = 0, @ZasobDoZwiazania = @PZAIDWykonany,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @IloscPom = @IloscPomTemp,
+									@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+							END
+							ELSE
+							BEGIN
+
+								IF @Ilosc &gt; @PZAAktualnyIlosc	
+								BEGIN
+									UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @Ilosc,
+									PZA_IloscPom =CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+									(@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END,
+									PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+									OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @Ilosc
+									ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+									(@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END END) * PZA_Cena ,2)
+									ELSE (@Ilosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+										PZA_TypZasobu = @TypZasobu,PZA_Zasob = @PZAIDWykonany
+									FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+									LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+									 WHERE PZA_Id = @PZAIDAktualny
+
+									 IF @PTEKopiujZalaczniki = 1
+									BEGIN
+										SET @PTZDodanego = 0
+										SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+										IF @PTZDodanego &gt; 0 
+										BEGIN
+											EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+										END
+									END	
+								END
+								ELSE
+								BEGIN
+									UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,PZA_Zasob = @PZAIDWykonany,
+									PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+									FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+									IF @PTEKopiujZalaczniki = 1
+									BEGIN
+										SET @PTZDodanego = 0
+										SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny 
+											AND PZA_Planowany = 0),0)
+				
+										IF @PTZDodanego &gt; 0 
+										BEGIN
+											EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+										END
+									END	
+								END
+							END
+
+							select @OperacjaPolproduktyWytworzoneID = PCZ_Realizuje FROM CDN.ProdZasoby 
+							JOIN cdn.ProdCzynnosci ON PCZ_Id = PZA_Czynnosc where PZA_Id = @PZAIDWykonany
+							if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID 
+								and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+								insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+						end
+
+					set @Ilosc = 0
+				end
+			else
+				begin
+					if @PZAPlanowany = 1
+					begin
+						--dodajemy nowy zasób
+						IF @PZAAktualnyIlosc &gt; @PZAIlosc OR @PZAAktualnyIlosc = -1
+						BEGIN
+							SET @IloscPomTemp = @Proporcja * @PZAIlosc
+							exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = null, @PTZID = @PTZID, @PCZID = @RealizacjaID, @Ilosc = @PZAIlosc, 
+								@TypZasobu = null, @Planowany = 0,@ZasobDoZwiazania = 0,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @IloscPom = @IloscPomTemp, 
+								@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+						END
+						ELSE
+						BEGIN
+							IF @PZAIlosc &gt; @PZAAktualnyIlosc	
+							BEGIN
+								UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @PZAIlosc,
+								PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+								(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END,
+								PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+								OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @PZAIlosc
+								ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+								(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END END) * PZA_Cena,2) 
+								ELSE (@PZAIlosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+										PZA_TypZasobu = @TypZasobu
+								FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+								LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+								WHERE PZA_Id = @PZAIDAktualny
+								IF @PTEKopiujZalaczniki = 1
+								BEGIN
+									SET @PTZDodanego = 0
+									SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+									IF @PTZDodanego &gt; 0 
+									BEGIN
+										EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+									END
+								END	
+							END
+							ELSE
+							BEGIN
+								UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,
+								PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+								FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+
+								IF @PTEKopiujZalaczniki = 1
+								BEGIN
+									SET @PTZDodanego = 0
+									SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+									IF @PTZDodanego &gt; 0 
+									BEGIN
+										EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+									END
+								END	
+							END
+
+							SET @PZAID_Insert = @PZAIDAktualny
+						END
+
+						if @TypZasobu = 0
+						begin
+							IF NOT EXISTS(SELECT * FROM CDN.ProdZwiazanePolprodukty WHERE PZP_PZAIDWykonany = @PZAID_Insert AND PZP_PZAIDPlanowany = @PZAID_DoZwiazania)
+								insert into cdn.ProdZwiazanePolprodukty(PZP_PZAIDWykonany,PZP_PZAIDPlanowany,PZP_Ilosc) values(@PZAID_Insert,@PZAID_DoZwiazania,@PZAIlosc)	
+							--w przypadku gdy wiążemy się z półproduktem planowanym nie wiążemy się przez PZA_Zasob, powiązanie powinno być przez ProdZwiazanePolprodukty	
+							select @OperacjaPolproduktySurowceID = PZA_Czynnosc FROM CDN.ProdZasoby where PZA_Id = @PZAID_DoZwiazania
+						end
+						else
+						begin
+							IF NOT EXISTS(SELECT * FROM CDN.ProdZwiazanePolprodukty WHERE PZP_PZAIDWykonany = @PZAID_DoZwiazania AND PZP_PZAIDPlanowany = @PZAID_Insert)
+								insert into cdn.ProdZwiazanePolprodukty(PZP_PZAIDWykonany,PZP_PZAIDPlanowany,PZP_Ilosc) values(@PZAID_DoZwiazania,@PZAID_Insert,@PZAIlosc)	
+								--w przypadku gdy wiążemy się z półproduktem planowanym nie wiążemy się przez PZA_Zasob, 
+							--powiązanie powinno być przez ProdZwiazanePolprodukty
+							select @OperacjaPolproduktyWytworzoneID = PZA_Czynnosc FROM CDN.ProdZasoby where PZA_Id = @PZAID_DoZwiazania
+						end
+						if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID 
+							and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+							insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+						IF @PZAAktualnyIlosc &gt; @PZAIlosc
+						BEGIN
+							--zmniejszamy ilość i jeśli ilość jest zerowa usuwamy zasób
+							update cdn.ProdZasoby set PZA_Ilosc = PZA_Ilosc - @PZAIlosc,
+							PZA_IloscPom = ((PZA_Ilosc - @PZAIlosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END,
+							PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+							OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN (PZA_Ilosc - @PZAIlosc)
+							ELSE ((PZA_Ilosc - @PZAIlosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END) * PZA_Cena ,2)
+							ELSE ((PZA_Ilosc - @PZAIlosc) * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END
+							FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+							LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc where PZA_ID = @PZAIDAktualny
+						END
+
+						set @Ilosc = @Ilosc - @PZAIlosc
+					end
+					else
+					begin				
+						--w zmiennej @Ilosc pozostaje ilość co powinno spowodować że na końcu zostanie dodany niezwiązany (lub związany z czymś innym) ProdZasob na tą pozostałą ilość
+						if @TypZasobu = 0
+						begin
+							IF @PZAAktualnyIlosc &gt; @PZAIlosc OR @PZAAktualnyIlosc = -1
+							BEGIN
+								SET @IloscPomTemp = @Proporcja * @PZAIlosc
+								exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = null, @PTZID = @PTZID, @PCZID = @RealizacjaID, @Ilosc = @PZAIlosc, 
+									@TypZasobu = null, @Planowany = 0, @ZasobDoZwiazania = 0,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @IloscPom = @IloscPomTemp, 
+									@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+							END
+							ELSE
+							BEGIN
+								IF @PZAIlosc &gt; @PZAAktualnyIlosc	
+								BEGIN
+									UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @PZAIlosc,
+									PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+									(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END,
+									PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+									OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @PZAIlosc
+									ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+									(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END END) * PZA_Cena ,2)
+									ELSE (@PZAIlosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+											PZA_TypZasobu = @TypZasobu
+									FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+									LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+									WHERE PZA_Id = @PZAIDAktualny
+									IF @PTEKopiujZalaczniki = 1
+									BEGIN
+										SET @PTZDodanego = 0
+										SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+										IF @PTZDodanego &gt; 0 
+										BEGIN
+											EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+										END
+									END	
+
+								END
+								ELSE
+								BEGIN
+									UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,
+									PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+									FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+									IF @PTEKopiujZalaczniki = 1
+									BEGIN
+										SET @PTZDodanego = 0
+										SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+										IF @PTZDodanego &gt; 0 
+										BEGIN
+											EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny								
+										END
+									END	
+								END
+
+								SET @PZAID_Insert = @PZAIDAktualny
+							END
+							update CDN.ProdZasoby set PZA_Zasob = @PZAID_Insert where PZA_ID = @PZAID_DoZwiazania
+							select @OperacjaPolproduktySurowceID = PCZ_Realizuje FROM CDN.ProdZasoby 
+								JOIN cdn.ProdCzynnosci ON PCZ_Id = PZA_Czynnosc where PZA_Id = @PZAID_DoZwiazania
+						end
+						else
+						begin
+							IF @PZAAktualnyIlosc &gt; @PZAIlosc OR @PZAAktualnyIlosc = -1
+							BEGIN
+								SET @IloscPomTemp = @Proporcja * @PZAIlosc
+								exec @PZAID_Insert = CDN.ProdZasoby_Insert @PZAID = null, @PTZID = @PTZID, @PCZID = @RealizacjaID, @Ilosc = @PZAIlosc, 
+									@TypZasobu = null, @Planowany = 0, @ZasobDoZwiazania = @PZAID_DoZwiazania,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @IloscPom = @IloscPomTemp, 
+									@PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+							END
+							ELSE
+							BEGIN
+								IF @PZAIlosc &gt; @PZAAktualnyIlosc
+								BEGIN	
+									UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @PZAIlosc,
+									PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+									(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END,
+									PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+									OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @PZAIlosc
+									ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+									(@PZAIlosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @PZAIlosc * @Proporcja END END) * PZA_Cena ,2)
+									ELSE (@PZAIlosc * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END,
+											PZA_TypZasobu = @TypZasobu,PZA_Zasob = @PZAID_DoZwiazania
+									FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+									LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+									WHERE PZA_Id = @PZAIDAktualny
+									IF @PTEKopiujZalaczniki = 1
+									BEGIN
+										SET @PTZDodanego = 0
+										SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+										IF @PTZDodanego &gt; 0 
+										BEGIN
+											EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+										END
+									END	
+								END
+								ELSE
+								BEGIN
+									UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,PZA_Zasob = @PZAID_DoZwiazania,
+									PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+									FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+									IF @PTEKopiujZalaczniki = 1
+									BEGIN
+										SET @PTZDodanego = 0
+										SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+										IF @PTZDodanego &gt; 0 
+										BEGIN
+											EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+										END
+									END	
+
+								END
+
+								SET @PZAID_Insert = @PZAIDAktualny
+							END
+							select @OperacjaPolproduktyWytworzoneID = PCZ_Realizuje FROM CDN.ProdZasoby 
+							JOIN cdn.ProdCzynnosci ON PCZ_Id = PZA_Czynnosc where PZA_Id = @PZAID_DoZwiazania
+						end
+						if not exists(select * from CDN.ProdOperacjePowiazane where POP_PczId = @OperacjaPolproduktySurowceID 
+							and POP_PrzedPczId = @OperacjaPolproduktyWytworzoneID)
+							insert into cdn.ProdOperacjePowiazane values(@OperacjaPolproduktySurowceID, @OperacjaPolproduktyWytworzoneID)
+
+						IF @PZAAktualnyIlosc &gt; @PZAIlosc 
+							update cdn.ProdZasoby set PZA_Ilosc = PZA_Ilosc - @PZAIlosc,
+								PZA_IloscPom = ((PZA_Ilosc - @PZAIlosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END,
+								PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+								OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN (PZA_Ilosc - @PZAIlosc)
+								ELSE ((PZA_Ilosc - @PZAIlosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END) * PZA_Cena ,2)
+								ELSE ((PZA_Ilosc - @PZAIlosc) * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END
+							FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+							LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc where PZA_ID = @PZAIDAktualny
+						
+						EXEC CDN.ProdAktualizujRez @PZAId =@PZAId_DoZwiazania
+						EXEC CDN.ProdAktualizujRez @PZAId =@PZAIDAktualny
+
+						set @Ilosc = @Ilosc - @PZAIlosc
+					end
+				end 
+				
+			fetch next from WiazaniePozostalych_cursor into @PZAID_DoZwiazania, @PZAIlosc,@PZAPlanowany,@PZAZwiazanyIlosc
+		end
+		
+		close WiazaniePozostalych_cursor 
+		deallocate WiazaniePozostalych_cursor
+		
+	end
+
+	IF @TypZasobu = 1
+	BEGIN
+		IF @IloscPocz - @Ilosc &lt; @IloscMin
+			SET @Ilosc = @IloscMin - (@IloscPocz - @Ilosc)
+		ELSE
+			SET @Ilosc = 0
+	END
+
+	if @Ilosc &gt; 0			--jeśli jeszcze coś zostało dodajemy ProdZasob niezwiązany, tutaj obsłużony jest również przypadek nadmiarowej realizacji w którym nie ma półproduktu planowanego oraz nie ma z czym związać półproduktu
+	BEGIN
+		SET @PZAAktualnyIlosc = -1
+		SELECT @PZAAktualnyIlosc = PZA_Ilosc FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 1
+
+		IF @PZAAktualnyIlosc &gt; @Ilosc OR @PZAAktualnyIlosc = -1 --zasób jest już na realzacji
+		BEGIN
+			SET @IloscPomTemp = @Proporcja * @Ilosc
+			exec CDN.ProdZasoby_Insert @PZAID = null, @PTZID = @PTZID, @PCZID = @RealizacjaID, @Ilosc = @Ilosc, @TypZasobu = null, 
+				@Planowany = 0, @ZasobDoZwiazania = null,@FirmaId = @FirmaId, @OpeNr = @OpeNr, @IloscPom = @IloscPomTemp, @PTEKopiujZalaczniki = @PTEKopiujZalaczniki
+
+			if exists(select * from cdn.ProdZasoby where PZA_ID = @PZAIDAktualny and PZA_Planowany = 1)
+				/*if exists(select * from cdn.ProdZasoby where PZA_Ilosc &lt;= 0 and PZA_ID = @PZAIDAktualny)
+						delete from cdn.ProdZasoby where PZA_ID = @PZAIDAktualny*/ --tfsid: 225104
+			begin
+				update cdn.ProdZasoby set PZA_Ilosc = PZA_Ilosc - @Ilosc,
+				PZA_IloscPom = ((PZA_Ilosc - @Ilosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END,
+				PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+					OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN (PZA_Ilosc - @Ilosc)
+				ELSE ((PZA_Ilosc - @Ilosc) * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END) * PZA_Cena ,2)
+				ELSE ((PZA_Ilosc - @Ilosc) * PZA_Koszt)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END
+				FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+				LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc where PZA_ID = @PZAIDAktualny
+			end
+		END
+		ELSE
+			IF @Ilosc &gt; @PZAAktualnyIlosc	
+			BEGIN
+				UPDATE CDN.ProdZasoby SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_Ilosc = @Ilosc,
+				PZA_IloscPom =CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+						(@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END,
+				PZA_Koszt = CASE WHEN PZA_TypKosztu = 1 THEN ROUND((CASE WHEN PZA_PrzeliczajWgPomocniczej = 0 OR (PZA_JednostkaPom = '' AND PZA_TechnologiaZasob = 0)
+					OR (PZA_TechnologiaZasob &gt; 0 AND ISNULL(PTZ_JednostkaPom,'') = '') THEN @Ilosc
+				ELSE (@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END END) * PZA_Cena ,2)
+				ELSE CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN 
+						(@Ilosc * PZA_IloscPom)/CASE WHEN PZA_Ilosc&gt;0 THEN PZA_Ilosc ELSE 1 END ELSE @Ilosc * @Proporcja END END,
+				PZA_TypZasobu = @TypZasobu
+				FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PZA_TechnologiaZasob = PTZ_ID
+				LEFT JOIN CDN.ProdTechnologiaCzynnosci ON PTC_Id = PTZ_TechnologiaCzynnosc  
+				WHERE PZA_Id = @PZAIDAktualny
+				IF @PTEKopiujZalaczniki = 1
+						BEGIN
+							SET @PTZDodanego = 0
+							SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+							IF @PTZDodanego &gt; 0 
+							BEGIN
+								EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny								
+							END
+						END	
+			END
+			ELSE
+			BEGIN
+				UPDATE Zas SET PZA_Planowany = 0, PZA_Czynnosc = @RealizacjaID, PZA_TypZasobu = @TypZasobu,
+				PZA_IloscPom = CASE WHEN ISNULL(PTZ_NiezaleznaOdJedPod,1) = 0 OR @IloscPom IS NULL THEN PZA_IloscPom ELSE PZA_Ilosc * @Proporcja END
+				FROM CDN.ProdZasoby Zas LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob WHERE PZA_Id = @PZAIDAktualny
+				IF @PTEKopiujZalaczniki = 1
+						BEGIN
+							SET @PTZDodanego = 0
+							SET @PTZDodanego = ISNULL((SELECT PZA_TechnologiaZasob FROM CDN.ProdZasoby WHERE PZA_Id = @PZAIDAktualny AND PZA_Planowany = 0),0)
+				
+							IF @PTZDodanego &gt; 0 
+							BEGIN
+								EXEC CDN.ProdKopiujZalaczniki @ZrdTyp = 14342, @ZrdNumer = @PTZDodanego, @DocTyp = 14346, @DocNumer = @PZAIDAktualny									
+							END
+						END	
+			END
+	END
+end
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury CDN.ProdRealizacjaPolproduktuSurowca" hidden="False">
+GRANT EXECUTE ON CDN.ProdRealizacjaPolproduktuSurowca TO CDNRaport
+</scriptdef>
+</ROOT>

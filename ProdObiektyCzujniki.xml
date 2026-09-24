@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:25:23 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="ProdObiektyCzujniki" ident="8a9e2fa9-7ee1-4db6-b779-7da6acd7da04" prefix="POC" filename="'produkcja.cdn\!ProdObiektyCzujniki'" options=""
+  description="Wiązanie między zasobami produkcyjnymi a czujnikami IoT" longdescription="" owner="Connect_DSN3" glbx="3" nosql="No"
+  aliases="">
+  <columns>
+    <column ident="d3c72d4e-2ba9-4bde-85b8-66354fc767a0" clarionname="POC:Id" sqlname="POC_Id" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator powiązania" longdescription="" options="SQL_IDENTITY()"
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="6b921879-f294-4e62-bf8e-24ea67da1573" clarionname="POC:PCUId" sqlname="POC_PCUId" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator czujnika powiązanego z zasobem produkcyjnym" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="PCUI d" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="4f0bdf61-dd16-416a-a51e-49b07d31e3bd" clarionname="POC:POBId" sqlname="POC_POBId" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator zasobu produkcyjnego  powiązanego z czujnikiem" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="POBI d" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="93eff2e6-874b-4114-8eed-399a26a0d5ee" clarionname="POC:AktywnyOd" sqlname="POC_AktywnyOd" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Data powiązania czujnika z urządzeniem" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Aktywny Od" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="266a3f89-5104-4d83-a131-e7d3330d6e2b" clarionname="POC:AktywnyDo" sqlname="POC_AktywnyDo" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Data ukończenia powiązania z urządzenie" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Aktywny Do" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="db973817-9627-4747-ace8-8b3b921a0620" clarionname="POC:Primary" sqlname="POCPrimary" description="Klucz podstawowy" longdescription="" options="" primary="Yes" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="Yes" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="d3c72d4e-2ba9-4bde-85b8-66354fc767a0" clarionname="POC:Id" sqlname="POC_Id" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="df8cb2fc-d29c-431c-a642-02a157485d6f" clarionname="POC:KeyObiekt" sqlname="POCObiekt" description="Klucz wg obiektu" longdescription="" options="" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="4f0bdf61-dd16-416a-a51e-49b07d31e3bd" clarionname="POC:POBId" sqlname="POC_POBId" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="767d397e-22d6-4c83-9f81-c96a559e290d" clarionname="POC:KeyCzujnik" sqlname="POCCzuijnik" description="Klucz wg czujnika" longdescription="" options="" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="6b921879-f294-4e62-bf8e-24ea67da1573" clarionname="POC:PCUId" sqlname="POC_PCUId" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+    <relation type="MANY:1" onupdate="" ondelete="CASCADE"
+        options=""
+        comments="" nosql="No" setnull="No"
+        conditional=""
+        parent="ProdCzujniki" primaryname="PCZU:Primary" primarysqlname="PCZUPrimary" parenthandler="" parentlink="ProdCzujniki"
+        child="ProdObiektyCzujniki" foreignname="POC:KeyCzujnik" foreignsqlname="POCCzuijnik" childhandler="FK_POCCzuijnik" childlink="ProdObiektyCzujniki">
+      <relationcolumn
+        parentident="1493ad12-e" parentname="PCZU:Id" parentsqlname="PCZU_Id"
+        childident="6b921879-f294-4e62-bf8e-24ea67da1573" childname="POC:PCUId" childsqlname="POC_PCUId" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="CASCADE"
+        options=""
+        comments="" nosql="No" setnull="No"
+        conditional=""
+        parent="ProdObiekty" primaryname="POB:Primary" primarysqlname="POBPrimary" parenthandler="" parentlink="ProdObiekty"
+        child="ProdObiektyCzujniki" foreignname="POC:KeyObiekt" foreignsqlname="POCObiekt" childhandler="FK_POCObiekt" childlink="ProdObiektyCzujniki">
+      <relationcolumn
+        parentident="e98c7f6a-5" parentname="POB:Id" parentsqlname="POB_Id"
+        childident="4f0bdf61-dd16-416a-a51e-49b07d31e3bd" childname="POC:POBId" childsqlname="POC_POBId" isinsqlprimary="Yes" />
+    </relation>
+  
+  </relations>
+</table>
+</ROOT>

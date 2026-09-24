@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie perspektywy ProdObiektyUzycieAktualneView" hidden="True">
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE NAME = 'ProdObiektyUzycieAktualneView'
+			AND type = 'v'
+		)
+	DROP VIEW CDN.ProdObiektyUzycieAktualneView
+</scriptdef>
+<scriptdef name="Tworzenie perspektywy ProdObiektyUzycieAktualneView" hidden="False">
+-- =============================================
+-- Author: Jacek Kosinski
+-- Create date: 2017-04-04
+-- Description: 
+-- =============================================
+create view CDN.ProdObiektyUzycieAktualneView
+as
+  SELECT  POU_Obiekt POV_Obiekt 
+      ,POU_Termin POV_Termin
+	  ,(select top 1 POU_Termin from CDN.ProdObiektyUzycie n where n.POU_Obiekt  = m.POU_Obiekt and n.POU_Termin &gt; m.POU_Termin order by POU_Termin) POV_TerminZdania
+	  ,(select top 1 POU_Termin from CDN.ProdObiektyUzycie n where n.POU_Obiekt  = m.POU_Obiekt and n.POU_Termin &gt; m.POU_Termin order by POU_Termin desc) POV_TerminOstUzycia
+	  , case when m.POU_PrcNumer &gt; 0 then p.Prc_Akronim else o.POB_Kod end POV_Kod
+	  , case when m.POU_PrcNumer &gt; 0 then p.Prc_Imie1 + ' ' + p.Prc_Nazwisko else o.POB_Nazwa end POV_Nazwa
+
+  FROM CDN.ProdObiektyUzycie m
+  left join cdn.PrcKarty p  on p.Prc_GIDNumer = m.POU_PrcNumer
+  left join cdn.ProdObiekty o on o.POB_Id = m.POU_ObiektPrzyjmujacy
+</scriptdef>
+<scriptdef name="Nadawanie praw do perspektywy ProdObiektyUzycieAktualneView" hidden="False">
+GRANT SELECT
+	ON CDN.ProdObiektyUzycieAktualneView
+	TO CDNRaport
+
+</scriptdef>
+<scriptdef name="Usuwanie perspektywy vZasobyGniazdRoboczych" hidden="True">
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE NAME = 'ZasobyGniazdRoboczychView'
+			AND type = 'v'
+		)
+	DROP VIEW CDN.ZasobyGniazdRoboczychView
+</scriptdef>
+<scriptdef name="Tworzenie perspektywy vZasobyGniazdRoboczych" hidden="False">
+-- =============================================
+-- Author: Jacek Kosinski
+-- Create date: 2017-04-04
+-- Description: 
+-- =============================================
+CREATE VIEW CDN.ZasobyGniazdRoboczychView AS
+SELECT pob_id,
+       pob_kod,
+       pob_nazwa,
+       isnull(frs_nazwa,'') Oddzial,
+       SLW_WartoscS,
+       SLW_ID,
+       pof_funkcja,
+       POF_Grupa,
+       POF_Id
+FROM cdn.prodobiektyfunkcje
+left JOIN cdn.prodobiekty ON pof_obiekt = pob_id
+left JOIN cdn.slowniki ON SLW_ID = POB_RodzajZasobu
+LEFT JOIN cdn.frmstruktura ON frs_id = pof_oddzial
+WHERE POF_Widocznosc IN (2,3)
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do perspektywy vZasobyGniazdRoboczych" hidden="False">
+GRANT SELECT
+	ON CDN.ZasobyGniazdRoboczychView
+	TO CDNRaport
+</scriptdef>
+<scriptdef name="Kasowanie  funkcji ProdDrzewoZasobowGniazd  " hidden="True">
+
+
+IF EXISTS (
+		SELECT *
+		FROM sys.objects
+		WHERE object_id = OBJECT_ID(N'[CDN].[ProdDrzewoZasobowGniazd]')
+			AND type IN (
+				N'FN'
+				, N'IF'
+				, N'TF'
+				, N'FS'
+				, N'FT'
+				)
+		)
+	DROP FUNCTION [CDN].ProdDrzewoZasobowGniazd
+</scriptdef>
+<scriptdef name="Tworzenie funkcji tabelarycznej  ProdDrzewoZasobowGniazd" hidden="False">
+-- =============================================
+-- Author: Jacek Kosinski
+-- Create date: 2017-04-04
+-- Description: 
+-- =============================================
+CREATE FUNCTION CDN.ProdDrzewoZasobowGniazd() 
+RETURNS TABLE 
+AS RETURN 
+WITH ZFT AS
+  ( SELECT PFU_Id Id,
+           PFU_Kod Parent ,
+           PFU_Kod Kod ,
+           PFU_Nazwa Nazwa ,
+           isnull(frs_nazwa,'') Oddzial ,
+           cast(CASE
+                    WHEN PFU_PlanujStrategicznie = 0 THEN 'Nie'
+                    ELSE 'Tak'
+                END AS varchar(5)) PlanujStrategicznie ,
+           cast(PFU_DopuszczalneObciazenie AS varchar(5)) DopuszczalneObciazenie ,
+           cast('' AS varchar(255)) RodzajZasobu ,
+           cast(0 AS int) IdZasobu ,
+           PFU_ZdolnoscWOkresie ZdolnoscWOkresie,
+           PFU_ZdolnoscWOkresieJedn ZdolnoscWOkresieJedn ,
+           1 poziom ,
+           0 POFGrupa ,
+           0 POFId ,
+           PFU_Archiwalny
+   FROM CDN.ProdFunkcje
+   LEFT   JOIN cdn.frmstruktura ON frs_id = pfu_oddzial
+   UNION ALL SELECT pob_id,
+                    ZFT.Kod Parent,
+                    pob_kod,
+                    pob_nazwa,
+                    z.Oddzial,
+                    cast('' AS varchar(5)),
+                    cast('' AS varchar(5)),
+                    SLW_WartoscS,
+                    SLW_ID,
+                    cast(0 AS decimal(11,2)),
+                    cast(0 AS tinyint),
+                    2 poziom,
+                    z.POF_Grupa,
+                    z.POF_Id,
+
+                    cast(0 AS tinyint)
+   FROM zft
+   JOIN cdn.ZasobyGniazdRoboczychView z ON pof_funkcja = ZFT.id
+    where zft.poziom = 1
+   )
+SELECT *
+FROM ZFT
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji tabelarycznej ProdDrzewoZasobowGniazd " hidden="False">
+GRANT SELECT
+	ON CDN.ProdDrzewoZasobowGniazd
+	TO CDNRaport
+</scriptdef>
+<scriptdef name="Kasowanie procedury i funkcji ProdCzynnosciTechnologiiDiagram" hidden="True">
+
+
+IF EXISTS (
+		SELECT *
+		FROM sys.objects
+		WHERE object_id = OBJECT_ID(N'[CDN].[ProdCzynnosciTechnologiiDiagram]')
+			AND type IN (
+				N'FN'
+				, N'IF'
+				, N'TF'
+				, N'FS'
+				, N'FT'
+				)
+		)
+	DROP FUNCTION [CDN].ProdCzynnosciTechnologiiDiagram
+</scriptdef>
+<scriptdef name="Tworzenie funkcji tabelarycznej ProdCzynnosciTechnologiiDiagram" hidden="False">
+-- =============================================
+-- Author: Jacek Kosiński
+-- Create date: 2017-04-18
+-- Description: 
+-- =============================================
+
+
+CREATE FUNCTION [CDN].[ProdCzynnosciTechnologiiDiagram]
+(
+        @PTEID INT 
+)
+RETURNS
+@tmpCzynnosci TABLE (ID INT, PTC_Ojciec INT, Kod VARCHAR(40), Nazwa VARCHAR(255), Lp INT, Poziom SMALLINT, Typ INT, Ilosc DECIMAL(11, 4), Jednostka VARCHAR(15), Filtr SMALLINT, KodKop VARCHAR(100), Zamiennik INT, Podrzedne SMALLINT, Polprodukt INT, TypOperacjiKTP TINYINT
+                , TypMaterialuKTP TINYINT,ZamiennikKod VARCHAR(40),ZamiennikIlosc DECIMAL(11,4),ZamiennikJm VARCHAR(15)
+                ,NrInstrukcji VARCHAR(50),Kolor INT ,Kolejnosc INT, IloscPom DECIMAL(11, 4), JmPom VARCHAR(15), PTZtwrNumer int, Ojciec INT
+                )
+AS
+BEGIN
+
+
+       DECLARE @lPoziom SMALLINT
+
+       SET @lPoziom = 1
+
+       DECLARE @TypZabieg SMALLINT
+
+       SET @TypZabieg = 43
+
+       DECLARE @TypProduktUboczny SMALLINT
+
+       SET @TypProduktUboczny = 47 -- bylo 7
+
+       DECLARE @TypCzynnosc SMALLINT
+
+       SET @TypCzynnosc = 40
+
+       DECLARE @TypProdukt SMALLINT
+
+       SET @TypProdukt = 50
+
+       DECLARE @TypSurowiec SMALLINT
+
+       SET @TypSurowiec = 60
+
+       DECLARE @TypFunkcja SMALLINT
+
+       SET @TypFunkcja = 70
+
+       DECLARE @TypPolProdukt SMALLINT
+
+       SET @TypPolProdukt = 80
+
+
+
+
+
+        DECLARE @insert INT
+
+        SET @insert = 0
+
+        INSERT INTO @tmpCzynnosci
+
+		Select PTE_id, 0        ,PTE_Kod , PTE_Nazwa ,1     , 0       ,            10,0
+		,PTE_Jednostka,1,'',0,0,0,0,0,'',0,'',0,-1,1,0,'',0,0
+		from cdn.ProdTechnologia where pte_id = @PTEID
+		union 
+        SELECT PTC_ID, PTC_Ojciec, PTC_Kod, PTC_Nazwa, PTC_Lp, @lPoziom, @TypCzynnosc, CDN.Prod_WartoscAtr(PTC_Ilosc, PTC_IloscAtr, 14340, @PTEID, DEFAULT, 0)
+		, PTC_Jednostka, 1, '', 0, 0, 0, PTC_TypOperacjiKTP TypOperacjiKTP, 0 TypMaterialuKTP,'' ZamiennikKod, 0 ZamiennikIlosc,'' ZamiennikJm
+                                                , PTC_NrInstrukcji, -1 Kolor , 2 Kolejnosc,0,'',0,@PTEID
+        FROM cdn.ProdTechnologiaCzynnosci
+        LEFT OUTER JOIN Cdn.TwrKarty ON PTC_TwrTyp = Twr_GIDTyp AND PTC_TwrNumer = Twr_GidNumer
+        WHERE PTC_Technologia = @PTEID AND isnull(PTC_Ojciec, 0) = 0
+
+        SET @insert = 1
+
+        WHILE (@insert &gt; 0 )
+        BEGIN
+                SET @insert = 0
+                SET @lPoziom = @lPoziom + 1
+
+                INSERT INTO @tmpCzynnosci
+                SELECT a1.PTZ_ID, a2.PTC_Ojciec, a1.PTZ_Kod, a1.PTZ_Nazwa, PTZ_Lp, @lPoziom, CASE
+                                WHEN a1.PTZ_TypZasobu = 0
+                                        THEN @TypProdukt
+                                WHEN a1.PTZ_TypZasobu = 4
+                                        THEN @TypProduktUboczny
+                                                --when a1.PTZ_TechnologiaZasob &gt; 0  then @TypPolProdukt
+                                ELSE @TypSurowiec
+                                END Typ
+                                                                , CDN.Prod_WartoscAtr(PTZ_Ilosc, PTZ_IloscAtr, 14340, @PTEID, DEFAULT, 0), PTZ_Jednostka
+							 , 1, Twr_Kod, a1.PTZ_Zamiennik, 0, a1.PTZ_TechnologiaZasob, 0, CASE
+                                WHEN a1.PTZ_TypZasobu IN (1, 2) AND EXISTS (
+                                                SELECT *
+                                                FROM CDN.ProdTechnologiaZasobyTwX
+                                                WHERE PTT_PTZId = a1.PTZ_Id
+                                                GROUP BY PTT_TwxTyp
+                                                HAVING (count(PTT_TwXTyp) &gt; 0 AND PTT_TwXTyp = - 16) OR (count(PTT_TwXTyp) &gt; 1 AND PTT_TwXTyp = 16)
+                                                )
+                                        THEN 2
+                                WHEN a1.PTZ_TypZasobu IN (1, 2)
+                                        THEN 1
+                                ELSE 0
+                                END TypMaterialuKTP,a2.Kod ZamiennikKod, a2.Ilosc,a2.Jednostka
+                                                                , ''
+                                                                ,0 Kolor
+                                                                , 4 Kolejnosc
+																, a1.PTZ_IloscPom
+																,a1.PTZ_JednostkaPom
+																, a1.PTZ_twrNumer
+																, a2.id
+                FROM cdn.ProdTechnologiaZasoby AS a1
+                LEFT OUTER JOIN Cdn.TwrKarty ON a1.PTZ_KopTyp = Twr_GidTyp AND a1.PTZ_KopNumer = Twr_GidNumer
+                INNER JOIN @tmpCzynnosci AS a2 ON
+    
+                        a1.PTZ_Zamiennik = a2.ID AND a2.Typ = @TypSurowiec AND a2.Poziom = (@lPoziom - 1)
+
+                IF @@RowCount &gt; 0
+                        SET @insert = 1
+
+                INSERT INTO @tmpCzynnosci
+                SELECT a1.PTZ_ID, a2.ID, a1.PTZ_Kod, a1.PTZ_Nazwa, PTZ_Lp, @lPoziom, CASE
+                                WHEN a1.PTZ_TypZasobu = 0
+                                        THEN @TypProdukt
+                                WHEN a1.PTZ_TypZasobu = 4
+                                        THEN @TypProduktUboczny
+                                                --when a1.PTZ_TechnologiaZasob &gt; 0  then @TypPolProdukt
+                                ELSE @TypSurowiec
+                                END, CDN.Prod_WartoscAtr(PTZ_Ilosc, PTZ_IloscAtr, 14340, @PTEID, DEFAULT, 0), PTZ_Jednostka, 1, Twr_Kod, a1.PTZ_Zamiennik, 0, a1.PTZ_TechnologiaZasob, 0
+								, CASE
+                                WHEN a1.PTZ_TypZasobu IN (1, 2) AND EXISTS (
+                                                SELECT *
+                                                FROM CDN.ProdTechnologiaZasobyTwX
+                                                WHERE PTT_PTZId = a1.PTZ_Id
+                                                GROUP BY PTT_TwxTyp
+                                                HAVING (count(PTT_TwXTyp) &gt; 0 AND PTT_TwXTyp = - 16) OR (count(PTT_TwXTyp) &gt; 1 AND PTT_TwXTyp = 16)
+                                                )
+                                        THEN 2
+                                WHEN a1.PTZ_TypZasobu IN (1, 2)
+                                        THEN 1
+                                ELSE 0
+                                END TypMaterialuKTP,'' ZamiennikKod
+                                                                ,0 ZamiennikIlosc
+                                                                ,'' ZamiennikJm
+                                                                , ''
+                                                                ,0 Kolor
+                                                                , 4 Kolejnosc
+																, a1.PTZ_IloscPom
+																,a1.PTZ_JednostkaPom
+																, a1.PTZ_twrNumer
+																, a2.id
+                                                FROM cdn.ProdTechnologiaZasoby AS a1
+                LEFT OUTER JOIN Cdn.TwrKarty ON a1.PTZ_KopTyp = Twr_GidTyp AND a1.PTZ_KopNumer = Twr_GidNumer
+                INNER JOIN @tmpCzynnosci AS a2 ON a1.PTZ_TechnologiaCzynnosc = a2.ID AND a2.Typ = @TypCzynnosc AND a2.Poziom = (@lPoziom - 1)
+                WHERE a1.PTZ_Zamiennik = 0
+
+                IF @@RowCount &gt; 0
+                        SET @insert = 1
+
+                    INSERT INTO @tmpCzynnosci
+                SELECT a1.PZO_ID, a2.ID, a1.PZO_Kod, a1.PZO_Nazwa, PZO_Lp, @lPoziom ,@TypZabieg, PZO_Ilosc, 'szt.', 1, '', 0, 0, 0, 0, 0,'' ,0 ,''
+                                                                , PZO_NrInstrukcji
+                                                                , 0 Kolor, 5 Kolejnosc,0,'',0, a2.id
+                FROM CDN.ProdZabiegiOperacji AS a1
+
+               INNER JOIN @tmpCzynnosci AS a2 ON a1.PZO_TechnologiaCzynnosc = a2.ID AND a2.Typ = @TypCzynnosc AND a2.Poziom = (@lPoziom - 1)
+
+                IF @@RowCount &gt; 0
+                        SET @insert = 1
+
+
+                INSERT INTO @tmpCzynnosci
+                SELECT a1.PFU_Id, a2.Id, a1.PFU_Kod, a1.PFU_Nazwa, 1, @lPoziom, @TypFunkcja AS Typ, PTF_LiczbaObiektow AS Ilosc, 'zasób' AS Jednostka, 1, '', 0, 0, 0, 0, 0,'',0,''
+                                                                , ''
+                                                                , -1 Kolor
+                                                                , 3 Kolejnosc, 0, '',0, a2.id
+                FROM CDN.ProdFunkcje AS a1
+                INNER JOIN CDN.ProdTechnologiaFunkcje ON a1.PFU_Id = PTF_FUnkcja
+                INNER JOIN @tmpCzynnosci AS a2 ON PTF_TechnologiaCzynnosc = a2.ID AND a2.Typ = @TypCzynnosc AND a2.Poziom = (@lPoziom - 1)
+
+                INSERT INTO @tmpCzynnosci
+                SELECT a1.PTC_ID, a1.PTC_Ojciec, a1.PTC_Kod, a1.PTC_Nazwa, a1.PTC_Lp, @lPoziom, @TypCzynnosc, CDN.Prod_WartoscAtr(PTC_Ilosc, PTC_IloscAtr, 14340, @PTEID, DEFAULT, 0)
+				, PTC_Jednostka, 1, CASE
+                                WHEN PTC_Kooperacja &gt; 0
+                                        THEN Twr_Kod
+                                ELSE ''
+                                END, 0, 0, 0, a1.PTC_TypOperacjiKTP, 0,'' ZamiennikKod,0 ZamiennikIlosc,'' ZamiennikJm
+                                                                , ''
+                                                                , -1 Kolor
+                                                                , 2 Kolejnosc,0,'',0, a2.id
+                FROM cdn.ProdTechnologiaCzynnosci AS a1
+                LEFT OUTER JOIN Cdn.TwrKarty ON a1.PTC_TwrTyp = Twr_GIDTyp AND a1.PTC_TwrNumer = Twr_GidNumer
+                INNER JOIN @tmpCzynnosci AS a2 ON a1.PTC_Ojciec = a2.ID AND a1.PTC_Technologia = @PTEID AND a2.Typ = @TypCzynnosc AND a2.Poziom = (@lPoziom - 1)
+
+                IF @@RowCount &gt; 0
+                        SET @insert = 1
+        END
+
+
+
+        UPDATE Rodz
+        SET Podrzedne = 1
+        FROM @tmpCzynnosci Czyn
+        INNER JOIN @tmpCzynnosci Rodz ON Rodz.Id = Czyn.PTC_Ojciec
+
+
+
+  RETURN
+
+END
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji tabelarycznej ZwrocDaneSElementyNag" hidden="False">
+GRANT SELECT
+	ON CDN.ProdCzynnosciTechnologiiDiagram
+	TO CDNRaport
+</scriptdef>
+</ROOT>

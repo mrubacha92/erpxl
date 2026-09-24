@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza ProdPKJNag_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'ProdPKJNag_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.ProdPKJNag_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza ProdPKJNag_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.ProdPKJNag_HistoriaZmian
+   ON CDN.ProdPKJNag
+   AFTER  UPDATE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+
+	--------------------
+
+		declare @ObiTyp nvarchar(50)
+		declare @ObiNumer nvarchar(50)
+		declare @ObiNazwa nvarchar(300)
+		declare @CzasZmian nvarchar(50)
+		declare @TabelaID smallint
+		declare @Tabela nvarchar(30)
+		declare @WarunekInsert nvarchar(1000)
+		declare @WarunekUpdate nvarchar(1000)
+		declare @WarunekDelete nvarchar(1000)
+		declare @WarunekWycofanieInsert nvarchar(1000)
+		declare @ColumnsUpdated varbinary(512)
+		DECLARE @PKJId nvarchar(50)
+	-------------	
+	
+		set @ObiTyp = '14383'
+		set @ObiNumer = 'PKJN_Id'
+		set @ObiNazwa = NULL
+		set @CzasZmian = 'PKJN_DataCzasM'
+		set @TabelaID = 1
+		set @Tabela = 'ProdPKJNag'
+		set @WarunekInsert = 'd.PKJN_Id &lt;&gt; i.PKJN_Id'
+		set @WarunekUpdate = 'i.PKJN_Id=d.PKJN_Id'
+		set @WarunekDelete = '1=1'
+		set @WarunekWycofanieInsert = '1=0'
+		set @PKJId = 'PKJN_Id'
+	
+	
+	-------	
+		set @ColumnsUpdated = COLUMNS_UPDATED()
+		select * into #inserted from inserted
+		select * into #deleted from deleted
+
+		exec cdn.ProdPKJHistoriaZmianRejestruj @ObiTyp, 
+										@ObiNumer,
+										@ObiNazwa,
+										@CzasZmian,
+										@TabelaID,
+										@Tabela,
+										@WarunekInsert,
+										@WarunekUpdate,
+										@WarunekDelete,
+										@WarunekWycofanieInsert,
+										@ColumnsUpdated,
+										@PKJId		
+	SET NOCOUNT OFF				
+					
+	/*END
+	ELSE
+	BEGIN
+		 DELETE FROM CDN.ProdPKJHistoriaZmian
+		 WHERE PKJH_ObiTyp = 14380 AND PKJH_ObiNumer IN (SELECT PPKO_Id FROM deleted d JOIN CDN.ProdParamKJNormyObiektow ON PPKO_OGidTyp = 14383 AND PPKO_OGidNumer = d.PKJN_Id)
+	END*/
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera ProdPKJNag_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.ProdPKJNag_HistoriaZmian', 'LAST', 'UPDATE'
+--exec sp_settriggerorder 'cdn.ProdPKJNag_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza ProdPKJZas_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'ProdPKJZas_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.ProdPKJZas_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza ProdPKJZas_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.ProdPKJZas_HistoriaZmian
+   ON CDN.ProdPKJZas
+   AFTER INSERT,DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+
+	--------------------
+
+		declare @ObiTyp nvarchar(50)
+		declare @ObiNumer nvarchar(50)
+		declare @ObiNazwa nvarchar(300)
+		declare @CzasZmian nvarchar(50)
+		declare @TabelaID smallint
+		declare @Tabela nvarchar(30)
+		declare @WarunekInsert nvarchar(1000)
+		declare @WarunekUpdate nvarchar(1000)
+		declare @WarunekDelete nvarchar(1000)
+		declare @WarunekWycofanieInsert nvarchar(1000)
+		declare @ColumnsUpdated varbinary(512)
+		DECLARE @PKJId nvarchar(50)
+	-------------	
+	
+		set @ObiTyp = '14382'
+		set @ObiNumer = 'PKJZ_Id'
+		IF EXISTS(SELECT * FROM inserted)
+			set @ObiNazwa = '(SELECT COALESCE(PTZ_Kod,Twr_Kod) FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob 
+				LEFT JOIN CDN.TwrKarty ON TWR_GidNumer = PZA_TwrNumer WHERE PZA_ID = i.PKJZ_PZAId)'
+		ELSE
+		BEGIN
+			IF NOT EXISTS(SELECT 1 FROM deleted JOIN cdn.ProdPKJNag ON PKJN_Id = deleted.PKJZ_PKJNId)
+				RETURN
+			set @ObiNazwa = '(SELECT COALESCE(PTZ_Kod,Twr_Kod) FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob 
+				LEFT JOIN CDN.TwrKarty ON TWR_GidNumer = PZA_TwrNumer WHERE PZA_ID = d.PKJZ_PZAId)'
+		END
+		set @CzasZmian = NULL
+		set @TabelaID = 3
+		set @Tabela = 'ProdPKJZas'
+		set @WarunekInsert = 'd.PKJZ_Id &lt;&gt; i.PKJZ_Id'
+		set @WarunekUpdate = '1=0'
+		set @WarunekDelete = 'exists(SELECT * FROM CDN.ProdPKJNag WHERE PKJN_ID=d.PKJZ_PKJNID) '
+		set @WarunekWycofanieInsert = '1=0'
+		set @PKJId = 'PKJZ_PKJNId'
+	
+	
+	-------	
+		set @ColumnsUpdated = COLUMNS_UPDATED()
+		select * into #inserted from inserted
+		select * into #deleted from deleted
+
+		exec cdn.ProdPKJHistoriaZmianRejestruj @ObiTyp, 
+										@ObiNumer,
+										@ObiNazwa,
+										@CzasZmian,
+										@TabelaID,
+										@Tabela,
+										@WarunekInsert,
+										@WarunekUpdate,
+										@WarunekDelete,
+										@WarunekWycofanieInsert,
+										@ColumnsUpdated,
+										@PKJId	
+	SET NOCOUNT OFF
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera ProdPKJZas_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.ProdPKJZas_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.ProdPKJZas_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza ProdZasoby_HistoriaZmianPKJ" hidden="True">
+if exists (select * from sysobjects where name = 'ProdZasoby_HistoriaZmianPKJ' and xtype = 'TR')
+  drop trigger CDN.ProdZasoby_HistoriaZmianPKJ;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza ProdZasoby_HistoriaZmianPKJ" hidden="False">
+CREATE TRIGGER cdn.ProdZasoby_HistoriaZmianPKJ
+   ON CDN.ProdZasoby
+   AFTER INSERT,DELETE
+AS 
+BEGIN
+	IF EXISTS(SELECT * FROM inserted i WHERE i.PZA_PKJNId &gt; 0 ) OR (EXISTS(SELECT * FROM deleted d WHERE d.PZA_PKJNId &gt; 0))
+	BEGIN 
+	SET NOCOUNT ON;
+
+		declare @ObiTyp nvarchar(50)
+		declare @ObiNumer nvarchar(50)
+		declare @ObiNazwa nvarchar(300)
+		declare @CzasZmian nvarchar(50)
+		declare @TabelaID smallint
+		declare @Tabela nvarchar(30)
+		declare @WarunekInsert nvarchar(1000)
+		declare @WarunekUpdate nvarchar(1000)
+		declare @WarunekDelete nvarchar(1000)
+		declare @WarunekWycofanieInsert nvarchar(1000)
+		declare @ColumnsUpdated varbinary(512)
+		DECLARE @PKJId nvarchar(50)
+
+
+	
+		set @ObiTyp = '14346'
+		set @ObiNumer = 'PZA_Id'
+		IF EXISTS(SELECT * FROM inserted)
+			set @ObiNazwa = '(SELECT COALESCE(PTZ_Kod,Twr_Kod) FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob 
+				LEFT JOIN CDN.TwrKarty ON TWR_GidNumer = PZA_TwrNumer WHERE PZA_ID = i.PZA_Id)'
+		ELSE
+			set @ObiNazwa = '(SELECT COALESCE(PTZ_Kod,Twr_Kod) FROM CDN.ProdZasoby LEFT JOIN CDN.ProdTechnologiaZasoby ON PTZ_Id = PZA_TechnologiaZasob 
+				LEFT JOIN CDN.TwrKarty ON TWR_GidNumer = PZA_TwrNumer WHERE PZA_ID = d.PZA_Id)'
+
+		set @CzasZmian = NULL
+		set @TabelaID = 4
+		set @Tabela = 'ProdZasoby'
+		set @WarunekInsert = 'd.PZA_Id &lt;&gt; i.PZA_Id'
+		set @WarunekUpdate = 'd.PZA_Id = i.PZA_Id'
+		set @WarunekDelete = 'd.PZA_PKJNId &gt; 0 '
+		set @WarunekWycofanieInsert = '1=0'
+		set @PKJId = 'PZA_PKJNId'
+	
+	
+	-------	
+		set @ColumnsUpdated = COLUMNS_UPDATED()
+		select * into #inserted from inserted where inserted.PZA_PKJNId &gt; 0
+		select * into #deleted from deleted where deleted.PZA_PKJNId &gt; 0
+
+		exec cdn.ProdPKJHistoriaZmianRejestruj @ObiTyp, 
+										@ObiNumer,
+										@ObiNazwa,
+										@CzasZmian,
+										@TabelaID,
+										@Tabela,
+										@WarunekInsert,
+										@WarunekUpdate,
+										@WarunekDelete,
+										@WarunekWycofanieInsert,
+										@ColumnsUpdated,
+										@PKJId	
+		SET NOCOUNT OFF
+	END
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera ProdZasoby_HistoriaZmianPKJ" hidden="False">
+exec sp_settriggerorder 'cdn.ProdZasoby_HistoriaZmianPKJ', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.ProdZasoby_HistoriaZmianPKJ', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza ProdParamKJNormyObiektow_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'ProdParamKJNormyObiektow_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.ProdParamKJNormyObiektow_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza ProdParamKJNormyObiektow_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.ProdParamKJNormyObiektow_HistoriaZmian
+   ON CDN.ProdParamKJNormyObiektow
+   AFTER INSERT,UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+
+	IF EXISTS(SELECT * FROM inserted i where i.PPKO_OGidTyp = 14383) OR EXISTS(SELECT * FROM deleted d where d.PPKO_OGidTyp = 14383)
+	BEGIN
+	--------------------
+		declare @ObiTyp nvarchar(50)
+		declare @ObiNumer nvarchar(50)
+		declare @ObiNazwa nvarchar(300)
+		declare @CzasZmian nvarchar(50)
+		declare @TabelaID smallint
+		declare @Tabela nvarchar(30)
+		declare @WarunekInsert nvarchar(1000)
+		declare @WarunekUpdate nvarchar(1000)
+		declare @WarunekDelete nvarchar(1000)
+		declare @WarunekWycofanieInsert nvarchar(1000)
+		declare @ColumnsUpdated varbinary(512)
+		DECLARE @PKJId nvarchar(50)
+	-------------		
+	
+		set @ObiTyp = '14380'
+		set @ObiNumer = 'PPKO_Id'
+		IF EXISTS(SELECT 1 FROM inserted)	
+			set @ObiNazwa = '(SELECT PKJ_Kod FROM CDN.ProdParametryKJ WHERE PKJ_Id = i.PPKO_PKJId)'
+		ELSE
+		BEGIN
+			IF NOT EXISTS(SELECT 1 FROM deleted JOIN cdn.ProdPKJNag ON PKJN_Id = deleted.PPKO_OGidNumer)				
+				RETURN
+			set @ObiNazwa = '(SELECT PKJ_Kod FROM CDN.ProdParametryKJ WHERE PKJ_Id = d.PPKO_PKJId)'
+		END
+
+		set @CzasZmian = NULL-- CAST(datediff(s,convert(datetime,'1990-01-01',120),getdate()) AS VARCHAR(50))
+		set @TabelaID = 2
+		set @Tabela = 'ProdParamKJNormyObiektow'
+		set @WarunekInsert = '(d.PPKO_OGIDTyp = 0 AND i.PPKO_OGIDTyp = 14383)'
+		set @WarunekUpdate = 'i.PPKO_Id=d.PPKO_Id'
+		set @WarunekDelete = '1=1'
+		set @WarunekWycofanieInsert = 'EXISTS(SELECT * FROM CDN.ProdParametryKJ WHERE PKJ_Id = d.PPKO_PKJId AND PKJ_Kod = '''')'
+		set @PKJId = 'PPKO_OGidNumer'
+	
+	
+	-------	
+		set @ColumnsUpdated = COLUMNS_UPDATED()
+		select * into #inserted from inserted
+		select * into #deleted from deleted
+
+		exec cdn.ProdPKJHistoriaZmianRejestruj @ObiTyp, 
+										@ObiNumer,
+										@ObiNazwa,
+										@CzasZmian,
+										@TabelaID,
+										@Tabela,
+										@WarunekInsert,
+										@WarunekUpdate,
+										@WarunekDelete,
+										@WarunekWycofanieInsert,
+										@ColumnsUpdated,
+										@PKJId
+		SET NOCOUNT OFF
+	END
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera ProdPKJNag_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.ProdParamKJNormyObiektow_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.ProdParamKJNormyObiektow_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.ProdParamKJNormyObiektow_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Kasowanie procedury ProdPKJHistoriaZmianRejestruj" hidden="True">
+if exists (select name from sysobjects where name = 'ProdPKJHistoriaZmianRejestruj' and type = 'P')
+  drop procedure CDN.ProdPKJHistoriaZmianRejestruj;
+</scriptdef>
+<scriptdef name="Tworzenie procedury ProdPKJHistoriaZmianRejestruj" hidden="False">
+CREATE PROCEDURE cdn.ProdPKJHistoriaZmianRejestruj (
+@ObiTyp nvarchar(50),
+@ObiNumer nvarchar(50),
+@ObiNazwa nvarchar(300),
+@CzasZmian nvarchar(50),
+@TabelaId integer,
+@Tabela nvarchar(30),
+@WarunekInsert nvarchar(1000),
+@WarunekUpdate nvarchar(1000),
+@WarunekDelete nvarchar(1000),
+@WarunekWycofanieInsert nvarchar(1000),
+@ColumnsUpdated varbinary(512),
+@PKJId nvarchar(50)
+)
+as
+begin
+
+	declare @OpeIdent nvarchar(40)
+	declare @sSQL nvarchar(max)
+	set @sSQL = ''
+	declare @TypZmiany tinyint
+	declare @DataDB int
+	set @DataDB = datediff(s,convert(datetime,'1990-01-01',120),getdate())
+	
+			
+	select @OpeIdent = isnull(CDN.PolaczenieInfo(4),'') --TID:188194
+	if @OpeIdent = ''
+	begin
+		select top 1 @OpeIdent = SES_OpeIdent from cdn.Sesje with(nolock) where (SES_ClarionSPID = @@SPID or SES_ADOSPID = @@SPID) and SES_Aktywna = 0 order by SES_Start desc
+		if @@ROWCOUNT = 0
+		begin 
+			set @OpeIdent = 'SQL:' + left(SYSTEM_USER,16)
+		end
+	end		
+		
+	declare @WarunekStaraWartosc nvarchar(max)
+	declare @WarunekNowaWartosc nvarchar(max)	
+	declare @UpdateJakoInsert tinyint
+	set @UpdateJakoInsert = 0			
+	declare @ExistInserted tinyint
+	declare @ExistDeleted tinyint
+	
+	
+	if exists(select 1 from #inserted)
+		set @ExistInserted = 1
+	else
+		set @ExistInserted = 0
+	
+	
+	if exists(select 1 from #deleted)
+		set @ExistDeleted = 1
+	else
+		set @ExistDeleted = 0	
+	
+		
+	
+		if @ExistDeleted = 0
+		begin --insert glownej
+			set @TypZmiany = 0	 
+			
+			set @sSQL = 'insert into cdn.ProdPKJHistoriaZmian (PKJH_ObiTyp, PKJH_ObiNumer,PKJH_TypZmiany, PKJH_CzasZmiany, PKJH_OpeIdent, PKJH_ObiNazwa, PKJH_Kolumna, PKJH_StaraWartosc,
+				PKJH_NowaWartosc,PKJH_PKJId)' + 
+						' select ' + @ObiTyp + ', i.' + @ObiNumer + ',@TypZmiany,' + coalesce('i.' + @CzasZmian,CAST(datediff(s,convert(datetime,'1990-01-01',120),getdate()) AS VARCHAR(50))) + ', @OpeIdent, '+COALESCE(@ObiNazwa,'''''')+', '''', '''', '''',' + 'i.'+@PKJId +
+						' from #inserted i'
+		
+			set @UpdateJakoInsert = 1
+		end
+		else
+		begin
+			set @sSQL = 'select @UpdateJakoInsert = case when exists(select 1 from #inserted i join #deleted d on ' + @WarunekUpdate + ' where ' + @WarunekInsert + ') then 1 else 0 end'		
+			exec sp_executeSQL @sSQL, N'@UpdateJakoInsert tinyint output', @UpdateJakoInsert = @UpdateJakoInsert output		
+			if @UpdateJakoInsert &gt; 0
+			begin
+				set @TypZmiany = 0	 
+				set @sSQL = 'insert into cdn.ProdPKJHistoriaZmian (PKJH_ObiTyp, PKJH_ObiNumer,PKJH_TypZmiany, PKJH_CzasZmiany, PKJH_OpeIdent, PKJH_ObiNazwa, PKJH_Kolumna, PKJH_StaraWartosc,
+					PKJH_NowaWartosc,PKJH_PKJId)' + 
+						' select ' + @ObiTyp + ', i.' + @ObiNumer + ',@TypZmiany,' + coalesce('i.' + @CzasZmian,CAST(datediff(s,convert(datetime,'1990-01-01',120),getdate()) AS VARCHAR(50))) + ',							@OpeIdent, '+COALESCE(@ObiNazwa,'''''')+', '''', '''', '''',' + 'i.'+@PKJId +
+						' from #inserted i'
+			end
+			else --update glownej/delete glownej			
+				set @UpdateJakoInsert = 0	
+		end
+	
+	
+	
+	if @ExistInserted = 0
+	begin --delete glownej/wycofanie z insert glownej
+		declare @DeleteJakoWycofanieP tinyint
+		set @DeleteJakoWycofanieP = 0
+		DECLARE @ParmDefinition nvarchar(500);  
+		
+		set @sSQL = 'select @DeleteJakoWycofanie = case when exists(select 1 from #deleted d where ' + @WarunekWycofanieInsert + ') then 1 else 0 end'
+		SET @ParmDefinition = N'@DeleteJakoWycofanie tinyint output';  
+		exec sp_executeSQL @sSQL, @ParmDefinition, @DeleteJakoWycofanie = @DeleteJakoWycofanieP	output
+		if @DeleteJakoWycofanieP = 0
+		begin
+			set @TypZmiany = 2
+
+			set @sSQL = 'insert into cdn.ProdPKJHistoriaZmian (
+				PKJH_ObiTyp, PKJH_ObiNumer,PKJH_TypZmiany, PKJH_CzasZmiany, PKJH_OpeIdent, PKJH_ObiNazwa, PKJH_Kolumna, PKJH_StaraWartosc, PKJH_NowaWartosc,PKJH_PKJId)' + 
+						' select ' + @ObiTyp + ', d.' + @ObiNumer + ', @TypZmiany, @DataDB, @OpeIdent,(' + coalesce(@ObiNazwa,'''''') + '), '''', '''','''', d.' +@PKJId +
+						' from #deleted d where ' + @WarunekDelete
+		
+		end
+		else
+		begin
+			set @sSQL = 'delete from cdn.ProdPKJHistoriaZmian where exists(select 1 from #deleted d where ' + @ObiTyp + ' = PKJH_ObiTyp and d.' + @ObiNumer + ' = PKJH_ObiNumer and ' 
+				+  @WarunekWycofanieInsert +')'
+		end
+	
+	end	
+	else if @UpdateJakoInsert = 0 and @ExistDeleted = 1
+	begin --update podleglej/glownej
+
+		set @WarunekInsert = '1=1' 		
+							
+		select colorder as Lp, b.name as NazwaKolumny into #Kolumny1
+		from syscolumns b with(nolock)					
+				join sysobjects a with(nolock)
+					on a.id = b.id 
+		where a.xtype = 'U' and a.name = @Tabela and sys.fn_IsBitSetInBitmask(@ColumnsUpdated,b.colid) &lt;&gt; 0
+
+		if @TabelaID = 1
+			DELETE FROM #Kolumny1 where NazwaKolumny in('PKJN_OpWNumer', 'PKJN_DataCzasW', 'PKJN_OpMNumer', 'PKJN_DataCzasM', 'PKJN_OpZNumer','PKJN_TwrTyp')	
+			
+		if @TabelaId = 4
+			DELETE FROM #Kolumny1 where NazwaKolumny &lt;&gt; 'PZA_PKJNId'
+
+		IF NOT EXISTS(select * from #Kolumny1)
+			RETURN
+		
+						
+		set @WarunekStaraWartosc = ''
+		set @WarunekNowaWartosc = ''
+		
+		
+		if exists(select 1 from #deleted)
+			set @TypZmiany = 1
+		else
+			set @TypZmiany = 0
+		
+								
+		
+		select 
+			@WarunekStaraWartosc = @WarunekStaraWartosc + ' when k.NazwaKolumny = ''' + NazwaKolumny + ''' then convert(varchar(1023),d.' + NazwaKolumny + ')',
+			@WarunekNowaWartosc = @WarunekNowaWartosc + ' when k.NazwaKolumny = ''' + NazwaKolumny + ''' then convert(varchar(1023),i.' + NazwaKolumny + ')'
+		from #Kolumny1
+
+
+		set @sSQL = 'insert into cdn.ProdPKJHistoriaZmian 
+			(PKJH_ObiTyp, PKJH_ObiNumer,PKJH_TypZmiany, PKJH_CzasZmiany, PKJH_OpeIdent, PKJH_ObiNazwa, PKJH_Kolumna, PKJH_StaraWartosc, PKJH_NowaWartosc,PKJH_PKJId)' + 		
+						' select a1,a2,a3,a4,a5,a6,a7,staraWartosc,nowaWartosc,a8 from (' +
+						' select k.Lp a0, ' + @ObiTyp + ' a1, i.' + @ObiNumer + ' a2, @TypZmiany a3,' + coalesce('i.' + @CzasZmian,CAST(datediff(s,convert(datetime,'1990-01-01',120),getdate()) AS VARCHAR(50))) +' a4, @OpeIdent a5, ('+coalesce(@ObiNazwa,'''''')+ ') a6, 
+						k.NazwaKolumny a7,i.'+@pkjiD+' a8,isnull(case ' + @WarunekStaraWartosc + ' end,'''') staraWartosc, isnull(case ' + @WarunekNowaWartosc + ' end,'''') nowaWartosc' + 
+						' from #Kolumny1 k, #inserted i left join #deleted d on ' + @WarunekUpdate + ' where ' + @WarunekInsert +
+						' ) a'
+						
+
+
+		set @sSQL = @sSQL + ' where staraWartosc &lt;&gt; nowaWartosc order by a.a0 '
+	end
+	
+
+	if @sSQL &lt;&gt; ''
+		exec sp_executeSQL @sSQL, N'@TabelaID smallint, @DataDB int, @OpeIdent nvarchar(16), @TypZmiany tinyint',						
+						@TabelaID = @TabelaID,
+						@DataDB = @DataDB,
+						@OpeIdent = @OpeIdent,
+						@TypZmiany = @TypZmiany
+			
+					
+
+	if @@ERROR &lt;&gt; 0
+	begin
+		raiserror('Błąd zapisu do tabeli cdn.ProdPKJHistoriaZmian',16,1)
+		ROLLBACK TRAN
+		return
+	end
+	
+	
+end
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ProdPKJHistoriaZmianRejestruj" hidden="False">
+GRANT EXECUTE ON CDN.ProdPKJHistoriaZmianRejestruj TO CDNRaport
+</scriptdef>
+</ROOT>

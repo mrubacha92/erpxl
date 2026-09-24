@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji CDN.ProdPlanowane" hidden="True">
+if exists(select name from sysobjects where name='ProdPlanowane' and type='IF')
+	drop function CDN.ProdPlanowane
+</scriptdef>
+<scriptdef name="Tworzenie funkcji CDN.ProdPlanowane" hidden="False">
+CREATE FUNCTION CDN.ProdPlanowane (@Proces int,@Zlecenie int,@Oddzial int)
+RETURNS TABLE
+as
+return
+  select 
+    case PTZ_TypZasobu when 0 then PTZ_Id else PTZ_TechnologiaZasob end Zasob,
+    (case when PCZ_Realizuje = 0 and PTZ_TypZasobu = 0
+			   then isnull(P.PZA_Ilosc,0)-isnull((select sum(PZP_Ilosc) from cdn.ProdZwiazanePolprodukty where PZP_PZAIDWykonany = P.PZA_ID),0)
+		  when PCZ_Realizuje = 0 and PTZ_TypZasobu = 1
+			   then isnull(P.PZA_Ilosc,0)-isnull((select sum(PZP_Ilosc) from cdn.ProdZwiazanePolprodukty where PZP_PZAIDPlanowany = P.PZA_ID),0)
+		  else isnull(P.PZA_Ilosc,0)-isnull((select sum(S.PZA_Ilosc) from CDN.ProdZasoby S where S.PZA_Zasob=P.PZA_Id),0)-isnull((select sum(PZP_Ilosc) from cdn.ProdZwiazanePolprodukty where PZP_PZAIDWykonany = P.PZA_Id),0) --MF - zrealizowany ProdZasób może być związany poprzez PZA_Zasob lub poprzez tabelę ProdZwiazanePolprodukty
+    end -- -  TID: 175833  isnull(sum(PZE_Ilosc),0)
+    -isnull((select sum(TrS_Ilosc) from CDN.TraSElem inner join Cdn.TraElem on TrE_GIDNumer=TrS_GIDNumer AND TrE_GIDLp=TrS_GIDLp
+                                where TrS_ZlcTyp=14346 and TrS_ZlcNumer=P.PZA_Id and P.PZA_TwrNumer = TrE_TwrNumer),0)
+    ) * (case PTZ_TypZasobu when 0 then 1 else -1 end) Ilosc,
+-- 23.07.2011  Faktyczny termin zakończenia to nie jest początek plus czas realizacji, bo czynność może mieć wiele terminów (PP)
+    case PTZ_TypZasobu when 0 then /*PCZ_TerminRozpoczecia%1073741824 + PCZ_CzasRealizacji%1073741824*/ PCZ_TerminZakonczenia else PCZ_TerminRozpoczecia end Termin,
+    C.PCZ_Proces Proces, PZL_Id Zlecenie, PCZ_Oddzial Oddzial,
+    PCZ_Id Czynnosc, PCZ_TechnologiaCzynnosc TechnologiaCzynnosc,
+    PCZ_TerminRozpoczecia TerminRozpoczecia, PCZ_CzasRealizacji CzasRealizacji
+  from CDN.ProdCzynnosci C
+  inner join CDN.ProdZlecenia L on PZL_Id=C.PCZ_PZLId and PZL_DataZamkniecia=0
+  inner join CDN.ProdTechnologiaCzynnosci on PTC_Id=PCZ_TechnologiaCzynnosc
+  INNER join CDN.ProdTechnologiaZasoby on PTZ_TechnologiaCzynnosc=PTC_Id --and (PCZ_Realizuje=0 /*or PTZ_Id=PZA_TechnologiaZasob*/)
+  left outer join CDN.ProdZasoby P on PZA_Czynnosc=PCZ_Id and PTZ_Id=PZA_TechnologiaZasob
+  where ((PTZ_TypZasobu=0 AND (ISNULL(PZA_TypZasobu,0) = 0 or ISNULL(PZA_Planowany,0) = 1)) or (PTZ_TechnologiaZasob&lt;&gt;0 and isnull(PZA_Zasob,0)=0 and PCZ_Realizuje &lt;&gt; 0) or (PCZ_Realizuje = 0 and PTZ_TechnologiaZasob&lt;&gt;0 and PZA_Planowany = 1)) -- (PTZ_TypZasobu=0 or (PTZ_TechnologiaZasob&lt;&gt;0 and isnull(PZA_Zasob,0)=0))
+    and (isnull(@Proces,0)=0 or PTZ_ZrodloZasobu&lt;&gt;0 or PCZ_Proces=@Proces)
+    and (isnull(@Zlecenie,0)=0 or PTZ_ZrodloZasobu&gt;1 or C.PCZ_PZLId=@Zlecenie)
+    and (isnull(@Oddzial,0)=0 or PTZ_ZrodloZasobu&lt;&gt;2 or PCZ_Oddzial=@Oddzial)
+  group by C.PCZ_Id, C.PCZ_Realizuje, C.PCZ_Ilosc, C.PCZ_TerminRozpoczecia, C.PCZ_TerminZakonczenia, C.PCZ_CzasRealizacji, 
+    C.PCZ_Oddzial, C.PCZ_TechnologiaCzynnosc, PZL_Id, PTZ_Id, PTZ_Ilosc, PTZ_IloscAtr,PTZ_IloscFormat,PTZ_TypZasobu,
+    PTC_Ilosc, PTC_IloscAtr, PTC_Technologia,C.PCZ_Proces, PTZ_TypZasobu, PTZ_TechnologiaZasob, PZA_Id, PZA_Ilosc,PZA_TwrNumer,PZA_Planowany
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji CDN.ProdPlanowane" hidden="False">
+GRANT SELECT ON CDN.ProdPlanowane TO CDNRaport
+</scriptdef>
+</ROOT>

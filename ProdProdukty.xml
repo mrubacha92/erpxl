@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji CDN.ProdProdukty" hidden="True">
+if exists(select name,type from sysobjects where name='ProdProdukty'
+ and (type='FN' OR type='IF')
+ )
+	drop function CDN.ProdProdukty
+</scriptdef>
+<scriptdef name="Tworzenie funkcji CDN.ProdProdukty" hidden="False">
+
+ 
+CREATE FUNCTION [CDN].[ProdProdukty] (@PzlId int,@Typ int)
+RETURNS TABLE AS
+
+RETURN (
+	SELECT SUBSTRING(P.Produkt,1,LEN(P.Produkt)-1) Kod FROM 
+	(SELECT  REPLACE(REPLACE((SELECT t.kod + ','
+	from 
+		(Select  case when @Typ = 0 then Twr_Kod else Twr_Nazwa  end Kod
+			From CDN.ProdZlecenia
+			inner join CDN.ProdCzynnosci on PCZ_PZLId = PZL_Id
+			inner join CDN.Rezerwacje on PCZ_Id=Rez_ZrdNumer and Rez_ZrdTyp = 14345
+			inner join CDN.TwrKarty on Twr_GIDNumer = Rez_TwrNumer
+			where PZL_Id=@PzlId and Rez_GIDTyp = 2592
+			union all
+			select case when @Typ = 0 then  isnull(T.Twr_Kod,PTZ_Kod) else ISNULL(T.Twr_Nazwa,PTZ_Nazwa) end Kod
+			From CDN.ProdZlecenia
+			inner join CDN.ProdCzynnosci on PZL_Id = PCZ_PZLId
+			inner join CDN.ProdZasoby Z on Z.PZA_Czynnosc = PCZ_Id
+			inner join CDN.TwrKarty T on T.Twr_GIDNumer = Z.PZA_TwrNumer
+			left outer join  CDN.ProdTechnologiaZasoby on PTZ_Id = Z.PZA_TechnologiaZasob
+			--left outer join Cdn.ProdZasoby Sur on Sur.PZA_Zasob = Z.Pza_Id
+			where PZL_Id= @PzlId  and ISNULL(PTZ_TypZasobu,Z.PZA_TypZasobu) IN (0,4)) T
+		ORDER BY T.Kod
+		FOR XML PATH('')),'&amp;lt;','&lt;'),'&amp;gt;','&gt;') AS Produkt) P)
+
+                /*SELECT cdn.Concatenate(Kod+',') Kod from
+        ( Select case when @Typ = 0 then Twr_Kod else Twr_Nazwa  end Kod
+        From CDN.ProdZlecenia
+        inner join CDN.ProdCzynnosci on PCZ_PZLId = PZL_Id
+        inner join CDN.Rezerwacje on PCZ_Id=Rez_ZrdNumer and Rez_ZrdTyp = 14345
+        inner join CDN.TwrKarty on Twr_GIDNumer = Rez_TwrNumer
+        where PZL_Id=@PzlId and Rez_GIDTyp = 2592
+        union all
+        select case when @Typ = 0 then  isnull(T.Twr_Kod,PTZ_Kod) else ISNULL(T.Twr_Nazwa,PTZ_Nazwa) end Kod
+        From CDN.ProdZlecenia
+        inner join CDN.ProdCzynnosci on PZL_Id = PCZ_PZLId
+        inner join CDN.ProdZasoby Z on Z.PZA_Czynnosc = PCZ_Id
+        inner join CDN.TwrKarty T on T.Twr_GIDNumer = Z.PZA_TwrNumer
+        left outer join  CDN.ProdTechnologiaZasoby on PTZ_Id = Z.PZA_TechnologiaZasob
+        --left outer join Cdn.ProdZasoby Sur on Sur.PZA_Zasob = Z.Pza_Id
+        where PZL_Id= @PzlId  and ISNULL(PTZ_TypZasobu,Z.PZA_TypZasobu) IN (0,4)   
+	   ) T 
+	   )*/
+   
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji CDN.ProdProdukty" hidden="False">
+GRANT SELECT ON CDN.ProdProdukty TO CDNRaport
+</scriptdef>
+</ROOT>

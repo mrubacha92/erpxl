@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji CDN.ProdPNZStan" hidden="True">
+if exists(select type from sysobjects where name='ProdPNZStan' and type='FN')
+	drop function CDN.ProdPNZStan
+</scriptdef>
+<scriptdef name="Tworzenie funkcji CDN.ProdPNZStan" hidden="False">
+CREATE FUNCTION CDN.ProdPNZStan (@PNZId int)
+RETURNS TINYINT
+as
+begin
+	declare @IloscZlc INT
+	DECLARE @DataZamkn INT
+
+	SELECT @DataZamkn = PNZ_DataZamkniecia FROM CDN.ProdNadzlecenia WHERE PNZ_Id = @PNZId
+	IF @DataZamkn &gt; 0
+		RETURN 3
+
+	SELECT @IloscZlc = COUNT(*) FROM CDN.ProdNadzleceniaLinki WHERE PNL_PNZId = @PNZId
+
+	IF @IloscZlc = 0
+		RETURN 0
+
+	IF NOT EXISTS(SELECT * FROM CDN.ProdNadzleceniaLinki JOIN CDN.ProdZlecenia ON PZL_Id = PNL_PZLId AND PZL_DataZamkniecia = 0 WHERE PNL_PNZId = @PNZId)
+		RETURN 2
+
+	IF EXISTS(SELECT * FROM CDN.ProdNadzleceniaLinki JOIN CDN.ProdCzynnosci ON PCZ_PZLId = PNL_PZLId WHERE PCZ_Realizuje &gt; 0 AND PNL_PNZId = @PNZId)
+		RETURN 1
+
+	RETURN 0
+
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji CDN.ProdPNZStan" hidden="False">
+GRANT EXEC ON CDN.ProdPNZStan TO CDNRaport
+</scriptdef>
+</ROOT>

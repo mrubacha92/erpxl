@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza ProdCzynnosci_AktualizujPKJN" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'ProdCzynnosci_AktualizujPKJN' AND xtype = 'TR')
+    DROP TRIGGER CDN.ProdCzynnosci_AktualizujPKJN
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza ProdCzynnosci_AktualizujPKJN" hidden="False">
+CREATE TRIGGER CDN.ProdCzynnosci_AktualizujPKJN
+  ON CDN.ProdCzynnosci
+  FOR DELETE
+AS
+begin
+SET NOCOUNT ON
+	UPDATE CDN.ProdPKJNag SET PKJN_PCZId = 0 FROM deleted d WHERE PKJN_PCZId = d.PCZ_Id
+SET NOCOUNT OFF
+end
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza ProdZlecenia_AktualizujPKJN" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'ProdZlecenia_AktualizujPKJN' AND xtype = 'TR')
+    DROP TRIGGER CDN.ProdZlecenia_AktualizujPKJN
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza ProdZlecenia_AktualizujPKJN" hidden="False">
+CREATE TRIGGER CDN.ProdZlecenia_AktualizujPKJN
+  ON CDN.ProdZlecenia
+  FOR DELETE
+AS
+begin
+SET NOCOUNT ON
+	UPDATE CDN.ProdPKJNag SET PKJN_PZLId = 0 FROM deleted d WHERE PKJN_PCZId = d.PZL_Id
+SET NOCOUNT OFF
+end
+</scriptdef>
+</ROOT>

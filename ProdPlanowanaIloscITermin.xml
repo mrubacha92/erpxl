@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji CDN.ProdPlanowanaIloscITermin" hidden="True">
+if exists(select type from sysobjects where name='ProdPlanowanaIloscITermin' and type='FN')
+	drop function CDN.ProdPlanowanaIloscITermin
+</scriptdef>
+<scriptdef name="Tworzenie funkcji CDN.ProdPlanowanaIloscITermin" hidden="False">
+CREATE FUNCTION CDN.ProdPlanowanaIloscITermin(@Zasob int,@Czynnosc int,@Termin int,@Proces int,@Zlecenie int,@Oddzial int)
+RETURNS varchar(30)
+as
+begin
+	declare @Ilosc decimal(11,4)
+	declare @TerminZwroc int
+
+	declare @planowane table (Ilosc decimal(11,4), Termin int, Czynnosc int)
+
+	if @Termin&gt;0
+		insert into @planowane
+		select Ilosc, Termin, Czynnosc--@Ilosc = sum(Ilosc)
+		from CDN.ProdPlanowane(@Proces,@Zlecenie,@Oddzial)
+		where Zasob=@Zasob and Czynnosc&lt;&gt;isnull(@Czynnosc,0) and Ilosc &gt; 0 
+	else
+	begin
+		insert into @planowane
+		select Ilosc, Termin, Czynnosc
+		from CDN.ProdPlanowane(@Proces,@Zlecenie,@Oddzial)
+		where Zasob=@Zasob and Czynnosc&lt;&gt;isnull(@Czynnosc,0) and Ilosc &gt; 0 and Termin&lt;=-@Termin		
+	end
+	select top 1 @termin = P.Termin
+	from @planowane P
+	order by  P.Termin
+
+	select @Ilosc = SUM(P.Ilosc)
+	from @planowane P
+
+	return cast(isnull(@ilosc,0) as varchar)+':'+cast(isnull(@termin,0) as varchar)
+end
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji CDN.ProdPlanowanaIloscITermin" hidden="False">
+GRANT EXEC ON CDN.ProdPlanowanaIloscITermin TO CDNRaport
+</scriptdef>
+</ROOT>
