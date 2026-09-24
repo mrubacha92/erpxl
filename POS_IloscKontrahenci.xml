@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_IloscKontrahenci" hidden="True">
+if exists (select name from sysobjects where name = 'POS_IloscKontrahenci' and type = 'P')
+drop procedure CDN.POS_IloscKontrahenci;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_IloscKontrahenci" hidden="False">
+CREATE PROCEDURE [CDN].[POS_IloscKontrahenci]
+	@rowVersion bigint,
+	@pointOfSaleId int,
+	@packageSize int,
+	@packagesCount int output,
+	@currentRowVersion bigint output 
+AS
+BEGIN
+	SET NOCOUNT ON;		
+		select @currentRowVersion=max(KntLastMod),@packagesCount=CEILING(cast(count(*) as float)/@packageSize) from CDN.POS_KntDoEksportu(@pointOfSaleId,@rowVersion)		
+		select @currentRowVersion=isnull(@currentRowVersion,@rowVersion),@packagesCount=isnull(@packagesCount,0)
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_IloscKontrahenci" hidden="False">
+GRANT EXECUTE ON CDN.POS_IloscKontrahenci TO CDNRaport
+</scriptdef>
+</ROOT>

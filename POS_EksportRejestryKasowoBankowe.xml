@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportRejestryKasowoBankowe" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportRejestryKasowoBankowe' and type = 'P')
+drop procedure CDN.POS_EksportRejestryKasowoBankowe;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportRejestryKasowoBankowe" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportRejestryKasowoBankowe]
+	@rowVersion bigint,
+	@pointOfSaleId int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	
+	select
+		(select max(KAR_CzasModyfikacji) from cdn.Rejestry join cdn.picostanowiskaformypl on PFP_KARNumer = KAR_GIDNumer where PFP_PSaID = @pointOfSaleId) as [@RowVersion], (		
+			select distinct kar_gidnumer as [@Id], 
+				kar_seria as [@Code], 
+				kar_nazwa as [@Name], 
+				(select WaN_ID from cdn.walnag where WaN_Symbol = kar_waluta) as [@CurrencyId], 
+				kar_typ - 1 as [@Type],
+				'true' as [@IsActive]
+			from cdn.pos_KarDoEksportu(@pointOfSaleId,0) --@rowVersion
+			join cdn.Rejestry on KAR_GIDNumer=karnumer
+		for xml path('CashBankAccount'), type)
+	for xml path('CashBankAccounts')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportRejestryKasowoBankowe" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportRejestryKasowoBankowe TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji PobierzKwotyPIK" hidden="True">
+if exists(select * from sysobjects where name='PobierzKwotyPIK' and type='IF')
+                drop function CDN.PobierzKwotyPIK;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji PobierzKwotyPIK" hidden="False">
+CREATE FUNCTION CDN.PobierzKwotyPIK(@GIDNumer INT,@GIDTyp SMALLINT)
+RETURNS TABLE 
+AS
+RETURN 
+(
+     -- Add the SELECT statement with parameter references here
+     SELECT PIE_GIDTyp, PIE_GIDFirma, PIE_GIDNumer, PIE_GIDLp, PIE_Znacznik, PIE_Kod, 
+     CASE WHEN PIE_Znacznik='D' THEN PIE_FrsId ELSE 0 END as FrSId, 
+     
+     SUM(CASE WHEN (PIK_Symbol IN(5,7,9,11,12,13,17,18) OR (PIK_Symbol IN(2,3,4,6,8,10,15,16) AND PIK_KosztFirma=1)) AND PIK_Rodzaj IN(1,2,4,6) THEN (CASE PIK_TypWyplaty 
+     when 2 THEN (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE PIK_Kwota END)ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END) END)           
+     WHEN (PIK_Symbol IN(5,7,9,11,12,13,17,18) OR (PIK_Symbol IN(2,3,4,6,8,15,16) AND PIK_KosztFirma=1)) AND PIK_Rodzaj IN(7,8)
+     THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE PIK_Kwota END)ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END) END)           
+     WHEN (PIK_Symbol = 10 AND PIK_KosztFirma=1) AND PIK_Rodzaj IN(7,8)          
+     THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END)ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE PIK_Kwota END) END)           
+     ELSE 0 END) as KosztCalkowity,  
+     
+     SUM(CASE WHEN (PIK_Symbol = 10 AND PIK_KosztFirma=1 AND PIK_Rodzaj IN(1,2,4,6) ) THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE      PIK_Kwota END) ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END)END) 
+     WHEN (PIK_Symbol = 10 AND PIK_KosztFirma=1 AND PIK_Rodzaj IN(7,8)) THEN (CASE PIK_TypWyplaty when 2 THEN 
+     (CASE WHEN PIK_Kwota &gt; 0 THEN (PIK_Kwota) ELSE 0 END) ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE (PIK_Kwota) END) END)ELSE 0 END)as Netto,       
+     
+     SUM(CASE WHEN PIK_Symbol = 2 AND PIK_KosztFirma=1 AND PIK_Rodzaj IN(1,2,4,6,7,8)  THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE     PIK_Kwota END) ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END)END) ELSE 0 END) as Podatek,  
+     
+     SUM(CASE WHEN PIK_Symbol IN(5,7,9,11,12,13) AND PIK_Rodzaj IN(1,2,4,6,7,8)  THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE   
+     PIK_Kwota END)ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END)END) ELSE 0 END) as ZUSPracodawcy, 
+      
+     SUM(CASE WHEN PIK_Symbol IN(3,4,6,8) AND PIK_Rodzaj IN(1,2,4,6,7,8) AND PIK_KosztFirma=1 THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0 THEN     0 ELSE PIK_Kwota END)ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END)END) ELSE 0 END) as ZUSPracobiorcy, 
+     
+     SUM(CASE WHEN PIK_Symbol IN(2,3,4,6,8,10,15,16) AND PIK_KosztFirma=1 AND PIK_Rodzaj IN(1,2,4,6) THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0    
+     THEN 0 ELSE PIK_Kwota END)ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END)END) 
+     WHEN PIK_Symbol IN(2,3,4,6,8,15,16) AND PIK_KosztFirma=1 AND PIK_Rodzaj IN(7,8) THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0    
+     THEN 0 ELSE PIK_Kwota END)ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END)END)          
+     WHEN PIK_Symbol = 10 AND PIK_KosztFirma=1 AND PIK_Rodzaj IN(7,8) THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0    
+     THEN PIK_Kwota ELSE 0 END)ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE PIK_Kwota END)END)     
+     ELSE 0 END) as Brutto,          
+       
+     SUM ( CASE WHEN (PIK_Symbol IN(2,3,4,5,6,7,8,9,11,12,13) OR (PIK_Symbol = 10 AND PIK_KosztFirma=1)) AND PIK_Rodzaj IN(1,2,4,6) THEN 
+     (CASE PIK_TypWyplaty  
+     WHEN 2 THEN (CASE WHEN PIK_Kwota &lt; 0 THEN 0 ELSE PIK_Kwota END) ELSE (CASE WHEN PIK_Kwota &lt; 0 THEN PIK_Kwota ELSE 0 END)END) 
+     WHEN (PIK_Symbol IN(2,3,4,5,6,7,8,9,11,12,13) AND PIK_Rodzaj IN(7,8) AND PIK_KosztFirma = 1) THEN 
+      (CASE PIK_TypWyplaty when 2 THEN 
+        (CASE WHEN PIK_Kwota &lt; 0 THEN 0 ELSE PIK_Kwota END) 
+       --jesli niestornujaca  
+       ELSE 
+         (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE PIK_Kwota END) END) 
+     WHEN (PIK_Symbol = 10 AND PIK_Rodzaj IN(7,8) AND PIK_KosztFirma = 1) THEN 
+      (CASE PIK_TypWyplaty when 2 THEN 
+        (CASE WHEN PIK_Kwota &lt; 0 THEN PIK_Kwota ELSE 0 END) 
+       --jesli niestornujaca  
+       ELSE 
+         (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END) END)   
+     
+     ELSE 0 END ) as Zmniejszenia,
+
+	 SUM(CASE WHEN PIK_Symbol IN(15,16) AND PIK_Rodzaj IN(1,2,6)  THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE PIK_Kwota END)ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END)END) ELSE 0 END) as PPKPracobiorcy,
+
+	 SUM(CASE WHEN PIK_Symbol IN(17,18) AND PIK_Rodzaj IN(1,2,6)  THEN (CASE PIK_TypWyplaty when 2 THEN (CASE WHEN PIK_Kwota &gt; 0 THEN 0 ELSE PIK_Kwota END)ELSE (CASE WHEN PIK_Kwota &gt; 0 THEN PIK_Kwota ELSE 0 END)END) ELSE 0 END) as PPKPracodawcy
+
+     FROM CDN.PikElem LEFT OUTER JOIN CDN.PikKwoty ON 
+     PIK_GIDTyp=PIE_GIDTyp AND PIK_GIDNumer=PIE_GIDNumer AND PIK_GIDLp=PIE_GIDLp 
+     WHERE PIK_Rodzaj IN(1,2,4,6,7,8) AND PIE_GIDTyp =  @GIDTyp AND PIE_GIDNumer = @GIDNumer
+     GROUP BY PIE_GIDTyp, PIE_GIDFirma, PIE_GIDNumer, PIE_GIDLp, PIE_Znacznik, PIE_Kod, CASE WHEN PIE_Znacznik='D' THEN PIE_FrsId ELSE 0 END
+)
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji CDN.PobierzKwotyPIK " hidden="False">
+GRANT SELECT ON CDN.PobierzKwotyPIK TO CDNRaport
+</scriptdef>
+</ROOT>

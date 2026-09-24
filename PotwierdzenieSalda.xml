@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="PotwierdzenieSalda">
+CREATE  PROCEDURE CDN.PotwierdzenieSalda @p_KontoOD varchar(30),@p_KontoDO varchar(30),@p_Data int,@p_Waluta varchar(5),@p_SaldaZerowe smallint
+AS
+  EXEC CDN.PotwierdzenieSaldaFlex '', '', 3, @p_KontoOD, @p_KontoDO, @p_Data, @p_Waluta, @p_SaldaZerowe, 0
+</proceduredef>
+</ROOT>

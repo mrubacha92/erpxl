@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportJednostkiMiar" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportJednostkiMiar' and type = 'P')
+drop procedure CDN.POS_EksportJednostkiMiar;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportJednostkiMiar" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportJednostkiMiar]
+	@rowVersion bigint
+AS
+BEGIN
+SET NOCOUNT ON;
+	
+	SELECT isnull((select max(Naz_CzasModyfikacji) from cdn.Nazwy where Naz_GIDTyp=144 AND Naz_CzasModyfikacji &gt; @rowVersion),@RowVersion) AS [@RowVersion]
+		,(		
+		select 
+			Naz_GIDLp as [@Id],
+			RTRIM(Naz_Nazwa) as [@Symbol],
+			RTRIM(Naz_Nazwa) as [@Name], 
+			'true' as [@IsActive] 
+		from cdn.Nazwy where Naz_GIDTyp=144 AND (Naz_CzasModyfikacji &gt; @rowVersion or @rowVersion = 0)
+		for xml path('Unit'), type)
+	for xml path('Units')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportJednostkiMiar" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportJednostkiMiar TO CDNRaport
+</scriptdef>
+</ROOT>

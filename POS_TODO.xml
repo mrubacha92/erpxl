@@ -1,0 +1,1096 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportNominaly" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportNominaly' and type = 'P')
+drop procedure CDN.POS_EksportNominaly;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportNominaly" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportNominaly]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('Denomination'), type)
+	for xml path('Denominations')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportNominaly" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportNominaly TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportLimityKredytoweKontrahentow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportLimityKredytoweKontrahentow' and type = 'P')
+drop procedure CDN.POS_EksportLimityKredytoweKontrahentow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportLimityKredytoweKontrahentow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportLimityKredytoweKontrahentow]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('CustomerCreditLimit'), type)
+	for xml path('CustomerCreditLimits')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportLimityKredytoweKontrahentow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportLimityKredytoweKontrahentow TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportRodzajeCenGrupKnt" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportRodzajeCenGrupKnt' and type = 'P')
+drop procedure CDN.POS_EksportRodzajeCenGrupKnt;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportRodzajeCenGrupKnt" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportRodzajeCenGrupKnt]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('CustomerGroupPriceType'), type)
+	for xml path('CustomerGroupPriceTypes')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportRodzajeCenGrupKnt" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportRodzajeCenGrupKnt TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportPunktyZbiorcze" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportPunktyZbiorcze' and type = 'P')
+drop procedure CDN.POS_EksportPunktyZbiorcze;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportPunktyZbiorcze" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportPunktyZbiorcze]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('CollectionPoint'), type)
+	for xml path('CollectionPoints')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportPunktyZbiorcze" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportPunktyZbiorcze TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportRodzajeCenGrupOpe" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportRodzajeCenGrupOpe' and type = 'P')
+drop procedure CDN.POS_EksportRodzajeCenGrupOpe;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportRodzajeCenGrupOpe" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportRodzajeCenGrupOpe]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (
+		select distinct
+			Sta_GIDNumer as [@GroupId],
+			cenaLP as [@PriceTypeId]
+		from cdn.PicoStanowiskaOperatorzy 
+		join cdn.OpeKarty on Ope_GIDNumer = PKn_OpeNumer
+		join cdn.StaKarty on Ope_StaNumer = Sta_GIDNumer
+		join cdn.POS_TCNDoEksportu(@PointOfSaleId) on 1=1
+		where PKn_PSaID = @pointOfSaleId
+	for xml path('SecurityGroupPriceType'), type)
+	for xml path('SecurityGroupPriceTypes')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportRodzajeCenGrupOpe" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportRodzajeCenGrupOpe TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportElementyZestawu" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportElementyZestawu' and type = 'P')
+drop procedure CDN.POS_EksportElementyZestawu;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportElementyZestawu" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportElementyZestawu]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('SetElement'), type)
+	for xml path('SetElements')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportElementyZestawu" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportElementyZestawu TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportPowiazaneTowary" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportPowiazaneTowary' and type = 'P')
+drop procedure CDN.POS_EksportPowiazaneTowary;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportPowiazaneTowary" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportPowiazaneTowary]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('RelatedProduct'), type)
+	for xml path('RelatedProducts')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportPowiazaneTowary" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportPowiazaneTowary TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportCenyPartii" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportCenyPartii' and type = 'P')
+drop procedure CDN.POS_EksportCenyPartii;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportCenyPartii" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportCenyPartii]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('LotPrice'), type)
+	for xml path('LotPrices')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportCenyPartii" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportCenyPartii TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportCenyProgowe" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportCenyProgowe' and type = 'P')
+drop procedure CDN.POS_EksportCenyProgowe;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportCenyProgowe" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportCenyProgowe]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('ThresholdPrice'), type)
+	for xml path('ThresholdPrices')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportCenyProgowe" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportCenyProgowe TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportObrazki" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportObrazki' and type = 'P')
+drop procedure CDN.POS_EksportObrazki;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportObrazki" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportObrazki]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;	
+	declare @RowVersion2 bigint = isnull((select max(DAB_CzasModyfikacji) from (
+				select DAB_CzasModyfikacji 
+				from CDN.POS_TwrDoEksportu(@PointOfSaleId,0)
+				join CDN.DaneObiekty on DAO_ObiTyp = 16 AND DAO_ObiNumer = TwrGIDNumer
+				join CDN.DaneBinarne on DAB_ID=DAO_DABId
+				where DAB_Retail=1 AND DAB_TypId = 326 AND (@RowVersion = 0 OR DAB_CzasModyfikacji &gt; @RowVersion)
+	) a),@RowVersion)
+
+	select
+		@RowVersion2 as [@RowVersion], 
+		(		
+		SELECT 
+			 DAB_ID as [@Id],
+			 DAB_Rozszerzenie/*reverse(left(reverse(DAB_URL),charindex('.',reverse(DAB_URL))-1))*/ as [@Extension],
+			 DATEADD(second,DAB_CzasModyfikacji,convert(datetime,'01-01-1990',105)) as [@ModificationDate],
+			 case when DAB_Archiwalny = 0 then 'true' else 'false' end as [@IsActive],
+			 'true' as [@IsUpToDate],
+			 'true' as [@IsThumbnailUpToDate]		
+				from CDN.POS_TwrDoEksportu(@PointOfSaleId,0)				
+				join CDN.DaneObiekty on DAO_ObiTyp = 16 AND DAO_ObiNumer = TwrGIDNumer
+				join CDN.DaneBinarne on DAB_ID=DAO_DABId
+				where DAB_Retail=1 AND DAB_TypId = 326 AND (@RowVersion = 0 OR DAB_CzasModyfikacji &gt; @RowVersion)
+				for xml path('Picture'), type)
+		for xml path('Pictures')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportObrazki" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportObrazki TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportObrazkiPartii" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportObrazkiPartii' and type = 'P')
+drop procedure CDN.POS_EksportObrazkiPartii;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportObrazkiPartii" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportObrazkiPartii]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('LotPicture'), type)
+	for xml path('LotPictures')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportObrazkiPartii" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportObrazkiPartii TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportPieczatki" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportPieczatki' and type = 'P')
+drop procedure CDN.POS_EksportPieczatki;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportPieczatki" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportPieczatki]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (
+		select 
+			Frm_GidNumer as [@Id],
+			Frm_Nazwa1 as [@CompanyName],
+			--as [@LegalForm],
+			--as [@SubsidiaryName],
+			Frm_NIP as [@CompanyTIN],
+			Frm_Regon as [@CompanyEIN],
+			--as [@Industry],
+			--as [@IndustryCode],
+			Frm_DOrganRej as [@RegisteringAuthority],
+			Frm_DNazwaRej as [@RegistryName],
+			Frm_DNumerRej as [@NumberInRegistry],
+			case when Frm_DDataRej = 0 then null else DateAdd(d,Frm_DDataRej,convert(datetime,'28-12-1800',105)) end as [@RegistrationDate],
+			Frm_DKapitalZakladowy as [@ShareCapital],
+			WanID as [@ShareCapitalCurrencyId],
+			Frm_DKapitalWplacony as [@PaidInCapital],
+			(select top 1 WaN_Id from cdn.walnag where wan_symbol=Frm_DWalutaKapitalu) as [@PaidInCapitalCurrencyId],
+			frm_GUIDdane as [@CompanyAddressGUID],
+			--as [@SubsidiaryAddressGUID],
+			Frm_Telefon1 as [@CompanyPhoneNumber],
+			--as [@SubsidiaryPhoneNumber],
+			Frm_Fax as [@CompanyFax],
+			--as [@SubsidiaryFax],
+			Frm_Email as [@CompanyEmail],
+			--as [@SubsidiaryEmail],
+			'true' as [@IsCurrent],
+			Frm_URL as [@URL]
+		from cdn.PicoStanowiska
+		join cdn.PicoKonfig on PSa_PcKID = PcK_PicoID
+		join cdn.FrmStruktura on FRS_ID = PcK_CentrumID
+		join cdn.Firma on Frm_GidNumer = FRS_FrmNumer
+		join cdn.KrajeCelne on Frm_Kraj = KPC_Kod
+		LEFT JOIN CDN.WaLNag on Frm_DWalutaKapitalu = WaN_Symbol
+		LEFT JOIN cdn.POS_WanDoEksportu(@PointOfSaleId,0) on WaN_Id = WanID
+		WHERE PSa_ID = @PointOfSaleId AND (Frm_CzasModyfikacji &gt; @RowVersion OR @RowVersion = 0) AND (Frm_DWalutaKapitalu = '' OR WanID is not null)
+		for xml path('Stamp'), type)
+	for xml path('Stamps')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportPieczatki" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportPieczatki TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportAktualneNumery" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportAktualneNumery' and type = 'P')
+drop procedure CDN.POS_EksportAktualneNumery;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportAktualneNumery" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportAktualneNumery]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('CurrentNumber'), type)
+	for xml path('CurrentNumbers')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportAktualneNumery" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportAktualneNumery TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportTypyDokumentow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportTypyDokumentow' and type = 'P')
+drop procedure CDN.POS_EksportTypyDokumentow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportTypyDokumentow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportTypyDokumentow]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	declare @dokumenty table(typ int)
+	insert into @dokumenty values (2033),(2041),(2042),(8960),(2034)
+	select
+		(select MAX(Dok_CzasModyfikacji) from cdn.PicoKonfig 
+				join cdn.PicoStanowiska on pck_picoid = psa_pckid
+				join cdn.dokdefinicje on Dok_FrsId = PcK_CentrumID
+				where Dok_GIDTyp in (select * from @dokumenty) AND psa_id = @PointOfSaleId  and (@RowVersion = 0 OR Dok_CzasModyfikacji &gt; @RowVersion)
+				) as [@RowVersion], (
+		SELECT * FROM (
+			select 
+			1 as [@Id],
+			5 as [@POSType],
+			2  as [@PricePrecision],
+			1 as [@NumeratorSchemeId],
+			'Wpłata kasowo-bankowa' as [@Name],
+			'True' as [@IsDefault]
+			
+			union all
+
+			select 
+			2 as [@Id],
+			6 as [@POSType],
+			2  as [@PricePrecision],
+			2 as [@NumeratorSchemeId],
+			'Wypłata kasowo-bankowa' as [@Name],
+			'True' as [@IsDefault]
+			
+			union all
+
+			select 
+			3 as [@Id],
+			18 as [@POSType],
+			2  as [@PricePrecision],
+			3 as [@NumeratorSchemeId],
+			'Nota debetowa' as [@Name],
+			'True' as [@IsDefault]
+
+			union all
+			
+			select 
+			4 as [@Id],
+			16 as [@POSType],
+			2  as [@PricePrecision],
+			4 as [@NumeratorSchemeId],
+			'Podsumowanie sesji' as [@Name],
+			'True' as [@IsDefault]
+
+			union all
+
+			select 
+			dok.dok_id as [@Id],
+			case when dok.dok_GIDTyp = 2033 then 2
+			when dok.dok_GIDTyp = 2041 then 4
+			when dok.dok_GIDTyp = 2034 then 1
+			when dok.dok_GIDTyp = 2042 then 3
+			when dok.dok_GIDTyp = 9472 then 13
+			when dok.dok_GIDTyp = 1603 then 10
+			when dok.dok_GIDTyp = 1604 then 11
+			when dok.dok_GIDTyp = 8960 then 17
+			when dok.dok_GIDTyp = 1824 then 14
+			when dok.dok_GIDTyp = 1832 then 15
+			when dok.dok_GIDTyp = 3584 then 7 end as [@POSType],
+			dok.dok_PrecyzjaCeny as [@PricePrecision],
+			case when org.Dok_Id is not null then org.Dok_Id else dok.dok_id end as [@NumeratorSchemeId],
+			dok.dok_Nazwa as [@Name],
+			'True' as [@IsDefault]
+					from cdn.PicoKonfig 
+					join cdn.PicoStanowiska on pck_picoid = psa_pckid
+					join cdn.dokdefinicje dok on dok.Dok_FrsId = PcK_CentrumID
+					left join cdn.DokDefinicje org on dok.Dok_GIDTyp in (2041,2042) AND org.Dok_FrsId = dok.Dok_FrsId and org.Dok_GIDTyp = dok.Dok_GIDTyp - 8
+					where /*(isnull(org.Dok_WystPrawo,dok.dok_WystPrawo) = 1 OR dok.dok_GIDTyp = 8960) AND*/ dok.dok_GIDTyp in (select * from @dokumenty) AND psa_id = @PointOfSaleId  and (@RowVersion = 0 OR dok.dok_CzasModyfikacji &gt; @RowVersion)
+		) A
+		for xml path('DocumentType'), type)
+	for xml path('DocumentTypes')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportTypyDokumentow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportTypyDokumentow TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportDomyslneJednostki" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportDomyslneJednostki' and type = 'P')
+drop procedure CDN.POS_EksportDomyslneJednostki;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportDomyslneJednostki" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportDomyslneJednostki]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('DefaultUnit'), type)
+	for xml path('DefaultUnits')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportDomyslneJednostki" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportDomyslneJednostki TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportTransakcje" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportTransakcje' and type = 'P')
+drop procedure CDN.POS_EksportTransakcje;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportTransakcje" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportTransakcje]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('Transaction'), type)
+	for xml path('Transactions')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportTransakcje" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportTransakcje TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportTypyObiektowKlasAtrybutow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportTypyObiektowKlasAtrybutow' and type = 'P')
+drop procedure CDN.POS_EksportTypyObiektowKlasAtrybutow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportTypyObiektowKlasAtrybutow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportTypyObiektowKlasAtrybutow]
+	@RowVersion BIGINT
+AS
+BEGIN
+SET NOCOUNT ON;
+
+	declare @gidTypy Table(Typ int)
+	insert into @gidTypy values(32)
+	/*select
+		(SELECT MAX(ato_czasModyfikacji) from cdn.AtrybutyObiekty where ato_gidtyp in(select * from @gidTypy)) as [@RowVersion], (
+		select 
+		AtO_Lp as [@Id], --DODAĆ ID IDENTITY
+		AtO_AtKId as [@AttributeClassId],
+		case when Ato_gidtyp=32 then 1 end as [@ObjectTypeId],
+		case when AtK_Nieaktywny = 1 then 'false' else 'true' end as [@IsActive],
+		case when AtK_Wymagany = 0 then 'false' else 'true' end as [@IsRequired]
+		from
+		(
+			Select AtO_GIDTyp,AtK_Nazwa,ATZ_Nazwa,AtO_Akcja,AtO_AtKID,AtO_Lp, (SELECT CASE WHEN AtO_Wymagany &gt; -1 THEN AtO_Wymagany ELSE AtK_Wymagany END) as Atk_Wymagany, AtK_Nieaktywny, AtO_Online 
+			From Cdn.AtrybutyObiekty 
+			join Cdn.AtrybutyKlasy on AtO_AtKID = AtK_ID 
+			LEFT JOIN CDN.AtrybutyZrodla ON AtO_ATZID = ATZ_ID 
+			LEFT JOIN CDN.AtrybutyUprawnienia ON AtU_AtkID = AtK_ID 
+			Where AtK_Wielowart = 0 and AtO_Element=0 AND AtO_AtKID&gt;0 AND (AtU_AtkID IS NULL OR ISNULL(AtU_OpeNumer,0) = 1) and AtK_NieAktywny = 0 AND AtO_GIDTyp  in(select * from @gidTypy) and (AtO_CzasModyfikacji &gt; @RowVersion or @RowVersion=0)
+			/*Union 
+			Select AtO_GIDTyp,AkP_Nazwa,ATZ_Nazwa,AtO_Akcja, AtO_AtKID,AtO_Lp, 0, 0, AtO_Online 
+			From Cdn.AtrybutyObiekty 
+			join Cdn.AtrybutyKomplety on AtO_AtKID = -AkP_ID 
+			LEFT JOIN CDN.AtrybutyZrodla ON AtO_ATZID = ATZ_ID 
+			LEFT JOIN CDN.AtrybutyUprawnienia ON AtU_AtkID = -AkP_ID 
+			join cdn.AtrybutyKlasy on AtO_AtKId = atk_id 
+			Where AtK_Wielowart = 0 AND AtO_Element=0 and AtO_AtKID&lt;0 AND (AtU_AtkID IS NULL OR ISNULL(AtU_OpeNumer,0) = 1) AND  AtO_GIDTyp  in(select * from @gidTypy) and (AtO_CzasModyfikacji &gt; @RowVersion or @RowVersion=0)*/
+		) a */
+		/*
+			select 0 as [@RowVersion], (
+	select 
+	atk_id as [@Id],
+	atk_id as [@AttributeClassId],
+	1 as [@ObjectTypeId],
+	'true' as [@IsActive],
+	'false' as [@IsRequired]
+		*/
+	select 0 as [@RowVersion], (select 1 WHERE 1=0
+	for xml path('AttributeClassObjectType'), type)
+	for xml path('AttributeClassesObjectTypes')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportTypyObiektowKlasAtrybutow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportTypyObiektowKlasAtrybutow TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportReklamacje" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportReklamacje' and type = 'P')
+drop procedure CDN.POS_EksportReklamacje;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportReklamacje" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportReklamacje]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('Complaint'), type)
+	for xml path('Complaints')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportReklamacje" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportReklamacje TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportAkcjeReklamacji" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportAkcjeReklamacji' and type = 'P')
+drop procedure CDN.POS_EksportAkcjeReklamacji;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportAkcjeReklamacji" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportAkcjeReklamacji]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('ComplaintAction'), type)
+	for xml path('ComplaintActions')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportAkcjeReklamacji" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportAkcjeReklamacji TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportDokumentyMagazynowe" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportDokumentyMagazynowe' and type = 'P')
+drop procedure CDN.POS_EksportDokumentyMagazynowe;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportDokumentyMagazynowe" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportDokumentyMagazynowe]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('WarehouseDocument'), type)
+	for xml path('WarehouseDocuments')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportDokumentyMagazynowe" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportDokumentyMagazynowe TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportZnizki" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportZnizki' and type = 'P')
+drop procedure CDN.POS_EksportZnizki;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportZnizki" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportZnizki]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+		for xml path('Discount'), type
+	) for xml path('Discounts')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportZnizki" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportZnizki TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportOferty" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportOferty' and type = 'P')
+drop procedure CDN.POS_EksportOferty;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportOferty" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportOferty]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('SalesQuote'), type)
+	for xml path('SalesQuotes')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportOferty" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportOferty TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportZamowienia" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportZamowienia' and type = 'P')
+drop procedure CDN.POS_EksportZamowienia;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportZamowienia" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportZamowienia]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('SalesOrder'), type)
+	for xml path('SalesOrders')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportZamowienia" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportZamowienia TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportOkresyHandlowe" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportOkresyHandlowe' and type = 'P')
+drop procedure CDN.POS_EksportOkresyHandlowe;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportOkresyHandlowe" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportOkresyHandlowe]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('TradingPeriod'), type)
+	for xml path('TradingPeriods')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportOkresyHandlowe" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportOkresyHandlowe TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportRegulyKodowKreskowych" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportRegulyKodowKreskowych' and type = 'P')
+drop procedure CDN.POS_EksportRegulyKodowKreskowych;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportRegulyKodowKreskowych" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportRegulyKodowKreskowych]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('BarcodeRule'), type)
+	for xml path('BarcodeRules')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportRegulyKodowKreskowych" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportRegulyKodowKreskowych TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportLimityStanuGotowki" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportLimityStanuGotowki' and type = 'P')
+drop procedure CDN.POS_EksportLimityStanuGotowki;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportLimityStanuGotowki" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportLimityStanuGotowki]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('CashStateLimit'), type)
+	for xml path('CashStateLimits')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportLimityStanuGotowki" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportLimityStanuGotowki TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportKupony" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportKupony' and type = 'P')
+drop procedure CDN.POS_EksportKupony;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportKupony" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportKupony]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('Voucher'), type)
+	for xml path('Vouchers')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportKupony" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportKupony TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportObiektyNiestandardowe" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportObiektyNiestandardowe' and type = 'P')
+drop procedure CDN.POS_EksportObiektyNiestandardowe;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportObiektyNiestandardowe" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportObiektyNiestandardowe]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('CustomObject'), type)
+	for xml path('CustomObjects')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportObiektyNiestandardowe" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportObiektyNiestandardowe TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportLayoutyGrupOperatorow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportLayoutyGrupOperatorow' and type = 'P')
+drop procedure CDN.POS_EksportLayoutyGrupOperatorow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportLayoutyGrupOperatorow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportLayoutyGrupOperatorow]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('LayoutSecurityGroup'), type)
+	for xml path('LayoutSecurityGroups')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportLayoutyGrupOperatorow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportLayoutyGrupOperatorow TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportTypyAdresow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportTypyAdresow' and type = 'P')
+drop procedure CDN.POS_EksportTypyAdresow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportTypyAdresow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportTypyAdresow]
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (
+		select * from(
+			select 0 as [@Id], 0 as [@POSAddressType], 'Adres' as [@Name] 
+			union
+			select 1 as [@Id], 1 as [@POSAddressType], 'Adres dostawy' as [@Name] 
+			union
+			select 2 as [@Id], 2 as [@POSAddressType], 'Adres oddziału' as [@Name] 
+			union
+			select 3 as [@Id], 3 as [@POSAddressType], 'Adres pocztowy' as [@Name] 
+			union
+			select 4 as [@Id], 4 as [@POSAddressType], 'Adres rozliczeniowy' as [@Name] 
+			union
+			select 5 as [@Id], 5 as [@POSAddressType], 'Adres zamieszkania' as [@Name] 
+			union
+			select 6 as [@Id], 6 as [@POSAddressType], 'Adres inny' as [@Name]) a
+	for xml path('AddressType'), type)
+	for xml path('AddressTypes')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportTypyAdresow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportTypyAdresow TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportMaskiWalidacjiPol" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportMaskiWalidacjiPol' and type = 'P')
+drop procedure CDN.POS_EksportMaskiWalidacjiPol;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportMaskiWalidacjiPol" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportMaskiWalidacjiPol]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('FieldValidationMask'), type)
+	for xml path('FieldValidationMasks')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportMaskiWalidacjiPol" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportMaskiWalidacjiPol TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportCentraFirmy" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportCentraFirmy' and type = 'P')
+drop procedure CDN.POS_EksportCentraFirmy;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportCentraFirmy" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportCentraFirmy]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('CompanyUnit'), type)
+	for xml path('CompanyUnits')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportCentraFirmy" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportCentraFirmy TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportGodzinyOtwarcia" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportGodzinyOtwarcia' and type = 'P')
+drop procedure CDN.POS_EksportGodzinyOtwarcia;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportGodzinyOtwarcia" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportGodzinyOtwarcia]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('OpeningHour'), type)
+	for xml path('OpeningHours')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportGodzinyOtwarcia" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportGodzinyOtwarcia TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportTypyKartLojalnosciowych" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportTypyKartLojalnosciowych' and type = 'P')
+drop procedure CDN.POS_EksportTypyKartLojalnosciowych;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportTypyKartLojalnosciowych" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportTypyKartLojalnosciowych]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('LoyaltyCardType'), type)
+	for xml path('LoyaltyCardTypes')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportTypyKartLojalnosciowych" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportTypyKartLojalnosciowych TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportKartyLojalnosciowe" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportKartyLojalnosciowe' and type = 'P')
+drop procedure CDN.POS_EksportKartyLojalnosciowe;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportKartyLojalnosciowe" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportKartyLojalnosciowe]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('LoyaltyCard'), type)
+	for xml path('LoyaltyCards')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportKartyLojalnosciowe" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportKartyLojalnosciowe TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportKontakty" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportKontakty' and type = 'P')
+drop procedure CDN.POS_EksportKontakty;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportKontakty" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportKontakty]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+
+	declare @Typ_Osoba int = 8211
+	select
+		0 as [@RowVersion], (
+			select * from(
+				select 
+					case when s.typ = 1 then Kns_GUID else Kns_GUID2 end as [@GUID],
+					Kns_GUID as [@AddressGUID],
+					s.typ as [@Type],
+					case when s.typ = 2 then Kns_Email else Kns_telefon end as [@Value],
+					DATEADD(second,Kns_CzasModyfikacji,convert(datetime,'01-01-1990',105)) as [@ModificationDate],
+					case when KnS_Archiwalny = 0 then 'false' else 'true' end as [@IsObsolete]
+				FROM CDN.POS_KntDoEksportu(@PointOfSaleId,0) 
+				JOIN CDN.KntOsoby ON KnS_KntNumer = KntGIDNumer
+				cross apply(select 1 as typ union select 2) as s
+				where Kns_Email &lt;&gt; '' and s.typ = 2 OR KnS_Telefon &lt;&gt; '' and s.typ = 1
+
+				union all
+
+				select distinct
+				case when s.typ = 1 then Kna_GUID else Kna_GUIDdane end as [@GUID],
+				kna_guid as [@AddressGUID], 
+				s.typ as [@Type],
+					case when s.typ = 2 then Kna_Email else Kna_telefon1 end as [@Value],
+					DATEADD(second,KnA_LastModL,convert(datetime,'01-01-1990',105)) as [@ModificationDate],
+					case when KnA_DataArc = 0 then 'false' else 'true' end as [@IsObsolete]
+				FROM CDN.POS_KntDoEksportu(@PointOfSaleId,0) 
+				join cdn.KntAdresy on KnA_KntNumer = KntGIDNumer
+				join cdn.KrajeCelne on KnA_Kraj = KPC_Kod
+				cross apply(select 1 as typ union select 2) as s
+				where Kna_Email &lt;&gt; '' and s.typ = 2 OR KnA_Telefon1 &lt;&gt; '' and s.typ = 1
+
+			) a for xml path('Contact'), type)
+	for xml path('Contacts')
+	SET NOCOUNT OFF;	
+
+	
+	/*
+					
+				union all
+
+				select distinct
+					PcL_ObiektGUID as [@GUID],
+					null as [@AddressGUID], 
+					null as [@Type],
+					null as [@Value],
+					null as [@ModificationDate],
+					'true' as [@IsObsolete]
+				FROM cdn.PicoLog
+				join cdn.PicoKonfig on PcL_PcKID = PcK_PicoID
+				join cdn.PicoStanowiska on PcK_PicoID = PSa_PcKID
+				where psa_id = @PointOfSaleId AND PcL_Komentarz = 'POS_ObsoleteObject' AND (PcL_TStamp &lt; @RowVersion or @RowVersion = 0)
+
+
+				delete a FROM
+				cdn.PicoLog a
+				join cdn.PicoKonfig on PcL_PcKID = PcK_PicoID
+				join cdn.PicoStanowiska on PcK_PicoID = PSa_PcKID
+				where psa_id = @PointOfSaleId AND PcL_Komentarz = 'POS_ObsoleteObject' AND (PcL_TStamp &lt; @RowVersion or @RowVersion = 0)
+
+				*/
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportKontakty" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportKontakty TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportWojewodztwa" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportWojewodztwa' and type = 'P')
+drop procedure CDN.POS_EksportWojewodztwa;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportWojewodztwa" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportWojewodztwa]
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (
+				select
+				ROW_NUMBER() OVER(ORDER BY ProvName ASC) as [@Id],
+				x.ProvName as [@Name],
+				(select isnull((select kpc_id from cdn.krajecelne where kpc_kod='pl'),0)) as [@CountryId],
+				'True' as [@IsActive]
+				from
+				(
+					select 'dolnośląskie' as ProvName
+					union select 'kujawsko-pomorskie'
+					union select 'lubelskie'
+					union select 'lubuskie'
+					union select 'łódzkie'
+					union select 'małopolskie'
+					union select 'mazowieckie'
+					union select 'opolskie'
+					union select 'podkarpackie'
+					union select 'podlaskie'
+					union select 'pomorskie'
+					union select 'śląskie'
+					union select 'świętokrzyskie'
+					union select 'warmińsko-mazurskie'
+					union select 'wielkopolskie'
+					union select 'zachodniopomorskie'
+
+				) x
+			for xml path('Province'), type)
+	for xml path('Provinces')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportWojewodztwa" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportWojewodztwa TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportUsunieteObiekty" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportUsunieteObiekty' and type = 'P')
+drop procedure CDN.POS_EksportUsunieteObiekty;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportUsunieteObiekty" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportUsunieteObiekty]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		DATEDIFF(second, convert(datetime,'01-01-1990',105),DateAdd(d,DateDiff(d, convert(datetime,'28-12-1800',105),getdate() ) ,convert(datetime,'28-12-1800',105))) as [@RowVersion], (
+		select 
+			PcL_Info as [@Type],
+			PcL_ObiektGUID as [@Ident]
+		FROM cdn.PicoLog
+		join cdn.PicoKonfig on PcL_PcKID = PcK_PicoID
+		join cdn.PicoStanowiska on PcK_PicoID = PSa_PcKID
+		where psa_id = @PointOfSaleId AND PcL_Komentarz = 'POS_DeletedObject' AND (PcL_TStamp &lt; @RowVersion or @RowVersion = 0)
+		for xml path('DeletedObject'), type)
+	for xml path('DeletedObjects')
+
+	delete a FROM
+	cdn.PicoLog a
+	join cdn.PicoKonfig on PcL_PcKID = PcK_PicoID
+	join cdn.PicoStanowiska on PcK_PicoID = PSa_PcKID
+	where psa_id = @PointOfSaleId AND PcL_Komentarz = 'POS_DeletedObject' AND (PcL_TStamp &lt; @RowVersion or @RowVersion = 0)
+	SET NOCOUNT OFF;	
+
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportUsunieteObiekty" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportUsunieteObiekty TO CDNRaport
+</scriptdef>
+<scriptdef name="Usuwanie procedury POS_EksportSortowanieKuponow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportSortowanieKuponow' and type = 'P')
+drop procedure CDN.POS_EksportSortowanieKuponow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportSortowanieKuponow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportSortowanieKuponow]
+AS
+BEGIN
+SET NOCOUNT ON;
+	select
+		0 as [@RowVersion], (select 1 WHERE 1=0		
+	for xml path('CustomerCreditLimit'), type)
+	for xml path('CustomerCreditLimits')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportSortowanieKuponow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportSortowanieKuponow TO CDNRaport
+</scriptdef>
+</ROOT>

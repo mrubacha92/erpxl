@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_PaczkaTowary" hidden="True">
+if exists (select name from sysobjects where name = 'POS_PaczkaTowary' and type = 'P')
+drop procedure CDN.POS_PaczkaTowary;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_PaczkaTowary" hidden="False">
+CREATE PROCEDURE [CDN].[POS_PaczkaTowary]
+	@rowVersion bigint,
+	@PointOfSaleId int,
+	@packageSize int,
+	@packageNumber int
+AS
+BEGIN
+SET NOCOUNT ON;
+
+	declare @maskaDostawca INT = 8,
+			@maskaOdbiorca INT = 16
+
+		select
+		    Twr_GIDNumer as [@Id],
+			twr_kod as [@Code],
+			twr_nazwa as [@Name],
+			1 as [@NameVersion], 
+			isnull(TwO_Opis,'') as [@Description], --MOŻE BYĆ WIELE OPISÓW, brać pierwszy z brzegu?
+			case when Twr_Typ=4 then 2 when Twr_Typ=2 then 1 else Twr_Typ end as [@Type],
+			'true' as [@DiscountOnPrice], --Co tutaj?
+			isnull(Naz_GIDLp,0) as [@VATRateId],
+			(select naz_gidlp from cdn.Nazwy where Naz_Nazwa = Twr_Jm AND naz_gidtyp=144) as [@BasicUnitId],
+			case when Twr_Waga &lt;&gt; 0 then 'true' else 'false' end as [@IsWeighedProduct],
+			-- as [@RetrieveSetElements],
+			-- as [@CategoryId],
+			case when Twr_Archiwalny = 1 THEN 'false' else 'true' end as [@IsActive],
+			-- as [@VoucherSortId], 
+			'false' as [@CollectVATOnASI],
+			'false' as [@IsRepurchase],
+			'true' as [@DiscountAllowed],
+			-- as [@AllowSetModification],
+			'false' as [@CanEditName],
+			'false' as [@CanUseReverseCharge],
+			twr_kod as [@FiscalName],
+				(SELECT (select Twr_GIDNumer as [@ProductId], 1 as [@NameVersion], Twr_Nazwa as [@Name] for xml path('Name'),type) for xml path('Names'),type),	
+				(SELECT 
+					(		
+					select * from (select
+						 -twr_gidnumer as [@Id],
+						 --Twr_GIDNumer as [@ProductId],	
+						naz_gidlp as [@UnitId], 
+						case when Twr_JMCalkowita = 1 then 0 else coalesce(Twr_JmFormat,0) end as [@Precision],
+						1 as [@Numerator],
+						1 as [@Denominator],
+						'false' as [@DecimalRepresentation],
+						0.0000 as [@Volume],
+						1 as [@VolumeUnitId],
+						0 as [@GrossWeight],
+						0 as [@NetWeight],
+						1 as [@WeightUnitId],
+						'true' as [@IsActive]
+					from 
+					cdn.Nazwy  
+					where Naz_Nazwa = Twr_Jm and naz_gidtyp=144 and not exists(select * from CDN.TwrJm where TwJ_JmZ=Twr_Jm AND twj_twrnumer=twr_gidnumer)
+					union all
+
+					select distinct
+						Twj_Id /*case when Naz_Nazwa=Twr_Jm then 1 else twj_twrlp+1 end*/ as [@Id],
+						--Twr_GIDNumer as [@ProductId],	
+						naz_gidlp as [@UnitId], 
+						case when TwJ_Calkowita = 1 then 0 else TwJ_JmFormat end as [@Precision],
+						ISNULL(TwJ_PrzeliczL,1) as [@Numerator],
+						ISNULL(TwJ_PrzeliczM,1) as [@Denominator],
+						'false' as [@DecimalRepresentation],
+						0.0000 as [@Volume],
+						1 as [@VolumeUnitId],
+						ISNULL(TwJ_WagaBrutto,Twr_WagaBrutto) as [@GrossWeight],
+						ISNULL(TwJ_Waga,Twr_Waga) as [@NetWeight],
+						1 as [@WeightUnitId],
+						'true' as [@IsActive]
+					from 
+					cdn.TwrJm
+					right join cdn.Nazwy on Naz_Nazwa = TwJ_JmZ
+					where naz_gidtyp=144 AND(TwJ_TwrNumer = Twr_GIDNumer)-- OR Naz_Nazwa=Twr_Jm) 					
+					) c
+
+					for xml path('Unit'),type)
+				for xml path('Units'),type)						
+		from cdn.POS_TwrDoEksportu(@PointOfSaleId,@rowVersion)		
+		join cdn.twrkarty on Twr_GIDNumer = TwrGidNumer
+		left join cdn.TwrOpisy on Twr_GIDNumer=TwO_TwrNumer AND TwO_Jezyk = 0
+		left join cdn.Nazwy on naz_gidtyp=624 and Naz_Nazwa = Twr_GrupaPodSpr+' '+cast(Twr_StawkaPodSpr as nvarchar)
+		where TwrLP between (@packageNumber-1)*@packageSize+1 and @packageNumber*@packageSize
+		for xml path('Product')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_PaczkaTowary" hidden="False">
+GRANT EXECUTE ON CDN.POS_PaczkaTowary TO CDNRaport
+</scriptdef>
+</ROOT>

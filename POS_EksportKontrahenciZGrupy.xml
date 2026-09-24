@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportKontrahenciZGrupy" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportKontrahenciZGrupy' and type = 'P')
+drop procedure CDN.POS_EksportKontrahenciZGrupy;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportKontrahenciZGrupy" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportKontrahenciZGrupy]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+	declare @Typ_KntLinki int = 5122,
+			@Typ_Knt int = 32
+
+			
+	SELECT @rowVersion AS [@RowVersion]
+		,(
+		select 
+			knl_GUID as [@GUID],
+			KnG_GIDNumer as [@GroupId],
+			kntGUID as [@CustomerGUID]
+		from cdn.PicoKonfig 
+		join cdn.PicoStanowiska on pck_picoid = psa_pckid
+		outer apply cdn.PobierzDrzewoGrupKontrahentow(PcK_KnGENumer,default)
+		join cdn.KntGrupy on KnG_GIDNumer = AktuGidNumer and KnG_GIDTyp = -32
+		join cdn.Kntlinki on Knl_GroNumer = kng_gidnumer and knl_grotyp = kng_gidtyp and KnL_Lisc = 1 and knl_gidtyp = 32
+		join cdn.POS_KntDoEksportu(@PointOfSaleId,0) ON Knl_GIDNumer = kntGIDNumer and Knl_Gidtyp = @Typ_Knt
+		join cdn.KntGrupyDom on KGD_GIDNumer = kntgidnumer and KGD_GIDTyp=32 and KGD_GrONumer = KnG_GIDNumer and KGD_GrOTyp = KnG_GIDTyp
+		where psa_id =  @PointOfSaleId
+		for xml path('CustomerGroupMember'), type)
+	for xml path('CustomerGroupMembers')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportKontrahenciZGrupy" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportKontrahenciZGrupy TO CDNRaport
+</scriptdef>
+</ROOT>

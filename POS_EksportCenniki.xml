@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportCenniki" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportCenniki' and type = 'P')
+drop procedure CDN.POS_EksportCenniki;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportCenniki" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportCenniki]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;
+
+		SELECT 0 AS [@RowVersion]
+		,(
+	select distinct * from (
+		select distinct 
+				TCN_ID as [@Id],
+				TcN_RodzajCeny as [@PriceTypeId],
+				DATEADD(second,TwC_DataOd,convert(datetime,'01-01-1990',105)) as [@ValidityStartDate],
+				-- as [@ValidityEndDate] NULL
+				DATEADD(second,TwC_DataOd,convert(datetime,'01-01-1990',105)) as [@AcceptanceDate],
+				-- as [@ValidityWeekdays] NULL
+				-- as [@DailyValidityStartTime] NULL
+				-- as [@DailyValidityEndTime] NULL
+				'true'  as [@IsActive],
+				'false' as [@IsSubjectToDiscounts],
+				'false' as [@IsThresholdPriceList],
+				RTRIM(TcN_Nazwa) as [@Name]
+		from cdn.POS_TwrDoEksportu(@PointOfSaleId,0) 
+		join cdn.TwrCeny on TwC_TwrNumer = TwrGIDNumer
+		join cdn.TwrCenyNag on TwC_TcnId = TCN_Id
+		join CDN.POS_TCNDoEksportu(@PointOfSaleId) on cenalp = TCN_RodzajCeny 
+		where tcn_stan = 5
+		
+		union all
+		select distinct 
+				TCN_ID as [@Id],
+				TcN_RodzajCeny as [@PriceTypeId],
+				DATEADD(second,DATEDIFF(second, convert(datetime,'01-01-1990',105),getdate()) ,convert(datetime,'01-01-1990',105))  as [@ValidityStartDate],
+				-- as [@ValidityEndDate] NULL
+				DATEADD(second,DATEDIFF(second, convert(datetime,'01-01-1990',105),getdate()) ,convert(datetime,'01-01-1990',105))  as [@AcceptanceDate],
+				-- as [@ValidityWeekdays] NULL
+				-- as [@DailyValidityStartTime] NULL
+				-- as [@DailyValidityEndTime] NULL
+				'false'  as [@IsActive],
+				'false' as [@IsSubjectToDiscounts],
+				'false' as [@IsThresholdPriceList],
+				RTRIM(TcN_Nazwa) as [@Name]
+		from  cdn.TwrCenyNag
+		join CDN.POS_TCNDoEksportu(@PointOfSaleId) on cenalp = TCN_RodzajCeny 
+		where tcn_stan = 6
+	) a		
+			for xml path('PriceList'), type)
+	for xml path('PriceLists')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportCenniki" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportCenniki TO CDNRaport
+</scriptdef>
+</ROOT>

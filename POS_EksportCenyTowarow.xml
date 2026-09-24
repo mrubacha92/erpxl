@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportCenyTowarow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportCenyTowarow' and type = 'P')
+drop procedure CDN.POS_EksportCenyTowarow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportCenyTowarow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportCenyTowarow]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+	declare @Cenniki table(id int, PriceListId int, ProductId int,GrossPrice decimal(15,4),NetPrice decimal(15,4),CurrencyId int,UnitId int,Points int,ValidityStartDate datetime,PriceTypeId int,LastMod int)
+
+	insert into @cenniki
+	select distinct 
+			twc_id as [@Id],
+			tcn_id as [@PriceListId],
+			TwC_TwrNumer as [@ProductId],
+			CASE WHEN SUBSTRING(naz_nazwa,11,1) = 'B' THEN Twc_Wartosc else ROUND(TwC_Wartosc * (1 + (TwrStawkaPodSpr / 100)), ( select case when TwC_Zaok=0.1 then 1 when TwC_Zaok=0.01 then 2 when TwC_Zaok=0.001 then 3 else 4 end)) + TwC_Offset end as [@GrossPrice],
+			CASE WHEN SUBSTRING(naz_nazwa,11,1) = 'B' THEN ROUND(Twc_Wartosc / (1 + (TwrStawkaPodSpr / 100)), ( select case when TwC_Zaok=0.1 then 1 when TwC_Zaok=0.01 then 2 when TwC_Zaok=0.001 then 3 else 4 end)) + TwC_Offset ELSE TwC_Wartosc end as [@NetPrice],
+			WaNid as [@CurrencyId],
+			(select naz_gidlp from cdn.Nazwy where Naz_Nazwa = Twr_Jm AND naz_gidtyp=144) as [@UnitId],
+			0 as [@Points],
+			-- as [@SetElementId] NULL
+			DATEADD(second,TwC_DataOd,convert(datetime,'01-01-1990',105)) as [@ValidityStartDate],
+			-- as [@ValidityEndDate] NULL
+			-- as [@AcceptanceDate] NULL
+			TCN_RodzajCeny as [@PriceTypeId],
+			TwC_CzasModyfikacji
+	FROM CDN.POS_TwrDoEksportu(@PointOfSaleId,0)
+	join cdn.TwrKarty on Twr_GIDNumer=twrgidnumer
+	join cdn.TwrCeny on TwC_TwrNumer = TwrGIDNumer
+	join cdn.TwrCenyNag on TwC_TcnId = TCN_Id
+	join cdn.Pos_WanDoEksportu(@PointOfSaleId,0) on TwC_Waluta = WanSymbol
+	join cdn.POS_TCNDoEksportu(@PointOfSaleId) on CenaLP = TCN_RodzajCeny
+	join cdn.nazwy on Naz_GIDTyp = 64 and Naz_GIDLp = CenaLP
+	where tcn_stan = 5
+
+	SELECT isnull((select max(c1.LastMod) from @Cenniki c1 where LastMod &gt; @RowVersion),@rowVersion) AS [@RowVersion]
+		,(		
+			select 
+				Id as [@Id],
+				PriceListId as [@PriceListId],
+				ProductId as [@ProductId],
+				GrossPrice as [@GrossPrice],
+				NetPrice as [@NetPrice],
+				CurrencyId as [@CurrencyId],
+				UnitId as [@UnitId],
+				Points as [@Points],
+				ValidityStartDate as [@ValidityStartDate]
+			 from @Cenniki c1 
+			 where LastMod &gt; @RowVersion OR (@RowVersion = 0)
+			for xml path('ProductPrice'), type)
+	for xml path('ProductPrices')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportCenyTowarow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportCenyTowarow TO CDNRaport
+</scriptdef>
+</ROOT>

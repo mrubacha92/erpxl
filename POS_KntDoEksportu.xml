@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji POS_KntDoEksportu" hidden="True">
+IF EXISTS (SELECT Name,xtype FROM sysobjects WHERE Name='POS_KntDoEksportu' AND xtype in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+ drop function CDN.POS_KntDoEksportu;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji POS_KntDoEksportu" hidden="False">
+CREATE FUNCTION CDN.POS_KntDoEksportu (@PointOfSaleId int,@rowVersion int)
+RETURNS @knt TABLE (
+	KntGidNumer				int,
+	KntLp					int,
+	KntLastMod				int,
+	KntKraj					nvarchar(3),
+	kntGUID					nvarchar(41)
+)
+AS  
+BEGIN
+	declare @formy Table(Lp int)	
+	insert into @formy select distinct kon_lp
+	from cdn.PicoStanowiska
+	join cdn.PicoKonfig on PSa_PcKID = PcK_PicoID
+	join cdn.FrmObiekty on FRO_FRMID = pck_CentrumId and Fro_GIDTyp=736
+	join cdn.konfig on KON_Numer=FRO_GIDTyp AND KON_Lp=FRO_GIDNumer 		
+	join cdn.picostanowiskaformypl on kon_lp = PFP_FormaNr and PFP_PSaID = psa_id
+	join cdn.pos_KarDoEksportu(@pointOfSaleId,0) on PFP_KARNumer = KarNumer
+	where Psa_ID = @pointOfSaleId
+	
+	insert into @knt  		    
+			select distinct Knt_GIDNumer as Id, row_number() over (order by Knt_GIDNumer) as row,Knt_LastModL,knt_kraj,knt_GUID from
+				(
+				select distinct Knt_GIDNumer,case when isnull(KnO_CzasModyfikacji,0) &gt; Knt_LastModL then KnO_CzasModyfikacji ELSE Knt_LastModL END as Knt_LastModL,knt_kraj,knt_GUID
+				from cdn.PicoKonfig 
+				join cdn.PicoStanowiska on pck_picoid = psa_pckid
+				outer apply cdn.PobierzDrzewoGrupKontrahentow(PcK_KnGENumer,default)
+				join cdn.KntGrupy on KnG_GIDNumer = AktuGidNumer and KnG_GIDTyp = -32
+				join cdn.Kntlinki on Knl_GroNumer = kng_gidnumer and knl_grotyp = kng_gidtyp and KnL_Lisc = 1 and knl_gidtyp = 32
+				join cdn.Kntkarty on (KnL_GIDNumer = Knt_GIDNumer and Knt_GIDTyp = Knl_Gidtyp)
+				join cdn.POS_TCNDoEksportu(@PointOfSaleId) on CenaLP = Knt_Cena OR Knt_Cena = 0
+				LEFT JOIN CDN.KntOpisy ON KnO_KntNumer = Knt_GIDNumer
+				where 
+				(
+					 psa_id = @PointOfSaleId AND 
+					 KnL_Lisc = 1 AND 
+					 (Knt_Cena &lt;&gt; 0 OR PcK_NrCenyDomyslnej &lt;&gt; 0) AND --jeśli knt nie ma ceny domyślnej to brać z oddziału
+					 Knt_FormaPl in (select * from @formy) AND       --knt musi mieć przypisaną formę dodaną na stanowisku
+					 (
+						(SELECT MAX(rw) FROM (VALUES (PSa_LastSync),(KnO_CzasModyfikacji),(Knt_LastModL)) AS AllPrices(rw)) &gt; @rowVersion OR @rowVersion=0
+					 ) AND 
+					 KnL_LiczbaPowtorzen=1
+					 AND knt_gidnumer &lt;&gt; 0
+					 AND case when Knt_Cena = 0 then PcK_NrCenyDomyslnej else Knt_Cena end in (select cenalp from CDN.POS_TCNDoEksportu(@pointOfSaleId))
+				)
+			) as y
+			insert into @knt
+			select distinct Knt_GIDNumer as Id, isnull((select max(KntLp)+1 from @knt),1),Knt_LastModL,knt_kraj,knt_GUID from cdn.KntKarty 
+			where knt_gidnumer = 0 and Knt_FormaPl in (select * from @formy) AND case when Knt_Cena = 0 then (select top 1 PcK_NrCenyDomyslnej from cdn.picokonfig join cdn.picostanowiska on PSa_PcKID = PcK_PicoID where psa_id=@PointOfSaleId) else Knt_Cena end in (select cenalp from CDN.POS_TCNDoEksportu(@pointOfSaleId))
+		
+	RETURN
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji POS_KntDoEksportu" hidden="False">
+GRANT SELECT ON CDN.POS_KntDoEksportu TO CDNRaport
+</scriptdef>
+</ROOT>

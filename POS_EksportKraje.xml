@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportKraje" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportKraje' and type = 'P')
+drop procedure CDN.POS_EksportKraje;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportKraje" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportKraje]
+	@rowVersion bigint
+AS
+BEGIN
+	SET NOCOUNT ON;	
+	select
+		(select max(kpc_id) from cdn.KrajeCelne) as [@RowVersion], (
+		select kpc_id as [@Id], kpc_kod as [@Code],KPC_NazwaPL as [@Name], 'true' as [@IsActive] from cdn.KrajeCelne where KPC_Id &gt;@RowVersion
+		
+	for xml path('Country'), type)
+	for xml path('Countries')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportKraje" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportKraje TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportCechyPartii" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportCechyPartii' and type = 'P')
+drop procedure CDN.POS_EksportCechyPartii;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportCechyPartii" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportCechyPartii]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+    declare @MaxInt int = 2147483647 --Max Int
+
+	SELECT @rowVersion AS [@RowVersion]
+		,(		
+			select 
+				MIN(TPA_ID) as [@LotId],
+				CASE WHEN sekcja=2 THEN @MaxInt ELSE TPa_CCKNumer END as [@FeatureId],
+				case when sekcja=1 then cast(TPa_Cecha as nvarchar) ELSE CONVERT(nvarchar,DateAdd(d,cast(tpa_dataw as int),convert(datetime,'28-12-1800',105)),101) END as [@Value]
+			from cdn.TwrPartie 
+			join cdn.Dostawy on TPa_Id = Dst_TpAID
+			left join cdn.TwrZasoby on Dst_GIDNumer = TwZ_DstNumer
+			left join cdn.Magazyny on TwZ_MagNumer = MAG_GIDNumer AND TwZ_MagTyp = MAG_GIDTyp
+			left join cdn.FrmObiekty on MAG_GIDNumer=FRO_GIDNumer AND MAG_GIDTyp = Fro_GidTyp
+			left join cdn.FrmStruktura on FRS_ID=FRO_FRMID 
+			left join cdn.PicoKonfig on PcK_CentrumID = FrS_ID
+			left join cdn.picostanowiska on PSa_PcKID = pck_picoid and PSa_Id = @PointOfSaleId
+			cross apply(select 1 as sekcja union all select 2) a
+			where TPa_TwrNumer in (select TwrGidNumer from CDN.POS_TwrDoEksportu(@PointOfSaleId,0)) AND (psa_id is not null or TwZ_Ilosc is null) AND (sekcja = 1 AND TPa_Cecha&lt;&gt;'' OR sekcja = 2 AND TPa_DataW &gt;0)
+			group by TPa_TwrNumer,TPa_DataW,TPa_Cecha,TPa_Ean,TpA_CCKNumer,sekcja
+			for xml path('Value'), type)
+	for xml path('LotFeatureValues')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportCechyPartii" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportCechyPartii TO CDNRaport
+</scriptdef>
+</ROOT>

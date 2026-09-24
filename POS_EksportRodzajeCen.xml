@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportRodzajeCen" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportRodzajeCen' and type = 'P')
+drop procedure CDN.POS_EksportRodzajeCen;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportRodzajeCen" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportRodzajeCen]
+	@rowVersion bigint,
+	@pointOfSaleId int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	declare @dbts bigint = cast(@@DBTS as bigint)
+	
+	select
+		@dbts as [@RowVersion], (
+		select CenaLP as [@Id], case when archiwalny = 0 then 'true' else 'false' end as [@IsAvailable],'true' as [@IsForAllCustomers] from CDN.POS_TCNDoEksportu(@pointOfSaleId)
+	for xml path('PriceType'), type)
+	for xml path('PriceTypes')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportRodzajeCen" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportRodzajeCen TO CDNRaport
+</scriptdef>
+</ROOT>

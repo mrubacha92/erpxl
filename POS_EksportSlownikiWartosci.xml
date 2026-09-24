@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportSlownikiWartosci" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportSlownikiWartosci' and type = 'P')
+drop procedure CDN.POS_EksportSlownikiWartosci;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportSlownikiWartosci" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportSlownikiWartosci]
+	@rowVersion bigint
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+	DECLARE @LastMod BIGINT = ISNULL((SELECT MAX(SLW_CzasModyfikacji) FROM CDN.Slowniki WHERE SLW_Kategoria IN('Rodzaje zgód dla danych osobowych','Powody wycofania zgody','Źródła zgody') AND SLW_CzasModyfikacji &gt; @rowVersion),@rowVersion)
+	
+	SELECT @LastMod AS [@RowVersion]
+		,(		
+			select * from
+			(
+				select
+					SLW_ID as [@Id],
+					1 as [@DirectoryId],
+					SlW_wartoscS as [@Value],
+					null as [@InternalName],
+					'true' as [@IsActive],
+					'false' as [@IsDefault]
+				from cdn.Slowniki where SLW_Kategoria = 'Rodzaje zgód dla danych osobowych' AND SLW_CzasModyfikacji &gt; @rowVersion
+				
+				union all
+
+				select
+					SLW_ID as [@Id],
+					2 as [@DirectoryId],
+					SlW_wartoscS as [@Value],
+					null as [@InternalName],
+					'true' as [@IsActive],
+					'false' as [@IsDefault]
+				from cdn.Slowniki where SLW_Kategoria = 'Powody wycofania zgody' AND SLW_CzasModyfikacji &gt; @rowVersion
+
+				union all
+
+				select
+					SLW_ID as [@Id],
+					3 as [@DirectoryId],
+					SlW_wartoscS as [@Value],
+					null as [@InternalName],
+					'true' as [@IsActive],
+					'false' as [@IsDefault]
+				from cdn.Slowniki where SLW_Kategoria = 'Źródła zgody' AND SLW_CzasModyfikacji &gt; @rowVersion
+				
+				/* PRZYDAŁA BY SIĘ NOWA/ODDZIELNA GAŁĄŹ W SŁOWNIKACH(JEŚLI W OGÓLE PONIŻSZE POBIERANE JEST Z WŁAŚCIWEJ GAŁĘZI)
+				union all
+
+				select
+					SLW_ID as [@Id],
+					4 as [@DirectoryId],
+					SlW_wartoscS as [@Value],
+					null as [@InternalName], 
+					'true' as [@IsActive],
+					'false' as [@IsDefault]
+				from cdn.Slowniki where SLW_Kategoria = 'Źródła zgody' AND SLW_CzasModyfikacji &gt; @rowVersion
+
+				*/
+				union all
+
+				select
+					1 as [@Id],
+					1 as [@DirectoryId],
+					'System' as [@Value],
+					'System' as [@InternalName],
+					'true' as [@IsActive],
+					'true' as [@IsDefault]	
+					
+				union all
+				
+
+				select				 
+					slw_id as [@Id],
+					5 as [@DirectoryId],
+					SLW_WartoscS as [@Value],
+					SLW_WartoscS as [@InternalName],
+					'true' as [@IsActive],
+					'true' as [@IsDefault]	
+				 from cdn.slowniki where SLW_Kategoria = 'Przyczyna korekty sprzedaż'	
+
+				 union all
+
+				 select				 
+					2 as [@Id],
+					5 as [@DirectoryId],
+					'Skup' as [@Value],
+					'BuyBack' as [@InternalName],
+					'true' as [@IsActive],
+					'true' as [@IsDefault]	
+				 
+				 union all
+
+				 /*select top 10000
+					ROW_NUMBER() OVER(ORDER BY kns_kntlp DESC) + 99999 as [@Id], --NIE MA WARTOŚCI W SŁOWNIKU WIĘC: tytuły osób kontaktowych od 100k - 110k
+					6 as [@DirectoryId],
+					KnS_Tytul as [@Value],
+					KnS_Tytul as [@InternalName],
+					'true' as [@IsActive],
+					case when ROW_NUMBER() OVER(ORDER BY kns_kntlp DESC) =1 then 'true' else 'false' end as [@IsDefault]	
+				 from cdn.KntOsoby
+				 where KnS_Tytul &lt;&gt; ''
+
+				 union all*/
+				 
+				 select				 
+					slw_id as [@Id],
+					7 as [@DirectoryId],
+					SLW_WartoscS as [@Value],
+					SLW_WartoscS as [@InternalName],
+					'true' as [@IsActive],
+					'true' as [@IsDefault]	
+				 from cdn.slowniki where SLW_Kategoria = 'Stanowiska'
+				 
+
+			) a
+			for xml path('Value'), type)
+	for xml path('GenericDirectoryValues')
+	SET NOCOUNT OFF;	
+
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportSlownikiWartosci" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportSlownikiWartosci TO CDNRaport
+</scriptdef>
+</ROOT>

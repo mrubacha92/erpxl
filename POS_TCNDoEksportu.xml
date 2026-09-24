@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji POS_TCNDoEksportu" hidden="True">
+IF EXISTS (SELECT Name,xtype FROM sysobjects WHERE Name='POS_TCNDoEksportu' AND xtype in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+ drop function CDN.POS_TCNDoEksportu;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji POS_TCNDoEksportu" hidden="False">
+CREATE FUNCTION CDN.POS_TCNDoEksportu(@PointOfSaleId int)
+RETURNS @TC TABLE (CenaLP int,archiwalny int)
+AS  
+BEGIN
+	insert into @TC 
+	select fro_gidlp,naz_archiwalny
+	from cdn.PicoStanowiska
+			join cdn.PicoKonfig on PSa_PcKID = PcK_PicoID
+			join cdn.FrmStruktura on PcK_CentrumID = FRS_ID
+			join cdn.FrmObiekty on FRS_Id=FRO_FRMID
+			join cdn.Nazwy on Naz_GIDLp = fro_gidlp AND Naz_GIDTyp = FRO_GIDTyp
+			where FRO_GIDTyp = 64 and PSa_ID = @PointOfSaleId
+	RETURN
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji POS_TCNDoEksportu" hidden="False">
+GRANT SELECT ON CDN.POS_TCNDoEksportu TO CDNRaport
+</scriptdef>
+</ROOT>

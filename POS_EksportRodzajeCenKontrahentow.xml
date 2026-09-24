@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportRodzajeCenKontrahentow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportRodzajeCenKontrahentow' and type = 'P')
+drop procedure CDN.POS_EksportRodzajeCenKontrahentow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportRodzajeCenKontrahentow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportRodzajeCenKontrahentow]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+	declare @CentrumID INT = (select pck_centrumid from cdn.PicoKonfig join cdn.picostanowiska on psa_pckid=pck_picoid where psa_id=@PointOfSaleId)
+	
+	SELECT @rowVersion AS [@RowVersion]
+		,(
+		select distinct
+		CenaLP as [@PriceTypeId],
+		KntGUID as [@CustomerGUID]		
+		from cdn.POS_KntDoEksportu(@PointOfSaleId,0)
+		CROSS APPLY (select * from cdn.pos_tcnDoEksportu(@PointOfSaleId)) Ceny
+		for xml path('CustomerPriceType'), type)
+	for xml path('CustomerPriceTypes')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportRodzajeCenKontrahentow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportRodzajeCenKontrahentow TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji POS_TwrDoEksportu" hidden="True">
+IF EXISTS (SELECT Name,xtype FROM sysobjects WHERE Name='POS_TwrDoEksportu' AND xtype in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+ drop function CDN.POS_TwrDoEksportu;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji POS_TwrDoEksportu" hidden="False">
+CREATE FUNCTION CDN.POS_TwrDoEksportu (@PointOfSaleId int,@rowVersion int)
+RETURNS @twr TABLE (
+	TwrGidNumer				int,
+	TwrLp					int,
+	TwrStawkaPodSpr			decimal(5,2),
+	TwrLastMod				int
+)
+AS  
+BEGIN	
+	insert into @twr 
+	select Twr_GIDNumer, row_number() over (order by Twr_GIDNumer) as row,Twr_StawkaPodSpr,Twr_LastModL from
+				(select distinct Twr_GIDNumer,Twr_StawkaPodSpr,Twr_LastModL
+				from cdn.PicoKonfig 
+				join cdn.PicoStanowiska on pck_picoid = psa_pckid
+				outer apply cdn.PobierzDrzewoGrupTowarowych(PcK_TwGENumer,DEFAULT,DEFAULT,1,DEFAULT,DEFAULT)
+				join cdn.TwrGrupy on TwG_GIDNumer = GidNumer AND TwG_GIDTyp = Gidtyp 
+				join cdn.twrlinki on TwL_GrOTyp = Gidtyp and Twl_GroNumer = GidNumer and TwL_Lisc = 1
+				join cdn.twrkarty on TwL_GIDNumer = Twr_GIDNumer and Twr_GIDTyp = Twl_Gidtyp
+				where psa_id = @PointOfSaleId AND Twr_Typ in (1,2) AND Twr_Kaucja = 0 AND Twr_LastModL &gt; @rowVersion) as y	
+
+	RETURN
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji POS_TwrDoEksportu" hidden="False">
+GRANT SELECT ON CDN.POS_TwrDoEksportu TO CDNRaport
+</scriptdef>
+</ROOT>

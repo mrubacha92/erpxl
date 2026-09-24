@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportPartie" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportPartie' and type = 'P')
+drop procedure CDN.POS_EksportPartie;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportPartie" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportPartie]
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+	SELECT 
+		(		
+			select * from
+			(select 
+				MIN(TPa_Id) as [@Id],
+				TPa_TwrNumer as [@ProductId],
+				isnull(SUM(TwZ_IlSpr),0) as [@Quantity],
+				0 as [@QuantityReserved],
+				CASE WHEN TPa_DataW=0 AND TPa_Cecha='' AND TPa_Ean='' AND MIN(TPa_DstNumer)=0 AND TpA_CCKNumer=0 THEN 'true' ELSE 'false' END as [@IsDefault],
+				MIN(TPa_Id) as [@DefaultBarcode]
+			from cdn.TwrPartie 
+			join cdn.Dostawy on TPa_Id = Dst_TpAID
+			left join cdn.TwrZasoby on Dst_GIDNumer = TwZ_DstNumer
+			left join cdn.Magazyny on TwZ_MagNumer = MAG_GIDNumer AND TwZ_MagTyp = MAG_GIDTyp
+			left join cdn.FrmObiekty on MAG_GIDNumer=FRO_GIDNumer AND MAG_GIDTyp = Fro_GidTyp
+			left join cdn.FrmStruktura on FRS_ID=FRO_FRMID 
+			left join cdn.PicoKonfig on PcK_CentrumID = FrS_ID
+			left join cdn.picostanowiska on PSa_PcKID = pck_picoid and PSa_Id = @PointOfSaleId
+			where TPa_TwrNumer in (select TwrGidNumer from CDN.POS_TwrDoEksportu(@PointOfSaleId,0)) AND (psa_id is not null or TwZ_Ilosc is null)
+			group by TPa_TwrNumer,TPa_DataW,TPa_Cecha,TPa_Ean,TpA_CCKNumer
+			) a
+			for xml path('Lot'), type)
+	for xml path('Lots')
+	SET NOCOUNT OFF;	
+
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportPartie" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportPartie TO CDNRaport
+</scriptdef>
+</ROOT>

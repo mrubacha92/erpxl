@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportSchematyNumeracji" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportSchematyNumeracji' and type = 'P')
+drop procedure CDN.POS_EksportSchematyNumeracji;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportSchematyNumeracji" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportSchematyNumeracji]
+	@rowVersion bigint,
+	@pointOfSaleId int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	declare @dbts bigint = cast(@@DBTS as bigint)
+
+
+	declare @dokumenty table(typ int)
+	insert into @dokumenty values (2033),(8960),(2034)
+
+	declare @picoId int, @centum int,@pckTyp int
+    select @pckTyp=pck_typ,@picoId = pck_picoid,@centum=PcK_CentrumID from cdn.PicoKonfig join cdn.PicoStanowiska on psa_pckid = pck_picoid where psa_id=@pointOfSaleId
+	
+	select
+		@rowVersion as [@RowVersion], (
+		select * from(
+			select 
+				dok.dok_Id as [@Id],
+				dok.Dok_Nazwa as [@Name],
+				dok.dok_Symbol as [@DocumentSymbol],
+				'' as [@UnconfirmedDocumentPrefix],
+				1 as [@StartNumber],
+				1 as [@DigitsCount],
+				case when kon_wartosc like '%7%' THEN 'true' when kon_wartosc like '%6%' then 'false' else null end as [@TwoDigitMonth],
+				(
+					select * from 
+					(
+						select dok.dok_Id*10  as [@Id], 
+						1 as [@OrdinalNumber],
+						'' as [@Separator],
+						'DocumentSymbol' as [@FunctionCode],
+						'true' as [@AffectsNumber]
+
+						union all
+
+						select dok.dok_Id*10 + Row_Number() over(PARTITION BY kon_numer ORDER BY kon_numer) as [@Id], 
+						Row_Number() over(PARTITION BY kon_numer ORDER BY kon_numer)+1 as [@OrdinalNumber], 
+						case when Row_Number() over(PARTITION BY kon_numer ORDER BY kon_numer) = 1 then '-' else u.separator end as [@Separator], 
+						u.val as [@FunctionCode],
+						'true' as [@AffectsNumber]
+						from
+						(
+							select wew.kon_numer,'/' as separator, 
+							case when len(Kon_Wartosc) &gt; 0 THEN 
+								CASE 
+									WHEN SUBSTRING(wew.kon_wartosc,1,1) = '1' THEN 'Number' --(N)
+									WHEN SUBSTRING(wew.kon_wartosc,1,1) = '2' THEN 'Number' --(NN)
+									WHEN SUBSTRING(wew.kon_wartosc,1,1) = '3' THEN 'Year2'
+									WHEN SUBSTRING(wew.kon_wartosc,1,1) = '4' THEN 'Year4'
+									WHEN SUBSTRING(wew.kon_wartosc,1,1) = '5' THEN 'Series'
+									WHEN SUBSTRING(wew.kon_wartosc,1,1) = '6' THEN 'Month' --(M)
+									WHEN SUBSTRING(wew.kon_wartosc,1,1) = '7' THEN 'Month' --(MM)
+									ELSE '' END
+								ELSE '' END as FC1,
+							case when len(Kon_Wartosc) &gt; 2 THEN 
+								CASE 
+									WHEN SUBSTRING(wew.kon_wartosc,3,1) = '1' THEN 'Number' --(N)
+									WHEN SUBSTRING(wew.kon_wartosc,3,1) = '2' THEN 'Number' --(NN)
+									WHEN SUBSTRING(wew.kon_wartosc,3,1) = '3' THEN 'Year2'
+									WHEN SUBSTRING(wew.kon_wartosc,3,1) = '4' THEN 'Year4'
+									WHEN SUBSTRING(wew.kon_wartosc,3,1) = '5' THEN 'Series'
+									WHEN SUBSTRING(wew.kon_wartosc,3,1) = '6' THEN 'Month' --(M)
+									WHEN SUBSTRING(wew.kon_wartosc,3,1) = '7' THEN 'Month' --(MM)
+									ELSE '' END
+								ELSE '' END as FC2,
+							case when len(Kon_Wartosc) &gt; 4 THEN 
+								CASE 
+									WHEN SUBSTRING(wew.kon_wartosc,5,1) = '1' THEN 'Number' --(N)
+									WHEN SUBSTRING(wew.kon_wartosc,5,1) = '2' THEN 'Number' --(NN)
+									WHEN SUBSTRING(wew.kon_wartosc,5,1) = '3' THEN 'Year2'
+									WHEN SUBSTRING(wew.kon_wartosc,5,1) = '4' THEN 'Year4'
+									WHEN SUBSTRING(wew.kon_wartosc,5,1) = '5' THEN 'Series'
+									WHEN SUBSTRING(wew.kon_wartosc,5,1) = '6' THEN 'Month' --(M)
+									WHEN SUBSTRING(wew.kon_wartosc,5,1) = '7' THEN 'Month' --(MM)
+									ELSE '' END
+								ELSE '' END as FC3,
+							case when len(Kon_Wartosc) &gt; 6 THEN 
+								CASE 
+									WHEN SUBSTRING(wew.kon_wartosc,7,1) = '1' THEN 'Number' --(N)
+									WHEN SUBSTRING(wew.kon_wartosc,7,1) = '2' THEN 'Number' --(NN)
+									WHEN SUBSTRING(wew.kon_wartosc,7,1) = '3' THEN 'Year2'
+									WHEN SUBSTRING(wew.kon_wartosc,7,1) = '4' THEN 'Year4'
+									WHEN SUBSTRING(wew.kon_wartosc,7,1) = '5' THEN 'Series'
+									WHEN SUBSTRING(wew.kon_wartosc,7,1) = '6' THEN 'Month' --(M)
+									WHEN SUBSTRING(wew.kon_wartosc,7,1) = '7' THEN 'Month' --(MM)
+									ELSE '' END
+								ELSE '' END as FC4						
+							from cdn.konfig wew where wew.Kon_Numer = zew.kon_numer
+						) s
+						unpivot
+						(
+							val
+							for FC in (FC1, FC2, FC3, FC4)
+						) u
+					) a where [@FunctionCode] &lt;&gt; ''
+					for xml path('Element'), type
+				) [Elements]
+				from cdn.konfig zew 
+				cross apply (select * from cdn.DokDefinicje org
+				where dok_gidtyp in(select * from @dokumenty) AND dok_FrsId = @centum) dok
+				where Kon_Komentarz like '%Format numeracji%' and Kon_Numer = 992 --AND (dok.dok_WystPrawo = 1 OR dok.Dok_GIDTyp = 8960)
+
+
+				
+				union all
+
+				select 1 as [@Id], 'Wpłata kasowo-bankowa' as [@Name], 'KP' as [@DocumentSymbol], '' as [@UnconfirmedDocumentPrefix], 1 as [@StartNumber], 1 as [@DigitsCount], null as [@TwoDigitMonth],
+				(
+				select * from(
+					select 10  as [@Id],  1 as [@OrdinalNumber], '' as [@Separator], 'DocumentSymbol' as [@FunctionCode], 'true' as [@AffectsNumber]
+					union all
+					select 11  as [@Id],  2 as [@OrdinalNumber], '/' as [@Separator], 'Number' as [@FunctionCode], 'true' as [@AffectsNumber]
+					union all
+					select 12  as [@Id],  3 as [@OrdinalNumber], '/' as [@Separator], 'Year2' as [@FunctionCode], 'true' as [@AffectsNumber]
+					) c
+					for xml path('Element'), type
+				) [Elements]
+
+				union all
+
+				select 2 as [@Id], 'Wypłata kasowo-bankowa' as [@Name], 'KW' as [@DocumentSymbol], '' as [@UnconfirmedDocumentPrefix], 1 as [@StartNumber], 1 as [@DigitsCount], null as [@TwoDigitMonth],
+				(
+				select * from(
+					select 20  as [@Id],  1 as [@OrdinalNumber], '' as [@Separator], 'DocumentSymbol' as [@FunctionCode], 'true' as [@AffectsNumber]
+					union all
+					select 21  as [@Id],  2 as [@OrdinalNumber], '/' as [@Separator], 'Number' as [@FunctionCode], 'true' as [@AffectsNumber]
+					union all
+					select 22  as [@Id],  3 as [@OrdinalNumber], '/' as [@Separator], 'Year2' as [@FunctionCode], 'true' as [@AffectsNumber]
+					) c
+					for xml path('Element'), type				
+				) [Elements]
+
+				union all
+
+				select 3 as [@Id], 'Nota debetowa' as [@Name], 'ND' as [@DocumentSymbol], '' as [@UnconfirmedDocumentPrefix], 1 as [@StartNumber], 1 as [@DigitsCount], null as [@TwoDigitMonth],
+				(
+				select * from(
+					select 30  as [@Id],  1 as [@OrdinalNumber], '' as [@Separator], 'DocumentSymbol' as [@FunctionCode], 'true' as [@AffectsNumber]
+					union all
+					select 31  as [@Id],  2 as [@OrdinalNumber], '/' as [@Separator], 'Number' as [@FunctionCode], 'true' as [@AffectsNumber]
+					union all
+					select 32  as [@Id],  3 as [@OrdinalNumber], '/' as [@Separator], 'Year2' as [@FunctionCode], 'true' as [@AffectsNumber]
+					) c
+					for xml path('Element'), type				
+				) [Elements]
+
+				union all
+
+				select 4 as [@Id], 'Podsumowanie sesji' as [@Name], 'PS' as [@DocumentSymbol], '' as [@UnconfirmedDocumentPrefix], 1 as [@StartNumber], 1 as [@DigitsCount], null as [@TwoDigitMonth],
+				(
+				select * from(
+					select 40  as [@Id],  1 as [@OrdinalNumber], '' as [@Separator], 'DocumentSymbol' as [@FunctionCode], 'true' as [@AffectsNumber]
+					union all
+					select 41  as [@Id],  2 as [@OrdinalNumber], '/' as [@Separator], 'Number' as [@FunctionCode], 'true' as [@AffectsNumber]
+					union all
+					select 42  as [@Id],  3 as [@OrdinalNumber], '/' as [@Separator], 'Year2' as [@FunctionCode], 'true' as [@AffectsNumber]
+					) c
+					for xml path('Element'), type				
+				) [Elements]
+			) a
+	for xml path('NumeratorScheme'), type)
+	for xml path('NumeratorSchemes')
+	SET NOCOUNT OFF;	
+	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportSchematyNumeracji" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportSchematyNumeracji TO CDNRaport
+</scriptdef>
+</ROOT>

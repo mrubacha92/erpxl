@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportGrupyTowarow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportGrupyTowarow' and type = 'P')
+drop procedure CDN.POS_EksportGrupyTowarow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportGrupyTowarow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportGrupyTowarow]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+	declare @LastMod BIGINT = isnull((select max(TwG_CzasModyfikacji) from cdn.PicoKonfig 
+		join cdn.PicoStanowiska on pck_picoid = psa_pckid
+		outer apply cdn.PobierzDrzewoGrupTowarowych(PcK_TwGENumer,DEFAULT,DEFAULT,1,DEFAULT,DEFAULT)
+		join cdn.TwrGrupy on GIDNumer=TwG_GIDNumer and GIDTyp=TwG_GIDTyp
+		where psa_id = @PointOfSaleId and TwG_CzasModyfikacji &gt; @rowVersion),@rowVersion)
+
+	SELECT @LastMod AS [@RowVersion]
+		,(select 
+			Gidnumer as [@Id],
+			Kod as [@Name],
+			-- as [@CategoryId], NULL
+			'true' as [@IsActive],
+			'false' as [@IsAnalytical],
+			Sciezka as [@HierarchyPath]
+		from cdn.PicoKonfig 
+		join cdn.PicoStanowiska on pck_picoid = psa_pckid
+		outer apply cdn.PobierzDrzewoGrupTowarowych(PcK_TwGENumer,DEFAULT,DEFAULT,1,DEFAULT,DEFAULT)
+		join cdn.TwrGrupy on GIDNumer=TwG_GIDNumer and GIDTyp=TwG_GIDTyp
+		where psa_id = @PointOfSaleId and (TwG_CzasModyfikacji &gt; @rowVersion OR @rowVersion = 0)
+		for xml path('ProductGroup'), type)
+	for xml path('ProductGroups')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportGrupyTowarow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportGrupyTowarow TO CDNRaport
+</scriptdef>
+</ROOT>

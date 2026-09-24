@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportAtrybuty" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportAtrybuty' and type = 'P')
+drop procedure CDN.POS_EksportAtrybuty;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportAtrybuty" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportAtrybuty]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+	declare @Typ_AtrybutWartosc int = 14417, @RowVersion2 int
+
+	
+			select @RowVersion2=max(AtR_LastMod) 
+			from cdn.Atrybuty
+			join cdn.AtrybutyKlasy on AtK_ID = Atr_AtkId
+			left JOIN  cdn.POS_KntDoEksportu(@PointOfSaleId,0) on 32 = Atr_ObiTyp AND KntGIDNumer = Atr_ObiNumer
+			left JOIN  cdn.POS_TwrDoEksportu(@PointOfSaleId,0) on 16 = Atr_ObiTyp AND TwrGidNumer = Atr_ObiNumer
+			where  AtK_Wielowart = 0 and (KntGIDNumer is not null or TwrGidNumer is not null)
+	
+	
+	SELECT @RowVersion2 AS [@RowVersion]
+		,(	
+			select 
+			[@GUID],
+			[@AttributeClassId],
+			[@ObjectTypeId],
+			case when [@ObjectTypeId] = 1 then [@ObjectGUID] else null end as [@ObjectGUID],
+			case when [@ObjectTypeId] = 3 then [@ObjectGUID] else null end as [@ObjectId],
+			[@DirectoryValueId],
+			[@ListValueId],
+			[@Value],
+			[@ModificationDate] 
+			from (
+				select distinct
+					Atr_GUID as [@GUID],
+					AtK_ID as [@AttributeClassId],
+					case when TwrGidNumer is not null then 3 when KntGidNumer is not null then 1 else null end as [@ObjectTypeId], --Kontrahent
+					case when TwrGidNumer is not null then cast(TwrGidNumer as nvarchar) when KntGidNumer is not null then KntGUID else null end as [@ObjectGUID],
+					case when AtK_Typ &gt; 10 then 0 else null end as [@DirectoryValueId],
+					case when AtK_Typ &lt; 10 AND AtK_Typ=4 AND atk_format like '@s%' then (select atw_id from cdn.atrybutywartosci where AtW_AtKId=atk_id and AtW_Wartosc=Atr_Wartosc) else null end as [@ListValueId],		
+				
+					case when AtK_Typ = 1 AND Atr_Wartosc= 'TAK' then 'true' 
+						 when AtK_Typ = 1 and Atr_Wartosc=  'NIE' then 'false'  
+						 when atk_format like '@d%' then CONVERT(nvarchar,DateAdd(d,cast(Atr_Wartosc as int),convert(datetime,'28-12-1800',105)),101) when NOT(AtK_Typ &lt; 10 AND AtK_Typ=4 AND atk_format like '@s%') then RTRIM(Atr_Wartosc) else null end as [@Value],
+					DATEADD(second,AtR_LastMod,convert(datetime,'01-01-1990',105)) as [@ModificationDate]
+				from cdn.Atrybuty
+				join cdn.AtrybutyKlasy on AtK_ID = Atr_AtkId
+				LEFT JOIN cdn.POS_KntDoEksportu(@PointOfSaleId,0) on 32 = Atr_ObiTyp AND KntGIDNumer = Atr_ObiNumer
+				LEFT JOIN cdn.POS_TwrDoEksportu(@PointOfSaleId,0) on 16 = Atr_ObiTyp AND TwrGidNumer = Atr_ObiNumer AND Atr_ObiLp = 0
+				where (KntGIDNumer is not null or TwrGidNumer is not null) AND AtK_Wielowart = 0 AND (AtR_LastMod &gt; @RowVersion OR @RowVersion = 0) AND case when Atk_Format like '@d%' then 6 when AtK_Typ=1 then 4 when AtK_Typ=2 then 1 when AtK_Typ=3 then 2 when AtK_Typ=4 then 5 else 3 end not in (3)
+			
+			) a for xml path('Attribute'), type)
+	for xml path('Attributes')
+	SET NOCOUNT OFF;	
+
+
+
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportAtrybuty" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportAtrybuty TO CDNRaport
+</scriptdef>
+</ROOT>

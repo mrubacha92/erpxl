@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportKlasyAtrybutow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportKlasyAtrybutow' and type = 'P')
+drop procedure CDN.POS_EksportKlasyAtrybutow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportKlasyAtrybutow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportKlasyAtrybutow]
+	@rowVersion bigint
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+	SELECT (select max(AtK_CzasModyfikacji) from cdn.AtrybutyKlasy where AtK_Wielowart = 0) AS [@RowVersion]
+		,(		
+			select
+			AtK_ID as [@Id],
+			AtK_Nazwa as [@Name],
+			AtK_Nazwa as [@InternalName],
+			case when Atk_Format like '@d%' then 6 when AtK_Typ=1 then 4 when AtK_Typ=2 then 1 when AtK_Typ=3 then 2 when AtK_Typ=4 then 5 else 3 end as [@Type],
+			case
+				when AtK_Typ in (3,4) and Atk_Format like '@s%' then 1
+				when AtK_Typ in (3,4) and Atk_Format not like '@d%' then 
+					case when AtK_Format = '@n4.0' then 2 
+						 when AtK_Format = '@n7.2' then 3 
+						 when AtK_Format = '@n9.4' then 4 
+						 else 2 end 
+				 else 1 end as [@Format],
+			null as [@DirectoryId],
+			case when AtK_Nieaktywny = 0 then 'true' else 'false' end as [@IsActive],
+			'true' as [@IsVisible],
+			'true' as [@CanBeModified]
+			from cdn.AtrybutyKlasy
+			where AtK_CzasModyfikacji &gt; @rowVersion and AtK_Wielowart = 0
+				AND case when Atk_Format like '@d%' then 6 when AtK_Typ=1 then 4 when AtK_Typ=2 then 1 when AtK_Typ=3 then 2 when AtK_Typ=4 then 5 else 3 end not in (3)
+			for xml path('AttributeClass'), type)
+	for xml path('AttributeClasses')
+	SET NOCOUNT OFF;	
+
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportKlasyAtrybutow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportKlasyAtrybutow TO CDNRaport
+</scriptdef>
+</ROOT>

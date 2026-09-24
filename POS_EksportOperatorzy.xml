@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury CDN.POS_EksportOperatorzy" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportOperatorzy' and type = 'P')
+drop procedure CDN.POS_EksportOperatorzy;
+</scriptdef>
+<scriptdef name="Tworzenie procedury CDN.POS_EksportOperatorzy" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportOperatorzy]
+	@rowVersion bigint,
+	@pointOfSaleId int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	
+	
+	select 
+		(isnull((select max(PKn_CzasModyfikacji) from cdn.PicoStanowiskaOperatorzy join cdn.OpeKarty on Ope_GIDNumer = PKn_OpeNumer where PKn_PSaID=@pointOfSaleId AND Ope_StaNumer &lt;&gt; 0),@rowVersion)) as [@RowVersion], (
+		select distinct
+			Ope_GIDNumer as [@Id],
+			Ope_IDENT as [@LoginName],
+			'0x0200AAF89ECE132D8EA3A15508664B853035E219F70E0E18C37C4A543F46E8E3574BD4A4410EF48DE76CA64E482FCE60E7F9C1EC1234DD99B21565C595675F1582BE97CA7A32EF09A620' as [@Password], 
+			null as [@PIN], 
+			coalesce(Prc_imie1+' '+Prc_nazwisko ,Ope_Nazwisko) as [@DisplayName], 
+			cast(Ope_RabatOperatora/100 as decimal(5,4)) as [@MaxUserDiscount],
+			case when PKn_PSaID is not null AND Ope_StaNumer &lt;&gt; 0 then 'true' else 'false' end as [@IsActive],			
+			null as [@CardNumber],
+			Ope_Ident as [@Code],
+			'false' as [@UsePasswordPolicy],
+			'false' as [@StrongPasswordRequired],
+			'false' as [@PasswordChangeRequired],
+			100 as [@PasswordDaysOfValidity]
+		from cdn.OpeKarty
+		left join cdn.PicoStanowiskaOperatorzy  on Ope_GIDNumer = PKn_OpeNumer AND PKn_PSaID = @pointOfSaleId
+		left join cdn.PrcKarty on Prc_GIDNumer = Ope_PrcNumer and Prc_GIDTyp = Ope_PrcTyp
+		where PKn_CzasModyfikacji=0 OR PKn_CzasModyfikacji is null
+	for xml path('User'), type)
+	for xml path('Users')
+
+    update a set a.PKn_CzasModyfikacji = DATEDIFF(s,CONVERT(DATETIME,'1990-01-01',120),GETDATE())
+	from cdn.PicoStanowiskaOperatorzy a
+	join cdn.OpeKarty on Ope_GIDNumer = PKn_OpeNumer
+	left join cdn.PrcKarty on Prc_GIDNumer = Ope_PrcNumer and Prc_GIDTyp = Ope_PrcTyp
+	where PKn_PSaID = @pointOfSaleId AND Ope_StaNumer &lt;&gt; 0 and PKn_CzasModyfikacji=0
+	SET NOCOUNT OFF;	
+
+
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury CDN.POS_EksportOperatorzy" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportOperatorzy TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportOperatorzyWGrupach" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportOperatorzyWGrupach' and type = 'P')
+drop procedure CDN.POS_EksportOperatorzyWGrupach;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportOperatorzyWGrupach" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportOperatorzyWGrupach]
+	@rowVersion bigint,
+	@pointOfSaleId int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	declare @dbts bigint = cast(@@DBTS as bigint)
+
+	select
+		@dbts as [@RowVersion], (
+		select 
+			Sta_GIDNumer as [@GroupId], pkn_openumer as [@UserId]
+		from cdn.PicoStanowiskaOperatorzy 
+		join cdn.OpeKarty on Ope_GIDNumer = PKn_OpeNumer
+		join cdn.StaKarty on Ope_StaNumer = Sta_GIDNumer
+		where PKn_PSaID = @pointOfSaleId
+	for xml path('UserGroup'), type)
+	for xml path('UserGroups')	
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportOperatorzyWGrupach" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportOperatorzyWGrupach TO CDNRaport
+</scriptdef>
+</ROOT>

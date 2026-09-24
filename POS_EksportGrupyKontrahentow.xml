@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportGrupyKontrahentow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportGrupyKontrahentow' and type = 'P')
+drop procedure CDN.POS_EksportGrupyKontrahentow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportGrupyKontrahentow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportGrupyKontrahentow]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+	declare @LastMod int = isnull((select max(KnG_CzasModyfikacji) from cdn.PicoKonfig 
+			join cdn.PicoStanowiska on pck_picoid = psa_pckid
+			outer apply cdn.PobierzDrzewoGrupKontrahentow(PcK_KnGENumer,default)
+			outer apply [CDN].[PobierzDrzewoGrupKntKuKorzeniowi](AktuGIDNumer,-32,AktuGrONumer)
+			join cdn.KntGrupy on KnG_GIDNumer = PobierzDrzewoGrupKontrahentow.AktuGidNumer and KnG_GIDTyp = -32
+			where psa_id = @PointOfSaleId AND PobierzDrzewoGrupKontrahentow.Poziom = [PobierzDrzewoGrupKntKuKorzeniowi].Poziom and KnG_CzasModyfikacji &gt; @rowVersion),@rowVersion)
+	
+
+	SELECT @LastMod AS [@RowVersion]
+		,(		
+		select KnG_GIDNumer as [@Id],
+			kng_akronim as [@Name],
+			--as [@CategoryId], NULL
+			case when KnW_Typ = 8 then 2 when KnW_Typ = 16 then 1 else 0 end as [@Kind],
+			case when PcK_KnGENumer = KnG_GIDNumer then 'true' else 'false' end as [@IsRoot],
+			'true' as [@IsActive],
+			'false' as [@IsDefault],
+			Sciezka as [@HierarchyPath]
+			from cdn.PicoKonfig 
+			join cdn.PicoStanowiska on pck_picoid = psa_pckid
+			outer apply cdn.PobierzDrzewoGrupKontrahentow(PcK_KnGENumer,default)
+			outer apply [CDN].[PobierzDrzewoGrupKntKuKorzeniowi](AktuGIDNumer,-32,AktuGrONumer)
+			join cdn.KntGrupy on KnG_GIDNumer = PobierzDrzewoGrupKontrahentow.AktuGidNumer and KnG_GIDTyp = -32
+			join cdn.KntWzorce on KnW_GrpTyp=KnG_GIDTyp AND KnW_GrpNumer=KnG_GIDNumer
+			where psa_id =@PointOfSaleId AND PobierzDrzewoGrupKontrahentow.Poziom = [PobierzDrzewoGrupKntKuKorzeniowi].Poziom and (KnG_CzasModyfikacji &gt; @rowVersion OR @rowVersion = 0)
+		for xml path('CustomerGroup'), type)
+	for xml path('CustomerGroups')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportGrupyKontrahentow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportGrupyKontrahentow TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportOsobyKontaktowe" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportOsobyKontaktowe' and type = 'P')
+drop procedure CDN.POS_EksportOsobyKontaktowe;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportOsobyKontaktowe" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportOsobyKontaktowe]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+	declare @Typ_Osoba int = 8211
+	
+	declare @LastMod bigint = isnull((select max(KnS_CzasModyfikacji) 
+		FROM CDN.POS_KntDoEksportu(@PointOfSaleId,0) JOIN CDN.KntOsoby ON KnS_KntNumer = KntGIDNumer where KnS_CzasModyfikacji &gt; @rowVersion),@rowVersion)
+	
+	SELECT @LastMod AS [@RowVersion]
+		,(		
+		select 
+		Kns_GUID as [@GUID],
+		isnull(SUBSTRING(kns_nazwa, 1, CASE CHARINDEX(' ', kns_nazwa) WHEN 0 THEN LEN(kns_nazwa) ELSE CHARINDEX(' ', kns_nazwa) - 1 END),'') as [@FirstName],
+		isnull(SUBSTRING(kns_nazwa, CASE CHARINDEX(' ', kns_nazwa) WHEN 0 THEN LEN(kns_nazwa) + 1 ELSE CHARINDEX(' ', kns_nazwa) + 1 END, 1000),'') as [@LastName],
+		-- as [@TitleId]
+		-- as [@FamilyRelationTypeId], NULL
+		(select slw_id from cdn.Slowniki where SLW_Kategoria='Stanowiska' and SLW_WartoscS=KnS_Stanowisko) as [@PositionTypeId],
+		-- as [@DateOfBirth], NULL
+		CASE WHEN KnS_Archiwalny &lt;&gt; 0 THEN 'false' else 'true' end as [@IsActive],
+		DATEADD(second,KnS_CzasModyfikacji,convert(datetime,'01-01-1990',105)) as [@ModificationDate],
+			(
+				select
+					kns_GUID as [@GUID],
+					kntGUID as [@CustomerGUID],
+					-- as [@FamilyRelationTypeId],
+					(select slw_id from cdn.Slowniki where SLW_Kategoria='Stanowiska' and SLW_WartoscS=KnS_Stanowisko) as [@PositionTypeId],
+					DATEADD(second,KnS_CzasModyfikacji,convert(datetime,'01-01-1990',105)) as [@ModificationDate],
+					'false'	as [@IsDefault]
+				for xml path('Customer'), root('Customers'), type
+			)
+		FROM CDN.POS_KntDoEksportu(@PointOfSaleId,0)
+		JOIN CDN.KntOsoby ON KnS_KntNumer = KntGIDNumer
+		where KnS_CzasModyfikacji &gt; @rowVersion		
+		for xml path('ContactPerson'), type)
+	for xml path('ContactPersons')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportOsobyKontaktowe" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportOsobyKontaktowe TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="PobierzOO">
+create procedure CDN.PobierzOO( @DataDekretu datetime, @Poczatek datetime output, @Koniec datetime output )
+as
+begin
+  declare @Data integer;
+  declare @StartDate datetime;
+
+  set @StartDate = CONVERT( datetime, '1800-12-28', 120 );
+  set @Data = DATEDIFF( day, @StartDate, @DataDekretu )
+  select @Poczatek = DATEADD( day, OKR_Poczatek, @StartDate ), @Koniec = DATEADD( day, OKR_Koniec, @StartDate )
+    from CDN.Okresy where @Data between OKR_Poczatek and OKR_Koniec;
+  if @Poczatek is null
+  begin
+    set @Poczatek = CONVERT( datetime, '1990-01-01', 120 );
+    set @Koniec   = @Poczatek
+  end
+end;
+</proceduredef>
+</ROOT>

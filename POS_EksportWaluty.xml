@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportWaluty" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportWaluty' and type = 'P')
+drop procedure CDN.POS_EksportWaluty;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportWaluty" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportWaluty]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	declare @pckid int = (select PSa_pckid from cdn.PicoStanowiska where psa_id=@PointOfSaleId)
+
+	INSERT into cdn.PicoLog([PcL_PcKID], [PcL_ObiTyp], [PcL_ObiNumer], [PcL_TStamp],[PcL_ObiektID]) 
+	select distinct @pckid,96,pwl_id,DATEDIFF(second, convert(datetime,'01-01-1990',105),convert(datetime, getdate(), 105)),0
+	from POS_WanDoEksportu(@PointOfSaleId,@RowVersion)
+	join cdn.walnag on WaN_Id = WanID
+	join CDN.picowaluty on WaN_Symbol = Pwl_symbolM AND PwL_PckId = @pckid	
+	WHERE NOT EXISTS (SELECT * FROM cdn.PicoLog WHERE [PcL_PcKID] = @pckid AND [PcL_ObiTyp] = 96 AND [PcL_ObiNumer] = pwl_id);
+
+	
+	SELECT (select max(PwL_KursTS) from CDN.picowaluty where pwl_PckId = @pckid) AS [@RowVersion]
+		,(
+			select distinct
+				 WaN_Id [@Id],
+				 WaN_Symbol [@Symbol],
+				 WaN_Nazwa [@Name],
+				 isnull(pwl_id,1) [@ExchangeRateId],
+				 coalesce(CONVERT(nvarchar(50), DATEADD(second,PwL_KursTS,convert(datetime,'01-01-1990',105)), 121),CONVERT(nvarchar(50), getdate(), 121))  [@ExchangeRateDate],  
+				 isnull(CAST(PwL_KursL*100 AS INT),1) [@ExchangeRateNumerator],
+				 isnull(CAST(PwL_KursM*100 AS INT),1) [@ExchangeRateDenominator],
+				 case when pwl_id is null and pck_waluta&lt;&gt;WaN_Symbol OR PcK_SprWRoznychWalutach = 0 and pck_waluta &lt;&gt; WaN_Symbol then 'false' else 'true' end [@IsActive],
+				 case when pck_waluta=WaN_Symbol then 'true' else 'false' end [@IsSystem],
+				 'false' as [@IsReverseCharge]
+			 from cdn.walnag
+			 left join cdn.POS_WanDoEksportu(@PointOfSaleId,@RowVersion) on WaN_Id = WanID
+			 left join CDN.picowaluty on WaN_Symbol = Pwl_symbolM AND PwL_PckId = @pckid and PwL_TSArchiwizacji = 0
+			 join cdn.PicoKonfig on PcK_PicoID=@pckid
+		FOR XML path('Currency')
+			,type
+		)
+	FOR XML path('Currencies')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportWaluty" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportWaluty TO CDNRaport
+</scriptdef>
+</ROOT>

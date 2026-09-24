@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportMagazyny" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportMagazyny' and type = 'P')
+drop procedure CDN.POS_EksportMagazyny;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportMagazyny" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportMagazyny]
+	@rowVersion bigint,
+	@pointOfSaleId int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	declare @LsatMod bigint = isnull((select max(MAG_CzasModyfikacji) from cdn.picostanowiska
+		join cdn.PicoKonfig on PSa_PcKID = pck_picoid 
+		join cdn.FrmStruktura on PcK_CentrumID = FrS_ID
+		join cdn.FrmObiekty on FRS_ID=FRO_FRMID 
+		join cdn.Magazyny on MAG_GIDNumer=FRO_GIDNumer AND FRO_GIDTyp = MAG_GIDTyp
+		where PSa_ID = @pointOfSaleId AND MAG_CzasModyfikacji &gt; @RowVersion),@rowVersion)
+
+	select 
+		@LsatMod as [@RowVersion], (
+		select distinct
+			Mag_Gidnumer as [@Id], 
+			Mag_Kod as [@Code], 
+			MAG_Nazwa as [@Name], 
+			'true' as [@IsActive],  
+			CASE WHEN EXISTS(select * from CDN.DokDefinicje 
+				left outer join CDN.DokRelacje on DoR_Id=Dok_Id and DoR_MSTyp=208 and DoR_MSNumer=1
+				where Dok_FrsId=1 and Dok_GIDTyp =1601) THEN 'true' else 'false' end as [@IsAvailableForWMMinus],
+			CASE WHEN EXISTS(select * from CDN.DokDefinicje 
+				left outer join CDN.DokRelacje on DoR_Id=Dok_Id and DoR_MSTyp=208 and DoR_MSNumer=1
+				where Dok_FrsId=1 and Dok_GIDTyp =1089) THEN 'true' else 'false' end as [@IsAvailableForWMPlus],
+			CASE WHEN EXISTS(select * from CDN.DokDefinicje 
+				left outer join CDN.DokRelacje on DoR_Id=Dok_Id and DoR_MSTyp=208 and DoR_MSNumer=1
+				where Dok_FrsId=1 and Dok_GIDTyp =2033) THEN 'true' else 'false' end as [@IsAvailableForReceiptSalesInvoice],
+			'false' as [@IsConsignment],
+			MAG_WMS as [@IsWMS]
+		from 
+		cdn.picostanowiska
+		join cdn.PicoKonfig on PSa_PcKID = pck_picoid 
+		join cdn.FrmStruktura on PcK_CentrumID = FrS_ID
+		join cdn.FrmObiekty on FRS_ID=FRO_FRMID 
+		join cdn.Magazyny on MAG_GIDNumer=FRO_GIDNumer AND FRO_GIDTyp = MAG_GIDTyp
+		where PSa_ID = @pointOfSaleId AND MAG_CzasModyfikacji &gt; @RowVersion
+	for xml path('Warehouse'), type)
+	for xml path('Warehouses')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportMagazyny" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportMagazyny TO CDNRaport
+</scriptdef>
+</ROOT>

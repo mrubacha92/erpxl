@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportUstawienia" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportUstawienia' and type = 'P')
+drop procedure CDN.POS_EksportUstawienia;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportUstawienia" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportUstawienia]
+	@rowVersion bigint,
+	@pointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;
+	DECLARE @dbts BIGINT = cast(@@DBTS AS BIGINT);
+	SELECT 0 AS [@RowVersion]
+		,(
+	select u.kolumna [@Name], u.val [@Value] from
+	(
+		select 
+			--STANOWISKO--	
+			cast(PSa_Seria as nvarchar) as [POSSeries],
+			cast(case when PSa_GenKpKwOtwarcie = 1 then 'true' else 'false' end as nvarchar) as [GenerateCashDocAtSessionStartDiff],
+			cast(case when PSa_GenKpKwZamkniecie = 1 then 'true' else 'false' end as nvarchar) as [GenerateCashDocAtSessionEndDiff],
+			cast(case when PSa_OtwZamBezStanu = 1 then 'true' else 'false' end as nvarchar) as [AllowEmptyRealBalance],
+			cast(case when PSa_AutoZamkniecieDnia = 1 then 'Nowithdrawal' else 'Disabled' end as nvarchar) as [DayClosureOnSessionAction],								
+			CONVERT(nvarchar, DATEADD(s, PSa_CzasZamkniecia/100 , 0), 108) as [DayClosureTime],
+			cast(case when PSa_DfiskWydruk = 1 then 'true' else 'false' end as nvarchar) as [FiscalPrintReports],
+			cast(case when PSa_TylkoDostepneTwr = 1 then 'true' else 'false' end as nvarchar) as [ProductsShowOnlyAvailable],
+			cast(case when PSa_Szuflada = 1 then 'true' else 'false' end as nvarchar) as [UseDrawer],
+			cast(case when PSa_SzufladaOtwPlatnosc = 1 then 'true' else 'false' end as nvarchar) as [OpenDrawerForFiscalDocumentsBeforePrinting],
+			cast(case when PSa_SzufladaOtwPlatnosc = 2 then 'true' else 'false' end as nvarchar) as [OpenDrawerForFiscalDocumentsAfterPrinting],
+			cast(case when PSa_SzufladaOtwWystawianie = 1 then 'true' else 'false' end as nvarchar) as [OpenDrawerForCashTransaction],
+			cast(case when PSa_SzufladaOtwZliczanie = 1 then 'true' else 'false' end as nvarchar) as [OpenDrawerWhenCountingCashRegister],
+			cast(case when PSa_SzufladaOtwZmianaOtw = 1 then 'true' else 'false' end as nvarchar) as [OpenDrawerWhenOpeningTheShift],
+			cast(case when PSa_SzufladaOtwZmianaZamk = 1 then 'true' else 'false' end as nvarchar) as [OpenDrawerWhenEndingTheShift],
+			cast(case when PSa_wydrukNaDOmyslnejDrukarce = 1 then 'true' else 'false' end as nvarchar) as [PrintOnDefaultSystemPrinter],
+			cast(isnull(right((select ';'+CAST(PFP_FormaNr as Nvarchar) from cdn.picostanowiskaformypl where PFP_PSaID = @pointOfSaleId AND PFP_BezKpKw = 1 for xml path('')) ,LEN((select ';'+CAST(PFP_FormaNr as Nvarchar) from cdn.picostanowiskaformypl where PFP_PSaID = @pointOfSaleId AND PFP_BezKpKw = 1 for xml path('')))-1),'') as nvarchar) as [CreditLimitPaymentForms],
+
+			--ODDZIAŁ--
+			cast(case when PcK_FaDoPAPoTerminie = 1 then 'true' else 'false' end as nvarchar) as [EnableInvoiceGenerationAfterDeadline],
+			cast(PcK_SposobWyszukiwania as nvarchar) as [DocumentsFilterMode],
+			cast(case when PcK_AutoZamykanieOkna = 1 then 'true' else 'false' end as nvarchar) as [AutomaticallyClosePaymentWindow],
+			cast(case when PcK_BlokadawieleDok = 1 then 'true' else 'false' end as nvarchar) as [BlockMultipleTradeDocuments],
+			cast(case when PcK_Minimalizacja = 1 then 'true' else 'false' end as nvarchar) as [AllowMinimization],			
+			cast(case when PcK_PrzeliczajBezPytania = 1 then 'true' else 'false' end as nvarchar) as [RecalculateDocumentWOPrompting],
+			cast(case when PcK_UjemnaKasaAutoryzacja = 1 then 'true' else 'false' end as nvarchar) as [BlockNegativeCashState],
+			cast(PcK_NrCenyDomyslnej as nvarchar) as [DefaultPriceTypeID],
+			cast(case when PcK_SprWroznychWalutach = 1 then 'true' else 'false' end as nvarchar) as [SalesInDifferentCurrencies],
+			cast(case when PcK_GenerujPWNaBraki = 1 then 'True' else 'False' end as nvarchar) as [AutomaticallyGenerateWMForRemainingItems],			
+			cast(PcK_KnGENumer as nvarchar) as [DefaultCustomerCategoryId],
+			cast(PcK_TwGENumer as nvarchar) as [DefaultProductCategoryId],
+
+			
+			--INNE--
+			cast((select kpc_id from cdn.KrajeCelne where kpc_kod = frm_kraj) as nvarchar) as [DefaultCountryID],
+			cast('2' as nvarchar) as [VatAggregationTypeForReceipts],
+			cast('2' as nvarchar) as [VATAggregationTypeForSalesInvoices],
+			cast('2' as nvarchar) as [VATAggregationTypeForSalesOrders],
+			cast('2' as nvarchar) as [VATAggregationTypeForSalesQuotes],
+			cast((select Dok_NettoBrutto+1 from cdn.DokDefinicje where dok_gidtyp=2033 and Dok_FrsId = FRS_ID) as nvarchar) as [VATDirectionForSalesInvoices],
+			cast('1' as nvarchar) as [VATDirectionForSalesOrders],
+			cast('1' as nvarchar) as [VATDirectionForSalesQuotes],
+			cast('false' as nvarchar) as [UseCategoryInsteadOfTypeForProducts],
+			cast('Auto' as nvarchar) as [HandledByMode],
+			cast('ListAndCard' as nvarchar) as [HandledBySelectionMethod],
+			----
+			cast('False' as nvarchar) as [BlockDocumentsGenerationBeyondTradingPeriod],
+			cast('False' as nvarchar) as [BlockDocumentsConfirmationAfterUnclosedTradingPeriod],
+			cast('False' as nvarchar) as [ShowOuterPOSCashBankTransactions],
+			cast('0' as nvarchar) as [DiscountBundleModeForReceipts],
+			cast('0' as nvarchar) as [DiscountBundleModeForSalesInvoices],
+			cast('0' as nvarchar) as [DiscountBundleModeForSalesOrders],
+			cast('0' as nvarchar) as [DiscountBundleModeForSalesQuotes],
+			cast('False' as nvarchar) as [EnableCreditLimit],
+			cast('1' as nvarchar) as [CompanyUnitId],
+			cast('False' as nvarchar) as [CopyQuantityFromSalesOrder],
+			cast('False' as nvarchar) as [HandleOuterPOSCashBankTransactions],
+			cast('False' as nvarchar) as [DefaultAutomaticNumerationOfCashBankTransactions],
+			----
+			cast('False' as nvarchar) as [PrintInvoicesOnReceiptPrinter],
+			cast('False' as nvarchar) as [OpenDrawerForNonFiscalDocumentsBeforePayment],
+			cast('False' as nvarchar) as [OpenDrawerForNonFiscalDocumentsAfterPayment],
+			cast('True' as nvarchar) as [GetCustomerAddressFromGeneratedDocument],
+			cast('0' as nvarchar) as [DiscountBundleItemsCorrectingModeForReceiptCorrections],
+			cast('0' as nvarchar) as [DiscountBundleItemsCorrectingModeForSalesInvoiceCorrections],
+			cast('True' as nvarchar) as [AllowPriceZeroOnDocumentItem],
+			cast('False' as nvarchar) as [ChangeDueRegistration],
+			cast('False' as nvarchar) as [AdvanceInvoiceFullDeduction],
+			cast('' as nvarchar) as [BIPointUrl],
+			cast('False' as nvarchar) as [CheckCorrectionsOnline],
+			cast('False' as nvarchar) as [CheckSalesOrderOnline],
+			cast('False' as nvarchar) as [CheckWarehouseDocumentsOnline],
+			cast('999' as nvarchar) as [ComplaintConsiderationDays],
+			cast('DoNotShow' as nvarchar) as [CreditLimitDisplayMode],
+			cast('0' as nvarchar) as [CreditLimitDocumentConfirmationModeForReceipts],
+			cast('0' as nvarchar) as [CreditLimitDocumentConfirmationModeForSalesInvoices],
+			cast('0' as nvarchar) as [CreditLimitDocumentConfirmationModeForSalesOrders],
+			cast('False' as nvarchar) as [CreditLimitExpiresAfterMinutes],
+			cast('False' as nvarchar) as [EnableExchangeForItemsOfLowerValue],
+			cast('False' as nvarchar) as [EnableMaximumCashStateOnFinalWithdrawal],
+			cast('False' as nvarchar) as [EnableMinimalCashStateOnCorrections],
+			cast('False' as nvarchar) as [EnableMinimalCashStateOnWithdrawals],
+			cast('Offline' as nvarchar) as [FiscalPrinterMode],
+			cast('False' as nvarchar) as [RelatedProductsShowOnlyAvailable],
+			cast('True' as nvarchar) as [SetArticlePriceOnManualCorrection],
+			cast('True' as nvarchar) as [UnconfirmedDocumentsHaveNumber]
+		from cdn.PicoStanowiska 
+		join cdn.picoKonfig on pck_picoid=psa_pckid
+		join cdn.FrmStruktura on FRS_Id = PcK_CentrumID
+		join cdn.Firma on FRS_FrmNumer = Frm_GidNumer
+		where PSa_ID = @pointOfSaleId
+		) s
+		unpivot
+		(
+			val
+			for kolumna in (
+			[POSSeries], 
+			[GenerateCashDocAtSessionStartDiff],
+			[GenerateCashDocAtSessionEndDiff],
+			[AllowEmptyRealBalance],
+			[DayClosureOnSessionAction],
+			[DayClosureTime],
+			[FiscalPrintReports],
+			[ProductsShowOnlyAvailable],
+			[UseDrawer],
+			[OpenDrawerForFiscalDocumentsBeforePrinting],
+			[OpenDrawerForFiscalDocumentsAfterPrinting],
+			[OpenDrawerForCashTransaction],
+			[OpenDrawerWhenCountingCashRegister],
+			[OpenDrawerWhenOpeningTheShift],
+			[OpenDrawerWhenEndingTheShift],
+			[AutomaticallyClosePaymentWindow],
+			[BlockMultipleTradeDocuments],
+			[AllowMinimization],
+			[PrintOnDefaultSystemPrinter],
+			[DocumentsFilterMode],
+			[EnableInvoiceGenerationAfterDeadline],
+			[RecalculateDocumentWOPrompting],
+			[BlockNegativeCashState],
+			[DefaultPriceTypeID],
+			[DefaultCountryID],
+			[VatAggregationTypeForReceipts],
+			[VATAggregationTypeForSalesInvoices],
+			[VATAggregationTypeForSalesOrders],
+			[VATAggregationTypeForSalesQuotes],
+			[VATDirectionForSalesOrders],
+			[VATDirectionForSalesQuotes],
+			[UseCategoryInsteadOfTypeForProducts],
+			[HandledByMode],
+			[HandledBySelectionMethod],
+			[CreditLimitPaymentForms],
+			[BlockDocumentsGenerationBeyondTradingPeriod],
+			[BlockDocumentsConfirmationAfterUnclosedTradingPeriod],
+			[ShowOuterPOSCashBankTransactions],
+			[VatDirectionForSalesInvoices],
+			[SalesIndifferentCurrencies],
+			[DiscountBundleModeForReceipts],
+			[DiscountBundleModeForSalesInvoices],
+			[DiscountBundleModeForSalesOrders],
+			[DiscountBundleModeForSalesQuotes],
+			[EnableCreditLimit],
+			[CompanyUnitId],
+			[CopyQuantityFromSalesOrder],
+			[HandleOuterPOSCashBankTransactions],
+			[DefaultAutomaticNumerationOfCashBankTransactions],
+			[PrintInvoicesOnReceiptPrinter],
+			[OpenDrawerForNonFiscalDocumentsBeforePayment],
+			[OpenDrawerForNonFiscalDocumentsAfterPayment],
+			[GetCustomerAddressFromGeneratedDocument],
+			[DiscountBundleItemsCorrectingModeForReceiptCorrections],
+			[AllowPriceZeroOnDocumentItem],
+			[DiscountBundleItemsCorrectingModeForSalesInvoiceCorrections],
+			[ChangeDueRegistration],
+			[AutomaticallyGenerateWMForRemainingItems],
+			[AdvanceInvoiceFullDeduction],
+			[BIPointUrl],
+			[CheckCorrectionsOnline],
+			[CheckSalesOrderOnline],
+			[CheckWarehouseDocumentsOnline],
+			[ComplaintConsiderationDays],
+			[CreditLimitDisplayMode],
+			[CreditLimitDocumentConfirmationModeForReceipts],
+			[CreditLimitDocumentConfirmationModeForSalesInvoices],
+			[CreditLimitDocumentConfirmationModeForSalesOrders],
+			[CreditLimitExpiresAfterMinutes],
+			[DefaultCustomerCategoryId],
+			[DefaultProductCategoryId],
+			[EnableExchangeForItemsOfLowerValue],
+			[EnableMaximumCashStateOnFinalWithdrawal],
+			[EnableMinimalCashStateOnCorrections],
+			[EnableMinimalCashStateOnWithdrawals],
+			[FiscalPrinterMode],
+			[RelatedProductsShowOnlyAvailable],
+			[SetArticlePriceOnManualCorrection],
+			[UnconfirmedDocumentsHaveNumber])
+		) u
+
+		for xml path('Setting'), type)
+	for xml path('Settings')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportUstawienia" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportUstawienia TO CDNRaport
+</scriptdef>
+</ROOT>

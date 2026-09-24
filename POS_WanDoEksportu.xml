@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji POS_WanDoEksportu" hidden="True">
+IF EXISTS (SELECT Name,xtype FROM sysobjects WHERE Name='POS_WanDoEksportu' AND xtype in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+ drop function CDN.POS_WanDoEksportu;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji POS_WanDoEksportu" hidden="False">
+CREATE FUNCTION CDN.POS_WanDoEksportu (@PointOfSaleId int,@RowVersion int)
+RETURNS @Wan TABLE (WanID int,WanSymbol nvarchar(3))
+AS  
+BEGIN
+	
+	declare @pckid int = (select PSa_pckid from cdn.PicoStanowiska where psa_id=@PointOfSaleId)	
+	insert into @Wan
+			SELECT WaN_Id,WaN_Symbol
+			 from cdn.PicoKonfig
+			 join cdn.walnag on PcK_Waluta=WaN_Symbol
+			 where PcK_PicoID = @pckid AND @RowVersion = 0			 
+				
+	insert into @Wan
+			SELECT WaN_Id,WaN_Symbol
+			 from cdn.walnag 
+			 join CDN.picowaluty on WaN_Symbol = Pwl_symbolM and PwL_PckId = @pckid
+			 where pwl_PckId = @pckid and PwL_TSArchiwizacji = 0--PwL_KursTS &gt; @RowVersion and 
+	RETURN
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji POS_WanDoEksportu" hidden="False">
+GRANT SELECT ON CDN.POS_WanDoEksportu TO CDNRaport
+</scriptdef>
+</ROOT>

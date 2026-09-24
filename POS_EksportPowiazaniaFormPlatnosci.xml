@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportPowiazaniaFormPlatnosci" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportPowiazaniaFormPlatnosci' and type = 'P')
+drop procedure CDN.POS_EksportPowiazaniaFormPlatnosci;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportPowiazaniaFormPlatnosci" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportPowiazaniaFormPlatnosci]
+	@rowVersion bigint,
+	@pointOfSaleId int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	declare @dbts bigint = cast(@@DBTS as bigint)
+	
+	select
+		@dbts as [@RowVersion], (
+		select 
+			Kon_Lp as [@PaymentFormId], 
+			PFP_KARNumer as [@CashBankAccountId], 
+			'false' as [@ShowByDefault],
+			null as [@VoucherSortId],
+			'false' as [@ResetBalanceAtEndOfDay],
+			'false' as [@ExternalValidationRequired]
+		from cdn.PicoStanowiska
+		join cdn.PicoKonfig on PSa_PcKID = PcK_PicoID
+		join cdn.FrmObiekty on FRO_FRMID = pck_CentrumId and Fro_GIDTyp=736
+		join cdn.konfig on KON_Numer=FRO_GIDTyp AND KON_Lp=FRO_GIDNumer 		
+		join cdn.picostanowiskaformypl on kon_lp = PFP_FormaNr and PFP_PSaID = psa_id
+		join cdn.pos_KarDoEksportu(@pointOfSaleId,0) on PFP_KARNumer = KarNumer
+		where Psa_ID = @pointOfSaleId
+	for xml path('PaymentFormAvailability'), type)
+	for xml path('PaymentFormAvailability')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportPowiazaniaFormPlatnosci" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportPowiazaniaFormPlatnosci TO CDNRaport
+</scriptdef>
+</ROOT>

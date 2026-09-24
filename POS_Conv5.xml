@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Aktualizacja wydruków POS w bazie XL" hidden="False">
+
+	declare @slwid int = (select slw_id from cdn.Slowniki where slw_kategoria='Typy załączników' and SLW_WartoscS = 'Wydruki POS')
+	update cdn.DaneBinarne set dab_kod = 'POS20_PL_SalesInvoiceDetails' where dab_kod = 'POS20_PL_SalesInvoice' and dab_typid=@slwid
+	update cdn.DaneBinarne set dab_kod = 'POS20_PL_OperatorShiftDailyReport' where dab_kod = 'POS_PL_OperatorShiftDailyReport' and dab_typid=@slwid
+	update cdn.DaneBinarne set dab_kod = 'POS20_PL_SalesAdvanceInvoiceDetails' where dab_kod = 'POS20_PL_AdvanceInvoiceDetails' and dab_typid=@slwid
+	delete from cdn.picostanowiskawydruki where pwr_nazwa in (select  dab_Nazwa from cdn.DaneBinarne where  dab_kod in ('POS20_PL_SalesInvoiceQuantityCorrectionDetails_Duplicate','POS20_PL_SalesInvoice_Duplicate','POS20_PL_SalesAdvanceInvoiceCorrectionDetails','POS20_PL_AdvanceInvoiceCorrectionDetails','POS20_PL_ComplaintReturnProtocolDetails','POS20_PL_AdvanceInvoiceDetails','POS20_PL_DebitMemoDetails','POS20_PL_SalesInvoice_Duplicate','POS20_PL_SalesInvoiceQuantityCorrectionDetails_Duplicate') and dab_typid=@slwid)
+	delete cdn.DaneBinarne where dab_kod in ('POS20_PL_SalesInvoiceQuantityCorrectionDetails_Duplicate','POS20_PL_SalesInvoice_Duplicate','POS20_PL_SalesAdvanceInvoiceCorrectionDetails','POS20_PL_AdvanceInvoiceCorrectionDetails','POS20_PL_ComplaintReturnProtocolDetails','POS20_PL_AdvanceInvoiceDetails','POS20_PL_DebitMemoDetails','POS20_PL_SalesInvoice_Duplicate','POS20_PL_SalesInvoiceQuantityCorrectionDetails_Duplicate') and dab_typid=@slwid
+	IF EXISTS (SELECT name FROM sysobjects WHERE name = 'PicoStanowiskaOperatorzy_CzasModyfikacji' AND type = 'TR')  DROP TRIGGER CDN.PicoStanowiskaOperatorzy_CzasModyfikacji	
+	update cdn.PicoStanowiskaOperatorzy set PKn_CzasModyfikacji = 0
+	ALTER TABLE [CDN].[Atrybuty] DROP CONSTRAINT [DF_Atr_GUID]
+	ALTER TABLE [CDN].[Atrybuty] ADD  CONSTRAINT [DF_Atr_GUID]  DEFAULT (CONVERT([varchar](36),newid())) FOR [Atr_GUID]
+	update cdn.DaneBinarne set DAB_Nazwa = 'Wydruk formularza karty kontrahenta' where dab_kod='POS20_PL_CustomerDetails'
+	update cdn.Atrybuty set atr_guid = newid() where atr_guid='' or atr_guid is null
+set nocount off;
+</scriptdef>
+</ROOT>

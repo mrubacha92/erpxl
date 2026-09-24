@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportUprawnienia" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportUprawnienia' and type = 'P')
+drop procedure CDN.POS_EksportUprawnienia;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportUprawnienia" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportUprawnienia]
+@rowVersion bigint
+AS
+BEGIN
+SET NOCOUNT ON;
+	declare @uprawnienia table(id int,Name nvarchar(50),IsAllowedToAll nvarchar(5))
+	insert into @uprawnienia 
+	select 1 as [@id], 'Receipt' as [@Name], 'false' as [@IsAllowedToAll] union all
+	select 2 as [@id], 'ReceiptQuantityCorrection' as [@Name], 'false' as [@IsAllowedToAll] union all
+	select 3 as [@id], 'SalesInvoice' as [@Name], 'false' as [@IsAllowedToAll]  union all
+	select 4 as [@id], 'SalesInvoiceQuantityCorrection' as [@Name], 'false' as [@IsAllowedToAll] union all
+	select 5 as [@id], 'CashBankDeposit' as [@Name], 'false' as [@IsAllowedToAll]  union all
+	select 6 as [@id], 'CashBankWithdrawal' as [@Name], 'false' as [@IsAllowedToAll]  union all
+	select 7 as [@id], 'SalesComplaint' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 8 as [@id], 'InternalOrder' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 9 as [@id], 'TaxFree' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 10 as [@id], 'DebitNote' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 11 as [@id], 'WarehouseMovementMinus' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 12 as [@id], 'WarehouseMovementPlus' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 13 as [@id], 'ReceivingAndDeliveryReport ' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 14 as [@id], 'SalesOrder' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 15 as [@id], 'SalesQuote' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 16 as [@id], 'AdvanceInvoice' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 17 as [@id], 'AdvanceInvoiceCorrection' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 18 as [@id], 'CollectionPoint' as [@Name], 'true' as [@IsAllowedToAll]  union all
+	select 19 as [@id], 'OfflineLogin' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 20 as [@id], 'Configuration' as [@Name], 'false' as [@IsAllowedToAll]  union all	
+	select 21 as [@id], 'UIConfiguration' as [@Name], 'false' as [@IsAllowedToAll]  union all	
+	select 22 as [@id], 'ChangeArticleEndPrice' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 23 as [@id], 'ElementStorno' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 24 as [@id], 'ReceiptStorno' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 25 as [@id], 'ManualOpenDrawer' as [@Name], 'false' as [@IsAllowedToAll]  union all	
+	select 26 as [@id], 'PrintDailyCashReport' as [@Name], 'false' as [@IsAllowedToAll]  union all	
+	select 27 as [@id], 'PrintPeriodCashReport' as [@Name], 'false' as [@IsAllowedToAll]  union all	
+	select 28 as [@id], 'RegisterStatePreview' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 29 as [@id], 'OperatorShiftStart' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 30 as [@id], 'CashRegisterBalanceAtShiftStart' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 31 as [@id], 'ShiftStartWithDifferenceInCashRegisterBalance' as [@Name], 'false' as [@IsAllowedToAll]  union all	
+	select 32 as [@id], 'OtherOperatorsShiftEnd' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 33 as [@id], 'ShiftEndWithoutWithdrawal' as [@Name], 'false' as [@IsAllowedToAll]  union all	
+	select 34 as [@id], 'EndOfTheDay' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 35 as [@id], 'ShiftEndWithDifferenceInCashRegisterBalance' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 36 as [@id], 'Refiscalization' as [@Name], 'false' as [@IsAllowedToAll]  union all	
+	select 37 as [@id], 'AccessToPurchasePrices' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 38 as [@id], 'DeliveryStatusChange' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 39 as [@id], 'PaymentStatusChange' as [@Name], 'true' as [@IsAllowedToAll]  union all	
+	select 40 as [@id], 'OtherOperatorsDocumentsEdit' as [@Name], 'false' as [@IsAllowedToAll]  union all	
+	select 41 as [@id], 'ConsentsToPersonalDataProcessing' as [@Name], 'false' as [@IsAllowedToAll]  union all	
+	select 42 as [@id], 'ExceedingCashRegisterLimit' as [@Name], 'false' as [@IsAllowedToAll]  union all
+	select 43 as [@id], 'CustomersModification' as [@Name],'false' as [@IsAllowedToAll]  union all
+	select 44 as [@id], 'InitialPriceModification' as [@Name],'true' as [@IsAllowedToAll]  union all
+	select 45 as [@id], 'CreationOfManualCorrections' as [@Name],'false' as [@IsAllowedToAll]
+
+	SELECT 1 AS [@RowVersion],(
+		select id as [@Id], name as [@Name],IsAllowedToAll as [@IsAllowedToAll] from @uprawnienia --where @rowVersion = 0 --Tylko przy pierwszej synchronizacji?
+
+	for xml path('Permission'), type)
+	for xml path('Permissions')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportUprawnienia" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportUprawnienia TO CDNRaport
+</scriptdef>
+</ROOT>

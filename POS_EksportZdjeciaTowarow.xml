@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportZdjeciaTowarow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportZdjeciaTowarow' and type = 'P')
+drop procedure CDN.POS_EksportZdjeciaTowarow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportZdjeciaTowarow" hidden="False">
+
+CREATE PROCEDURE [CDN].[POS_EksportZdjeciaTowarow]
+	@RowVersion BIGINT,
+	@PointOfSaleId INT
+AS
+BEGIN
+SET NOCOUNT ON;
+	declare @RowVersion2 bigint = 0
+
+	select @RowVersion2 = maxrw from (
+		select max(DAB_CzasModyfikacji) as maxrw from (
+				select DAB_CzasModyfikacji from cdn.PicoKonfig 
+				join cdn.PicoStanowiska on pck_picoid = psa_pckid
+				outer apply cdn.POS_TwrDoEksportu(@PointOfSaleId,0)				
+				join CDN.DaneObiekty on DAO_ObiTyp = 16 AND DAO_ObiNumer = TwrGIDNumer
+				join CDN.DaneBinarne on DAB_ID=DAO_DABId
+				where DAB_Retail=1 AND psa_id = @PointOfSaleId AND DAB_TypId = 326 AND (@RowVersion = 0 OR DAB_CzasModyfikacji &gt; @RowVersion)
+	) a ) b
+
+	
+
+	select @RowVersion2 = ISNULL(@RowVersion2,@RowVersion)
+	select
+		@RowVersion2 as [@RowVersion], 
+		(		
+		SELECT 
+			TwrGIDNumer as [@ProductId],
+			DAB_ID as [@PictureId],
+			case when dao_pozycja = (select min(dao_pozycja) from cdn.DaneObiekty join CDN.DaneBinarne on DAB_ID=DAO_DABId where DAO_ObiTyp = 16 AND DAO_ObiNumer = TwrGIDNumer AND DAB_Retail=1 AND DAB_TypId = 326) 
+				then 'true' else 'false' end as [@IsDefault]
+		from CDN.POS_TwrDoEksportu(@PointOfSaleId,0)
+		join CDN.DaneObiekty on DAO_ObiTyp = 16 AND DAO_ObiNumer = TwrGIDNumer
+		join CDN.DaneBinarne on DAB_ID=DAO_DABId
+		where DAB_Retail=1 AND DAB_TypId = 326 AND (@RowVersion = 0 OR DAB_CzasModyfikacji &gt; @RowVersion)	
+	for xml path('ProductPicture'), type)
+	for xml path('ProductPictures')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportZdjeciaTowarow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportZdjeciaTowarow TO CDNRaport
+</scriptdef>
+</ROOT>

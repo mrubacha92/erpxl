@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury PodajDodatkowyConnectString" hidden="True">
+IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = object_id(N'CDN.PodajDodatkowyConnectString') and xtype = 'FN')
+  DROP FUNCTION CDN.PodajDodatkowyConnectString
+</scriptdef>
+<scriptdef name="Tworzenie procedury PodajDodatkowyConnectString" hidden="False">
+CREATE FUNCTION CDN.PodajDodatkowyConnectString ()
+ RETURNS VARCHAR(1024)
+AS
+BEGIN
+	RETURN 'DRIVER={SQL Server};Provider=SQLOLEDB;Data Source='+@@SERVERNAME+';Initial Catalog='+DB_NAME()+';Integrated Security=SSPI;'
+END
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury PodajDodatkowyConnectString" hidden="False">
+GRANT EXECUTE ON CDN.PodajDodatkowyConnectString TO CDNRaport
+</scriptdef>
+</ROOT>

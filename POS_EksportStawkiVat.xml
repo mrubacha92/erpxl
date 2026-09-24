@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportStawkiVat" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportStawkiVat' and type = 'P')
+drop procedure CDN.POS_EksportStawkiVat;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportStawkiVat" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportStawkiVat]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	declare @dbts bigint = cast(@@DBTS as bigint)	
+	select
+		isnull((select max(naz_CzasModyfikacji) from cdn.Nazwy where naz_gidtyp=624 AND naz_CzasModyfikacji &gt; @RowVersion),@RowVersion) as [@RowVersion], (
+		select 
+			stawka.naz_gidlp as [@Id],
+			RTRIM(stawka.naz_Nazwa) as [@Name],
+			CAST(CAST(SUBSTRING(stawka.naz_Nazwa,2,10) AS Decimal(15,2))/100 as Decimal(15,4)) as [@Value],
+			ISNULL(SUBSTRING(drukarka.Naz_Opis,r,1),'') as [@MappedVATRate],
+			Case when stawka.naz_Archiwalny = 0 then 'true' else 'false' end as [@IsActive],
+			case when LEFT(RIGHT(stawka.naz_nazwa1,10),2) = '00' then 'true' else 'false' end as [@IsNotSubjectToTaxation],
+			SUBSTRING(stawka.naz_Nazwa,1,1) as [@Symbol],
+			case when CAST(SUBSTRING(stawka.naz_Nazwa,2,10) AS Decimal(15,2))=0 then  SUBSTRING(stawka.naz_nazwa1,11,1) else 0 end as [@ExportDocumentType],
+			case when LEFT(RIGHT(stawka.naz_nazwa1,10),2) = '20' then 'true' else 'false' end as [@IsReverseCharge]
+		from cdn.Nazwy stawka 
+		left join cdn.Nazwy drukarka on drukarka.Naz_Nazwa1 = (select psa_drukarka from cdn.PicoStanowiska where PSa_ID = @PointOfSaleId) AND drukarka.Naz_GIDTyp=2672
+		left join (select r+1 as r,s from 
+		(
+			select ROW_NUMBER() OVER(ORDER BY Naz_Opis ASC) r,substring(a.Naz_Opis, v.number+1, 1)  s
+			from (select Naz_Opis from cdn.Nazwy where Naz_Nazwa1 = (select psa_drukarka from cdn.PicoStanowiska where PSa_ID = @PointOfSaleId) AND Naz_GIDTyp=2672) a
+			join master..spt_values v on v.number &lt; len(a.Naz_Opis)
+			where v.type = 'P'
+		) b where r % 2 &lt;&gt; 0) S on S.s = SUBSTRING(stawka.naz_Nazwa,1,1)		
+		where stawka.naz_gidtyp=624 AND stawka.naz_CzasModyfikacji &gt; @RowVersion
+
+
+	for xml path('VATRate'), type)
+	for xml path('VATRates')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportStawkiVat" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportStawkiVat TO CDNRaport
+</scriptdef>
+</ROOT>

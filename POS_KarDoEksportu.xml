@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji POS_KarDoEksportu" hidden="True">
+IF EXISTS (SELECT Name,xtype FROM sysobjects WHERE Name='POS_KarDoEksportu' AND xtype in (N'FN', N'IF', N'TF', N'FS', N'FT'))
+ drop function CDN.POS_KarDoEksportu;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji POS_KarDoEksportu" hidden="False">
+CREATE FUNCTION CDN.POS_KarDoEksportu (@PointOfSaleId int,@rowVersion int)
+RETURNS @knt TABLE (
+	KarNumer				int
+)
+AS  
+BEGIN
+	insert into @knt
+			select distinct kar_gidnumer
+			from cdn.Rejestry
+			join cdn.picostanowiskaformypl on PFP_KARNumer = KAR_GIDNumer
+			join cdn.POS_WanDoEksportu(@pointOfSaleId,@rowVersion) on WanSymbol = KAR_Waluta
+			where PFP_PSaID = @pointOfSaleId AND (KAR_CzasModyfikacji &gt; @rowVersion OR @rowVersion = 0)
+	RETURN
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji POS_KarDoEksportu" hidden="False">
+GRANT SELECT ON CDN.POS_KarDoEksportu TO CDNRaport
+</scriptdef>
+</ROOT>

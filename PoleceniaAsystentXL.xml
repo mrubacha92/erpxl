@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Wypełnienie tabeli PoleceniaGlowne" hidden="False">
+set nocount on;
+declare @PGLId int;
+
+If (select count(*) from cdn.PoleceniaGlowne where PGL_PredefiniowaneID&gt;0) &gt;0
+begin
+	delete from cdn.PoleceniaGlowne where PGL_PredefiniowaneID&gt;0
+end
+
+--Wspólne
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis, PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż kontrahentów','#K','0','Wyświetla listę kontrahentów','1','Wspólne');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Pokaż listę kontrahentów')
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę kontrahentów')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż towary','#T','0','Wyświetla listę towarów','2','Wspólne');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Pokaż listę towarów')
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę towarów')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż pracowników','#P','0','Wyświetla listę pracowników','3','Wspólne');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Pokaż listę pracowników')
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę pracowników')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż kontrahenta','#K/','0','Wyświetla kartę kontrahenta o podanym kodzie (kod poprzedzony spacją)','4','Wspólne');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Pokaż kartę kontrahenta')
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz kartę kontrahenta')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż towar','#T/','0','Wyświetla kartę towaru o podanym kodzie (kod poprzedzony spacją)','5','Wspólne');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Pokaż kartę towaru')
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz kartę towaru')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż pracownika','#P/','0','Wyświetla kartę pracownika o podanym kodzie (kod poprzedzony spacją)','6','Wspólne');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Pokaż kartę pracownika')
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz kartę pracownika')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż limit kontrahenta','#L/','0','Wyświetla kartę limitu kredytowego kontrahenta o podanym kodzie (kod poprzedzony spacją)','7','Wspólne');
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż limit wykorzystany','#LW/','0','Wyświetla wykorzystanie limitu kredytowego kontrahenta o podanym kodzie (kod poprzedzony spacją)','8','Wspólne');
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj kontrahenta','+K/','1','Otwiera kartę nowego kontrahenta z uzupełnionym kodem (kod poprzedzony spacją). Kontrahent zostanie dodany do Grupy głównej.','9','Wspólne');
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj towar','+T/','1','Otwiera kartę nowego towaru z uzupełnionym kodem (kod poprzedzony spacją). Towar zostanie dodany do Grupy głównej.','10','Wspólne');
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj pracownika','+P/','1','Otwiera kartę nowego pracownika z uzupełnionym kodem (kod poprzedzony spacją).','11','Wspólne');
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż dokument','#d/','0','Wyświetla dokument handlowy o podanym numerze (numer poprzedzony spacją). Możliwe do wyszukania dokumenty to: PZ/PZK, PZI/PKI, WZ/WZK, WZE/WKE, FZ/FZK, FS/FSK, FSE/FKE, FW/FWK, FRR, PA, PW, RW, WKA, PKA, RS, MMW, MMP, TF, FZL, FSL, FEL (A)FS, (A)FZ, ZZ, ZS, ZW, OZ, OS, ZOZ, ZOS, WM, PM, MP, AWD, ZWM, ZK, ZD, FAI, WYS, PC, ZP, PP','12','Wspólne');
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż ostatni dokument','#d@','0','Wyświetla ostatni dokument handlowy wystawiony przez użytkownika. Możliwe do wyszukania dokumenty to: PZ/PZK, PZI/PKI, WZ/WZK, WZE/WKE, FZ/FZK, FS/FSK, FSE/FKE, FW/FWK, FRR, PA, PW, RW, WKA, PKA, RS, MMW, MMP, TF, FZL, FSL, FEL (A)FS, (A)FZ, ZZ, ZS, ZW, OZ, OS, ZOZ, ZOS, WM, PM, MP, AWD, ZWM','13','Wspólne');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Pokaż mój ostatni dokument')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Wykonaj funkcję CDN.WartoscWWalucieSys','?','3','Przelicza wpisaną wartość w walucie obcej na walutę systemową. Zarówno wartość, jak i symbol waluty muszę być poprzedzone spacjami.','14','Wspólne');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Przelicz')
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Przelicz na walutę')
+
+--Sprzedaż
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę PZ', '#dPZ','0','Wyświetla listę dokumentów PZ','15','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę PZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę PZI', '#dPZI','0','Wyświetla listę dokumentów PZI','16','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę PZI')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę WZ','#dWZ','0','Wyświetla listę dokumentów WZ','17','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę WZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę WZE','#dWZE','0','Wyświetla listę dokumentów WZE','18','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę WZE')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę FZ','#dFZ','0','Wyświetla listę dokumentów FZ','19','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę FZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę FRR','#dFRR','0','Wyświetla listę dokumentów FRR','20','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę FRR')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę FS','#dFS','0','Wyświetla listę dokumentów FS','21','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę FS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę FSE','#dFSE','0','Wyświetla listę dokumentów FSE','22','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę FSE')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę FW','#dFW','0','Wyświetla listę dokumentów FW','23','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę FW')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę PA','#dPA','0','Wyświetla listę paragonów','24','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę PA')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę PW','#dPW','0','Wyświetla listę dokumentów PW','25','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę PW')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę RW','#dRW','0','Wyświetla listę dokumentów RW','26','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę RW')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę WKA','#dWKA','0','Wyświetla listę dokumentów WKA','27','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę WKA')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę PKA','#dPKA','0','Wyświetla listę dokumentów PKA','28','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę PKA')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę RS','#dRS','0','Wyświetla listę raportów sprzedaży','29','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę RS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę MMW','#dMMW','0','Wyświetla listę dokumentów MMW','30','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę MMW')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę MMP','#dMMP','0','Wyświetla listę dokumentów MMP','31','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę MMP')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę TF','#dTF','0','Wyświetla listę dokumentów TF','32','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę TF')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę RVAT','#dRVAT','0','Wyświetla listę Rejestr VAT','33','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę RVAT')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż historię kontrahenta','#dK/','0','Wyświetla okno historii kontrahenta o podanym kodzie (kod poprzedzony spacją).','34','Sprzedaż');
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż historię towaru','#dT/','0','Wyświetla okno historii towaru o podanym kodzie (kod poprzedzony spacją).','35','Sprzedaż');
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PZ','+dPZ','1','Dodaje nowy dokument PZ.','36','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PZI','+dPZI','1','Dodaje nowy dokument PZI.','37','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PZI')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj WZ','+dWZ','1','Dodaje nowy dokument WZ.','38','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument WZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj WZE','+dWZE','1','Dodaje nowy dokument WZE.','39','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument WZE')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FZ','+dFZ','1','Dodaje nowy dokument FZ.','40','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FZK','+dFZK','1','Dodaje nowy dokument FZK.','41','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FZK')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FS','+dFS','1','Dodaje nowy dokument FS.','42','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FSK','+dFSK','1','Dodaje nowy dokument FSK.','43','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FSK')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FSE','+dFSE','1','Dodaje nowy dokument FSE.','44','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FSE')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FKE','+dFKE','1','Dodaje nowy dokument FKE.','45','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FKE')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FW','+dFW','1','Dodaje nowy dokument FW.','46','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FW')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FRR','+dFRR','1','Dodaje nowy dokument FRR.','47','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FRR')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PA','+dPA','1','Dodaje nowy dokument PA.','48','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PA')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PW','+dPW','1','Dodaje nowy dokument PW.','49','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PW')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj RW','+dRW','1','Dodaje nowy dokument RW.','50','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument RW')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj WKA','+dWKA','1','Dodaje nowy dokument WKA.','51','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument WKA')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PKA','+dPKA','1','Dodaje nowy dokument PKA.','52','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PKA')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FZL','+dFZL','1','Dodaje nowy dokument FZL.','53','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FZL')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FSL','+dFSL','1','Dodaje nowy dokument FSL.','54','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FSL')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj RS','+dRS','1','Dodaje nowy dokument RS.','55','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument RS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj MMW','+dMMW','1','Dodaje nowy dokument MMW.','56','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument MMW')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj MMP','+dMMP','1','Dodaje nowy dokument MMP.','57','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument MMP')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PZ dla','+dPZ/','2','Dodaje nowy dokument PZ dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','58','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PZ dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PZI dla','+dPZI/','2','Dodaje nowy dokument PZI dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','59','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PZI dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj WZ dla','+dWZ/','2','Dodaje nowy dokument WZ dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','60','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument WZ dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj WZE dla','+dWZE/','2','Dodaje nowy dokument WZE dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','61','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument WZE dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FZ dla','+dFZ/','2','Dodaje nowy dokument FZ dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','62','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FZ dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FS dla','+dFS/','2','Dodaje nowy dokument FS dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','63','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FS dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FSE dla','+dFSE/','2','Dodaje nowy dokument FSE dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','64','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FSE dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FW dla','+dFW/','2','Dodaje nowy dokument FW dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','65','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FW dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FRR dla','+dFRR/','2','Dodaje nowy dokument FRR dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','66','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FRR dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PA dla','+dPA/','2','Dodaje nowy dokument PA dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','67','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PA dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PW dla','+dPW/','2','Dodaje nowy dokument PW dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','68','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PW dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj RW dla','+dRW/','2','Dodaje nowy dokument RW dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','69','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument RW dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj WKA dla','+dWKA/','2','Dodaje nowy dokument WKA dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','70','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument WKA dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PKA dla','+dPKA/','2','Dodaje nowy dokument PKA dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','71','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PKA dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FZL dla','+dFZL/','2','Dodaje nowy dokument FZL dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','72','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FZL dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FSL dla','+dFSL/','2','Dodaje nowy dokument FSL dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','73','Sprzedaż');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FSL dla')
+
+
+--Zamówienia
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę ZZ','#dZZ','0','Wyświetla listę zamówień zakupu.','74','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę ZZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę ZS','#dZS','0','Wyświetla listę zamówień sprzedaży','75','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę ZS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę ZW','#dZW','0','Wyświetla listę zamówień wewnętrznych.','76','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę ZW')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę OS','#dOS','0','Wyświetla listę ofert sprzedaży','77','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę OS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę OZ','#dOZ','0','Wyświetla listę ofert zakupu.','78','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę OZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę ZOS','#dZOS','0','Wyświetla listę zapytań ofertowych sprzedaży','79','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę ZOS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę ZOZ','#dZOZ','0','Wyświetla listę zapytań ofertowych zakupu.','80','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę ZOZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZZ','+dZZ','1','Dodaje nowy dokument ZZ','81','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZS','+dZS','1','Dodaje nowy dokument ZS','82','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj OS','+dOS','1','Dodaje nowy dokument OS','83','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument OS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj OZ','+dOZ','1','Dodaje nowy dokument OZ','84','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument OZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZOS','+dZOS','1','Dodaje nowy dokument ZOS','85','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZOS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZOZ','+dZOZ','1','Dodaje nowy dokument ZOS','86','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZOZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZZ dla','+dZZ/','2','Dodaje nowy dokument ZZ dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','87','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZZ dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZS dla','+dZS/','2','Dodaje nowy dokument ZS dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','88','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZS dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj OS dla','+dOS/','2','Dodaje nowy dokument OS dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','89','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument OS dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj OZ dla','+dOZ/','2','Dodaje nowy dokument OZ dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','90','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument OZ dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZOS dla','+dZOS/','2','Dodaje nowy dokument ZOS dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','91','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZOS dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZOZ dla','+dZOZ/','2','Dodaje nowy dokument ZOS dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','92','Zamówienia');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZOZ dla')
+
+--Magazyn
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę WM','#dWM','0','Wyświetla listę dokumentów WM','93','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę WM')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę PM','#dPM','0','Wyświetla listę dokumentów PM','94','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę PM')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę MP','#dMP','0','Wyświetla listę dokumentów MP','95','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę MP')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę AWD','#dAWD','0','Wyświetla listę dokumentów AWD','96','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę AWD')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę ZWM','#dZWM','0','Wyświetla listę dokumentów ZWM','97','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę ZWM')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj WM','+dWM','1','Dodaje nowy dokument WM','98','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument WM')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PM','+dPM','1','Dodaje nowy dokument PM','99','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PM')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj MP','+dMP','1','Dodaje nowy dokument MP','100','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument MP')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj AWD','+dAWD','1','Dodaje nowy dokument AWD','101','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument AWD')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZWM','+dZWM','1','Dodaje nowy dokument ZWM','102','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZWM')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj WM dla','+dWM/','2','Dodaje nowy dokument WM dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','103','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument WM dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PM dla','+dPM/','2','Dodaje nowy dokument PM dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','104','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PM dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj AWD dla','+dAWD/','2','Dodaje nowy dokument AWD dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','105','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument AWD dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZWM dla','+dZWM/','2','Dodaje nowy dokument ZWM dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','106','Magazyn');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZWM dla')
+
+--Import
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę FAI','#dFAI','0','Wyświetla listę dokumentów FAI','107','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę FAI')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę SAD','#dSAD','0','Wyświetla listę dokumentów SAD','108','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę SAD')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę SSC','#dSSC','0','Wyświetla listę dokumentów SSC','109','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę SSC')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę FWZ','#dFWZ','0','Wyświetla listę dokumentów FWZ','110','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę FWZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę FWS','#dFWS','0','Wyświetla listę dokumentów FWS','111','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę FWS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FAI','+dFAI','1','Dodaje nowy dokument FAI','112','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FAI')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj SAD','+dSAD','1','Dodaje nowy dokument SAD','113','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument SAD')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj SSC','+dSSC','1','Dodaje nowy dokument SSC','114','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument SSC')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FWZ','+dFWZ','1','Dodaje nowy dokument FWZ','115','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FWZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FWS','+dFWS','1','Dodaje nowy dokument FWS','116','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FWS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FAI dla','+dFAI/','2','Dodaje nowy dokument FAI dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','117','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FAI dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FWZ dla','+dFWZ/','2','Dodaje nowy dokument FWZ dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','118','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FWZ dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj FWS dla','+dFWS/','2','Dodaje nowy dokument FWS dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','119','Import');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument FWS dla')
+
+--Transport
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę PC','#dPC','0','Wyświetla listę paczek','120','Transport');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę PC')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę WYS','#dWYS','0','Wyświetla listę zleceń transportowych (wysyłek)','121','Transport');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę WYS')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj PC','+dPC','1','Dodaje nową paczkę','121','Transport');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument PC')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj WYS','+dWYS','1','Dodaje nowe zlecenie transportowe (wysyłkę).','122','Transport');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument WYS')
+
+--CRM
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę WH','#dWH','0','Wyświetla listę wizyt handlowych','123','CRM');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę WH')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę KM','#dKM','0','Wyświetla listę kampanii marketingowych','124','CRM');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę KM')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę CRMK','#dCRMK','0','Wyświetla listę konwersacji','125','CRM');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę CRMK')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę CRMZ','#dCRMZ','0','Wyświetla listę zadań CRM','126','CRM');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę CRMZ')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż terminarz','#TERM','0','Wyświetla okno terminarza','127','CRM');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz terminarz')
+
+--Księgowość
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę NM','#dNM','0','Wyświetla listę not memoriałowych','128','Księgowość');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę NM')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę SRT','#dSRT','0','Wyświetla listę środków trwałych','129','Księgowość');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę SRT')
+
+--Produkcja
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę ZP','#dZP','0','Wyświetla listę dokumentów ZP','130','Produkcja');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę ZP')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę ZK','#dZK','0','Wyświetla listę dokumentów ZK','131','Produkcja');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę ZK')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę ZD','#dZD','0','Wyświetla listę dokumentów ZD','132','Produkcja');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę ZD')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę PP','#dPP','0','Wyświetla listę planów produkcji','133','Produkcja');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę PP')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZP','+dZP','1','Dodaje nowy dokument ZP','134','Produkcja');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZP')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZK','+dZK','1','Dodaje nowy dokument ZK','135','Produkcja');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZK')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZD','+dZD','1','Dodaje nowy dokument ZD','136','Produkcja');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZD')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZP dla','+dZP/','2','Dodaje nowy dokument ZP dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','137','Produkcja');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZP dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZK dla','+dZK/','2','Dodaje nowy dokument ZK dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','138','Produkcja');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZK dla')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Dodaj ZD dla','+dZD/','2','Dodaje nowy dokument ZD dla kontrahenta o podanym kodzie (kod poprzedzony spacją).','139','Produkcja');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Nowy dokument ZD dla')
+
+--Serwis
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę ZSR','#dZSR','0','Wyświetla listę dokumentów ZSR','140','Serwis');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę ZSR')
+
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę USR','#dUSR','0','Wyświetla listę urządzeń serwisowych','141','Serwis');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę USR')
+
+--Projekty
+INSERT INTO CDN.PoleceniaGlowne	(PGL_Tresc,PGL_Skrot,PGL_Rodzaj,PGL_Opis,PGL_PredefiniowaneID, PGL_NazwaGr) VALUES ('Pokaż listę BDT','#dBDT','0','Wyświetla listę budżetów projektowych','142','Projekty');
+set @PGLId = Scope_Identity()
+INSERT INTO CDN.PoleceniaTozsame (POT_PGLId,POT_Tresc) VALUES (@PGLId,'Otwórz listę BDT')
+
+
+set nocount off;
+</scriptdef>
+<scriptdef name="Wypełnienie tabeli PoleceniaOdpowiedzi" hidden="False">
+set nocount on;
+
+If (select count(*) from cdn.PoleceniaOdpowiedzi) &gt;0
+begin
+	RETURN
+end
+INSERT INTO CDN.PoleceniaOdpowiedzi (POD_Tresc) VALUES ('Niestety nie zrozumiałem polecenia. Spróbuj ponownie.');
+INSERT INTO CDN.PoleceniaOdpowiedzi (POD_Tresc) VALUES ('Nie potrafię rozpoznać Twojego polecenia. Powtórz, proszę.');
+INSERT INTO CDN.PoleceniaOdpowiedzi (POD_Tresc) VALUES ('Wydane polecenie nie jest dostępne. Nie poddawaj się, może tym razem się uda…');
+INSERT INTO CDN.PoleceniaOdpowiedzi (POD_Tresc) VALUES ('Nie znajduję takiego polecenia. Spróbuj jeszcze raz.');
+INSERT INTO CDN.PoleceniaOdpowiedzi (POD_Tresc) VALUES ('Sprawdź, czy poprawnie wpisałeś polecenie. Tego nie potrafię wykonać.');
+
+set nocount off;
+</scriptdef>
+</ROOT>

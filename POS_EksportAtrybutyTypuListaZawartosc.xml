@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportAtrybutyTypuListaZawartosc" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportAtrybutyTypuListaZawartosc' and type = 'P')
+drop procedure CDN.POS_EksportAtrybutyTypuListaZawartosc;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportAtrybutyTypuListaZawartosc" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportAtrybutyTypuListaZawartosc]
+	@rowVersion bigint
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+
+	SELECT (select max(AtW_CzasModyfikacji) from cdn.AtrybutyWartosci join cdn.atrybutyklasy on AtW_AtKId=atk_id where AtK_Wielowart = 0) AS [@RowVersion]
+		,(	
+			select AtW_ID as [@Id],
+				AtW_AtKId as [@AttributeClassId],
+				case when AtK_Format like '@s%' then AtW_ID else null end as [@ValueId],
+				case when AtK_Format like '@s%' then null else AtW_Wartosc end as [@Value]
+			from cdn.AtrybutyWartosci
+			join cdn.atrybutyklasy on AtW_AtKId=atk_id
+			where AtW_CzasModyfikacji &gt; @rowVersion and AtK_Wielowart = 0
+			for xml path('Value'), type)
+	for xml path('ListAttributeValues')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportAtrybutyTypuListaZawartosc" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportAtrybutyTypuListaZawartosc TO CDNRaport
+</scriptdef>
+</ROOT>

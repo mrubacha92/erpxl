@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_ZapiszDateSynchronizacji" hidden="True">
+if exists (select name from sysobjects where name = 'POS_ZapiszDateSynchronizacji' and type = 'P')
+drop procedure CDN.POS_ZapiszDateSynchronizacji;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_ZapiszDateSynchronizacji" hidden="False">
+CREATE PROCEDURE [CDN].[POS_ZapiszDateSynchronizacji]
+	@PosCode nvarchar(50)
+AS
+BEGIN
+SET NOCOUNT ON;	
+	UPDATE CDN.PicoStanowiska set PSa_LastSync=DateDiff(d, convert(datetime,'28-12-1800',105),getdate()) where psa_kod=@PosCode 
+	UPDATE a set pck_stan = 2,PcK_TSSynchr=DATEDIFF(second, convert(datetime,'01-01-1990',105),convert(datetime, getdate(), 105)) 
+		from CDN.PicoKonfig a join cdn.picostanowiska on psa_pckid=pck_picoid  where psa_kod=@PosCode	
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_ZapiszDateSynchronizacji" hidden="False">
+GRANT EXECUTE ON CDN.POS_ZapiszDateSynchronizacji TO CDNRaport
+</scriptdef>
+</ROOT>

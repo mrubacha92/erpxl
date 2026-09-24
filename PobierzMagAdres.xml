@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="PobierzMagAdres">
+CREATE FUNCTION CDN.PobierzMagAdres(@Adres int)
+RETURNS varchar(24)
+AS
+BEGIN
+DECLARE @Wynik as varchar(24)
+
+SELECT @Wynik = 
+	CASE 
+		WHEN isnull(MgO_Kod,'brak') = 'brak' then 'Nieznane'
+		ELSE
+			MgO_Kod + '-' +
+			MgA_Segment1 + '-' +
+			MgA_Segment2 + '-' +
+			MgA_Segment3 +  
+			CASE 
+				WHEN MgA_Segment4 &lt;&gt;'' THEN '-' + MgA_Segment4
+				ELSE '' 
+			END			
+	END 	
+FROM CDN.MagObszary
+JOIN CDN.MagAdresy ON MgO_Id=MgA_MgOId
+WHERE MgA_ID = @Adres
+RETURN @Wynik
+END
+</functiondef>
+</ROOT>

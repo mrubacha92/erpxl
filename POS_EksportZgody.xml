@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportZgody" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportZgody' and type = 'P')
+drop procedure CDN.POS_EksportZgody;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportZgody" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportZgody]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+	
+	declare @Typ_Zgoda int = 6560,
+			@Typ_Knt int = 32,
+			@Typ_Osoba int = 8211
+    declare @GIDY TABLE(Typ int,Numer int, lp int)
+	declare @Zgody TABLE(GUID nvarchar(41),ConsentHeaderId int,CustomerId nvarchar(41),ContactId nvarchar(41),ConsentDate datetime,WithdrawalDate datetime,WithdrawalReasonId int,IsActive nvarchar(5), Zgo_CzasModyfikacji bigint)
+	declare @PckID INT = (select pck_picoid from cdn.PicoKonfig join cdn.picostanowiska on psa_pckid=pck_picoid where psa_id=@PointOfSaleId)
+
+	INSERT INTO @GIDY
+	select 32,KntGidNumer,0 from cdn.POS_KntDoEksportu(@PointOfSaleId,0)
+
+	INSERT INTO @GIDY
+	select distinct 8211,kns_kntnumer,kns_kntlp 
+	from cdn.KntOsoby 
+	join @GIDY on kns_kntnumer=Numer
+
+
+	INSERT INTO @Zgody
+	select distinct
+		zgo_GUID as [@GUID],
+		Zgo_RodzajZgody as [@ConsentHeaderId],
+		knt_GUID as [@CustomerGUID],
+		kns_GUID as [@ContactPersonGUID],
+		-- as [@AddressHeaderId] NULL
+		-- as [@ContactId] NULL 
+		DateAdd(d,Zgo_DataUdzielenia,convert(datetime,'28-12-1800',105))  as [@ConsentDate],
+		case when Zgo_DataWycofania=0 then null else  DateAdd(d,Zgo_DataWycofania,convert(datetime,'28-12-1800',105)) end as [@WithdrawalDate],
+		case when Zgo_PowodWycofania = 0 then null else Zgo_PowodWycofania end as [@WithdrawalReasonId],
+		case when Zgo_DataUdzielenia &lt;= DateDiff(d, convert(datetime,'28-12-1800',105),getdate()) and (Zgo_DataWycofania &gt; DateDiff(d, convert(datetime,'28-12-1800',105),getdate()) OR Zgo_DataWycofania = 0) then 'true' else 'false' end as [@IsActive],
+		Zgo_CzasModyfikacji
+	from @GIDY
+	join cdn.Zgody on Zgo_ObiNumer = Numer and Zgo_ObiTyp = Typ and Zgo_Obilp = lp
+	join cdn.Slowniki on Zgo_RodzajZgody = Slw_Id
+	left join cdn.KntKarty on Knt_GIDNumer = Numer AND Knt_GIDTyp = Typ and lp = 0
+	left join cdn.KntOsoby on KnS_KntNumer = Numer and 8211 = Typ and KnS_KntLp = lp
+	where knt_GUID is not null and typ=32 or kns_GUID is not null and typ=8211 AND Zgo_CzasModyfikacji &gt; @rowVersion
+
+			
+
+
+	SELECT isnull((select max(Zgo_CzasModyfikacji) from @Zgody),@rowVersion) AS [@RowVersion]
+		,(		
+			select 
+				GUID as [@GUID],
+				ConsentHeaderId as [@ConsentHeaderId],
+				CustomerId as [@CustomerGUID],
+				ContactId as [@ContactPersonGUID],
+				ConsentDate as [@ConsentDate],
+				WithdrawalDate as [@WithdrawalDate],
+				WithdrawalReasonId as [@WithdrawalReasonId],
+				IsActive as [@IsActive]
+			from @Zgody
+			for xml path('Consent'), type)
+	for xml path('Consents')
+	SET NOCOUNT OFF;	
+
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportZgody" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportZgody TO CDNRaport
+</scriptdef>
+</ROOT>

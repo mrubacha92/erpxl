@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_ZapiszGuidElementu" hidden="True">
+if exists (select name from sysobjects where name = 'POS_ZapiszGuidElementu' and type = 'P')
+drop procedure CDN.POS_ZapiszGuidElementu;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_ZapiszGuidElementu" hidden="False">
+CREATE PROCEDURE [CDN].[POS_ZapiszGuidElementu]
+	@Numer int,
+	@Lp int,
+	@Guid nvarchar(40)
+AS
+BEGIN
+SET NOCOUNT OFF;
+	UPDATE cdn.TraElem set tre_przyczynaKorekty = @Guid where TrE_GIDNumer = @Numer AND TrE_GIDLp = @Lp
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_ZapiszGuidElementu" hidden="False">
+GRANT EXECUTE ON CDN.POS_ZapiszGuidElementu TO CDNRaport
+</scriptdef>
+</ROOT>

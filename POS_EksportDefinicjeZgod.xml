@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportDefinicjeZgod" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportDefinicjeZgod' and type = 'P')
+drop procedure CDN.POS_EksportDefinicjeZgod;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportDefinicjeZgod" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportDefinicjeZgod]
+	@rowVersion bigint
+AS
+BEGIN
+SET NOCOUNT ON;	
+	SELECT isnull((select max(SLW_CzasModyfikacji) from cdn.slowniki where SLW_Kategoria = 'Rodzaje zgód dla danych osobowych' AND SLW_CzasModyfikacji &gt; @rowVersion),@rowVersion) AS [@RowVersion]
+		,(		
+			select
+				slw_id as [@Id],
+				slw_id as [@CategoryId], --ConsentCategories z POS_EksportSlowniki
+				SLW_WartoscS as [@Title],
+				SLW_WartoscS3 as [@Consent],
+				case when SLW_Aktywny &lt;&gt; 0 then 'true' else 'false' end as [@IsActive],	
+				case when exists(select * from cdn.SlwLinki where SLL_IdNadrzedny = SLW_ID AND SLL_IdPodrzedny = 1042) then 'true' else 'false' end as [@RefersToAddress],
+				case when exists(select * from cdn.SlwLinki where SLL_IdNadrzedny = SLW_ID AND SLL_IdPodrzedny = 1044) then 'true' else 'false' end as [@RefersToPhoneNumber],
+				case when exists(select * from cdn.SlwLinki where SLL_IdNadrzedny = SLW_ID AND SLL_IdPodrzedny = 1041) then 'true' else 'false' end as [@RefersToEmail],
+				'false' as [@ShowInPrintout]	
+			from cdn.Slowniki 
+			where SLW_Kategoria = 'Rodzaje zgód dla danych osobowych' AND (SLW_CzasModyfikacji &gt; @rowVersion OR @rowVersion = 0)
+			for xml path('ConsentHeader'), type)
+	for xml path('ConsentHeaders')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportDefinicjeZgod" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportDefinicjeZgod TO CDNRaport
+</scriptdef>
+</ROOT>

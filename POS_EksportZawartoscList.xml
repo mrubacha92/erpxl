@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportZawartoscList" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportZawartoscList' and type = 'P')
+drop procedure CDN.POS_EksportZawartoscList;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportZawartoscList" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportZawartoscList]
+	@rowVersion bigint
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+
+	SELECT (select max(AtW_CzasModyfikacji) from cdn.AtrybutyWartosci join cdn.atrybutyklasy on AtW_AtKId=atk_id where AtK_Format like '@s%' and AtK_Wielowart = 0) AS [@RowVersion]
+		,(		
+			select 
+				AtW_ID as [@Id],
+				AtW_Wartosc as [@Value] 
+			from cdn.AtrybutyWartosci
+			join cdn.atrybutyklasy on AtW_AtKId=atk_id
+			where (AtW_CzasModyfikacji &gt; @rowVersion OR @rowVersion = 0) AND AtK_Format like '@s%' and AtK_Wielowart = 0
+			for xml path('Value'), type)
+	for xml path('ListValues')
+	SET NOCOUNT OFF;	
+
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportZawartoscList" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportZawartoscList TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportRelacjeGrupTowarow" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportRelacjeGrupTowarow' and type = 'P')
+drop procedure CDN.POS_EksportRelacjeGrupTowarow;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportRelacjeGrupTowarow" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportRelacjeGrupTowarow]
+	@rowVersion bigint,
+	@PointOfSaleId int
+AS
+BEGIN
+SET NOCOUNT ON;	
+	SELECT @rowVersion+1 AS [@RowVersion]
+		,(		
+		select distinct TwG_GIDNumer as [@Id], TwG_GIDNumer as [@ChildGroupId], twg_gronumer as [@ParentGroupId] 
+			from cdn.PicoKonfig 
+			join cdn.PicoStanowiska on pck_picoid = psa_pckid
+			outer apply cdn.PobierzDrzewoGrupTowarowych(PcK_TwGENumer,DEFAULT,DEFAULT,1,DEFAULT,DEFAULT)
+			join cdn.TwrGrupy on TwG_GIDNumer = GidNumer AND TwG_GIDTyp = Gidtyp 
+			where psa_id = @PointOfSaleId and twg_gronumer &gt;= 0 and TwG_GIDNumer &lt;&gt; PcK_TwGENumer
+		for xml path('ProductGroupRelation'), type)
+	for xml path('ProductGroupRelations')
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportRelacjeGrupTowarow" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportRelacjeGrupTowarow TO CDNRaport
+</scriptdef>
+</ROOT>

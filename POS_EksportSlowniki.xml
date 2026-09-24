@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_EksportSlowniki" hidden="True">
+if exists (select name from sysobjects where name = 'POS_EksportSlowniki' and type = 'P')
+drop procedure CDN.POS_EksportSlowniki;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_EksportSlowniki" hidden="False">
+CREATE PROCEDURE [CDN].[POS_EksportSlowniki]
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+	SELECT 
+		(		
+			select * from
+			(select 
+				1 as [@Id],
+				'ConsentCategories' as [@InternalName], --kategorie zgód
+				10 as [@ValueType]
+			
+			
+			union all
+
+			select 
+				2 as [@Id],
+				'ConsentWithDrawReason' as [@InternalName], --przyczyny wycofania
+				10 as [@ValueType]
+
+			
+			union all
+
+			select 
+				3 as [@Id],
+				'ConsentSource' as [@InternalName], --źródła udzielenia
+				10 as [@ValueType]
+
+			
+			union all
+
+			select 
+				4 as [@Id],
+				'ConsentWithdrawSources' as [@InternalName], --źródła wycofania
+				10 as [@ValueType]
+
+			union all
+
+			select				 
+				 5 as [@Id],
+				 'ReasonForCorrections' as [@InternalName],
+				 10 as [@ValueType]
+
+			union all
+
+			select
+				6 as [@Id],
+				'PersonTitleTypes' as [@InternalName],
+				10 as [@ValueType]
+			
+			union all
+
+			select
+				7 as [@Id],
+				'PersonPositionTypes' as [@InternalName],
+				10 as [@ValueType]				
+			) a
+
+
+			for xml path('GenericDirectory'), type)
+	for xml path('GenericDirectories')
+	
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_EksportSlowniki" hidden="False">
+GRANT EXECUTE ON CDN.POS_EksportSlowniki TO CDNRaport
+</scriptdef>
+</ROOT>

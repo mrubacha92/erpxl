@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie procedury POS_ZapiszPicoLog" hidden="True">
+if exists (select name from sysobjects where name = 'POS_ZapiszPicoLog' and type = 'P')
+drop procedure CDN.POS_ZapiszPicoLog;
+</scriptdef>
+<scriptdef name="Tworzenie procedury POS_ZapiszPicoLog" hidden="False">
+CREATE PROCEDURE [CDN].[POS_ZapiszPicoLog]
+	@Poziom int,
+	@Id int output,
+	@Typ int,
+	@datetime1 nvarchar(30), 
+	@datetime2 nvarchar(30),
+	@Txt nvarchar(512) 
+AS
+BEGIN
+SET NOCOUNT ON;	
+
+	DECLARE @Output TABLE (Id INT);
+	IF @Poziom = 1
+		insert into CDN.PicoLogNag( [PcN_PcKID], [PcN_Status], [PcN_Typ], [PcN_DataStart], [PcN_DataKoniec], [PcN_Komputer], [PcN_Poziom]) 
+			output INSERTED.PcN_Id into @Output(Id) select @Id,0,0,convert(datetime,@datetime1,105),convert(datetime,@datetime2,105),left(@Txt,128),1 
+	ELSE
+	BEGIN
+
+		
+		declare @usuniete table(ID int,PcNID int)
+		insert into @usuniete select [PcE_ID],[PcE_PcNID] from CDN.PicoLogElem where [PcE_Opis] = @Txt
+		
+		delete from CDN.PicoLogElem where PcE_ID in (select distinct ID from @usuniete)
+
+		delete from cdn.PicoLogNag where PcN_ID &lt;&gt; @Id AND PcN_ID in (select distinct PcNID from @usuniete) and not exists(select * from cdn.PicoLogElem where PcE_PcNID=PcN_ID)
+		
+		insert into CDN.PicoLogElem( [PcE_PcNID], [PcE_Status], [PcE_DataStart], [PcE_ObiTyp], [PcE_ObiIdent], [PcE_Kod], [PcE_Opis], [PcE_DataKoniec], [PcE_Ojciec]) 
+			select @Id,@Typ,convert(datetime,@datetime1,105),0,'',0,@Txt,convert(datetime,@datetime2,105),0
+	END
+	select top 1  @Id = Id from @Output
+	SET @Id = isnull(@Id,0)
+	SET NOCOUNT OFF;	
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury POS_ZapiszPicoLog" hidden="False">
+GRANT EXECUTE ON CDN.POS_ZapiszPicoLog TO CDNRaport
+</scriptdef>
+</ROOT>
