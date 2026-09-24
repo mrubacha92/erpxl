@@ -1,0 +1,1398 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja tabeli CDN.Atrybuty" hidden="False">
+ALTER TABLE CDN.Atrybuty ADD Atr_Pozycja                     INTEGER        CONSTRAINT DF_Atr_Pozycja DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Atrybuty ADD Atr_GUID                        VARCHAR (   41)   CONSTRAINT DF_Atr_GUID DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+ALTER TABLE CDN.Atrybuty ADD Atr_LastMod                     INTEGER        CONSTRAINT DF_Atr_LastMod DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli BIPointRaportDef" hidden="False">
+CREATE TABLE CDN.BIPointRaportDef
+  (
+      BRD_Id                          INTEGER        IDENTITY , --- LONG,NAME('BRD_Id')
+      BRD_Nazwa                       VARCHAR (  100)   CONSTRAINT DF_BRD_Nazwa DEFAULT('')         , --- CSTRING(101),NAME('BRD_Nazwa')
+      BRD_Aktywny                     TINYINT        CONSTRAINT DF_BRD_Aktywny DEFAULT(0)         , --- BYTE,NAME('BRD_Aktywny')
+      BRD_ListaId                     INTEGER        CONSTRAINT DF_BRD_ListaId DEFAULT(0)         , --- LONG,NAME('BRD_ListaId')
+      BRD_FormatkaId                  INTEGER        CONSTRAINT DF_BRD_FormatkaId DEFAULT(0)         , --- LONG,NAME('BRD_FormatkaId')
+      BRD_KontekstId                  INTEGER        CONSTRAINT DF_BRD_KontekstId DEFAULT(0)         , --- LONG,NAME('BRD_KontekstId')
+      CONSTRAINT BRD_Primary PRIMARY KEY
+        (
+                          BRD_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli BIPointRaportElem" hidden="False">
+CREATE TABLE CDN.BIPointRaportElem
+  (
+      BRE_Id                          INTEGER        IDENTITY , --- LONG,NAME('BRE_Id')
+      BRE_BRDId                       INTEGER        CONSTRAINT DF_BRE_BRDId DEFAULT(0)         , --- LONG,NAME('BRE_BRDId')
+      BRE_Lp                          SMALLINT       CONSTRAINT DF_BRE_Lp DEFAULT(0)         , --- SHORT,NAME('BRE_Lp')
+      BRE_RaportId                    INTEGER        CONSTRAINT DF_BRE_RaportId DEFAULT(0)         , --- LONG,NAME('BRE_RaportId')
+      BRE_Kontekst                    VARCHAR (   20)   CONSTRAINT DF_BRE_Kontekst DEFAULT('')         , --- CSTRING(21),NAME('BRE_Kontekst')
+      BRE_Nazwa                       VARCHAR (  100)   CONSTRAINT DF_BRE_Nazwa DEFAULT('')         , --- CSTRING(101),NAME('BRE_Nazwa')
+      BRE_TStamp                      INTEGER        CONSTRAINT DF_BRE_TStamp DEFAULT(0)         , --- LONG,NAME('BRE_TStamp')
+      BRE_KontekstId                  INTEGER        CONSTRAINT DF_BRE_KontekstId DEFAULT(0)         , --- LONG,NAME('BRE_KontekstId')
+      CONSTRAINT BRE_Primary PRIMARY KEY
+        (
+                          BRE_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli BIPointRaportOpeCentra" hidden="False">
+CREATE TABLE CDN.BIPointRaportOpeCentra
+  (
+      BRO_Id                          INTEGER        IDENTITY , --- LONG,NAME('BRO_Id')
+      BRO_BRDId                       INTEGER        CONSTRAINT DF_BRO_BRDId DEFAULT(0)         , --- LONG,NAME('BRO_BRDId')
+      BRO_Numer                       INTEGER        CONSTRAINT DF_BRO_Numer DEFAULT(0)         , --- LONG,NAME('BRO_Numer')
+      BRO_Typ                         SMALLINT       CONSTRAINT DF_BRO_Typ DEFAULT(0)         , --- SHORT,NAME('BRO_Typ')
+      CONSTRAINT BRO_Primary PRIMARY KEY
+        (
+                          BRO_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Banki" hidden="False">
+ALTER TABLE CDN.Banki ADD Bnk_BnDId                       INTEGER        CONSTRAINT DF_Bnk_BnDId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli BankiDefinicje" hidden="False">
+CREATE TABLE CDN.BankiDefinicje
+  (
+      BnD_Id                          INTEGER        IDENTITY , --- LONG,NAME('BnD_Id')
+      BnD_Kod                         VARCHAR (   20)   CONSTRAINT DF_BnD_Kod DEFAULT('')         , --- CSTRING(21),NAME('BnD_Kod')
+      BnD_Nazwa                       VARCHAR (  100)   CONSTRAINT DF_BnD_Nazwa DEFAULT('')         , --- CSTRING(101),NAME('BnD_Nazwa')
+      BnD_Archiwalny                  TINYINT        CONSTRAINT DF_BnD_Archiwalny DEFAULT(0)         , --- BYTE,NAME('BnD_Archiwalny')
+      CONSTRAINT BnD_Primary PRIMARY KEY
+        (
+                          BnD_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli BankiDefinicjeOperacje" hidden="False">
+CREATE TABLE CDN.BankiDefinicjeOperacje
+  (
+      BDO_Id                          INTEGER        IDENTITY , --- LONG,NAME('BDO_Id')
+      BDO_FirmaId                     INTEGER        CONSTRAINT DF_BDO_FirmaId DEFAULT(0)         , --- LONG,NAME('BDO_FirmaId')
+      BDO_Lp                          INTEGER        CONSTRAINT DF_BDO_Lp DEFAULT(0)         , --- LONG,NAME('BDO_Lp')
+      BDO_BankDefId                   INTEGER        CONSTRAINT DF_BDO_BankDefId DEFAULT(0)         , --- LONG,NAME('BDO_BankDefId')
+      BDO_KAONumer                    INTEGER        CONSTRAINT DF_BDO_KAONumer DEFAULT(0)         , --- LONG,NAME('BDO_KAONumer')
+      BDO_Nazwa                       VARCHAR (   80)   CONSTRAINT DF_BDO_Nazwa DEFAULT('')         , --- CSTRING(81),NAME('BDO_Nazwa')
+      BDO_FiltrSQL                    VARCHAR ( 4096)   CONSTRAINT DF_BDO_FiltrSQL DEFAULT('')         , --- CSTRING(4097),NAME('BDO_FiltrSQL')
+      BDO_FiltrSym                    VARCHAR ( 4096)   CONSTRAINT DF_BDO_FiltrSym DEFAULT('')         , --- CSTRING(4097),NAME('BDO_FiltrSym')
+      CONSTRAINT BDO_Primary PRIMARY KEY
+        (
+                          BDO_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.BankiFormKryt" hidden="False">
+IF EXISTS(SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.BankiFormKryt') AND name = N'FBKBank')
+  DROP INDEX FBKBank on CDN.BankiFormKryt;
+EXEC sp_rename 'CDN.BankiFormKryt.BFK_BankID', 'BFK_BankDefID', 'COLUMN';
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.BudzetPrjElem" hidden="False">
+ALTER TABLE CDN.BudzetPrjElem ADD BPE_StawkaWaluta                DECIMAL (15,2) CONSTRAINT DF_BPE_StawkaWaluta DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.BudzetPrjElem ADD BPE_KosztyWyrazen               DECIMAL (15,2) CONSTRAINT DF_BPE_KosztyWyrazen DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.BudzetPrjElem ADD BPE_Wyrazenie                   TEXT      CONSTRAINT DF_BPE_Wyrazenie DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.BudzetPrjElem ADD BPE_Waluta                      VARCHAR (    3)   CONSTRAINT DF_BPE_Waluta DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.BudzetPrjElem ADD BPE_KursM                       DECIMAL ( 5,0) CONSTRAINT DF_BPE_KursM DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.BudzetPrjElem ADD BPE_KursL                       DECIMAL ( 7,2) CONSTRAINT DF_BPE_KursL DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.BudzetPrjNag" hidden="False">
+ALTER TABLE CDN.BudzetPrjNag ADD BPN_AktualizujKosztyWyr         TINYINT        CONSTRAINT DF_BPN_AktualizujKosztyWyr DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli BudzetPrjNagWaluty" hidden="False">
+CREATE TABLE CDN.BudzetPrjNagWaluty
+  (
+      BPNW_Id                         INTEGER        IDENTITY , --- LONG,NAME('BPNW_Id')
+      BPNW_BPNId                      INTEGER        CONSTRAINT DF_BPNW_BPNId DEFAULT(0)         , --- LONG,NAME('BPNW_BPNId')
+      BPNW_Waluta                     VARCHAR (    3)   CONSTRAINT DF_BPNW_Waluta DEFAULT('')         , --- CSTRING(4),NAME('BPNW_Waluta')
+      BPNW_KursM                      DECIMAL ( 5,0) CONSTRAINT DF_BPNW_KursM DEFAULT(0)         , --- DECIMAL(5),NAME('BPNW_KursM')
+      BPNW_KursL                      DECIMAL ( 7,2) CONSTRAINT DF_BPNW_KursL DEFAULT(0)         , --- DECIMAL(7,2),NAME('BPNW_KursL')
+      CONSTRAINT BPNW_Primary PRIMARY KEY
+        (
+                          BPNW_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli CDCLoginy" hidden="False">
+CREATE TABLE CDN.CDCLoginy
+  (
+      CDCL_Id                         INTEGER        IDENTITY , --- LONG,NAME('CDCL_Id')
+      CDCL_BnkNumer                   INTEGER        CONSTRAINT DF_CDCL_BnkNumer DEFAULT(0)         , --- LONG,NAME('CDCL_BnkNumer')
+      CDCL_OpeNumer                   INTEGER        CONSTRAINT DF_CDCL_OpeNumer DEFAULT(0)         , --- LONG,NAME('CDCL_OpeNumer')
+      CDCL_Login                      VARCHAR (  101)   CONSTRAINT DF_CDCL_Login DEFAULT('')         , --- STRING(101),NAME('CDCL_Login')
+      CDCL_LoginTyp                   VARCHAR (   20)   CONSTRAINT DF_CDCL_LoginTyp DEFAULT('')         , --- STRING(20),NAME('CDCL_LoginTyp')
+      CONSTRAINT CDCL_Primary PRIMARY KEY
+        (
+                          CDCL_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.DaneBinarne" hidden="False">
+IF EXISTS(SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.DaneBinarne') AND name = N'DABKod')
+  DROP INDEX DABKod on CDN.DaneBinarne;
+IF EXISTS(SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.DaneBinarne') AND name = N'DABProcID')
+  DROP INDEX DABProcID on CDN.DaneBinarne;
+IF EXISTS(SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.DaneBinarne') AND name = N'DABDataKod')
+  DROP INDEX DABDataKod on CDN.DaneBinarne;
+IF OBJECT_ID('CDN.DF_DAB_Kod','D') IS NOT NULL ALTER TABLE CDN.DaneBinarne DROP CONSTRAINT DF_DAB_Kod;
+ALTER TABLE CDN.DaneBinarne ALTER COLUMN DAB_Kod VARCHAR (   99)   ;
+ALTER TABLE CDN.DaneBinarne ADD CONSTRAINT DF_DAB_Kod  DEFAULT('') FOR DAB_Kod WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.DefinicjeKolumn" hidden="False">
+ALTER TABLE CDN.DefinicjeKolumn ADD DFK_CzyDX                       TINYINT        CONSTRAINT DF_DFK_CzyDX DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Delegacje" hidden="False">
+ALTER TABLE CDN.Delegacje ADD DLG_DataKsiegowania             INTEGER        CONSTRAINT DF_DLG_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.DokDefinicje" hidden="False">
+ALTER TABLE CDN.DokDefinicje ADD Dok_DostepDoWzorcowAnalitPodrz  TINYINT        CONSTRAINT DF_Dok_DostepDoWzorcowAnalitPodrz DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.DokDefinicje ADD Dok_ElementyNaKorektach         TINYINT        CONSTRAINT DF_Dok_ElementyNaKorektach DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.DokDefinicje ADD Dok_GenerujZleceniaPrzyPlanowaniu  TINYINT        CONSTRAINT DF_Dok_GenerujZleceniaPrzyPlanowaniu DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.DokDefinicje ADD Dok_GenerujJednNaWieleMag       TINYINT        CONSTRAINT DF_Dok_GenerujJednNaWieleMag DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.DokDefinicje ADD Dok_IloscElemKor                SMALLINT       CONSTRAINT DF_Dok_IloscElemKor DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.DtsWyplatyOpis" hidden="False">
+ALTER TABLE CDN.DtsWyplatyOpis ADD DWO_PPKP                        DECIMAL (15,2) CONSTRAINT DF_DWO_PPKP DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.DtsWyplatyOpis ADD DWO_PPKF                        DECIMAL (15,2) CONSTRAINT DF_DWO_PPKF DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Firma" hidden="False">
+ALTER TABLE CDN.Firma ADD Frm_DlugoscGeo                  VARCHAR (   20)   CONSTRAINT DF_Frm_DlugoscGeo DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.Firma ADD Frm_SzerokoscGeo                VARCHAR (   20)   CONSTRAINT DF_Frm_SzerokoscGeo DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.Firma ADD Frm_GUID                        VARCHAR (   41)   CONSTRAINT DF_Frm_GUID DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+ALTER TABLE CDN.Firma ADD Frm_GUIDdane                    VARCHAR (   41)   CONSTRAINT DF_Frm_GUIDdane DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.FrmStruktura" hidden="False">
+ALTER TABLE CDN.FrmStruktura ADD FRS_PrezentujMagOddzial         TINYINT        CONSTRAINT DF_FRS_PrezentujMagOddzial DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_PrezentujMagZablok          TINYINT        CONSTRAINT DF_FRS_PrezentujMagZablok DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_PIZRodzica                  TINYINT        CONSTRAINT DF_FRS_PIZRodzica DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_MESZRodzica                 TINYINT        CONSTRAINT DF_FRS_MESZRodzica DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_MESAutoPrzypisanieOperatora  TINYINT        CONSTRAINT DF_FRS_MESAutoPrzypisanieOperatora DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_MESBlokujZeroweRealizacje   TINYINT        CONSTRAINT DF_FRS_MESBlokujZeroweRealizacje DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_MESUruchamianieRealizacjiWieleOp  TINYINT        CONSTRAINT DF_FRS_MESUruchamianieRealizacjiWieleOp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_MESSposobUruchamianiaWieleOp  TINYINT        CONSTRAINT DF_FRS_MESSposobUruchamianiaWieleOp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_MESZakonczenieRealizacjiWieleOp  TINYINT        CONSTRAINT DF_FRS_MESZakonczenieRealizacjiWieleOp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_MESPokazTylkoPierwszaOp     TINYINT        CONSTRAINT DF_FRS_MESPokazTylkoPierwszaOp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_MESLiczacOd                 TINYINT        CONSTRAINT DF_FRS_MESLiczacOd DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_MESLiczacOdCzas             INTEGER        CONSTRAINT DF_FRS_MESLiczacOdCzas DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.FrmStruktura ADD FRS_MESLiczacOdCzasJedn         TINYINT        CONSTRAINT DF_FRS_MESLiczacOdCzasJedn DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli HeatMapLog" hidden="False">
+CREATE TABLE CDN.HeatMapLog
+  (
+      HML_LogId                       BIGINT     IDENTITY , --- LONG,NAME('HML_LogId')
+      HML_OpeGuid                     VARCHAR (   32)   CONSTRAINT DF_HML_OpeGuid DEFAULT('')         , --- CSTRING(33),NAME('HML_OpeGuid')
+      HML_SessionGuid                 VARCHAR (   32)   CONSTRAINT DF_HML_SessionGuid DEFAULT('')         , --- CSTRING(33),NAME('HML_SessionGuid')
+      HML_Time                        INTEGER        CONSTRAINT DF_HML_Time DEFAULT(0)         , --- LONG,NAME('HML_Time')
+      HML_ViewName                    VARCHAR (   49)   CONSTRAINT DF_HML_ViewName DEFAULT('')         , --- CSTRING(50),NAME('HML_ViewName')
+      HML_ControlPath                 VARCHAR (  255)   CONSTRAINT DF_HML_ControlPath DEFAULT('')         , --- CSTRING(256),NAME('HML_ControlPath')
+      HML_Action                      INTEGER        CONSTRAINT DF_HML_Action DEFAULT(0)         , --- LONG,NAME('HML_Action')
+      HML_MessageId                   INTEGER        CONSTRAINT DF_HML_MessageId DEFAULT(0)         , --- LONG,NAME('HML_MessageId')
+      HML_Message                     VARCHAR ( 2047)   CONSTRAINT DF_HML_Message DEFAULT('')         , --- CSTRING(2048),NAME('HML_Message')
+      HML_OpeModules                  VARCHAR (   20)   CONSTRAINT DF_HML_OpeModules DEFAULT('')         , --- CSTRING(21)
+      CONSTRAINT HML_Primary PRIMARY KEY
+        (
+                          HML_LogId
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.HistoriaUruchomien" hidden="False">
+IF OBJECT_ID('CDN.DF_HtU_Wydruk','D') IS NOT NULL ALTER TABLE CDN.HistoriaUruchomien DROP CONSTRAINT DF_HtU_Wydruk;
+ALTER TABLE CDN.HistoriaUruchomien ALTER COLUMN HtU_Wydruk VARCHAR (  256)   ;
+ALTER TABLE CDN.HistoriaUruchomien ADD CONSTRAINT DF_HtU_Wydruk  DEFAULT('') FOR HtU_Wydruk WITH VALUES;
+IF EXISTS(SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.HistoriaUruchomien') AND name = N'HtUNazwa')
+  DROP INDEX HtUNazwa on CDN.HistoriaUruchomien;
+IF OBJECT_ID('CDN.DF_HtU_Nazwa','D') IS NOT NULL ALTER TABLE CDN.HistoriaUruchomien DROP CONSTRAINT DF_HtU_Nazwa;
+ALTER TABLE CDN.HistoriaUruchomien ALTER COLUMN HtU_Nazwa VARCHAR (  256)   ;
+ALTER TABLE CDN.HistoriaUruchomien ADD CONSTRAINT DF_HtU_Nazwa  DEFAULT('') FOR HtU_Nazwa WITH VALUES;
+ALTER TABLE CDN.HistoriaUruchomien ADD HtU_GidTyp                      SMALLINT       CONSTRAINT DF_HtU_GidTyp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.HistoriaUruchomien ADD HtU_GidFirma                    INTEGER        CONSTRAINT DF_HtU_GidFirma DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.HistoriaUruchomien ADD HtU_GidNumer                    INTEGER        CONSTRAINT DF_HtU_GidNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.HistoriaUruchomien ADD HtU_GidLp                       SMALLINT       CONSTRAINT DF_HtU_GidLp DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ImpElem" hidden="False">
+ALTER TABLE CDN.ImpElem ADD ImE_SentElemId                  INTEGER        CONSTRAINT DF_ImE_SentElemId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ImpNag" hidden="False">
+ALTER TABLE CDN.ImpNag ADD ImN_DataKsiegowania             INTEGER        CONSTRAINT DF_ImN_DataKsiegowania DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ImpNag ADD ImN_ProceduraUproszcz           TINYINT        CONSTRAINT DF_ImN_ProceduraUproszcz DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ImpNag ADD ImN_OpiTyp                      SMALLINT       CONSTRAINT DF_ImN_OpiTyp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ImpNag ADD ImN_OpiFirma                    INTEGER        CONSTRAINT DF_ImN_OpiFirma DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ImpNag ADD ImN_OpiNumer                    INTEGER        CONSTRAINT DF_ImN_OpiNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ImpNag ADD ImN_OpiLp                       SMALLINT       CONSTRAINT DF_ImN_OpiLp DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ImportWyciagowBankowych" hidden="False">
+CREATE TABLE CDN.ImportWyciagowBankowych
+  (
+      IWB_ThreadId                    INTEGER        CONSTRAINT DF_IWB_ThreadId DEFAULT(0)         , --- LONG,NAME('IWB_ThreadId')
+      IWB_LP                          INTEGER        CONSTRAINT DF_IWB_LP DEFAULT(0)         , --- LONG,NAME('IWB_LP')
+      IWB_Operacja                    VARCHAR (    5)   CONSTRAINT DF_IWB_Operacja DEFAULT('')         , --- CSTRING(6),NAME('IWB_Operacja')
+      IWB_Adres                       VARCHAR (  100)   CONSTRAINT DF_IWB_Adres DEFAULT('')         , --- STRING(100),NAME('IWB_Adres')
+      IWB_KodOperacji                 VARCHAR (   30)   CONSTRAINT DF_IWB_KodOperacji DEFAULT('')         , --- CSTRING(31),NAME('IWB_KodOperacji')
+      IWB_Nazwa                       VARCHAR (  100)   CONSTRAINT DF_IWB_Nazwa DEFAULT('')         , --- STRING(100),NAME('IWB_Nazwa')
+      IWB_Tresc                       VARCHAR (  250)   CONSTRAINT DF_IWB_Tresc DEFAULT('')         , --- STRING(250),NAME('IWB_Tresc')
+      IWB_Przychod                    DECIMAL (15,2) CONSTRAINT DF_IWB_Przychod DEFAULT(0)         , --- DECIMAL(15,2),NAME('IWB_Przychod')
+      IWB_Rozchod                     DECIMAL (15,2) CONSTRAINT DF_IWB_Rozchod DEFAULT(0)         , --- DECIMAL(15,2),NAME('IWB_Rozchod')
+      IWB_Rejestr                     VARCHAR (    5)   CONSTRAINT DF_IWB_Rejestr DEFAULT('')         , --- CSTRING(6),NAME('IWB_Rejestr')
+      IWB_Lokata                      SMALLINT       CONSTRAINT DF_IWB_Lokata DEFAULT(0)         , --- SHORT,NAME('IWB_Lokata')
+      IWB_DodatkowaKol1               VARCHAR (   30)   CONSTRAINT DF_IWB_DodatkowaKol1 DEFAULT('')         , --- CSTRING(31),NAME('IWB_DodatkowaKol1')
+      IWB_DodatkowaKol2               VARCHAR (   30)   CONSTRAINT DF_IWB_DodatkowaKol2 DEFAULT('')         , --- CSTRING(31),NAME('IWB_DodatkowaKol2')
+      IWB_DodatkowaKol3               VARCHAR (   30)   CONSTRAINT DF_IWB_DodatkowaKol3 DEFAULT('')         , --- CSTRING(31),NAME('IWB_DodatkowaKol3')
+      IWB_DodatkowaKol4               VARCHAR (   30)   CONSTRAINT DF_IWB_DodatkowaKol4 DEFAULT('')         , --- CSTRING(31),NAME('IWB_DodatkowaKol4')
+      IWB_DodatkowaKol5               VARCHAR (   30)   CONSTRAINT DF_IWB_DodatkowaKol5 DEFAULT('')         , --- CSTRING(31),NAME('IWB_DodatkowaKol5')
+      IWB_DodatkowaKol6               VARCHAR (   30)   CONSTRAINT DF_IWB_DodatkowaKol6 DEFAULT('')         , --- CSTRING(31),NAME('IWB_DodatkowaKol6')
+      IWB_DodatkowaKol7               VARCHAR (   20)   CONSTRAINT DF_IWB_DodatkowaKol7 DEFAULT('')         , --- STRING(20),NAME('IWB_DodatkowaKol7')
+      IWB_DodatkowaKol8               VARCHAR (   30)   CONSTRAINT DF_IWB_DodatkowaKol8 DEFAULT('')         , --- CSTRING(31),NAME('IWB_DodatkowaKol8')
+      IWB_DodatkowaKol9               VARCHAR (   30)   CONSTRAINT DF_IWB_DodatkowaKol9 DEFAULT('')         , --- CSTRING(31),NAME('IWB_DodatkowaKol9')
+      CONSTRAINT IWB_Primary PRIMARY KEY
+        (
+                          IWB_ThreadId                  ,
+                          IWB_LP
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KBNNag" hidden="False">
+ALTER TABLE CDN.KBNNag ADD KBNN_DataKsiegowania            INTEGER        CONSTRAINT DF_KBNN_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntAdresy" hidden="False">
+ALTER TABLE CDN.KntAdresy ADD KnA_MetodaKasowa                TINYINT        CONSTRAINT DF_KnA_MetodaKasowa DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_GUID                        VARCHAR (   41)   CONSTRAINT DF_KnA_GUID DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_GUIDdane                    VARCHAR (   41)   CONSTRAINT DF_KnA_GUIDdane DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_VatDataRejestracji          INTEGER        CONSTRAINT DF_KnA_VatDataRejestracji DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_VatDataOdmowy               INTEGER        CONSTRAINT DF_KnA_VatDataOdmowy DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_VatDataPrzywrocenia         INTEGER        CONSTRAINT DF_KnA_VatDataPrzywrocenia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_VatDataUsuniecia            INTEGER        CONSTRAINT DF_KnA_VatDataUsuniecia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_VatDataSprawdzenia          INTEGER        CONSTRAINT DF_KnA_VatDataSprawdzenia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_KrajSiedziby                VARCHAR (    2)   CONSTRAINT DF_KnA_KrajSiedziby DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntKarty" hidden="False">
+ALTER TABLE CDN.KntKarty ADD Knt_MetodaKasowa                TINYINT        CONSTRAINT DF_Knt_MetodaKasowa DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_GUID                        VARCHAR (   41)   CONSTRAINT DF_Knt_GUID DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_GUIDdane                    VARCHAR (   41)   CONSTRAINT DF_Knt_GUIDdane DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_DataPromocji                TINYINT        CONSTRAINT DF_Knt_DataPromocji DEFAULT(1) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_VatDataRejestracji          INTEGER        CONSTRAINT DF_Knt_VatDataRejestracji DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_VatDataOdmowy               INTEGER        CONSTRAINT DF_Knt_VatDataOdmowy DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_VatDataPrzywrocenia         INTEGER        CONSTRAINT DF_Knt_VatDataPrzywrocenia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_VatDataUsuniecia            INTEGER        CONSTRAINT DF_Knt_VatDataUsuniecia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_KrajSiedziby                VARCHAR (    2)   CONSTRAINT DF_Knt_KrajSiedziby DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_ProcTrnJpk                  VARCHAR (   50)   CONSTRAINT DF_Knt_ProcTrnJpk DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntLinki" hidden="False">
+ALTER TABLE CDN.KntLinki ADD KnL_GUID                        VARCHAR (   41)   CONSTRAINT DF_KnL_GUID DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntOsoby" hidden="False">
+ALTER TABLE CDN.KntOsoby ADD KnS_PreferowanyJezyk            INTEGER        CONSTRAINT DF_KnS_PreferowanyJezyk DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntOsoby ADD KnS_GUID                        VARCHAR (   40)   CONSTRAINT DF_KnS_GUID DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+ALTER TABLE CDN.KntOsoby ADD KnS_GUID2                       VARCHAR (   40)   CONSTRAINT DF_KnS_GUID2 DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli KntRejestr" hidden="False">
+CREATE TABLE CDN.KntRejestr
+  (
+      KRj_Id                          INTEGER        IDENTITY , --- LONG,NAME('KRj_Id')
+      KRj_ObiTyp                      SMALLINT       CONSTRAINT DF_KRj_ObiTyp DEFAULT(0)         , --- SHORT,NAME('KRj_ObiTyp')
+      KRj_ObiFirma                    INTEGER        CONSTRAINT DF_KRj_ObiFirma DEFAULT(0)         , --- LONG,NAME('KRj_ObiFirma')
+      KRj_ObiNumer                    INTEGER        CONSTRAINT DF_KRj_ObiNumer DEFAULT(0)         , --- LONG,NAME('KRj_ObiNumer')
+      KRj_ObiLp                       SMALLINT       CONSTRAINT DF_KRj_ObiLp DEFAULT(0)         , --- SHORT,NAME('KRj_ObiLp')
+      KRj_TypRejestru                 TINYINT        CONSTRAINT DF_KRj_TypRejestru DEFAULT(0)         , --- BYTE,NAME('KRj_TypRejestru')
+      KRj_Waluta                      VARCHAR (    3)   CONSTRAINT DF_KRj_Waluta DEFAULT('')         , --- CSTRING(4),NAME('KRj_Waluta')
+      KRj_PrzypiszDoPlatnosci         TINYINT        CONSTRAINT DF_KRj_PrzypiszDoPlatnosci DEFAULT(0)         , --- BYTE,NAME('KRj_PrzypiszDoPlatnosci')
+      KRj_NrRachunku                  VARCHAR (   50)   CONSTRAINT DF_KRj_NrRachunku DEFAULT('')         , --- CSTRING(51),NAME('KRj_NrRachunku')
+      KRj_KarNumer                    INTEGER        CONSTRAINT DF_KRj_KarNumer DEFAULT(0)         , --- LONG,NAME('KRj_KarNumer')
+      KRj_Uwagi                       VARCHAR (  255)   CONSTRAINT DF_KRj_Uwagi DEFAULT('')         , --- CSTRING(256),NAME('KRj_Uwagi')
+      KRj_CzasArchiwizacji            INTEGER        CONSTRAINT DF_KRj_CzasArchiwizacji DEFAULT(0)         , --- LONG,NAME('KRj_CzasArchiwizacji')
+      CONSTRAINT KRj_Primary PRIMARY KEY
+        (
+                          KRj_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntVAT" hidden="False">
+ALTER TABLE CDN.KntVAT ADD KnV_RequestId                   VARCHAR (   50)   CONSTRAINT DF_KnV_RequestId DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntWzorce" hidden="False">
+ALTER TABLE CDN.KntWzorce ADD KnW_KrajSiedziby                VARCHAR (    2)   CONSTRAINT DF_KnW_KrajSiedziby DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.KntWzorce ADD KnW_ProcTrnJpk                  VARCHAR (   50)   CONSTRAINT DF_KnW_ProcTrnJpk DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.KntWzorce ADD KnW_MetodaKasowa                TINYINT        CONSTRAINT DF_KnW_MetodaKasowa DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntWzorce ADD KnW_DataPromocji                TINYINT        CONSTRAINT DF_KnW_DataPromocji DEFAULT(1) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KodyCN" hidden="False">
+ALTER TABLE CDN.KodyCN ADD KCN_StawkaVAT                   DECIMAL ( 7,2) CONSTRAINT DF_KCN_StawkaVAT DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KodyCN ADD KCN_FlagaVAT                    TINYINT        CONSTRAINT DF_KCN_FlagaVAT DEFAULT(0) WITH VALUES;
+IF OBJECT_ID('CDN.DF_KCN_Opis','D') IS NOT NULL ALTER TABLE CDN.KodyCN DROP CONSTRAINT DF_KCN_Opis;
+ALTER TABLE CDN.KodyCN ALTER COLUMN KCN_Opis VARCHAR ( 1024)   ;
+ALTER TABLE CDN.KodyCN ADD CONSTRAINT DF_KCN_Opis  DEFAULT('') FOR KCN_Opis WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KompNag" hidden="False">
+ALTER TABLE CDN.KompNag ADD KMN_DataKsiegowania             INTEGER        CONSTRAINT DF_KMN_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KosztyDodDok" hidden="False">
+ALTER TABLE CDN.KosztyDodDok ADD KDD_Waluta                      VARCHAR (    3)   CONSTRAINT DF_KDD_Waluta DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.KosztyDodDok ADD KDD_Id                          INTEGER        IDENTITY;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KrajeCelne" hidden="False">
+ALTER TABLE CDN.KrajeCelne ADD KPC_Id                          INTEGER        IDENTITY;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.MSKntKarty" hidden="False">
+ALTER TABLE CDN.MSKntKarty ADD MSKnt_GUID                      VARCHAR (   41)   CONSTRAINT DF_MSKnt_GUID DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.MSKntKarty ADD MSKnt_GUIDdane                  VARCHAR (   41)   CONSTRAINT DF_MSKnt_GUIDdane DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.MemNag" hidden="False">
+ALTER TABLE CDN.MemNag ADD MEN_DataKsiegowania             INTEGER        CONSTRAINT DF_MEN_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Nazwy" hidden="False">
+IF OBJECT_ID('CDN.DF_Naz_Nazwa1','D') IS NOT NULL ALTER TABLE CDN.Nazwy DROP CONSTRAINT DF_Naz_Nazwa1;
+ALTER TABLE CDN.Nazwy ALTER COLUMN Naz_Nazwa1 VARCHAR (   30)   ;
+ALTER TABLE CDN.Nazwy ADD CONSTRAINT DF_Naz_Nazwa1  DEFAULT('') FOR Naz_Nazwa1 WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.OpeKarty" hidden="False">
+ALTER TABLE CDN.OpeKarty ADD Ope_PrezentujInformacje         INTEGER        CONSTRAINT DF_Ope_PrezentujInformacje DEFAULT(-1) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_AktualizacjaInformacji      INTEGER        CONSTRAINT DF_Ope_AktualizacjaInformacji DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_DostepDoWzorcowAnalitPodrz  TINYINT        CONSTRAINT DF_Ope_DostepDoWzorcowAnalitPodrz DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_PrzerywanieSesji            TINYINT        CONSTRAINT DF_Ope_PrzerywanieSesji DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_MetodaKasowa                TINYINT        CONSTRAINT DF_Ope_MetodaKasowa DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_ParametrWgRozliczenia       TINYINT        CONSTRAINT DF_Ope_ParametrWgRozliczenia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_BIPointLogin                VARCHAR (  255)   CONSTRAINT DF_Ope_BIPointLogin DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_KorektaDanych               TINYINT        CONSTRAINT DF_Ope_KorektaDanych DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_EdycjaDatySpr               TINYINT        CONSTRAINT DF_Ope_EdycjaDatySpr DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_MESWidokZalacznikow         TINYINT        CONSTRAINT DF_Ope_MESWidokZalacznikow DEFAULT(1) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_ModDatyKsiegowania          TINYINT        CONSTRAINT DF_Ope_ModDatyKsiegowania DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_DoczytujRekordy             TINYINT        CONSTRAINT DF_Ope_DoczytujRekordy DEFAULT(1) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_MESEdycjaTerminowRealizacji  TINYINT        CONSTRAINT DF_Ope_MESEdycjaTerminowRealizacji DEFAULT(1) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_Tlumaczenie                 TINYINT        CONSTRAINT DF_Ope_Tlumaczenie DEFAULT(1) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_EsprawozdaniaFinansowe      TINYINT        CONSTRAINT DF_Ope_EsprawozdaniaFinansowe DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_EdycjaNrObcego              TINYINT        CONSTRAINT DF_Ope_EdycjaNrObcego DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_MESZadaniaWGniazdachRoboczych  TINYINT        CONSTRAINT DF_Ope_MESZadaniaWGniazdachRoboczych DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.OpeKarty ADD Ope_EdycjaPCN                   TINYINT        CONSTRAINT DF_Ope_EdycjaPCN DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Operacje" hidden="False">
+ALTER TABLE CDN.Operacje ADD KAO_Tresc                       VARCHAR (  254)   CONSTRAINT DF_KAO_Tresc DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.PIKNag" hidden="False">
+ALTER TABLE CDN.PIKNag ADD PIN_DataKsiegowania             INTEGER        CONSTRAINT DF_PIN_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.PicoKonfig" hidden="False">
+ALTER TABLE CDN.PicoKonfig ADD PcK_TwGETyp                     SMALLINT       CONSTRAINT DF_PcK_TwGETyp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_TwGENumer                   INTEGER        CONSTRAINT DF_PcK_TwGENumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_SposobWyszukiwania          TINYINT        CONSTRAINT DF_PcK_SposobWyszukiwania DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_KARTyp                      SMALLINT       CONSTRAINT DF_PcK_KARTyp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_KARFirma                    INTEGER        CONSTRAINT DF_PcK_KARFirma DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_KARNumer                    INTEGER        CONSTRAINT DF_PcK_KARNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_KARLp                       SMALLINT       CONSTRAINT DF_PcK_KARLp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_DniPrzedData                INTEGER        CONSTRAINT DF_PcK_DniPrzedData DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_FaDoPAPoTerminie            TINYINT        CONSTRAINT DF_PcK_FaDoPAPoTerminie DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_AutoZamykanieOkna           TINYINT        CONSTRAINT DF_PcK_AutoZamykanieOkna DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_PrzeliczajBezPytania        TINYINT        CONSTRAINT DF_PcK_PrzeliczajBezPytania DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_Minimalizacja               TINYINT        CONSTRAINT DF_PcK_Minimalizacja DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_BlokadawieleDok             TINYINT        CONSTRAINT DF_PcK_BlokadawieleDok DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_UjemnaKasaAutoryzacja       TINYINT        CONSTRAINT DF_PcK_UjemnaKasaAutoryzacja DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_GenerujPWNaBraki            TINYINT        CONSTRAINT DF_PcK_GenerujPWNaBraki DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PicoKonfig ADD PcK_SprWRoznychWalutach         TINYINT        CONSTRAINT DF_PcK_SprWRoznychWalutach DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli PicoStanowiska" hidden="False">
+CREATE TABLE CDN.PicoStanowiska
+  (
+      PSa_ID                          INTEGER        IDENTITY , --- LONG
+      PSa_PcKID                       INTEGER        CONSTRAINT DF_PSa_PcKID DEFAULT(0)         , --- LONG
+      PSa_Kod                         VARCHAR (   40)   CONSTRAINT DF_PSa_Kod DEFAULT('')         , --- CSTRING(41)
+      PSa_Nazwa                       VARCHAR (  255)   CONSTRAINT DF_PSa_Nazwa DEFAULT('')         , --- CSTRING(256)
+      PSa_Seria                       VARCHAR (    5)   CONSTRAINT DF_PSa_Seria DEFAULT('')         , --- CSTRING(6)
+      PSa_TrybPracy                   TINYINT        CONSTRAINT DF_PSa_TrybPracy DEFAULT(0)         , --- BYTE
+      PSa_UrzadzenieZew               INTEGER        CONSTRAINT DF_PSa_UrzadzenieZew DEFAULT(0)         , --- LONG
+      PSa_Drukarka                    VARCHAR (  100)   CONSTRAINT DF_PSa_Drukarka DEFAULT('')         , --- CSTRING(101)
+      PSa_Szuflada                    INTEGER        CONSTRAINT DF_PSa_Szuflada DEFAULT(0)         , --- LONG
+      PSa_GenKpKwOtwarcie             TINYINT        CONSTRAINT DF_PSa_GenKpKwOtwarcie DEFAULT(0)         , --- BYTE
+      PSa_GenKpKwZamkniecie           TINYINT        CONSTRAINT DF_PSa_GenKpKwZamkniecie DEFAULT(0)         , --- BYTE
+      PSa_OtwZamBezStanu              TINYINT        CONSTRAINT DF_PSa_OtwZamBezStanu DEFAULT(0)         , --- BYTE
+      PSa_AutoZamkniecieDnia          TINYINT        CONSTRAINT DF_PSa_AutoZamkniecieDnia DEFAULT(0)         , --- BYTE
+      PSa_BezWyplaty                  TINYINT        CONSTRAINT DF_PSa_BezWyplaty DEFAULT(0)         , --- BYTE
+      PSa_CzasZamkniecia              INTEGER        CONSTRAINT DF_PSa_CzasZamkniecia DEFAULT(0)         , --- LONG
+      PSa_DfiskWydruk                 TINYINT        CONSTRAINT DF_PSa_DfiskWydruk DEFAULT(0)         , --- BYTE
+      PSa_TylkoDostepneTwr            TINYINT        CONSTRAINT DF_PSa_TylkoDostepneTwr DEFAULT(0)         , --- BYTE
+      PSa_wydrukNaDOmyslnejDrukarce   TINYINT        CONSTRAINT DF_PSa_wydrukNaDOmyslnejDrukarce DEFAULT(0)         , --- BYTE
+      PSa_LastSync                    INTEGER        CONSTRAINT DF_PSa_LastSync DEFAULT(0)         , --- LONG
+      PSa_SzufladaOtwPlatnosc         TINYINT        CONSTRAINT DF_PSa_SzufladaOtwPlatnosc DEFAULT(0)         , --- BYTE
+      PSa_SzufladaOtwWystawianie      TINYINT        CONSTRAINT DF_PSa_SzufladaOtwWystawianie DEFAULT(0)         , --- BYTE
+      PSa_SzufladaOtwZliczanie        TINYINT        CONSTRAINT DF_PSa_SzufladaOtwZliczanie DEFAULT(0)         , --- BYTE
+      PSa_SzufladaOtwZmianaOtw        TINYINT        CONSTRAINT DF_PSa_SzufladaOtwZmianaOtw DEFAULT(0)         , --- BYTE
+      PSa_SzufladaOtwZmianaZamk       TINYINT        CONSTRAINT DF_PSa_SzufladaOtwZmianaZamk DEFAULT(0)         , --- BYTE
+      CONSTRAINT PSa_Primary PRIMARY KEY
+        (
+                          PSa_ID
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli PicoStanowiskaFormyPl" hidden="False">
+CREATE TABLE CDN.PicoStanowiskaFormyPl
+  (
+      PFP_PSaID                       INTEGER        CONSTRAINT DF_PFP_PSaID DEFAULT(0)         , --- LONG
+      PFP_NazwaPOS                    VARCHAR (   40)   CONSTRAINT DF_PFP_NazwaPOS DEFAULT('')         , --- CSTRING(41)
+      PFP_KARTyp                      SMALLINT       CONSTRAINT DF_PFP_KARTyp DEFAULT(0)         , --- SHORT
+      PFP_KARFirma                    INTEGER        CONSTRAINT DF_PFP_KARFirma DEFAULT(0)         , --- LONG
+      PFP_KARNumer                    INTEGER        CONSTRAINT DF_PFP_KARNumer DEFAULT(0)         , --- LONG
+      PFP_KARLp                       SMALLINT       CONSTRAINT DF_PFP_KARLp DEFAULT(0)         , --- SHORT
+      PFP_FormaNr                     TINYINT        CONSTRAINT DF_PFP_FormaNr DEFAULT(0)         , --- BYTE
+      PFP_BezKpKw                     TINYINT        CONSTRAINT DF_PFP_BezKpKw DEFAULT(0)         , --- BYTE
+      PFP_CzyscPoZamknieciuSesji      TINYINT        CONSTRAINT DF_PFP_CzyscPoZamknieciuSesji DEFAULT(0)         , --- BYTE
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli PicoStanowiskaOperatorzy" hidden="False">
+CREATE TABLE CDN.PicoStanowiskaOperatorzy
+  (
+      PKn_PSaID                       INTEGER        NOT NULL CONSTRAINT DF_PKn_PSaID DEFAULT(0)         , --- LONG
+      PKn_OpeTyp                      SMALLINT       CONSTRAINT DF_PKn_OpeTyp DEFAULT(0)         , --- SHORT
+      PKn_OpeFirma                    INTEGER        CONSTRAINT DF_PKn_OpeFirma DEFAULT(0)         , --- LONG
+      PKn_OpeNumer                    INTEGER        NOT NULL CONSTRAINT DF_PKn_OpeNumer DEFAULT(0)         , --- LONG
+      PKn_OpeLP                       SMALLINT       CONSTRAINT DF_PKn_OpeLP DEFAULT(0)         , --- SHORT
+      PKn_CzasModyfikacji             INTEGER        CONSTRAINT DF_PKn_CzasModyfikacji DEFAULT(0)         , --- LONG
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli PicoStanowiskaWydruki" hidden="False">
+CREATE TABLE CDN.PicoStanowiskaWydruki
+  (
+      PWr_ID                          INTEGER        IDENTITY , --- LONG
+      PWr_PSaID                       INTEGER        CONSTRAINT DF_PWr_PSaID DEFAULT(0)         , --- LONG
+      PWr_Nazwa                       VARCHAR (  255)   CONSTRAINT DF_PWr_Nazwa DEFAULT('')         , --- CSTRING(256)
+      PWr_NazwaPos                    VARCHAR (  255)   CONSTRAINT DF_PWr_NazwaPos DEFAULT('')         , --- CSTRING(256)
+      PWr_Wysylaj                     TINYINT        CONSTRAINT DF_PWr_Wysylaj DEFAULT(0)         , --- BYTE
+      PWr_Domyslny                    TINYINT        CONSTRAINT DF_PWr_Domyslny DEFAULT(0)         , --- BYTE
+      PWr_Kopie                       TINYINT        CONSTRAINT DF_PWr_Kopie DEFAULT(0)         , --- BYTE
+      PWr_Typ                         TINYINT        CONSTRAINT DF_PWr_Typ DEFAULT(0)         , --- BYTE
+      PWr_Rodzaj                      INTEGER        CONSTRAINT DF_PWr_Rodzaj DEFAULT(0)         , --- LONG
+      PWr_IdDefinicji                 INTEGER        CONSTRAINT DF_PWr_IdDefinicji DEFAULT(0)         , --- LONG
+      PWr_CzasModyfikacji             INTEGER        CONSTRAINT DF_PWr_CzasModyfikacji DEFAULT(0)         , --- LONG
+      CONSTRAINT PWr_Primary PRIMARY KEY
+        (
+                          PWr_ID
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.PlanSprzedazy" hidden="False">
+ALTER TABLE CDN.PlanSprzedazy ADD PSp_DataZrodlPozaOkres          TINYINT        CONSTRAINT DF_PSp_DataZrodlPozaOkres DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.PodNag" hidden="False">
+ALTER TABLE CDN.PodNag ADD PON_OkresID                     INTEGER        CONSTRAINT DF_PON_OkresID DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PodNag ADD PON_DataKsiegowania             INTEGER        CONSTRAINT DF_PON_DataKsiegowania DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PodNag ADD PON_OptimaId                    INTEGER        CONSTRAINT DF_PON_OptimaId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli PoleceniaGlowne" hidden="False">
+CREATE TABLE CDN.PoleceniaGlowne
+  (
+      PGL_Id                          INTEGER        IDENTITY , --- LONG,NAME('PGL_Id')
+      PGL_Tresc                       VARCHAR (  100)   CONSTRAINT DF_PGL_Tresc DEFAULT('')         , --- CSTRING(101),NAME('PGL_Tresc')
+      PGL_Skrot                       VARCHAR (   20)   CONSTRAINT DF_PGL_Skrot DEFAULT('')         , --- CSTRING(21),NAME('PGL_Skrot')
+      PGL_Rodzaj                      TINYINT        CONSTRAINT DF_PGL_Rodzaj DEFAULT(0)         , --- BYTE,NAME('PGL_Rodzaj')
+      PGL_Opis                        VARCHAR ( 2000)   CONSTRAINT DF_PGL_Opis DEFAULT('')         , --- CSTRING(2001),NAME('PGL_Opis')
+      PGL_PredefiniowaneID            INTEGER        CONSTRAINT DF_PGL_PredefiniowaneID DEFAULT(0)         , --- LONG,NAME('PGL_PredefiniowaneID')
+      PGL_NazwaGr                     VARCHAR (   40)   CONSTRAINT DF_PGL_NazwaGr DEFAULT('')         , --- CSTRING(41),NAME('PGL_NazwaGr')
+      CONSTRAINT PGL_Primary PRIMARY KEY
+        (
+                          PGL_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli PoleceniaOdpowiedzi" hidden="False">
+CREATE TABLE CDN.PoleceniaOdpowiedzi
+  (
+      POD_Id                          INTEGER        IDENTITY , --- LONG,NAME('POD_Id')
+      POD_Tresc                       VARCHAR (  500)   CONSTRAINT DF_POD_Tresc DEFAULT('')         , --- CSTRING(501),NAME('POD_Tresc')
+      CONSTRAINT POD_Primary PRIMARY KEY
+        (
+                          POD_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli PoleceniaTozsame" hidden="False">
+CREATE TABLE CDN.PoleceniaTozsame
+  (
+      POT_Id                          INTEGER        IDENTITY , --- LONG,NAME('POT_Id')
+      POT_PGLId                       INTEGER        CONSTRAINT DF_POT_PGLId DEFAULT(0)         , --- LONG,NAME('POT_PGLId')
+      POT_Tresc                       VARCHAR (  100)   CONSTRAINT DF_POT_Tresc DEFAULT('')         , --- CSTRING(101),NAME('POT_Tresc')
+      CONSTRAINT POT_Primary PRIMARY KEY
+        (
+                          POT_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.PrcKarty" hidden="False">
+ALTER TABLE CDN.PrcKarty ADD Prc_DomyslneCentrumKosztId      INTEGER        CONSTRAINT DF_Prc_DomyslneCentrumKosztId DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.PrcKarty ADD Prc_Kraj                        VARCHAR (    2)   CONSTRAINT DF_Prc_Kraj DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdCzujniki" hidden="False">
+CREATE TABLE CDN.ProdCzujniki
+  (
+      PCZU_Id                         INTEGER        IDENTITY , --- LONG
+      PCZU_Numer                      INTEGER        CONSTRAINT DF_PCZU_Numer DEFAULT(0)         , --- LONG
+      PCZU_Nazwa                      VARCHAR (   31)   CONSTRAINT DF_PCZU_Nazwa DEFAULT('')         , --- STRING(31)
+      PCZU_Opis                       TEXT      CONSTRAINT DF_PCZU_Opis DEFAULT('')         , --- CSTRING(65536)
+      PCZU_Archiwalny                 TINYINT        CONSTRAINT DF_PCZU_Archiwalny DEFAULT(0)         , --- BYTE
+      PCZU_OpeWNumer                  INTEGER        CONSTRAINT DF_PCZU_OpeWNumer DEFAULT(0)         , --- LONG
+      PCZU_OpeMNumer                  INTEGER        CONSTRAINT DF_PCZU_OpeMNumer DEFAULT(0)         , --- LONG
+      PCZU_DataCzasW                  INTEGER        CONSTRAINT DF_PCZU_DataCzasW DEFAULT(0)         , --- LONG
+      PCZU_DataCzasM                  INTEGER        CONSTRAINT DF_PCZU_DataCzasM DEFAULT(0)         , --- LONG
+      CONSTRAINT PCZU_Primary PRIMARY KEY
+        (
+                          PCZU_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdCzujnikiZdarzenia" hidden="False">
+CREATE TABLE CDN.ProdCzujnikiZdarzenia
+  (
+      PCZZ_Id                         INTEGER        IDENTITY , --- LONG
+      PCZZ_PCZUId                     INTEGER        CONSTRAINT DF_PCZZ_PCZUId DEFAULT(0)         , --- LONG
+      PCZZ_Timestamp                  INTEGER        CONSTRAINT DF_PCZZ_Timestamp DEFAULT(0)         , --- LONG
+      PCZZ_Zdarzenie                  VARCHAR (   50)   CONSTRAINT DF_PCZZ_Zdarzenie DEFAULT('')         , --- CSTRING(51)
+      CONSTRAINT PCZZ_Primary PRIMARY KEY
+        (
+                          PCZZ_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdCzujnikiZdarzeniaDefinicje" hidden="False">
+CREATE TABLE CDN.ProdCzujnikiZdarzeniaDefinicje
+  (
+      PCZZD_Id                        INTEGER        IDENTITY , --- LONG
+      PCZZD_Kod                       VARCHAR (   30)   CONSTRAINT DF_PCZZD_Kod DEFAULT('')         , --- CSTRING(31)
+      PCZZD_Nazwa                     VARCHAR (   50)   CONSTRAINT DF_PCZZD_Nazwa DEFAULT('')         , --- CSTRING(51)
+      PCZZD_Tytul                     VARCHAR (   50)   CONSTRAINT DF_PCZZD_Tytul DEFAULT('')         , --- CSTRING(51)
+      PCZZD_ZadaniaDoWykonania        VARCHAR (  255)   CONSTRAINT DF_PCZZD_ZadaniaDoWykonania DEFAULT('')         , --- CSTRING(256)
+      PCZZD_PriorytetIoTId            INTEGER        CONSTRAINT DF_PCZZD_PriorytetIoTId DEFAULT(0)         , --- LONG
+      PCZZD_Archiwalna                TINYINT        CONSTRAINT DF_PCZZD_Archiwalna DEFAULT(0)         , --- BYTE
+      PCZZD_WyswietlacKomunikat       TINYINT        CONSTRAINT DF_PCZZD_WyswietlacKomunikat DEFAULT(0)         , --- BYTE
+      CONSTRAINT PCZZD_Primary PRIMARY KEY
+        (
+                          PCZZD_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdCzynnosci" hidden="False">
+ALTER TABLE CDN.ProdCzynnosci ADD PCZ_KontrolaJakosci             TINYINT        CONSTRAINT DF_PCZ_KontrolaJakosci DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdCzynnosciObiekty" hidden="False">
+ALTER TABLE CDN.ProdCzynnosciObiekty ADD PCO_Pochodzenie                 TINYINT        CONSTRAINT DF_PCO_Pochodzenie DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdKosztyElemO" hidden="False">
+CREATE TABLE CDN.ProdKosztyElemO
+  (
+      PKEO_PKOId                      INTEGER        CONSTRAINT DF_PKEO_PKOId DEFAULT(0)         , --- LONG,NAME('PKEO_PKOId')
+      PKEO_ObiTyp                     SMALLINT       CONSTRAINT DF_PKEO_ObiTyp DEFAULT(0)         , --- SHORT,NAME('PKEO_ObiTyp')
+      PKEO_ObiNumer                   INTEGER        CONSTRAINT DF_PKEO_ObiNumer DEFAULT(0)         , --- LONG,NAME('PKEO_ObiNumer')
+      CONSTRAINT PKEO_Primary PRIMARY KEY
+        (
+                          PKEO_PKOId                    ,
+                          PKEO_ObiNumer                 ,
+                          PKEO_ObiTyp
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdNadzlecenia" hidden="False">
+CREATE TABLE CDN.ProdNadzlecenia
+  (
+      PNZ_Id                          INTEGER        IDENTITY , --- LONG,NAME('PNZ_Id')
+      PNZ_Projekt                     INTEGER        CONSTRAINT DF_PNZ_Projekt DEFAULT(0)         , --- LONG,NAME('PNZ_Projekt')
+      PNZ_Oddzial                     INTEGER        CONSTRAINT DF_PNZ_Oddzial DEFAULT(0)         , --- LONG,NAME('PNZ_Oddzial')
+      PNZ_DataWystawienia             INTEGER        CONSTRAINT DF_PNZ_DataWystawienia DEFAULT(0)         , --- LONG,NAME('PNZ_DataWystawienia')
+      PNZ_OpWNumer                    INTEGER        CONSTRAINT DF_PNZ_OpWNumer DEFAULT(0)         , --- LONG,NAME('PNZ_OpWNumer')
+      PNZ_FrsId                       INTEGER        CONSTRAINT DF_PNZ_FrsId DEFAULT(0)         , --- LONG,NAME('PNZ_FrsId')
+      PNZ_CzasModyfikacji             INTEGER        CONSTRAINT DF_PNZ_CzasModyfikacji DEFAULT(0)         , --- LONG,NAME('PNZ_CzasModyfikacji')
+      PNZ_OpMNumer                    INTEGER        CONSTRAINT DF_PNZ_OpMNumer DEFAULT(0)         , --- LONG,NAME('PNZ_OpMNumer')
+      PNZ_KntTyp                      SMALLINT       CONSTRAINT DF_PNZ_KntTyp DEFAULT(0)         , --- SHORT,NAME('PNZ_KntTyp')
+      PNZ_KntNumer                    INTEGER        CONSTRAINT DF_PNZ_KntNumer DEFAULT(0)         , --- LONG,NAME('PNZ_KntNumer')
+      PNZ_KnDTyp                      SMALLINT       CONSTRAINT DF_PNZ_KnDTyp DEFAULT(0)         , --- SHORT,NAME('PNZ_KnDTyp')
+      PNZ_KnDNumer                    INTEGER        CONSTRAINT DF_PNZ_KnDNumer DEFAULT(0)         , --- LONG,NAME('PNZ_KnDNumer')
+      PNZ_Opis                        VARCHAR ( 3999)   CONSTRAINT DF_PNZ_Opis DEFAULT('')         , --- CSTRING(4000),NAME('PNZ_Opis')
+      PNZ_Rok                         SMALLINT       CONSTRAINT DF_PNZ_Rok DEFAULT(0)         , --- SHORT,NAME('PNZ_Rok')
+      PNZ_Miesiac                     TINYINT        CONSTRAINT DF_PNZ_Miesiac DEFAULT(0)         , --- BYTE,NAME('PNZ_Miesiac')
+      PNZ_Seria                       VARCHAR (    5)   CONSTRAINT DF_PNZ_Seria DEFAULT('')         , --- CSTRING(6),NAME('PNZ_Seria')
+      PNZ_Numer                       INTEGER        CONSTRAINT DF_PNZ_Numer DEFAULT(0)         , --- LONG,NAME('PNZ_Numer')
+      PNZ_Lp                          SMALLINT       CONSTRAINT DF_PNZ_Lp DEFAULT(0)         , --- SHORT,NAME('PNZ_Lp')
+      PNZ_DokumentObcy                VARCHAR (   40)   CONSTRAINT DF_PNZ_DokumentObcy DEFAULT('')         , --- CSTRING(41),NAME('PNZ_DokumentObcy')
+      PNZ_DataZamkniecia              INTEGER        CONSTRAINT DF_PNZ_DataZamkniecia DEFAULT(0)         , --- LONG,NAME('PNZ_DataZamkniecia')
+      PNZ_Status                      INTEGER        CONSTRAINT DF_PNZ_Status DEFAULT(0)         , --- LONG,NAME('PNZ_Status')
+      PNZ_Url                         VARCHAR (  255)   CONSTRAINT DF_PNZ_Url DEFAULT('')         , --- CSTRING(256),NAME('PNZ_Url')
+      CONSTRAINT PNZ_Primary PRIMARY KEY
+        (
+                          PNZ_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdNadzleceniaLinki" hidden="False">
+CREATE TABLE CDN.ProdNadzleceniaLinki
+  (
+      PNL_Id                          INTEGER        IDENTITY , --- LONG
+      PNL_PZLId                       INTEGER        CONSTRAINT DF_PNL_PZLId DEFAULT(0)         , --- LONG
+      PNL_PNZId                       INTEGER        CONSTRAINT DF_PNL_PNZId DEFAULT(0)         , --- LONG
+      CONSTRAINT PNL_Primary PRIMARY KEY
+        (
+                          PNL_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdObiektyCzujniki" hidden="False">
+CREATE TABLE CDN.ProdObiektyCzujniki
+  (
+      POC_Id                          INTEGER        IDENTITY , --- LONG
+      POC_PCUId                       INTEGER        CONSTRAINT DF_POC_PCUId DEFAULT(0)         , --- LONG
+      POC_POBId                       INTEGER        CONSTRAINT DF_POC_POBId DEFAULT(0)         , --- LONG
+      POC_AktywnyOd                   INTEGER        CONSTRAINT DF_POC_AktywnyOd DEFAULT(0)         , --- LONG
+      POC_AktywnyDo                   INTEGER        CONSTRAINT DF_POC_AktywnyDo DEFAULT(0)         , --- LONG
+      CONSTRAINT POC_Primary PRIMARY KEY
+        (
+                          POC_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdObiektyFunkcje" hidden="False">
+ALTER TABLE CDN.ProdObiektyFunkcje ADD POF_Widocznosc                  TINYINT        CONSTRAINT DF_POF_Widocznosc DEFAULT(3) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdPKJHistoriaZmian" hidden="False">
+CREATE TABLE CDN.ProdPKJHistoriaZmian
+  (
+      PKJH_Id                         INTEGER        IDENTITY , --- LONG,NAME('PKJH_Id')
+      PKJH_ObiTyp                     SMALLINT       CONSTRAINT DF_PKJH_ObiTyp DEFAULT(0)         , --- SHORT,NAME('PKJH_ObiTyp')
+      PKJH_ObiNumer                   INTEGER        CONSTRAINT DF_PKJH_ObiNumer DEFAULT(0)         , --- LONG,NAME('PKJH_ObiNumer')
+      PKJH_TypZmiany                  TINYINT        CONSTRAINT DF_PKJH_TypZmiany DEFAULT(0)         , --- BYTE,NAME('PKJH_TypZmiany')
+      PKJH_CzasZmiany                 INTEGER        CONSTRAINT DF_PKJH_CzasZmiany DEFAULT(0)         , --- LONG,NAME('PKJH_CzasZmiany')
+      PKJH_OpeIdent                   VARCHAR (   20)   CONSTRAINT DF_PKJH_OpeIdent DEFAULT('')         , --- CSTRING(21),NAME('PKJH_OpeIdent')
+      PKJH_ObiNazwa                   VARCHAR (   50)   CONSTRAINT DF_PKJH_ObiNazwa DEFAULT('')         , --- CSTRING(51),NAME('PKJH_ObiNazwa')
+      PKJH_Kolumna                    VARCHAR (   50)   CONSTRAINT DF_PKJH_Kolumna DEFAULT('')         , --- CSTRING(51),NAME('PKJH_Kolumna')
+      PKJH_StaraWartosc               VARCHAR ( 1023)   CONSTRAINT DF_PKJH_StaraWartosc DEFAULT('')         , --- CSTRING(1024),NAME('PKJH_StaraWartosc')
+      PKJH_NowaWartosc                VARCHAR ( 1023)   CONSTRAINT DF_PKJH_NowaWartosc DEFAULT('')         , --- CSTRING(1024),NAME('PKJH_NowaWartosc')
+      PKJH_PKJId                      INTEGER        CONSTRAINT DF_PKJH_PKJId DEFAULT(0)         , --- LONG,NAME('PKJH_PKJId')
+      CONSTRAINT PKJH_Primary PRIMARY KEY
+        (
+                          PKJH_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdPKJNag" hidden="False">
+CREATE TABLE CDN.ProdPKJNag
+  (
+      PKJN_Id                         INTEGER        IDENTITY , --- LONG,NAME('PKJN_Id')
+      PKJN_Status                     INTEGER        CONSTRAINT DF_PKJN_Status DEFAULT(0)         , --- LONG,NAME('PKJN_Status')
+      PKJN_Ilosc                      DECIMAL (11,4) CONSTRAINT DF_PKJN_Ilosc DEFAULT(0)         , --- DECIMAL(11,4),NAME('PKJN_Ilosc')
+      PKJN_IloscZgodnych              DECIMAL (11,4) CONSTRAINT DF_PKJN_IloscZgodnych DEFAULT(0)         , --- DECIMAL(11,4),NAME('PKJN_IloscZgodnych')
+      PKJN_IloscNiezgodnych           DECIMAL (11,4) CONSTRAINT DF_PKJN_IloscNiezgodnych DEFAULT(0)         , --- DECIMAL(11,4),NAME('PKJN_IloscNiezgodnych')
+      PKJN_WynikKJ                    INTEGER        CONSTRAINT DF_PKJN_WynikKJ DEFAULT(0)         , --- LONG,NAME('PKJN_WynikKJ')
+      PKJN_PTZId                      INTEGER        CONSTRAINT DF_PKJN_PTZId DEFAULT(0)         , --- LONG,NAME('PKJN_PTZId')
+      PKJN_TwrTyp                     SMALLINT       CONSTRAINT DF_PKJN_TwrTyp DEFAULT(0)         , --- SHORT,NAME('PKJN_TwrTyp')
+      PKJN_TwrNumer                   INTEGER        CONSTRAINT DF_PKJN_TwrNumer DEFAULT(0)         , --- LONG,NAME('PKJN_TwrNumer')
+      PKJN_Uboczny                    TINYINT        CONSTRAINT DF_PKJN_Uboczny DEFAULT(0)         , --- BYTE,NAME('PKJN_Uboczny')
+      PKJN_MagTyp                     SMALLINT       CONSTRAINT DF_PKJN_MagTyp DEFAULT(0)         , --- SHORT,NAME('PKJN_MagTyp')
+      PKJN_MagNumer                   INTEGER        CONSTRAINT DF_PKJN_MagNumer DEFAULT(0)         , --- LONG,NAME('PKJN_MagNumer')
+      PKJN_PrzyczynaOdrzucenia        INTEGER        CONSTRAINT DF_PKJN_PrzyczynaOdrzucenia DEFAULT(0)         , --- LONG,NAME('PKJN_PrzyczynaOdrzucenia')
+      PKJN_Opis                       VARCHAR ( 1023)   CONSTRAINT DF_PKJN_Opis DEFAULT('')         , --- CSTRING(1024),NAME('PKJN_Opis')
+      PKJN_Rok                        SMALLINT       CONSTRAINT DF_PKJN_Rok DEFAULT(0)         , --- SHORT,NAME('PKJN_Rok')
+      PKJN_Miesiac                    TINYINT        CONSTRAINT DF_PKJN_Miesiac DEFAULT(0)         , --- BYTE,NAME('PKJN_Miesiac')
+      PKJN_Seria                      VARCHAR (    5)   CONSTRAINT DF_PKJN_Seria DEFAULT('')         , --- CSTRING(6),NAME('PKJN_Seria')
+      PKJN_Numer                      INTEGER        CONSTRAINT DF_PKJN_Numer DEFAULT(0)         , --- LONG,NAME('PKJN_Numer')
+      PKJN_Lp                         SMALLINT       CONSTRAINT DF_PKJN_Lp DEFAULT(0)         , --- SHORT,NAME('PKJN_Lp')
+      PKJN_FrsId                      INTEGER        CONSTRAINT DF_PKJN_FrsId DEFAULT(0)         , --- LONG,NAME('PKJN_FrsId')
+      PKJN_OpWNumer                   INTEGER        CONSTRAINT DF_PKJN_OpWNumer DEFAULT(0)         , --- LONG,NAME('PKJN_OpWNumer')
+      PKJN_DataCzasW                  INTEGER        CONSTRAINT DF_PKJN_DataCzasW DEFAULT(0)         , --- LONG,NAME('PKJN_DataCzasW')
+      PKJN_OpMNumer                   INTEGER        CONSTRAINT DF_PKJN_OpMNumer DEFAULT(0)         , --- LONG,NAME('PKJN_OpMNumer')
+      PKJN_DataCzasM                  INTEGER        CONSTRAINT DF_PKJN_DataCzasM DEFAULT(0)         , --- LONG,NAME('PKJN_DataCzasM')
+      PKJN_OpZNumer                   INTEGER        CONSTRAINT DF_PKJN_OpZNumer DEFAULT(0)         , --- LONG,NAME('PKJN_OpZNumer')
+      PKJN_DataCzasZ                  INTEGER        CONSTRAINT DF_PKJN_DataCzasZ DEFAULT(0)         , --- LONG,NAME('PKJN_DataCzasZ')
+      PKJN_Url                        VARCHAR (  255)   CONSTRAINT DF_PKJN_Url DEFAULT('')         , --- CSTRING(256),NAME('PKJN_Url')
+      PKJN_PZLId                      INTEGER        CONSTRAINT DF_PKJN_PZLId DEFAULT(0)         , --- LONG,NAME('PKJN_PZLId')
+      PKJN_PCZId                      INTEGER        CONSTRAINT DF_PKJN_PCZId DEFAULT(0)         , --- LONG,NAME('PKJN_PCZId')
+      CONSTRAINT PKJN_Primary PRIMARY KEY
+        (
+                          PKJN_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdPKJZas" hidden="False">
+CREATE TABLE CDN.ProdPKJZas
+  (
+      PKJZ_Id                         INTEGER        IDENTITY , --- LONG,NAME('PKJZ_Id')
+      PKJZ_PKJNId                     INTEGER        CONSTRAINT DF_PKJZ_PKJNId DEFAULT(0)         , --- LONG,NAME('PKJZ_PKJNId')
+      PKJZ_PZAId                      INTEGER        CONSTRAINT DF_PKJZ_PZAId DEFAULT(0)         , --- LONG,NAME('PKJZ_PZAId')
+      CONSTRAINT PKJZ_Primary PRIMARY KEY
+        (
+                          PKJZ_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdParamKJNormyObiektow" hidden="False">
+CREATE TABLE CDN.ProdParamKJNormyObiektow
+  (
+      PPKO_Id                         INTEGER        IDENTITY NOT NULL , --- LONG,NAME('PPKO_Id')
+      PPKO_PKJId                      INTEGER        NOT NULL CONSTRAINT DF_PPKO_PKJId DEFAULT(0)         , --- LONG,NAME('PPKO_PKJId')
+      PPKO_OGidTyp                    SMALLINT       NOT NULL CONSTRAINT DF_PPKO_OGidTyp DEFAULT(0)         , --- SHORT,NAME('PPKO_OGidTyp')
+      PPKO_OGidNumer                  INTEGER        NOT NULL CONSTRAINT DF_PPKO_OGidNumer DEFAULT(0)         , --- LONG,NAME('PPKO_OGidNumer')
+      PPKO_Lp                         INTEGER        CONSTRAINT DF_PPKO_Lp DEFAULT(1)         , --- LONG,NAME('PPKO_Lp')
+      PPKO_Opis                       VARCHAR ( 1023)   CONSTRAINT DF_PPKO_Opis DEFAULT('')         , --- CSTRING(1024)
+      PPKO_Url                        VARCHAR (  255)   CONSTRAINT DF_PPKO_Url DEFAULT('')         , --- CSTRING(256)
+      PPKO_Jednostka                  VARCHAR (  250)   CONSTRAINT DF_PPKO_Jednostka DEFAULT('')         , --- CSTRING(251)
+      PPKO_Wartosc                    VARCHAR (  512)   CONSTRAINT DF_PPKO_Wartosc DEFAULT('')         , --- CSTRING(513)
+      PPKO_WynikIlosc                 DECIMAL (11,4) CONSTRAINT DF_PPKO_WynikIlosc DEFAULT(0)         , --- DECIMAL(11,4)
+      CONSTRAINT PPKO_Primary PRIMARY KEY
+        (
+                          PPKO_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdParametryKJ" hidden="False">
+CREATE TABLE CDN.ProdParametryKJ
+  (
+      PKJ_Id                          INTEGER        IDENTITY NOT NULL , --- LONG,NAME('PKJ_Id')
+      PKJ_Kod                         VARCHAR (   40)   CONSTRAINT DF_PKJ_Kod DEFAULT('')         , --- CSTRING(41),NAME('PKJ_Kod')
+      PKJ_Nazwa                       VARCHAR (  100)   CONSTRAINT DF_PKJ_Nazwa DEFAULT('')         , --- CSTRING(101),NAME('PKJ_Nazwa')
+      PKJ_Lp                          INTEGER        CONSTRAINT DF_PKJ_Lp DEFAULT(0)         , --- LONG,NAME('PKJ_Lp')
+      PKJ_OpeW                        INTEGER        CONSTRAINT DF_PKJ_OpeW DEFAULT(0)         , --- LONG,NAME('PKJ_OpeW')
+      PKJ_DataW                       INTEGER        CONSTRAINT DF_PKJ_DataW DEFAULT(0)         , --- LONG,NAME('PKJ_DataW')
+      PKJ_OpeM                        INTEGER        CONSTRAINT DF_PKJ_OpeM DEFAULT(0)         , --- LONG,NAME('PKJ_OpeM')
+      PKJ_DataM                       INTEGER        CONSTRAINT DF_PKJ_DataM DEFAULT(0)         , --- LONG,NAME('PKJ_DataM')
+      PKJ_Archiwalny                  TINYINT        CONSTRAINT DF_PKJ_Archiwalny DEFAULT(0)         , --- BYTE,NAME('PKJ_Archiwalny')
+      PKJ_Typ                         TINYINT        CONSTRAINT DF_PKJ_Typ DEFAULT(0)         , --- BYTE,NAME('PKJ_Typ')
+      PKJ_Format                      VARCHAR (   30)   CONSTRAINT DF_PKJ_Format DEFAULT('')         , --- CSTRING(31),NAME('PKJ_Format')
+      PKJ_Zamknieta                   TINYINT        CONSTRAINT DF_PKJ_Zamknieta DEFAULT(0)         , --- BYTE,NAME('PKJ_Zamknieta')
+      CONSTRAINT PKJ_Primary PRIMARY KEY
+        (
+                          PKJ_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdParametryKJNormy" hidden="False">
+CREATE TABLE CDN.ProdParametryKJNormy
+  (
+      KJN_Id                          INTEGER        IDENTITY NOT NULL , --- LONG,NAME('KJN_Id')
+      KJN_Wartosc                     VARCHAR (  512)   CONSTRAINT DF_KJN_Wartosc DEFAULT('')         , --- CSTRING(513),NAME('KJN_Wartosc')
+      KJN_Zgodna                      TINYINT        CONSTRAINT DF_KJN_Zgodna DEFAULT(0)         , --- BYTE,NAME('KJN_Zgodna')
+      KJN_Domyslna                    TINYINT        CONSTRAINT DF_KJN_Domyslna DEFAULT(0)         , --- BYTE,NAME('KJN_Domyslna')
+      KJN_ZakresOd                    DECIMAL (13,4) CONSTRAINT DF_KJN_ZakresOd DEFAULT(0)         , --- DECIMAL(13,4),NAME('KJN_ZakresOd')
+      KJN_ZakresDo                    DECIMAL (13,4) CONSTRAINT DF_KJN_ZakresDo DEFAULT(0)         , --- DECIMAL(13,4),NAME('KJN_ZakresDo')
+      KJN_PPKOId                      INTEGER        CONSTRAINT DF_KJN_PPKOId DEFAULT(0)         , --- LONG
+      CONSTRAINT KJN_Primary PRIMARY KEY
+        (
+                          KJN_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdPlanyMaterialy" hidden="False">
+ALTER TABLE CDN.ProdPlanyMaterialy ADD PPT_DoWykorzystania             DECIMAL (15,4) CONSTRAINT DF_PPT_DoWykorzystania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdTechnologia" hidden="False">
+ALTER TABLE CDN.ProdTechnologia ADD PTE_KopiowacZalacznikiNaZP      TINYINT        CONSTRAINT DF_PTE_KopiowacZalacznikiNaZP DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdTechnologia ADD PTE_Aktywny                     INTEGER        CONSTRAINT DF_PTE_Aktywny DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdTechnologiaCzynnosci" hidden="False">
+ALTER TABLE CDN.ProdTechnologiaCzynnosci ADD PTC_KontrolaJakosci             TINYINT        CONSTRAINT DF_PTC_KontrolaJakosci DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdTechnologiaZasoby" hidden="False">
+ALTER TABLE CDN.ProdTechnologiaZasoby ADD PTZ_PodlegaKJ                   TINYINT        CONSTRAINT DF_PTZ_PodlegaKJ DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdTechnologiaZasoby ADD PTZ_RodzajKJ                    TINYINT        CONSTRAINT DF_PTZ_RodzajKJ DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdTechnologiaZasoby ADD PTZ_IdProduktNiezgodny          INTEGER        CONSTRAINT DF_PTZ_IdProduktNiezgodny DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdTechnologiaZasoby ADD PTZ_IdMagazynNiezgodny          INTEGER        CONSTRAINT DF_PTZ_IdMagazynNiezgodny DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdTechnologiaZasoby ADD PTZ_CzyUbocznyNiezgodny         TINYINT        CONSTRAINT DF_PTZ_CzyUbocznyNiezgodny DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdTechnologiaZasoby ADD PTZ_OpisKJ                      VARCHAR ( 1023)   CONSTRAINT DF_PTZ_OpisKJ DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.ProdTechnologiaZasoby ADD PTZ_NiezaleznaOdJedPod          TINYINT        CONSTRAINT DF_PTZ_NiezaleznaOdJedPod DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdTechnologiaZasoby ADD PTZ_PrzeliczajWgPomocniczej     TINYINT        CONSTRAINT DF_PTZ_PrzeliczajWgPomocniczej DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdTechnologiaZasoby ADD PTZ_PrzeliczajIloscPomWgPodst   TINYINT        CONSTRAINT DF_PTZ_PrzeliczajIloscPomWgPodst DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdWzorceKJ" hidden="False">
+CREATE TABLE CDN.ProdWzorceKJ
+  (
+      WKJ_Id                          INTEGER        IDENTITY , --- LONG,NAME('WKJ_Id')
+      WKJ_Kod                         VARCHAR (   40)   CONSTRAINT DF_WKJ_Kod DEFAULT('')         , --- CSTRING(41),NAME('WKJ_Kod')
+      WKJ_Nazwa                       VARCHAR (  100)   CONSTRAINT DF_WKJ_Nazwa DEFAULT('')         , --- CSTRING(101),NAME('WKJ_Nazwa')
+      WKJ_OpeW                        INTEGER        CONSTRAINT DF_WKJ_OpeW DEFAULT(0)         , --- LONG,NAME('WKJ_OpeW')
+      WKJ_DataW                       INTEGER        CONSTRAINT DF_WKJ_DataW DEFAULT(0)         , --- LONG,NAME('WKJ_DataW')
+      WKJ_OpeM                        INTEGER        CONSTRAINT DF_WKJ_OpeM DEFAULT(0)         , --- LONG,NAME('WKJ_OpeM')
+      WKJ_DataM                       INTEGER        CONSTRAINT DF_WKJ_DataM DEFAULT(0)         , --- LONG,NAME('WKJ_DataM')
+      WKJ_Archiwalny                  TINYINT        CONSTRAINT DF_WKJ_Archiwalny DEFAULT(0)         , --- BYTE,NAME('WKJ_Archiwalny')
+      WKJ_Url                         VARCHAR (  255)   CONSTRAINT DF_WKJ_Url DEFAULT('')         , --- CSTRING(256),NAME('WKJ_Url')
+      WKJ_Opis                        VARCHAR ( 1024)   CONSTRAINT DF_WKJ_Opis DEFAULT('')         , --- STRING(1024),NAME('WKJ_Opis')
+      CONSTRAINT WKJ_Primary PRIMARY KEY
+        (
+                          WKJ_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdWzorceKJTowary" hidden="False">
+CREATE TABLE CDN.ProdWzorceKJTowary
+  (
+      PWT_Id                          INTEGER        IDENTITY , --- LONG,NAME('PWT_Id')
+      PWT_TwrGIDNumer                 INTEGER        CONSTRAINT DF_PWT_TwrGIDNumer DEFAULT(0)         , --- LONG,NAME('PWT_TwrGIDNumer')
+      PWT_TwrGIDTyp                   SMALLINT       CONSTRAINT DF_PWT_TwrGIDTyp DEFAULT(0)         , --- SHORT
+      PWT_WKJId                       INTEGER        CONSTRAINT DF_PWT_WKJId DEFAULT(0)         , --- LONG,NAME('PWT_WKJId')
+      PWT_Domyslny                    TINYINT        CONSTRAINT DF_PWT_Domyslny DEFAULT(0)         , --- BYTE,NAME('PWT_Domyslny')
+      CONSTRAINT PWT_Primary PRIMARY KEY
+        (
+                          PWT_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdZasoby" hidden="False">
+ALTER TABLE CDN.ProdZasoby ADD PZA_PrzeliczajWgPomocniczej     TINYINT        CONSTRAINT DF_PZA_PrzeliczajWgPomocniczej DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdZasoby ADD PZA_JednostkaPom                VARCHAR (    8)   CONSTRAINT DF_PZA_JednostkaPom DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.ProdZasoby ADD PZA_PodlegaKJ                   TINYINT        CONSTRAINT DF_PZA_PodlegaKJ DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdZasoby ADD PZA_PKJNId                      INTEGER        CONSTRAINT DF_PZA_PKJNId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdZlecenia" hidden="False">
+ALTER TABLE CDN.ProdZlecenia ADD PZL_DataKsiegowania             INTEGER        CONSTRAINT DF_PZL_DataKsiegowania DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProdZlecenia ADD PZL_GenerujZleceniaPrzyPlanowaniu  TINYINT        CONSTRAINT DF_PZL_GenerujZleceniaPrzyPlanowaniu DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ProdZwiazane" hidden="False">
+CREATE TABLE CDN.ProdZwiazane
+  (
+      PZW_Id                          INTEGER        IDENTITY , --- LONG,NAME('PZW_Id')
+      PZW_ZrdTyp                      SMALLINT       CONSTRAINT DF_PZW_ZrdTyp DEFAULT(0)         , --- SHORT,NAME('PZW_ZrdTyp')
+      PZW_ZrdFirma                    INTEGER        CONSTRAINT DF_PZW_ZrdFirma DEFAULT(0)         , --- LONG,NAME('PZW_ZrdFirma')
+      PZW_ZrdNumer                    INTEGER        CONSTRAINT DF_PZW_ZrdNumer DEFAULT(0)         , --- LONG,NAME('PZW_ZrdNumer')
+      PZW_ZrdLp                       SMALLINT       CONSTRAINT DF_PZW_ZrdLp DEFAULT(0)         , --- SHORT,NAME('PZW_ZrdLp')
+      PZW_DokTyp                      SMALLINT       CONSTRAINT DF_PZW_DokTyp DEFAULT(0)         , --- SHORT,NAME('PZW_DokTyp')
+      PZW_DokFirma                    INTEGER        CONSTRAINT DF_PZW_DokFirma DEFAULT(0)         , --- LONG,NAME('PZW_DokFirma')
+      PZW_DokNumer                    INTEGER        CONSTRAINT DF_PZW_DokNumer DEFAULT(0)         , --- LONG,NAME('PZW_DokNumer')
+      PZW_DokLp                       SMALLINT       CONSTRAINT DF_PZW_DokLp DEFAULT(0)         , --- SHORT,NAME('PZW_DokLp')
+      CONSTRAINT PZW_Primary PRIMARY KEY
+        (
+                          PZW_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProlongElem" hidden="False">
+ALTER TABLE CDN.ProlongElem ADD PRLE_walutaOdsetki              VARCHAR (    3)   CONSTRAINT DF_PRLE_walutaOdsetki DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.ProlongElem ADD PRLE_NrKursuOdsetki             SMALLINT       CONSTRAINT DF_PRLE_NrKursuOdsetki DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProlongElem ADD PRLE_KursMOdsetki               DECIMAL ( 5,2) CONSTRAINT DF_PRLE_KursMOdsetki DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProlongElem ADD PRLE_KursLOdsetki               DECIMAL ( 7,2) CONSTRAINT DF_PRLE_KursLOdsetki DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProlongNag" hidden="False">
+ALTER TABLE CDN.ProlongNag ADD PRLN_KwotaOdsetki               DECIMAL (15,2) CONSTRAINT DF_PRLN_KwotaOdsetki DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProlongNag ADD PRLN_KarTyp                     SMALLINT       CONSTRAINT DF_PRLN_KarTyp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProlongNag ADD PRLN_KarFirma                   INTEGER        CONSTRAINT DF_PRLN_KarFirma DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProlongNag ADD PRLN_KarNumer                   INTEGER        CONSTRAINT DF_PRLN_KarNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProlongNag ADD PRLN_KarLp                      SMALLINT       CONSTRAINT DF_PRLN_KarLp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ProlongNag ADD PRLN_DataKsiegowania            INTEGER        CONSTRAINT DF_PRLN_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli PrzelewyAutoryzacje" hidden="False">
+CREATE TABLE CDN.PrzelewyAutoryzacje
+  (
+      PPA_ID                          INTEGER        IDENTITY , --- LONG,NAME('PPA_ID')
+      PPA_PPNID                       INTEGER        CONSTRAINT DF_PPA_PPNID DEFAULT(0)         , --- LONG,NAME('PPA_PPNID')
+      PPA_OpeNumer                    INTEGER        CONSTRAINT DF_PPA_OpeNumer DEFAULT(0)         , --- LONG,NAME('PPA_OpeNumer')
+      PPA_Data                        INTEGER        CONSTRAINT DF_PPA_Data DEFAULT(0)         , --- LONG,NAME('PPA_Data')
+      PPA_Podpis                      VARCHAR ( 5000)   CONSTRAINT DF_PPA_Podpis DEFAULT('')         , --- CSTRING(5001),NAME('PPA_Podpis')
+      CONSTRAINT PPA_Primary PRIMARY KEY
+        (
+                          PPA_ID
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.PrzelewyNag" hidden="False">
+ALTER TABLE CDN.PrzelewyNag ADD PPN_PlikZlecenia                VARCHAR(MAX)     CONSTRAINT DF_PPN_PlikZlecenia DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.PrzelewyNag ADD PPN_PlikSkrot                   VARCHAR (   50)   CONSTRAINT DF_PPN_PlikSkrot DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.PrzelewyNag ADD PPN_MsgId                       VARCHAR (   50)   CONSTRAINT DF_PPN_MsgId DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli RachunkiBankowe" hidden="False">
+CREATE TABLE CDN.RachunkiBankowe
+  (
+      RkB_Id                          INTEGER        IDENTITY , --- LONG,NAME('RkB_Id')
+      RkB_ObiTyp                      SMALLINT       CONSTRAINT DF_RkB_ObiTyp DEFAULT(0)         , --- SHORT,NAME('RkB_ObiTyp')
+      RkB_ObiFirma                    INTEGER        CONSTRAINT DF_RkB_ObiFirma DEFAULT(0)         , --- LONG,NAME('RkB_ObiFirma')
+      RkB_ObiNumer                    INTEGER        CONSTRAINT DF_RkB_ObiNumer DEFAULT(0)         , --- LONG,NAME('RkB_ObiNumer')
+      RkB_ObiLp                       SMALLINT       CONSTRAINT DF_RkB_ObiLp DEFAULT(0)         , --- SHORT,NAME('RkB_ObiLp')
+      RkB_NrRachunku                  VARCHAR (   50)   CONSTRAINT DF_RkB_NrRachunku DEFAULT('')         , --- CSTRING(51),NAME('RkB_NrRachunku')
+      RkB_NrRachunkuE                 VARCHAR (   50)   CONSTRAINT DF_RkB_NrRachunkuE DEFAULT('')         , --- CSTRING(51),NAME('RkB_NrRachunkuE')
+      RkB_IBAN                        TINYINT        CONSTRAINT DF_RkB_IBAN DEFAULT(0)         , --- BYTE,NAME('RkB_IBAN')
+      RkB_BnkTyp                      SMALLINT       CONSTRAINT DF_RkB_BnkTyp DEFAULT(0)         , --- SHORT,NAME('RkB_BnkTyp')
+      RkB_BnkFirma                    INTEGER        CONSTRAINT DF_RkB_BnkFirma DEFAULT(0)         , --- LONG,NAME('RkB_BnkFirma')
+      RkB_BnkNumer                    INTEGER        CONSTRAINT DF_RkB_BnkNumer DEFAULT(0)         , --- LONG,NAME('RkB_BnkNumer')
+      RkB_BnkLp                       SMALLINT       CONSTRAINT DF_RkB_BnkLp DEFAULT(0)         , --- SHORT,NAME('RkB_BnkLp')
+      RkB_Waluta                      VARCHAR (    3)   CONSTRAINT DF_RkB_Waluta DEFAULT('')         , --- CSTRING(4),NAME('RkB_Waluta')
+      RkB_OpeUtworzyl                 INTEGER        CONSTRAINT DF_RkB_OpeUtworzyl DEFAULT(0)         , --- LONG,NAME('RkB_OpeUtworzyl')
+      RkB_CzasUtworzenia              INTEGER        CONSTRAINT DF_RkB_CzasUtworzenia DEFAULT(0)         , --- LONG,NAME('RkB_CzasUtworzenia')
+      RkB_KntAdres                    INTEGER        CONSTRAINT DF_RkB_KntAdres DEFAULT(0)         , --- LONG,NAME('RkB_KntAdres')
+      RkB_TypRachunku                 INTEGER        CONSTRAINT DF_RkB_TypRachunku DEFAULT(0)         , --- LONG,NAME('RkB_TypRachunku')
+      RkB_Uwagi                       VARCHAR (  255)   CONSTRAINT DF_RkB_Uwagi DEFAULT('')         , --- CSTRING(256),NAME('RkB_Uwagi')
+      RkB_CzasArchiwizacji            INTEGER        CONSTRAINT DF_RkB_CzasArchiwizacji DEFAULT(0)         , --- LONG,NAME('RkB_CzasArchiwizacji')
+      RkB_Domyslny                    TINYINT        CONSTRAINT DF_RkB_Domyslny DEFAULT(0)         , --- BYTE,NAME('RkB_Domyslny')
+      RkB_CzasModyfikacji             INTEGER        CONSTRAINT DF_RkB_CzasModyfikacji DEFAULT(0)         , --- LONG,NAME('RkB_CzasModyfikacji')
+      RkB_OpeModyfikowal              INTEGER        CONSTRAINT DF_RkB_OpeModyfikowal DEFAULT(0)         , --- LONG,NAME('RkB_OpeModyfikowal')
+      RkB_ZgloszonyDoUS               TINYINT        CONSTRAINT DF_RkB_ZgloszonyDoUS DEFAULT(0)         , --- BYTE,NAME('RkB_ZgloszonyDoUS')
+      CONSTRAINT RkB_Primary PRIMARY KEY
+        (
+                          RkB_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli RachunkiBankoweVat" hidden="False">
+CREATE TABLE CDN.RachunkiBankoweVat
+  (
+      RBV_Id                          INTEGER        IDENTITY , --- LONG,NAME('RBV_Id')
+      RBV_RkbId                       INTEGER        CONSTRAINT DF_RBV_RkbId DEFAULT(0)         , --- LONG,NAME('RBV_RkbId')
+      RBV_Nip                         VARCHAR (   20)   CONSTRAINT DF_RBV_Nip DEFAULT('')         , --- CSTRING(21),NAME('RBV_Nip')
+      RBV_VatWynik                    SMALLINT       CONSTRAINT DF_RBV_VatWynik DEFAULT(0)         , --- SHORT,NAME('RBV_VatWynik')
+      RBV_RequestId                   VARCHAR (   50)   CONSTRAINT DF_RBV_RequestId DEFAULT('')         , --- CSTRING(51),NAME('RBV_RequestId')
+      RBV_DataWeryfikacji             INTEGER        CONSTRAINT DF_RBV_DataWeryfikacji DEFAULT(0)         , --- LONG,NAME('RBV_DataWeryfikacji')
+      CONSTRAINT RBV_Primary PRIMARY KEY
+        (
+                          RBV_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Raporty" hidden="False">
+ALTER TABLE CDN.Raporty ADD KRP_DataKsiegowania             INTEGER        CONSTRAINT DF_KRP_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Rejestry" hidden="False">
+ALTER TABLE CDN.Rejestry ADD KAR_ImpKAOKontrahentPrzychod    INTEGER        CONSTRAINT DF_KAR_ImpKAOKontrahentPrzychod DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Rejestry ADD KAR_ImpKAOKontrahentRozchod     INTEGER        CONSTRAINT DF_KAR_ImpKAOKontrahentRozchod DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Rejestry ADD KAR_ImpKAOInnePrzychod          INTEGER        CONSTRAINT DF_KAR_ImpKAOInnePrzychod DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Rejestry ADD KAR_ImpKAOInneRozchod           INTEGER        CONSTRAINT DF_KAR_ImpKAOInneRozchod DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Rejestry ADD KAR_ImpKAOLokatyPrzychod        INTEGER        CONSTRAINT DF_KAR_ImpKAOLokatyPrzychod DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Rejestry ADD KAR_ImpKAOLokatyRozchod         INTEGER        CONSTRAINT DF_KAR_ImpKAOLokatyRozchod DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Rejestry ADD KAR_ImpKAOSplitPPrzychod        INTEGER        CONSTRAINT DF_KAR_ImpKAOSplitPPrzychod DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Rejestry ADD KAR_ImpKAOSplitPRozchod         INTEGER        CONSTRAINT DF_KAR_ImpKAOSplitPRozchod DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Rejestry ADD KAR_ImpKAOPracownikRozchod      INTEGER        CONSTRAINT DF_KAR_ImpKAOPracownikRozchod DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Rejestry ADD KAR_IdGrupyRejestru             INTEGER        CONSTRAINT DF_KAR_IdGrupyRejestru DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Rejestry ADD KAR_IdKlientaWBanku             VARCHAR (  100)   CONSTRAINT DF_KAR_IdKlientaWBanku DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.RozniceKursowe" hidden="False">
+ALTER TABLE CDN.RozniceKursowe ADD RKN_DataKsiegowania             INTEGER        CONSTRAINT DF_RKN_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.RptFormaty2" hidden="False">
+ALTER TABLE CDN.RptFormaty2 ADD RpF2_DomyslnyMES                TINYINT        CONSTRAINT DF_RpF2_DomyslnyMES DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.RptFormatyU" hidden="False">
+ALTER TABLE CDN.RptFormatyU ADD RpFU_domyslnyMES                TINYINT        CONSTRAINT DF_RpFU_domyslnyMES DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SFNag" hidden="False">
+CREATE TABLE CDN.SFNag
+  (
+      SFN_Id                          INTEGER        IDENTITY , --- LONG,NAME('SFN_Id')
+      SFN_NazwaFirmy                  VARCHAR ( 3500)   CONSTRAINT DF_SFN_NazwaFirmy DEFAULT('')         , --- CSTRING(3501),NAME('SFN_NazwaFirmy')
+      SFN_DataDo                      INTEGER        CONSTRAINT DF_SFN_DataDo DEFAULT(0)         , --- LONG,NAME('SFN_DataDo')
+      SFN_DataSporzadzenia            INTEGER        CONSTRAINT DF_SFN_DataSporzadzenia DEFAULT(0)         , --- LONG,NAME('SFN_DataSporzadzenia')
+      SFN_Typ                         INTEGER        CONSTRAINT DF_SFN_Typ DEFAULT(0)         , --- LONG,NAME('SFN_Typ')
+      SFN_WersjaSchemy                VARCHAR (   10)   CONSTRAINT DF_SFN_WersjaSchemy DEFAULT('')         , --- CSTRING(11),NAME('SFN_WersjaSchemy')
+      SFN_Status                      INTEGER        CONSTRAINT DF_SFN_Status DEFAULT(0)         , --- LONG,NAME('SFN_Status')
+      SFN_Aktywny                     INTEGER        CONSTRAINT DF_SFN_Aktywny DEFAULT(0)         , --- LONG,NAME('SFN_Aktywny')
+      SFN_NrReferencyjny              VARCHAR (   40)   CONSTRAINT DF_SFN_NrReferencyjny DEFAULT('')         , --- CSTRING(41),NAME('SFN_NrReferencyjny')
+      SFN_UPOKod                      VARCHAR (    3)   CONSTRAINT DF_SFN_UPOKod DEFAULT('')         , --- CSTRING(4),NAME('SFN_UPOKod')
+      SFN_UPOOpis                     VARCHAR (  120)   CONSTRAINT DF_SFN_UPOOpis DEFAULT('')         , --- CSTRING(121),NAME('SFN_UPOOpis')
+      SFN_UPOXml                      VARBINARY(MAX)     , --- CSTRING(20),NAME('SFN_UPOXml')
+      SFN_PlikXml                     VARBINARY(MAX)     , --- CSTRING(20),NAME('SFN_PlikXml')
+      SFN_PlikKonfigXml               VARBINARY(MAX)     , --- CSTRING(20),NAME('SFN_PlikKonfigXml')
+      CONSTRAINT SFN_Primary PRIMARY KEY
+        (
+                          SFN_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SFPodpisy" hidden="False">
+CREATE TABLE CDN.SFPodpisy
+  (
+      SFP_Id                          INTEGER        IDENTITY , --- LONG,NAME('SFP_Id')
+      SFP_SFNId                       INTEGER        CONSTRAINT DF_SFP_SFNId DEFAULT(0)         , --- LONG,NAME('SFP_SFNId')
+      SFP_Nazwa                       VARCHAR (  128)   CONSTRAINT DF_SFP_Nazwa DEFAULT('')         , --- CSTRING(129),NAME('SFP_Nazwa')
+      SFP_Podpis                      TINYINT        CONSTRAINT DF_SFP_Podpis DEFAULT(0)         , --- BYTE,NAME('SFP_Podpis')
+      SFP_Odmowa                      TINYINT        CONSTRAINT DF_SFP_Odmowa DEFAULT(0)         , --- BYTE,NAME('SFP_Odmowa')
+      SFP_Odcisk                      VARCHAR (  120)   CONSTRAINT DF_SFP_Odcisk DEFAULT('')         , --- CSTRING(121),NAME('SFP_Odcisk')
+      CONSTRAINT SFP_Primary PRIMARY KEY
+        (
+                          SFP_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SFSlownikiElem" hidden="False">
+CREATE TABLE CDN.SFSlownikiElem
+  (
+      SFSE_ID                         INTEGER        IDENTITY , --- LONG
+      SFSE_SFSNID                     INTEGER        CONSTRAINT DF_SFSE_SFSNID DEFAULT(0)         , --- LONG
+      SFSE_ParID                      INTEGER        CONSTRAINT DF_SFSE_ParID DEFAULT(0)         , --- LONG
+      SFSE_Kod                        VARCHAR (   30)   CONSTRAINT DF_SFSE_Kod DEFAULT('')         , --- CSTRING(31)
+      SFSE_Nazwa                      VARCHAR (  200)   CONSTRAINT DF_SFSE_Nazwa DEFAULT('')         , --- CSTRING(201)
+      SFSE_GuidID                     VARCHAR (   40)   CONSTRAINT DF_SFSE_GuidID DEFAULT('')         , --- CSTRING(41)
+      CONSTRAINT SFSE_Primary PRIMARY KEY
+        (
+                          SFSE_ID
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SFSlownikiNag" hidden="False">
+CREATE TABLE CDN.SFSlownikiNag
+  (
+      SFSN_ID                         INTEGER        IDENTITY , --- LONG
+      SFSN_KodSystemowy               VARCHAR (   20)   CONSTRAINT DF_SFSN_KodSystemowy DEFAULT('')         , --- CSTRING(21)
+      SFSN_WersjaSchemy               VARCHAR (   10)   CONSTRAINT DF_SFSN_WersjaSchemy DEFAULT('')         , --- CSTRING(11)
+      SFSN_WersjaSlownika             SMALLINT       CONSTRAINT DF_SFSN_WersjaSlownika DEFAULT(0)         , --- SHORT
+      SFSN_Nazwa                      VARCHAR (  100)   CONSTRAINT DF_SFSN_Nazwa DEFAULT('')         , --- CSTRING(101)
+      SFSN_Jednostka                  TINYINT        CONSTRAINT DF_SFSN_Jednostka DEFAULT(0)         , --- BYTE
+      SFSN_Zestawienie                TINYINT        CONSTRAINT DF_SFSN_Zestawienie DEFAULT(0)         , --- BYTE
+      CONSTRAINT SFSN_Primary PRIMARY KEY
+        (
+                          SFSN_ID
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SFZalWlasne" hidden="False">
+CREATE TABLE CDN.SFZalWlasne
+  (
+      SFZW_Id                         INTEGER        IDENTITY , --- LONG,NAME('SFZW_Id')
+      SFZW_SFNId                      INTEGER        CONSTRAINT DF_SFZW_SFNId DEFAULT(0)         , --- LONG,NAME('SFZW_SFNId')
+      SFZW_Nazwa                      VARCHAR (  400)   CONSTRAINT DF_SFZW_Nazwa DEFAULT('')         , --- CSTRING(401),NAME('SFZW_Nazwa')
+      SFZW_Modyfikuje                 VARCHAR (   50)   CONSTRAINT DF_SFZW_Modyfikuje DEFAULT('')         , --- CSTRING(51),NAME('SFZW_Modyfikuje')
+      SFZW_Opis                       VARCHAR (  500)   CONSTRAINT DF_SFZW_Opis DEFAULT('')         , --- CSTRING(501),NAME('SFZW_Opis')
+      SFZW_Plik                       VARBINARY(MAX)     , --- CSTRING(20),NAME('SFZW_Plik')
+      CONSTRAINT SFZW_Primary PRIMARY KEY
+        (
+                          SFZW_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SFZalaczniki" hidden="False">
+CREATE TABLE CDN.SFZalaczniki
+  (
+      SFZ_Id                          INTEGER        IDENTITY , --- LONG,NAME('SFZ_Id')
+      SFZ_SFNId                       INTEGER        CONSTRAINT DF_SFZ_SFNId DEFAULT(0)         , --- LONG,NAME('SFZ_SFNId')
+      SFZ_Nazwa                       VARCHAR (  400)   CONSTRAINT DF_SFZ_Nazwa DEFAULT('')         , --- CSTRING(401),NAME('SFZ_Nazwa')
+      SFZ_Typ                         INTEGER        CONSTRAINT DF_SFZ_Typ DEFAULT(0)         , --- LONG,NAME('SFZ_Typ')
+      SFZ_Plik                        VARBINARY(MAX)     , --- CSTRING(20),NAME('SFZ_Plik')
+      CONSTRAINT SFZ_Primary PRIMARY KEY
+        (
+                          SFZ_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SISDefinicjeKonta" hidden="False">
+CREATE TABLE CDN.SISDefinicjeKonta
+  (
+      SISK_SISNumer                   INTEGER        CONSTRAINT DF_SISK_SISNumer DEFAULT(0)         , --- LONG
+      SISK_Lp                         SMALLINT       CONSTRAINT DF_SISK_Lp DEFAULT(0)         , --- SHORT
+      SISK_Konto                      VARCHAR (   30)   CONSTRAINT DF_SISK_Konto DEFAULT('')         , --- CSTRING(31)
+      SISK_KlasaKonta                 VARCHAR (   30)   CONSTRAINT DF_SISK_KlasaKonta DEFAULT('')         , --- CSTRING(31)
+      CONSTRAINT SISK_Primary PRIMARY KEY
+        (
+                          SISK_SISNumer                 ,
+                          SISK_Lp
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.SadNag" hidden="False">
+ALTER TABLE CDN.SadNag ADD SaN_DataKsiegowania             INTEGER        CONSTRAINT DF_SaN_DataKsiegowania DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.SadNag ADD SaN_ProceduraUproszcz           TINYINT        CONSTRAINT DF_SaN_ProceduraUproszcz DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.SchematRodzajDaty" hidden="False">
+ALTER TABLE CDN.SchematRodzajDaty ADD SCR_WarunekTyp                  TINYINT        CONSTRAINT DF_SCR_WarunekTyp DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Sent" hidden="False">
+ALTER TABLE CDN.Sent ADD SnT_Wojewodztwo                 VARCHAR (   30)   CONSTRAINT DF_SnT_Wojewodztwo DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.Sent ADD SnT_DlugoscGeo                  VARCHAR (   30)   CONSTRAINT DF_SnT_DlugoscGeo DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.Sent ADD SnT_SzerokoscGeo                VARCHAR (   30)   CONSTRAINT DF_SnT_SzerokoscGeo DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.Sent ADD SnT_StawkaVat                   DECIMAL ( 5,2) CONSTRAINT DF_SnT_StawkaVat DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Sent ADD SnT_FlagaVat                    TINYINT        CONSTRAINT DF_SnT_FlagaVat DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.Sent ADD SnT_RodzajTransportu            TINYINT        CONSTRAINT DF_SnT_RodzajTransportu DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SentElem" hidden="False">
+CREATE TABLE CDN.SentElem
+  (
+      SnE_Id                          INTEGER        IDENTITY , --- LONG
+      SnE_SnTId                       INTEGER        CONSTRAINT DF_SnE_SnTId DEFAULT(0)         , --- LONG
+      SnE_Pozycja                     SMALLINT       CONSTRAINT DF_SnE_Pozycja DEFAULT(0)         , --- SHORT
+      SnE_KCNId                       INTEGER        CONSTRAINT DF_SnE_KCNId DEFAULT(0)         , --- LONG
+      SnE_Ilosc                       DECIMAL (15,4) CONSTRAINT DF_SnE_Ilosc DEFAULT(0)         , --- DECIMAL(15,4)
+      SnE_JM                          VARCHAR (    9)   CONSTRAINT DF_SnE_JM DEFAULT('')         , --- CSTRING(10)
+      SnE_StawkaVat                   DECIMAL ( 5,2) CONSTRAINT DF_SnE_StawkaVat DEFAULT(0)         , --- DECIMAL(5,2)
+      SnE_FlagaVat                    TINYINT        CONSTRAINT DF_SnE_FlagaVat DEFAULT(0)         , --- BYTE
+      SnE_KodOdpadu                   VARCHAR (    6)   CONSTRAINT DF_SnE_KodOdpadu DEFAULT('')         , --- CSTRING(7)
+      CONSTRAINT SnE_Primary PRIMARY KEY
+        (
+                          SnE_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SlwDefPowiazaniaKont" hidden="False">
+CREATE TABLE CDN.SlwDefPowiazaniaKont
+  (
+      SDPK_Id                         INTEGER        IDENTITY , --- LONG,NAME('SDPK_Id')
+      SDPK_TypKonta                   TINYINT        CONSTRAINT DF_SDPK_TypKonta DEFAULT(0)         , --- BYTE,NAME('SDPK_TypKonta')
+      SDPK_SlwId                      INTEGER        CONSTRAINT DF_SDPK_SlwId DEFAULT(0)         , --- LONG,NAME('SDPK_SlwId')
+      CONSTRAINT SDPK_Primary PRIMARY KEY
+        (
+                          SDPK_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SlwFunkcjeKonta" hidden="False">
+CREATE TABLE CDN.SlwFunkcjeKonta
+  (
+      SFK_Id                          INTEGER        IDENTITY , --- LONG,NAME('SFK_Id')
+      SFK_Operator                    TINYINT        CONSTRAINT DF_SFK_Operator DEFAULT(0)         , --- BYTE,NAME('SFK_Operator')
+      SFK_FunkcjaKonta                VARCHAR (    4)   CONSTRAINT DF_SFK_FunkcjaKonta DEFAULT('')         , --- CSTRING(5),NAME('SFK_FunkcjaKonta')
+      SFK_Znak                        TINYINT        CONSTRAINT DF_SFK_Znak DEFAULT(0)         , --- BYTE,NAME('SFK_Znak')
+      SFK_SDPKId                      INTEGER        CONSTRAINT DF_SFK_SDPKId DEFAULT(0)         , --- LONG
+      CONSTRAINT SFK_Primary PRIMARY KEY
+        (
+                          SFK_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.SrtHistNag" hidden="False">
+ALTER TABLE CDN.SrtHistNag ADD SHN_DataKsiegowania             INTEGER        CONSTRAINT DF_SHN_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SrwObiektyReceptury" hidden="False">
+CREATE TABLE CDN.SrwObiektyReceptury
+  (
+      SOR_Id                          INTEGER        IDENTITY , --- LONG,NAME('SOR_Id')
+      SOR_SrcId                       INTEGER        CONSTRAINT DF_SOR_SrcId DEFAULT(0)         , --- LONG,NAME('SOR_SrcId')
+      SOR_SreId                       INTEGER        CONSTRAINT DF_SOR_SreId DEFAULT(0)         , --- LONG,NAME('SOR_SreId')
+      SOR_ObiTyp                      SMALLINT       CONSTRAINT DF_SOR_ObiTyp DEFAULT(0)         , --- SHORT,NAME('SOR_ObiTyp')
+      SOR_ObiNumer                    INTEGER        CONSTRAINT DF_SOR_ObiNumer DEFAULT(0)         , --- LONG,NAME('SOR_ObiNumer')
+      CONSTRAINT SOR_Primary PRIMARY KEY
+        (
+                          SOR_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SrwReceptury" hidden="False">
+CREATE TABLE CDN.SrwReceptury
+  (
+      SRE_Id                          INTEGER        IDENTITY , --- LONG,NAME('SRE_Id')
+      SRE_ObiTyp                      INTEGER        CONSTRAINT DF_SRE_ObiTyp DEFAULT(0)         , --- LONG,NAME('SRE_ObiTyp')
+      SRE_ObiNumer                    INTEGER        CONSTRAINT DF_SRE_ObiNumer DEFAULT(0)         , --- LONG,NAME('SRE_ObiNumer')
+      SRE_Kod                         VARCHAR (  255)   CONSTRAINT DF_SRE_Kod DEFAULT('')         , --- CSTRING(256),NAME('SRE_Kod')
+      SRE_Nazwa                       VARCHAR (  255)   CONSTRAINT DF_SRE_Nazwa DEFAULT('')         , --- CSTRING(256),NAME('SRE_Nazwa')
+      SRE_OPDNumer                    INTEGER        CONSTRAINT DF_SRE_OPDNumer DEFAULT(0)         , --- LONG,NAME('SRE_OPDNumer')
+      SRE_DataDodania                 INTEGER        CONSTRAINT DF_SRE_DataDodania DEFAULT(0)         , --- LONG,NAME('SRE_DataDodania')
+      SRE_OPMNumer                    INTEGER        CONSTRAINT DF_SRE_OPMNumer DEFAULT(0)         , --- LONG,NAME('SRE_OPMNumer')
+      SRE_DataModyfikacji             INTEGER        CONSTRAINT DF_SRE_DataModyfikacji DEFAULT(0)         , --- LONG,NAME('SRE_DataModyfikacji')
+      SRE_OPANumer                    INTEGER        CONSTRAINT DF_SRE_OPANumer DEFAULT(0)         , --- LONG,NAME('SRE_OPANumer')
+      SRE_DataArchiwizacji            INTEGER        CONSTRAINT DF_SRE_DataArchiwizacji DEFAULT(0)         , --- LONG,NAME('SRE_DataArchiwizacji')
+      SRE_Domyslna                    TINYINT        CONSTRAINT DF_SRE_Domyslna DEFAULT(0)         , --- BYTE,NAME('SRE_Domyslna')
+      SRE_Archiwalna                  TINYINT        CONSTRAINT DF_SRE_Archiwalna DEFAULT(0)         , --- BYTE,NAME('SRE_Archiwalna')
+      CONSTRAINT SRE_Primary PRIMARY KEY
+        (
+                          SRE_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SrwRecepturyCzynnosci" hidden="False">
+CREATE TABLE CDN.SrwRecepturyCzynnosci
+  (
+      SRC_Id                          INTEGER        IDENTITY , --- LONG,NAME('SRC_Id')
+      SRC_SREId                       INTEGER        CONSTRAINT DF_SRC_SREId DEFAULT(0)         , --- LONG,NAME('SRC_SREId')
+      SRC_Lp                          SMALLINT       CONSTRAINT DF_SRC_Lp DEFAULT(0)         , --- SHORT,NAME('SRC_Lp')
+      SRC_TwrTyp                      SMALLINT       CONSTRAINT DF_SRC_TwrTyp DEFAULT(0)         , --- SHORT,NAME('SRC_TwrTyp')
+      SRC_TwrNumer                    INTEGER        CONSTRAINT DF_SRC_TwrNumer DEFAULT(0)         , --- LONG,NAME('SRC_TwrNumer')
+      SRC_TwrNazwa                    VARCHAR (  255)   CONSTRAINT DF_SRC_TwrNazwa DEFAULT('')         , --- CSTRING(256),NAME('SRC_TwrNazwa')
+      SRC_GenerujZadaniaWTerminarzu   TINYINT        CONSTRAINT DF_SRC_GenerujZadaniaWTerminarzu DEFAULT(0)         , --- BYTE,NAME('SRC_GenerujZadaniaWTerminarzu')
+      SRC_SprzedazKoszt               TINYINT        CONSTRAINT DF_SRC_SprzedazKoszt DEFAULT(0)         , --- BYTE,NAME('SRC_SprzedazKoszt')
+      SRC_Opis                        VARCHAR ( 2048)   CONSTRAINT DF_SRC_Opis DEFAULT('')         , --- CSTRING(2049),NAME('SRC_Opis')
+      SRC_CzasWykonania               INTEGER        CONSTRAINT DF_SRC_CzasWykonania DEFAULT(0)         , --- LONG,NAME('SRC_CzasWykonania')
+      SRC_CzasWykonaniaJedn           TINYINT        CONSTRAINT DF_SRC_CzasWykonaniaJedn DEFAULT(0)         , --- BYTE,NAME('SRC_CzasWykonaniaJedn')
+      SRC_Ilosc                       DECIMAL (11,4) CONSTRAINT DF_SRC_Ilosc DEFAULT(0)         , --- DECIMAL(11,4),NAME('SRC_Ilosc')
+      CONSTRAINT SRC_Primary PRIMARY KEY
+        (
+                          SRC_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SrwRecepturySkladniki" hidden="False">
+CREATE TABLE CDN.SrwRecepturySkladniki
+  (
+      SRS_Id                          INTEGER        IDENTITY , --- LONG,NAME('SRS_Id')
+      SRS_SrcId                       INTEGER        CONSTRAINT DF_SRS_SrcId DEFAULT(0)         , --- LONG,NAME('SRS_SrcId')
+      SRS_SreId                       INTEGER        CONSTRAINT DF_SRS_SreId DEFAULT(0)         , --- LONG,NAME('SRS_SreId')
+      SRS_TwrTyp                      SMALLINT       CONSTRAINT DF_SRS_TwrTyp DEFAULT(0)         , --- SHORT,NAME('SRS_TwrTyp')
+      SRS_TwrNumer                    INTEGER        CONSTRAINT DF_SRS_TwrNumer DEFAULT(0)         , --- LONG,NAME('SRS_TwrNumer')
+      SRS_TwrNazwa                    VARCHAR (  255)   CONSTRAINT DF_SRS_TwrNazwa DEFAULT('')         , --- CSTRING(256),NAME('SRS_TwrNazwa')
+      SRS_SprzedazKoszt               TINYINT        CONSTRAINT DF_SRS_SprzedazKoszt DEFAULT(0)         , --- BYTE,NAME('SRS_SprzedazKoszt')
+      SRS_Opis                        VARCHAR ( 2000)   CONSTRAINT DF_SRS_Opis DEFAULT('')         , --- CSTRING(2001),NAME('SRS_Opis')
+      SRS_Ilosc                       DECIMAL (11,4) CONSTRAINT DF_SRS_Ilosc DEFAULT(0)         , --- DECIMAL(11,4),NAME('SRS_Ilosc')
+      SRS_Lp                          SMALLINT       CONSTRAINT DF_SRS_Lp DEFAULT(0)         , --- SHORT,NAME('SRS_Lp')
+      SRS_MagZNumer                   INTEGER        CONSTRAINT DF_SRS_MagZNumer DEFAULT(0)         , --- LONG,NAME('SRS_MagZNumer')
+      CONSTRAINT SRS_Primary PRIMARY KEY
+        (
+                          SRS_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.SrwZlcCzynnosci" hidden="False">
+ALTER TABLE CDN.SrwZlcCzynnosci ADD SZC_SREId                       INTEGER        CONSTRAINT DF_SZC_SREId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.SrwZlcObiekty" hidden="False">
+ALTER TABLE CDN.SrwZlcObiekty ADD SZO_SREId                       INTEGER        CONSTRAINT DF_SZO_SREId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.SrwZlcSkladniki" hidden="False">
+ALTER TABLE CDN.SrwZlcSkladniki ADD SZS_SREId                       INTEGER        CONSTRAINT DF_SZS_SREId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.SrwZlcUrz" hidden="False">
+ALTER TABLE CDN.SrwZlcUrz ADD SZU_SREId                       INTEGER        CONSTRAINT DF_SZU_SREId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.StaKarty" hidden="False">
+ALTER TABLE CDN.StaKarty ADD Sta_DostepDoWzorcowAnalitPodrz  TINYINT        CONSTRAINT DF_Sta_DostepDoWzorcowAnalitPodrz DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_PrzerywanieSesji            TINYINT        CONSTRAINT DF_Sta_PrzerywanieSesji DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_MetodaKasowa                TINYINT        CONSTRAINT DF_Sta_MetodaKasowa DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_ParametrWgRozliczenia       TINYINT        CONSTRAINT DF_Sta_ParametrWgRozliczenia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_KorektaDanych               TINYINT        CONSTRAINT DF_Sta_KorektaDanych DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_EdycjaDatySpr               TINYINT        CONSTRAINT DF_Sta_EdycjaDatySpr DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_ModDatyKsiegowania          TINYINT        CONSTRAINT DF_Sta_ModDatyKsiegowania DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_DoczytujRekordy             TINYINT        CONSTRAINT DF_Sta_DoczytujRekordy DEFAULT(1) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_Tlumaczenie                 TINYINT        CONSTRAINT DF_Sta_Tlumaczenie DEFAULT(1) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_EsprawozdaniaFinansowe      TINYINT        CONSTRAINT DF_Sta_EsprawozdaniaFinansowe DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_EdycjaNrObcego              TINYINT        CONSTRAINT DF_Sta_EdycjaNrObcego DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSKonfiguracja             TINYINT        CONSTRAINT DF_Sta_POSKonfiguracja DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSKonfInterfejs            TINYINT        CONSTRAINT DF_Sta_POSKonfInterfejs DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSReczneOtwarcieSzuflady   TINYINT        CONSTRAINT DF_Sta_POSReczneOtwarcieSzuflady DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSDrukRaportFiskalnyDob    TINYINT        CONSTRAINT DF_Sta_POSDrukRaportFiskalnyDob DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSDrukRaportOkresowy       TINYINT        CONSTRAINT DF_Sta_POSDrukRaportOkresowy DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSDodEdycjaKnt             TINYINT        CONSTRAINT DF_Sta_POSDodEdycjaKnt DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSEdycjaDokOpe             TINYINT        CONSTRAINT DF_Sta_POSEdycjaDokOpe DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSOtwarcieZmianyZRoznicaSK  TINYINT        CONSTRAINT DF_Sta_POSOtwarcieZmianyZRoznicaSK DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSZamkniecieZmianyBezWyplaty  TINYINT        CONSTRAINT DF_Sta_POSZamkniecieZmianyBezWyplaty DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSPrzekroczenieLimituSK    TINYINT        CONSTRAINT DF_Sta_POSPrzekroczenieLimituSK DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_POSOznaczDokZafiskalizowane  TINYINT        CONSTRAINT DF_Sta_POSOznaczDokZafiskalizowane DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.StaKarty ADD Sta_EdycjaPCN                   TINYINT        CONSTRAINT DF_Sta_EdycjaPCN DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TraElem" hidden="False">
+ALTER TABLE CDN.TraElem ADD TrE_OperatorPOS                 INTEGER        CONSTRAINT DF_TrE_OperatorPOS DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraElem ADD TrE_SentElemId                  INTEGER        CONSTRAINT DF_TrE_SentElemId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli TraJPK" hidden="False">
+CREATE TABLE CDN.TraJPK
+  (
+      TrJ_TrNTyp                      SMALLINT       CONSTRAINT DF_TrJ_TrNTyp DEFAULT(0)         , --- SHORT
+      TrJ_TrNFirma                    INTEGER        CONSTRAINT DF_TrJ_TrNFirma DEFAULT(0)         , --- LONG
+      TrJ_TrNNumer                    INTEGER        CONSTRAINT DF_TrJ_TrNNumer DEFAULT(0)         , --- LONG
+      TrJ_TrNLp                       SMALLINT       CONSTRAINT DF_TrJ_TrNLp DEFAULT(0)         , --- SHORT
+      TrJ_Wartosc                     VARCHAR (   50)   CONSTRAINT DF_TrJ_Wartosc DEFAULT('')         , --- CSTRING(51)
+      CONSTRAINT TrJ_Primary PRIMARY KEY
+        (
+                          TrJ_TrNNumer                  ,
+                          TrJ_TrNLp
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TraNag" hidden="False">
+ALTER TABLE CDN.TraNag ADD TrN_DataKsiegowania             INTEGER        CONSTRAINT DF_TrN_DataKsiegowania DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_MetodaKasowa                TINYINT        CONSTRAINT DF_TrN_MetodaKasowa DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_KorektaDanych               TINYINT        CONSTRAINT DF_TrN_KorektaDanych DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_KKGNumer                    INTEGER        CONSTRAINT DF_TrN_KKGNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_KKDNumer                    INTEGER        CONSTRAINT DF_TrN_KKDNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_KKPNumer                    INTEGER        CONSTRAINT DF_TrN_KKPNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_KAGNumer                    INTEGER        CONSTRAINT DF_TrN_KAGNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_KADNumer                    INTEGER        CONSTRAINT DF_TrN_KADNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_KAPNumer                    INTEGER        CONSTRAINT DF_TrN_KAPNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_ProceduraUproszcz           TINYINT        CONSTRAINT DF_TrN_ProceduraUproszcz DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_OCR                         TINYINT        CONSTRAINT DF_TrN_OCR DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_SposobRozbiciaKosztow       TINYINT        CONSTRAINT DF_TrN_SposobRozbiciaKosztow DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_GUID                        VARCHAR (   40)   CONSTRAINT DF_TrN_GUID DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_OperatorPOS                 INTEGER        CONSTRAINT DF_TrN_OperatorPOS DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_MPP                         TINYINT        CONSTRAINT DF_TrN_MPP DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_JestLimitCelowy             TINYINT        CONSTRAINT DF_TrN_JestLimitCelowy DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_DokTypJPK                   VARCHAR (   50)   CONSTRAINT DF_TrN_DokTypJPK DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TraPlat" hidden="False">
+ALTER TABLE CDN.TraPlat ADD TrP_RachBank                    INTEGER        CONSTRAINT DF_TrP_RachBank DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraPlat ADD TrP_ZrdTyp                      SMALLINT       CONSTRAINT DF_TrP_ZrdTyp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraPlat ADD TrP_ZrdFirma                    INTEGER        CONSTRAINT DF_TrP_ZrdFirma DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraPlat ADD TrP_ZrdNumer                    INTEGER        CONSTRAINT DF_TrP_ZrdNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraPlat ADD TrP_ZrdLp                       SMALLINT       CONSTRAINT DF_TrP_ZrdLp DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraPlat ADD TrP_KorektaDanych               TINYINT        CONSTRAINT DF_TrP_KorektaDanych DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli TraSVat" hidden="False">
+CREATE TABLE CDN.TraSVat
+  (
+      TSV_GIDTyp                      SMALLINT       CONSTRAINT DF_TSV_GIDTyp DEFAULT(0)         , --- SHORT
+      TSV_GIDFirma                    INTEGER        CONSTRAINT DF_TSV_GIDFirma DEFAULT(0)         , --- LONG
+      TSV_GIDNumer                    INTEGER        CONSTRAINT DF_TSV_GIDNumer DEFAULT(0)         , --- LONG
+      TSV_GIDLp                       SMALLINT       CONSTRAINT DF_TSV_GIDLp DEFAULT(0)         , --- SHORT
+      TSV_SubGIDlp                    SMALLINT       CONSTRAINT DF_TSV_SubGIDlp DEFAULT(0)         , --- SHORT
+      TSV_NettoR                      DECIMAL (15,2) CONSTRAINT DF_TSV_NettoR DEFAULT(0)         , --- DECIMAL(15,2)
+      TSV_NettoP                      DECIMAL (15,2) CONSTRAINT DF_TSV_NettoP DEFAULT(0)         , --- DECIMAL(15,2)
+      TSV_VatR                        DECIMAL (15,2) CONSTRAINT DF_TSV_VatR DEFAULT(0)         , --- DECIMAL(15,2)
+      TSV_VatP                        DECIMAL (15,2) CONSTRAINT DF_TSV_VatP DEFAULT(0)         , --- DECIMAL(15,2)
+      TSV_DeklRok                     SMALLINT       NOT NULL CONSTRAINT DF_TSV_DeklRok DEFAULT(0)         , --- SHORT
+      TSV_DeklMiesiac                 SMALLINT       NOT NULL CONSTRAINT DF_TSV_DeklMiesiac DEFAULT(0)         , --- SHORT
+      TSV_RodzajZakupu                TINYINT        NOT NULL CONSTRAINT DF_TSV_RodzajZakupu DEFAULT(0)         , --- BYTE
+      TSV_OdliczeniaVat               TINYINT        NOT NULL CONSTRAINT DF_TSV_OdliczeniaVat DEFAULT(0)         , --- BYTE
+      TSV_Rozliczac                   TINYINT        NOT NULL CONSTRAINT DF_TSV_Rozliczac DEFAULT(0)         , --- BYTE
+      TSV_RozliczacP                  TINYINT        CONSTRAINT DF_TSV_RozliczacP DEFAULT(0)         , --- BYTE
+      TSV_Opis                        VARCHAR (   40)   CONSTRAINT DF_TSV_Opis DEFAULT('')         , --- CSTRING(41)
+      TSV_KatDatyOP                   TINYINT        CONSTRAINT DF_TSV_KatDatyOP DEFAULT(0)         , --- BYTE
+      TSV_DataOP                      INTEGER        CONSTRAINT DF_TSV_DataOP DEFAULT(0)         , --- LONG
+      TSV_DataPO                      INTEGER        CONSTRAINT DF_TSV_DataPO DEFAULT(0)         , --- LONG
+      TSV_MetodaKasowa                TINYINT        CONSTRAINT DF_TSV_MetodaKasowa DEFAULT(0)         , --- BYTE
+      TSV_R2ID                        INTEGER        CONSTRAINT DF_TSV_R2ID DEFAULT(0)         , --- LONG
+      CONSTRAINT TSV_Primary PRIMARY KEY
+        (
+                          TSV_GIDTyp                    ,
+                          TSV_GIDNumer                  ,
+                          TSV_GIDLp                     ,
+                          TSV_SubGIDlp
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TraVat" hidden="False">
+ALTER TABLE CDN.TraVat ADD TrV_KntNumer                    INTEGER        CONSTRAINT DF_TrV_KntNumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraVat ADD TrV_KnANumer                    INTEGER        CONSTRAINT DF_TrV_KnANumer DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraVat ADD TrV_KorektaDanych               TINYINT        CONSTRAINT DF_TrV_KorektaDanych DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TwrJm" hidden="False">
+ALTER TABLE CDN.TwrJm ADD TwJ_Id                          INTEGER        IDENTITY;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TwrKarty" hidden="False">
+ALTER TABLE CDN.TwrKarty ADD Twr_KodOdpadu                   VARCHAR (    6)   CONSTRAINT DF_Twr_KodOdpadu DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.TwrKarty ADD Twr_MPP                         TINYINT        CONSTRAINT DF_Twr_MPP DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TwrKarty ADD Twr_GrupaJpk                    VARCHAR (   50)   CONSTRAINT DF_Twr_GrupaJpk DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TwrWzorce" hidden="False">
+ALTER TABLE CDN.TwrWzorce ADD TwW_KodOdpadu                   VARCHAR (    6)   CONSTRAINT DF_TwW_KodOdpadu DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.TwrWzorce ADD TwW_MPP                         TINYINT        CONSTRAINT DF_TwW_MPP DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TwrWzorce ADD TwW_DodEleZez                   TINYINT        CONSTRAINT DF_TwW_DodEleZez DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TwrWzorce ADD TwW_GrupaJpk                    VARCHAR (   50)   CONSTRAINT DF_TwW_GrupaJpk DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.UpoNag" hidden="False">
+ALTER TABLE CDN.UpoNag ADD UPN_DataKsiegowania             INTEGER        CONSTRAINT DF_UPN_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Urzedy" hidden="False">
+ALTER TABLE CDN.Urzedy ADD URZ_Kraj                        VARCHAR (    2)   CONSTRAINT DF_URZ_Kraj DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Zapisy" hidden="False">
+ALTER TABLE CDN.Zapisy ADD KAZ_BankKodOperacji             VARCHAR (   20)   CONSTRAINT DF_KAZ_BankKodOperacji DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.Zapisy ADD KAZ_GUID                        VARCHAR (   40)   CONSTRAINT DF_KAZ_GUID DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ZestKSDef" hidden="False">
+IF OBJECT_ID('CDN.DF_ZKD_Wartosc','D') IS NOT NULL ALTER TABLE CDN.ZestKSDef DROP CONSTRAINT DF_ZKD_Wartosc;
+ALTER TABLE CDN.ZestKSDef ALTER COLUMN ZKD_Wartosc VARCHAR(MAX)     ;
+ALTER TABLE CDN.ZestKSDef ADD CONSTRAINT DF_ZKD_Wartosc  DEFAULT('') FOR ZKD_Wartosc WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ZestKSDefKonta" hidden="False">
+CREATE TABLE CDN.ZestKSDefKonta
+  (
+      ZKDK_GIDNumer                   INTEGER        CONSTRAINT DF_ZKDK_GIDNumer DEFAULT(0)         , --- LONG
+      ZKDK_GIDLp                      SMALLINT       CONSTRAINT DF_ZKDK_GIDLp DEFAULT(0)         , --- SHORT
+      ZKDK_SubGIDLp                   SMALLINT       CONSTRAINT DF_ZKDK_SubGIDLp DEFAULT(0)         , --- SHORT
+      ZKDK_ZKDKLp                     SMALLINT       CONSTRAINT DF_ZKDK_ZKDKLp DEFAULT(0)         , --- SHORT
+      ZKDK_Konto                      VARCHAR (   30)   CONSTRAINT DF_ZKDK_Konto DEFAULT('')         , --- CSTRING(31)
+      ZKDK_KlasaKonta                 VARCHAR (   30)   CONSTRAINT DF_ZKDK_KlasaKonta DEFAULT('')         , --- CSTRING(31)
+      CONSTRAINT ZKDK_Primary PRIMARY KEY
+        (
+                          ZKDK_GIDNumer                 ,
+                          ZKDK_GIDLp                    ,
+                          ZKDK_SubGIDLp                 ,
+                          ZKDK_ZKDKLp
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ZestKSElem" hidden="False">
+ALTER TABLE CDN.ZestKSElem ADD ZKE_SFEID                       INTEGER        CONSTRAINT DF_ZKE_SFEID DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ZestKSElem ADD ZKE_SFPominEksport              TINYINT        CONSTRAINT DF_ZKE_SFPominEksport DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ZestKSNag" hidden="False">
+ALTER TABLE CDN.ZestKSNag ADD ZKN_SFEksport                   TINYINT        CONSTRAINT DF_ZKN_SFEksport DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ZestKSNag ADD ZKN_SFNJednostka                TINYINT        CONSTRAINT DF_ZKN_SFNJednostka DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ZestKSNag ADD ZKN_SFNZestawienie              TINYINT        CONSTRAINT DF_ZKN_SFNZestawienie DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.ZestKSNag ADD ZKN_SFNID                       INTEGER        CONSTRAINT DF_ZKN_SFNID DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Zgody" hidden="False">
+ALTER TABLE CDN.Zgody ADD Zgo_GUID                        VARCHAR (   41)   CONSTRAINT DF_Zgo_GUID DEFAULT(CONVERT(varchar(36), NEWID())) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ZlcNag" hidden="False">
+ALTER TABLE CDN.ZlcNag ADD ZcN_DataKsiegowania             INTEGER        CONSTRAINT DF_ZcN_DataKsiegowania DEFAULT(0) WITH VALUES;
+</scriptdef>
+</ROOT>

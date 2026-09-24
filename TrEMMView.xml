@@ -1,0 +1,946 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:26:43 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="TrEMMView" ident="a9fd5aa3-ffa9-45a1-b159-1106006379b4" prefix="TrEM" filename="'Trans.Cdn\!TrEMMView'" options="NO_SQL"
+  description="-View" longdescription="Ciało transakcji. Czyli elementy opisujące towary, produkty,..." owner="Connect_DSN2" glbx="2" nosql="Yes"
+  aliases="">
+  <columns>
+    <group ident="4db471a4-ab43-40fd-9e49-d396cb12ceb4" clarionname="TrEM:GID" type="GROUP" clariontype="GROUP" description="Identyfikator nagłówka" longdescription="">
+    <column ident="89329428-1f5c-44a9-a3c1-b0b1364c1214" clarionname="TrEM:GIDTyp" sqlname="TrE_GIDTyp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="GIDT yp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="Yes" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="9a7081f9-4066-48eb-9a55-c92d68c7338b" clarionname="TrEM:GIDFirma" sqlname="TrE_GIDFirma" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-13" initial="FirmaID" justification.type="L" justification.indent="0"
+      header="GIDF irma" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="7d77cb8e-19aa-41e4-932a-a3242b0c455f" clarionname="TrEM:GIDNumer" sqlname="TrE_GIDNumer" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="Unikalny numer nagłówka transakcji. Przepisywany z nagłówka" options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="GIDN umer" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="Yes" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="2109ddd3-101c-4f41-82ae-05c36d8e9b4b" clarionname="TrEM:GIDLp" sqlname="TrE_GIDLp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="GIDL p" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="Yes" comments="" isinsqlprimary="Yes"
+     />
+    </group>
+    <column ident="633e71e3-409b-4396-b81b-3ede80124bbe" clarionname="TrEM:Pozycja" sqlname="TrE_Pozycja" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="Pozycja elementu na dokumencie" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Pozycja" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <group ident="f6d0551a-7b19-4e7f-908f-c5e836042a24" clarionname="TrEM:TwrGID" type="GROUP" clariontype="GROUP" description="Identyfikator towaru" longdescription="">
+    <column ident="377be89d-25a4-460f-9105-62557b6e06e6" clarionname="TrEM:TwrTyp" sqlname="TrE_TwrTyp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Twr Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="d8579b16-8940-4ae0-8d57-3733207ec92f" clarionname="TrEM:TwrFirma" sqlname="TrE_TwrFirma" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="Twr Firma" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="571a34b0-3447-478d-bffd-5cc9e1e2f739" clarionname="TrEM:TwrNumer" sqlname="TrE_TwrNumer" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="Numer elementu z karty magazynowej." options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="Twr Numer" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="acc1fb85-8e6f-4d65-8ca4-680f11e88885" clarionname="TrEM:TwrLp" sqlname="TrE_TwrLp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Twr Lp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="0677bd80-2651-4db3-9389-e33e9d9d2afe" clarionname="TrEM:TwrNazwa" sqlname="TrE_TwrNazwa" type="CSTRING" clariontype="CSTRING(256)" sqltype=""
+      size="256" places="0" description="Pełna nazwa elementu" longdescription="Opis słowny towaru (rozwinięcie kodu)" options=""
+      picture="@s255" initial="" justification.type="L" justification.indent="0"
+      header="Twr Nazwa" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="6b7f0a76-54f0-44a5-bf01-367910936a76" clarionname="TrEM:TwrKod" sqlname="TrE_TwrKod" type="CSTRING" clariontype="CSTRING(41)" sqltype=""
+      size="41" places="0" description="Kod towaru" longdescription="" options=""
+      picture="@s40" initial="" justification.type="L" justification.indent="0"
+      header="Twr Kod" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="d83b8cbc-20c7-4497-ae8e-ae022bc604b1" clarionname="TrEM:TypTwr" sqlname="TrE_TypTwr" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Typ towaru" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Typ Twr" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <group ident="8676eb97-4887-43d2-81a5-f008cd7063f4" clarionname="TrEM:KntGID" type="GROUP" clariontype="GROUP" description="Identyfikator kontrahenta" longdescription="">
+    <column ident="cf6af6f6-d514-4bd9-806a-b94764f0c0fb" clarionname="TrEM:KntTyp" sqlname="TrE_KntTyp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Knt Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="84590696-4652-427c-abd5-11f032f1fa8e" clarionname="TrEM:KntFirma" sqlname="TrE_KntFirma" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="Knt Firma" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="7bce1437-16bc-42d1-a28c-6b3eee8172d0" clarionname="TrEM:KntNumer" sqlname="TrE_KntNumer" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="Numer elementu z karty magazynowej." options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="Knt Numer" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="86a43db4-1af6-45d7-8abe-3153f79f437f" clarionname="TrEM:KntLp" sqlname="TrE_KntLp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Knt Lp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <group ident="d9434c18-2ac6-4f33-9011-76b5fb6f67bb" clarionname="TrEM:AkwGID" type="GROUP" clariontype="GROUP" description="Identyfikator akwizytora" longdescription="">
+    <column ident="b3fc1ad2-81d0-4fce-a0cd-935f8cb87013" clarionname="TrEM:AkwTyp" sqlname="TrE_Akwtyp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options="NO_FILTER"
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Akw Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="2baad75a-ce95-443b-b2a5-3de5fc0d95c7" clarionname="TrEM:AkwFirma" sqlname="TrE_AkwFirma" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="Akw Firma" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="2ba4c459-81e5-49f3-8c26-1c4445251f0d" clarionname="TrEM:AkwNumer" sqlname="TrE_AkwNumer" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="Numer elementu z karty magazynowej." options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="Akw Numer" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="a8805bb4-3246-43cf-b666-f1d9b1c88623" clarionname="TrEM:AkwLp" sqlname="TrE_AkwLp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Akw Lp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="347a9d69-cbc7-49e6-835e-7412b9275e51" clarionname="TrEM:TrnTStamp" sqlname="TrE_TrnTStamp" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="Fizyczny czas utworzenia transakcji" longdescription="" options=""
+      picture="@n-13" initial="TimeStamp()" justification.type="L" justification.indent="0"
+      header="Trn TS tamp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="57bb6d9e-8dfe-4abb-bf9d-af024bdc16ee" clarionname="TrEM:Punkty" sqlname="TrE_Punkty" type="DECIMAL" clariontype="DECIMAL(7,2)" sqltype=""
+      size="7" places="2" description="Punktacja towaru" longdescription="" options=""
+      picture="@n-10.2" initial="" justification.type="R" justification.indent="0"
+      header="Punkty" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <group ident="b033f1d3-767f-408d-be34-d312747538d9" clarionname="TrEM:GroupIlosc" type="GROUP" clariontype="GROUP" description="Dane o opakowaniu" longdescription="">
+    <column ident="7c0e1620-a7c3-4f43-a176-01bdd2695b93" clarionname="TrEM:Ilosc" sqlname="TrE_Ilosc" type="DECIMAL" clariontype="DECIMAL(11,4)" sqltype=""
+      size="11" places="4" description="Ilość na jaką opiewa transakcja" longdescription="Ilość na jaką opiewa transakcja." options=""
+      picture="@n-13.4" initial="" justification.type="R" justification.indent="0"
+      header="Ilość" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="8dbeadf7-1aa7-4b0c-9136-5fc1876dbf71" clarionname="TrEM:JMFormat" sqlname="TrE_JMFormat" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Miejsca po przecinku" longdescription="" options=""
+      picture="@n3" initial="" justification.type="R" justification.indent="0"
+      header="JMF ormat" validation="INRANGE" choices="" rangelow="0" rangehigh="4"
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="6ed87736-59f1-4861-b00a-736f62091e6d" clarionname="TrEM:JmZ" sqlname="TrE_JmZ" type="CSTRING" clariontype="CSTRING(9)" sqltype=""
+      size="9" places="0" description="Jednostka pomocnicza" longdescription="" options=""
+      picture="@s8" initial="" justification.type="L" justification.indent="0"
+      header="Jm. pomocnicza" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="90dcb93a-dd38-477a-94fc-0f3e16d54c02" clarionname="TrEM:JmFormatZ" sqlname="TrE_JmFormatZ" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Miejsca po przecinku jednostki pomocniczej" longdescription="" options=""
+      picture="@n3" initial="" justification.type="R" justification.indent="0"
+      header="Jm Format Z" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="ae31aba7-e24f-4a5b-b75c-cdc72d57fbf2" clarionname="TrEM:TypJm" sqlname="TrE_TypJm" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Przelicznik (ciągły, dyskretny)" longdescription="Typ jednostki miary, a właściwie przelicznik:
+Ciągły          12 / 5 = 2.4
+Dyskretny   12 / 5 = 2 reszty 2" options=""
+      picture="@n-13.4" initial="" justification.type="L" justification.indent="0"
+      header="Typ Jm" validation="INLIST" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="bb6db34a-2374-4e9e-a1a4-68daed095077" clarionname="TrEM:PrzeliczM" sqlname="TrE_PrzeliczM" type="DECIMAL" clariontype="DECIMAL(15)" sqltype=""
+      size="15" places="0" description="Mianownik przelicznika" longdescription="Przelicznik waluty w stosunku do 1zł." options=""
+      picture="@n-20.0" initial="" justification.type="R" justification.indent="0"
+      header="Mianownik" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="7c42e020-4b27-477f-b465-44af023411bb" clarionname="TrEM:PrzeliczL" sqlname="TrE_PrzeliczL" type="DECIMAL" clariontype="DECIMAL(15)" sqltype=""
+      size="15" places="0" description="Licznik przelicznika" longdescription="" options=""
+      picture="@n-20.0" initial="" justification.type="R" justification.indent="0"
+      header="Licznik" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <group ident="88e080b2-cdbc-4f21-9534-811d4359d31b" clarionname="TrEM:GroupPod" type="GROUP" clariontype="GROUP" description="Dane o podatku" longdescription="Dane o podatku zakupu.">
+    <column ident="f7861457-b7ba-43f8-8361-ec5768c4dcad" clarionname="TrEM:GrupaPod" sqlname="TrE_GrupaPod" type="CSTRING" clariontype="CSTRING(2)" sqltype=""
+      size="2" places="0" description="Grupa do jakiej należy podatek" longdescription="Grupa podatkowa (A,B,C,D,E,F)" options=""
+      picture="@s1" initial="" justification.type="L" justification.indent="0"
+      header="Grupa" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="472026c0-7193-41f9-99a4-d7510c7fc13c" clarionname="TrEM:StawkaPod" sqlname="TrE_StawkaPod" type="DECIMAL" clariontype="DECIMAL(5,2)" sqltype=""
+      size="5" places="2" description="Stawka podatku (%)" longdescription="Stawka podatku wyrażona liczbą (22)" options=""
+      picture="@n-8.2~%~" initial="" justification.type="L" justification.indent="0"
+      header="Stawka" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="af37c071-340c-467a-bbd8-7035438601fe" clarionname="TrEM:FlagaVat" sqlname="TrE_FlagaVat" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Rozróżnienie stawki zero" longdescription="Ustawiane na TRUE jeśli podatek jest  chwilowo zaniżony." options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Zero" validation="INLIST" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="e2165661-7253-49e5-9b47-ad992df3dd6e" clarionname="TrEM:Zrodlowa" sqlname="TrE_Zrodlowa" type="DECIMAL" clariontype="DECIMAL(5,2)" sqltype=""
+      size="5" places="2" description="Z jakiej stawki zaniżony" longdescription="" options=""
+      picture="@n-7.2" initial="" justification.type="L" justification.indent="0"
+      header="Żródłowa" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="d5fa6db9-fdb4-4c88-99ec-0be7f5db0a9b" clarionname="TrEM:Akcyza" sqlname="TrE_Akcyza" type="DECIMAL" clariontype="DECIMAL(5,2)" sqltype=""
+      size="5" places="2" description="Stawka podatku akcyzowego(%)" longdescription="Stawka podatku wyrażona liczbą (22)" options=""
+      picture="@n-8.2~%~" initial="" justification.type="R" justification.indent="0"
+      header="Akcyza" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <group ident="d6bc712d-47df-41e9-b5e3-d29e20d441b4" clarionname="TrEM:GroupWaluta" type="GROUP" clariontype="GROUP" description="Waluta transakcji" longdescription="">
+    <column ident="551559b4-ee32-46dd-8fb7-4771d8463e19" clarionname="TrEM:Waluta" sqlname="TrE_Waluta" type="CSTRING" clariontype="CSTRING(4)" sqltype=""
+      size="4" places="0" description="Symbol waluty" longdescription="Symbol  waluty" options=""
+      picture="@s3" initial="" justification.type="L" justification.indent="0"
+      header="Waluta" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="fabef7bf-a15c-4c44-bb6f-fcc3a4a5e445" clarionname="TrEM:NrKursu" sqlname="TrE_NrKursu" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="Numer kursu waluty" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Nr Kursu" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="c47d1589-3700-4efc-a240-91134a32d1e1" clarionname="TrEM:KursM" sqlname="TrE_KursM" type="DECIMAL" clariontype="DECIMAL(5)" sqltype=""
+      size="5" places="0" description="Mianownik kursu" longdescription="" options=""
+      picture="@n-7.0" initial="" justification.type="R" justification.indent="0"
+      header="Mianownik" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="2d4329fc-7aaf-4e86-b0d3-99e30e5541ba" clarionname="TrEM:KursL" sqlname="TrE_KursL" type="DECIMAL" clariontype="DECIMAL(7,2)" sqltype=""
+      size="7" places="2" description="Licznik kursu" longdescription="" options=""
+      picture="@n-10.2" initial="" justification.type="R" justification.indent="0"
+      header="Licznik" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="c191c3cf-a79d-4374-a1b5-7e67a955d775" clarionname="TrEM:Poczatkowa" sqlname="TrE_Poczatkowa" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Wartosc początkowa" longdescription="Pamiętana wartość nabycia, czyli wartość zakupu powiększona o koszty.
+Liczymy ją w taki sposób:
+Przykład: 19x.01=.19               .19x.05/.40=.02        (.22)
+                   10x.01=.10               .10x.05/.40=.01        (.11)
+                   11x.01=.11               .11x.05/.40=.01        (.12)
+                   --------------- -----
+                                  .40+.05(koszty)=.45       04 .05-.04=.01 jest to różnica koszty - doliczone koszty
+                 na do towarów. Doliczamy ją do towaru o
+                    największej wartości
+Transakcje modyfikują tą wartość:
+Sprzedajemy 3szt z pozycji 19         3x.22/19=.03    czyli .22-.03=.19" options=""
+      picture="@n-14.2" initial="" justification.type="R" justification.indent="0"
+      header="Początkowa" validation="INRANGE" choices="" rangelow="0" rangehigh="99999999"
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="e1151675-7b4b-4da4-8d38-1ed37efbb1dc" clarionname="TrEM:FlagaNB" sqlname="TrE_FlagaNB" type="CSTRING" clariontype="CSTRING(2)" sqltype=""
+      size="2" places="0" description="Flaga netto/brutto" longdescription="" options=""
+      picture="@s1" initial="" justification.type="L" justification.indent="0"
+      header="Flaga NB" validation="INLIST" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <group ident="59a3f7ee-8a07-49fc-9a6d-4dafd4236d5d" clarionname="TrEM:GroupRabat" type="GROUP" clariontype="GROUP" description="Dane o wartościach rabatu" longdescription="">
+    <column ident="9f5cdb45-4ec3-4688-ade6-c93423673830" clarionname="TrEM:Rabat" sqlname="TrE_Rabat" type="DECIMAL" clariontype="DECIMAL(5,2)" sqltype=""
+      size="5" places="2" description="Procent udzielonego rabatu" longdescription="Procentowe określenie rabatu." options=""
+      picture="@n-8.2~%~" initial="" justification.type="R" justification.indent="0"
+      header="Rabat" validation="INRANGE" choices="" rangelow="-99" rangehigh="99"
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="c7dfa243-c7b3-4a81-95f5-7fed0e87771f" clarionname="TrEM:WartoscPoRabacie" sqlname="TrE_WartoscPoRabacie" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Cena po rabacie" longdescription="Pamiętana wartość nabycia, czyli wartość zakupu powiększona o koszty.
+Liczymy ją w taki sposób:
+Przykład: 19x.01=.19               .19x.05/.40=.02        (.22)
+                   10x.01=.10               .10x.05/.40=.01        (.11)
+                   11x.01=.11               .11x.05/.40=.01        (.12)
+                   --------------- -----
+                                  .40+.05(koszty)=.45       04 .05-.04=.01 jest to różnica koszty - doliczone koszty
+                 na do towarów. Doliczamy ją do towaru o
+                    największej wartości
+Transakcje modyfikują tą wartość:
+Sprzedajemy 3szt z pozycji 19         3x.22/19=.03    czyli .22-.03=.19" options=""
+      picture="@n-13.2" initial="" justification.type="R" justification.indent="0"
+      header="Netto" validation="INRANGE" choices="" rangelow="-99999999" rangehigh="99999999"
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <group ident="69f8097f-652f-4e41-9906-af9a4dde555c" clarionname="TrEM:GroupKsiegowa" type="GROUP" clariontype="GROUP" description="Dane o wartościach księgowych" longdescription="Dane o wartościach księgowych.">
+    <column ident="db1a40dd-c876-4e4b-95fa-c596f7aa4c5c" clarionname="TrEM:KsiegowaNetto" sqlname="TrE_KsiegowaNetto" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Wartość księgowa netto" longdescription="Pamiętana wartość nabycia, czyli wartość zakupu powiększona o koszty.
+Liczymy ją w taki sposób:
+Przykład: 19x.01=.19               .19x.05/.40=.02        (.22)
+                   10x.01=.10               .10x.05/.40=.01        (.11)
+                   11x.01=.11               .11x.05/.40=.01        (.12)
+                   --------------- -----
+                                  .40+.05(koszty)=.45       04 .05-.04=.01 jest to różnica koszty - doliczone koszty
+                 na do towarów. Doliczamy ją do towaru o
+                    największej wartości
+Transakcje modyfikują tą wartość:
+Sprzedajemy 3szt z pozycji 19         3x.22/19=.03    czyli .22-.03=.19" options=""
+      picture="@n-14.2" initial="" justification.type="R" justification.indent="0"
+      header="Netto" validation="INRANGE" choices="" rangelow="0" rangehigh="99999999"
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="2f87b98c-aee7-4c0e-af72-d8db26eb06aa" clarionname="TrEM:KsiegowaBrutto" sqlname="TrE_KsiegowaBrutto" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Wartość księgowa brutto" longdescription="@n11.2Pamiętana wartość nabycia, czyli wartość zakupu powiększona o        koszty.
+Liczymy ją w taki sposób:
+Przykład: 19x.01=.19               .19x.05/.40=.02        (.22)
+                   10x.01=.10               .10x.05/.40=.01        (.11)
+                   11x.01=.11               .11x.05/.40=.01        (.12)
+                   --------------- -----
+                                  .40+.05(koszty)=.45       04 .05-.04=.01 jest to różnica koszty - doliczone koszty
+                 na do towarów. Doliczamy ją do towaru o
+                    największej wartości
+Transakcje modyfikują tą wartość:
+Sprzedajemy 3szt z pozycji 19         3x.22/19=.03    czyli .22-.03=.19" options=""
+      picture="@n-14.2" initial="" justification.type="R" justification.indent="0"
+      header="Brutto" validation="INRANGE" choices="" rangelow="-99999999" rangehigh="99999999"
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="680abdc4-19c7-426e-88e6-f4192f08cb9d" clarionname="TrEM:RzeczywistaNetto" sqlname="TrE_RzeczywistaNetto" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Wartość rzeczywista netto" longdescription="Pamiętana wartość nabycia, czyli wartość zakupu powiększona o koszty.
+Liczymy ją w taki sposób:
+Przykład: 19x.01=.19               .19x.05/.40=.02        (.22)
+                   10x.01=.10               .10x.05/.40=.01        (.11)
+                   11x.01=.11               .11x.05/.40=.01        (.12)
+                   --------------- -----
+                                  .40+.05(koszty)=.45       04 .05-.04=.01 jest to różnica koszty - doliczone koszty
+                 na do towarów. Doliczamy ją do towaru o
+                    największej wartości
+Transakcje modyfikują tą wartość:
+Sprzedajemy 3szt z pozycji 19         3x.22/19=.03    czyli .22-.03=.19" options=""
+      picture="@n-14.2" initial="" justification.type="R" justification.indent="0"
+      header="Netto" validation="INRANGE" choices="" rangelow="0" rangehigh="99999999"
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <group ident="6d7400ff-d2c0-41ab-8832-f8a1ee10e4b8" clarionname="TrEM:GroupKoszt" type="GROUP" clariontype="GROUP" description="Dane o kosztach" longdescription="">
+    <column ident="1488e595-7d09-460d-abc6-a266cf1a862d" clarionname="TrEM:KosztKsiegowy" sqlname="TrE_KosztKsiegowy" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Wartość księgowa kosztu netto" longdescription="" options=""
+      picture="@n-14.2" initial="" justification.type="R" justification.indent="0"
+      header="Koszt ksiegowy netto" validation="INRANGE" choices="" rangelow="0" rangehigh="99999999"
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="fcf011f5-2bfa-4c3a-aa9b-2a29aef1f74d" clarionname="TrEM:KosztRzeczywisty" sqlname="TrE_KosztRzeczywisty" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Wartość rzeczywista kosztu" longdescription="" options=""
+      picture="@n-14.2" initial="" justification.type="R" justification.indent="0"
+      header="Koszt rzeczywisty" validation="INRANGE" choices="" rangelow="0" rangehigh="99999999"
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="1ec380fd-07a5-43af-b2a7-3eaab480b818" clarionname="TrEM:ProgTyp" sqlname="TrE_ProgTyp" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="typ progu upustowego (ilościowy/wartościowy)" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Prog Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="ac785802-77e3-4913-b32f-bb1f60cc7326" clarionname="TrEM:Prog" sqlname="TrE_Prog" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Wartość progowa" longdescription="" options=""
+      picture="@n-21.2" initial="" justification.type="D" justification.indent="12"
+      header="Prog" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="2845c596-d3c5-423d-9e3f-06b31de86ee4" clarionname="TrEM:UpustTyp" sqlname="TrE_UpustTyp" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Typ upustu (kwotowy/procentowy)" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Upust Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="207ffb81-9f87-49fb-a606-6924012b91d4" clarionname="TrEM:Upust" sqlname="TrE_Upust" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="wartość upustu" longdescription="" options=""
+      picture="@n-21.2" initial="" justification.type="D" justification.indent="12"
+      header="Upust" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="80ddd652-c844-477e-9a05-96837aa7d502" clarionname="TrEM:UpustKnt" sqlname="TrE_UpustKnt" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Upust dla kontrahenta" longdescription="" options=""
+      picture="@n-21.2" initial="" justification.type="D" justification.indent="12"
+      header="Upust Knt" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="7142c2e2-ef31-43fc-881d-ffa6e6052415" clarionname="TrEM:UpustKntTyp" sqlname="TrE_UpustKntTyp" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Typ upustu (kwotowy/procentowy) dla kontrahenta: 1-stała cena, 2-stały procent, 0-brak" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Upust Knt Typ" validation="INLIST" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="9b077386-09d3-4ecf-9915-75eabccdbdc2" clarionname="TrEM:IloscDPPrzed" sqlname="TRE_IloscDPPrzed" type="DECIMAL" clariontype="DECIMAL(11,4)" sqltype=""
+      size="11" places="4" description="Ilość przed deprecjacją" longdescription="" options=""
+      picture="@n-13.4" initial="" justification.type="D" justification.indent="12"
+      header="Ilość przed deprecjacją" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="34424a6c-7517-49f4-9df7-695f8d694c3f" clarionname="TrEM:KsiegowyDPPrzed" sqlname="TRE_KsiegowyDPPrzed" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Wartość kosztu księgowego przed deprecjacją" longdescription="" options=""
+      picture="@n-21.2" initial="" justification.type="D" justification.indent="12"
+      header="Wartość przed deprecjacją" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <group ident="d5836797-a444-4868-910c-9b09de19cd3b" clarionname="TrEM:ZlcGID" type="GROUP" clariontype="GROUP" description="GID pozycji zlecenia" longdescription="">
+    <column ident="f4db5afb-c07c-4fbe-b709-d8b39b1d3316" clarionname="TrEM:ZlcTyp" sqlname="TRE_ZlcTyp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Zlc Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="b1fa9069-be9c-4a79-95b2-91c6f226474c" clarionname="TrEM:ZlcFirma" sqlname="TRE_ZlcFirma" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Zlc Firma" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="cda802e7-19b9-45a9-a9a9-7b9877acbf9b" clarionname="TrEM:ZlcNumer" sqlname="TRE_ZlcNumer" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Zlc Numer" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="40474b56-b557-42f4-81ed-e210a6ca491b" clarionname="TrEM:ZlcLp" sqlname="TRE_ZlcLp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Zlc Lp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <group ident="63c84e6e-9366-4087-bc18-8855812b7198" clarionname="TrEM:RecGID" type="GROUP" clariontype="GROUP" description="Identyfikator receptury" longdescription="">
+    <column ident="f67fd39e-1388-4d28-98b8-224a9b39fe76" clarionname="TrEM:RecTyp" sqlname="TRE_RecTyp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Rec Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="2e3855c3-4cac-49f4-b86e-f556ee541637" clarionname="TrEM:RecFirma" sqlname="TRE_RecFirma" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Rec Firma" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="66fc25a3-6ffa-4b3f-8831-3262179eaae9" clarionname="TrEM:RecNumer" sqlname="TRE_RecNumer" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Rec Numer" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="e11d32df-a822-4e9b-b90f-bf9aa679c2f2" clarionname="TrEM:RecLp" sqlname="TRE_RecLp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Rec Lp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="46580e00-2c93-490a-a6fa-7e357d42eeec" clarionname="TrEM:Cena" sqlname="TRE_Cena" type="DECIMAL" clariontype="DECIMAL(15,4)" sqltype=""
+      size="15" places="4" description="Cena jednostkowa pozycji" longdescription="" options=""
+      picture="@n-20.4" initial="" justification.type="D" justification.indent="12"
+      header="Cena" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="8df3bafd-749a-4014-89be-f4d6d426dfc6" clarionname="TrEM:Rownanie" sqlname="TRE_Rownanie" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Ilość*cena=wartość" longdescription="Ustawione na 1 mówi o tym że na tej pozycji powinno być trzytmane równanie ilość*cena=wartość" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Rownanie" validation="BOOLEAN" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="fac6c99b-ae29-4103-a57e-c06dddb9c86e" clarionname="TrEM:OdKsiegowych" sqlname="TRE_OdKsiegowych" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Wartości walutowe liczone od wartości księgowych" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Od Ksiegowych" validation="BOOLEAN" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="3e2d2e5e-61e9-45ea-8a54-b29f066bb4a8" clarionname="TrEM:RzeczywistyDPPrzed" sqlname="TRE_RzeczywistyDPPrzed" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Koszt rzeczywisty przed deprecjacją" longdescription="Tylko na potrzeby deprecjacji - przechowuje koszt rzeczywisty            przecenianego zasobu przed przeprowadzeniem deprecjacji." options=""
+      picture="@n-21.2" initial="" justification.type="D" justification.indent="12"
+      header="Rzeczywisty DPP rzed" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="2f3fd40a-75c0-45c7-b670-7299e44b409c" clarionname="TrEM:PCN" sqlname="TRE_PCN" type="CSTRING" clariontype="CSTRING(11)" sqltype=""
+      size="11" places="0" description="Kod taryfy celnej" longdescription="" options=""
+      picture="@s10" initial="" justification.type="L" justification.indent="0"
+      header="PCN" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="42f0bfb7-fddc-453c-8cc1-3fa340732d73" clarionname="TrEM:PrecyzjaCeny" sqlname="TrE_PrecyzjaCeny" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Precyzja ceny" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Precyzja Ceny" validation="BOOLEAN" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <group ident="4f713954-4b52-41a5-9adf-7f6a7fd684d2" clarionname="TrEM:VatGID" type="GROUP" clariontype="GROUP" description="Identyfikator receptury" longdescription="">
+    <column ident="a78d8fb9-8ce6-4041-9617-7255b91e3f5b" clarionname="TrEM:VatTyp" sqlname="TrE_VatTyp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Vat Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="22eaa618-d028-47a8-a305-252c09dc9308" clarionname="TrEM:VatFirma" sqlname="TrE_VatFirma" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Vat Firma" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="5504b7c8-4788-47e9-b60e-3e020cfb2c3d" clarionname="TrEM:VatNumer" sqlname="TrE_VatNumer" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Vat Numer" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="2e7ce35d-9e34-46ad-9fec-4d2b0be6dbb5" clarionname="TrEM:VatLp" sqlname="TrE_VatLp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Vat Lp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="3a0da735-e643-4e59-9836-cc008dca0f0f" clarionname="TrEM:KosztVat" sqlname="TrE_KosztVat" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="" longdescription="" options=""
+      picture="@n3" initial="True" justification.type="L" justification.indent="0"
+      header="Koszt Vat" validation="BOOLEAN" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="7fbd664f-bee6-49ea-9b6f-dca7239519e4" clarionname="TrEM:KosztNetto" sqlname="TrE_KosztNetto" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="" longdescription="" options=""
+      picture="@n3" initial="False" justification.type="L" justification.indent="0"
+      header="Koszt Netto" validation="BOOLEAN" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="08bcec01-ee84-4433-91c7-ac529e0b9ee8" clarionname="TrEM:Licencja" sqlname="TrE_Licencja" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="Licencja" longdescription="Określenie dla towaru, produktu, usługi" options=""
+      picture="@n-7" initial="0" justification.type="R" justification.indent="1"
+      header="Licencja" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="daa88c59-9417-4de8-a8ee-48e938da34c9" clarionname="TrEM:KrajPoch" sqlname="TrE_KrajPoch" type="CSTRING" clariontype="CSTRING(3)" sqltype=""
+      size="3" places="0" description="Kraj pochodzenia" longdescription="" options=""
+      picture="@s2" initial="" justification.type="L" justification.indent="0"
+      header="" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="fd4ed7d5-1451-4d3d-9088-e8119d21b2fa" clarionname="TrEM:RabatPromocyjny" sqlname="TrE_RabatPromocyjny" type="DECIMAL" clariontype="DECIMAL(15,4)" sqltype=""
+      size="15" places="4" description="" longdescription="" options=""
+      picture="@n-20.4" initial="" justification.type="D" justification.indent="12"
+      header="Rabat Promocyjny" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="d2ad59d2-7f5a-438a-8718-5f06bc7e8227" clarionname="TrEM:RabatKorekta" sqlname="TrE_RabatKorekta" type="DECIMAL" clariontype="DECIMAL(15,4)" sqltype=""
+      size="15" places="4" description="" longdescription="" options=""
+      picture="@n-20.4" initial="" justification.type="D" justification.indent="12"
+      header="Rabat Korekta" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="c82d8bd9-689a-4672-ad01-476716534361" clarionname="TrEM:Promocje" sqlname="TrE_Promocje" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Promocje" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <group ident="7e6ff6d8-7177-4029-8714-0a0531c6222d" clarionname="TrEM:ZstGID" type="GROUP" clariontype="GROUP" description="" longdescription="">
+    <column ident="71ce7bc2-a656-40b5-b2f9-2dcc9cfdc620" clarionname="TrEM:ZstTyp" sqlname="TrE_ZstTyp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Zst Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="b916fb7e-3fcf-40a9-9b8b-2b243ee864f6" clarionname="TrEM:ZstFirma" sqlname="TrE_ZstFirma" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Zst Firma" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="5b51f0bb-8965-4fe7-9659-9180e55e9fc7" clarionname="TrEM:ZstNumer" sqlname="TrE_ZstNumer" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Zst Numer" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="6fab7715-0e9c-45a2-b3d6-d839dc130b36" clarionname="TrEM:ZstLp" sqlname="TrE_ZstLp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Zst Lp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="1bc3bde1-7221-4675-8ff3-f43c1ebef773" clarionname="TrEM:PrecyzjaCenyPocz" sqlname="TrE_PrecyzjaCenyPocz" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Precyzja ceny poczatkowej" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Precyzja Ceny Pocz" validation="BOOLEAN" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="6dd82ca6-0547-4169-89c0-0aa48ac28bf5" clarionname="TrEM:ZwroconoCalaIlosc" sqlname="TrE_ZwroconoCalaIlosc" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Zwrócono całość" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Zwrocono Cala Ilosc" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="27332912-8eaf-40c8-8fe5-df1cd65b9c6e" clarionname="TrEM:RodzajCenyBazowej" sqlname="TrE_RodzajCenyBazowej" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="Identyfikator ceny bazowej" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Rodzaj Ceny Bazowej" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="1fb2eab1-5495-45dd-bbf8-f11a2f9abac4" clarionname="TrEM:KosztBazowy" sqlname="TrE_KosztBazowy" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Cena bazowa" longdescription="" options=""
+      picture="@n-15.2" initial="" justification.type="D" justification.indent="12"
+      header="Koszt Bazowy" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="6a84d761-15a7-49b8-baf5-8bf7d3f59cf9" clarionname="TrEM:WartoscBazowa" sqlname="TrE_WartoscBazowa" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Wartość w cenie bazowej" longdescription="" options=""
+      picture="@n-15.2" initial="" justification.type="D" justification.indent="12"
+      header="Wartosc Bazowa" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="90c69162-164c-4e29-8bbb-dbffe824dbf3" clarionname="TrEM:CenaSpr" sqlname="TrE_CenaSpr" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="Cena domyślna dla transakcji" longdescription="Numer ceny domyślnej dla transakcji, domyślnie wynika z ustawień ceny      domyślnej kontrahenta" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Cena Spr" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="8dbb3d9f-3200-4d2f-99c3-4fcf0758ef98" clarionname="TrEM:CenaPoRabacie" sqlname="TrE_CenaPoRabacie" type="DECIMAL" clariontype="DECIMAL(15,4)" sqltype=""
+      size="15" places="4" description="Cena jednostkowa pozycji po rabacie" longdescription="" options=""
+      picture="@n-20.4" initial="" justification.type="D" justification.indent="12"
+      header="Cena Po Rabacie" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="079dd7d1-ffc7-4f55-aa9d-80738b28c01b" clarionname="TrEM:CChTyp" sqlname="TrE_CChTyp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="Typ cechy" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="CC h Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="baca7949-82e8-4ea4-b231-e0f2304bcc71" clarionname="TrEM:CChNumer" sqlname="TrE_CChNumer" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="Klasa cechy" longdescription="" options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="CC h Numer" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="82dcfeb5-326a-4a72-b9fb-a1d97f7aa899" clarionname="TrEM:Cecha" sqlname="TrE_Cecha" type="CSTRING" clariontype="CSTRING(256)" sqltype=""
+      size="256" places="0" description="Cechy elementu" longdescription="Wartość cechy" options=""
+      picture="@s255" initial="" justification.type="L" justification.indent="0"
+      header="Cecha" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="b71c0188-df3a-499d-85fd-ee9041255df8" clarionname="TrEM:KGOJednostkowe" sqlname="TrE_KGOJednostkowe" type="DECIMAL" clariontype="DECIMAL(9,2)" sqltype=""
+      size="9" places="2" description="Wartość jednostkowego KGO dla elementu" longdescription="Wartość jednostkowego KGO dla elementu" options=""
+      picture="@n-13.2" initial="" justification.type="R" justification.indent="0"
+      header="KGOJ ednostkowe" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="b3a33b8b-bf27-4900-9b17-87cbcfd629d5" clarionname="TrEM:IloscMin" sqlname="TrE_IloscMin" type="DECIMAL" clariontype="DECIMAL(11,4)" sqltype=""
+      size="11" places="4" description="Minimalny zakres ilości" longdescription="Ilość towaru w jednostkach podstawowych" options=""
+      picture="@n-13.4" initial="" justification.type="R" justification.indent="0"
+      header="Ilość min" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="d7a04280-49e2-42be-b1f6-6aa3de96e546" clarionname="TrEM:IloscMax" sqlname="TrE_IloscMax" type="DECIMAL" clariontype="DECIMAL(11,4)" sqltype=""
+      size="11" places="4" description="Maksymalny zakres ilości" longdescription="Ilość towaru w jednostkach podstawowych" options=""
+      picture="@n-13.4" initial="" justification.type="R" justification.indent="0"
+      header="Ilość max" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="39264a5b-a41c-43a6-b427-41c2120b5e6b" clarionname="TrEM:PakietId" sqlname="TrE_PakietId" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="Identyfikator promocji pakietowej" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Pakiet Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="617e893a-18a4-4800-9a0d-df4e9d121f94" clarionname="TrEM:Gratis" sqlname="TrE_Gratis" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="Rodzaj elementu promocji pakietowej" longdescription="0 - element,
+1 - gratis" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Gratis" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="128c6adf-0199-486a-b920-1b67ff402c60" clarionname="TrEM:PromocjaProgID" sqlname="TrE_PromocjaProgID" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="ID progu promocji" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Promocja Prog ID" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="78c9dc82-cf25-45ec-af68-ae0bbf11b57f" clarionname="TrEM:FormatkaCyr" sqlname="TrE_FormatkaCyr" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Pole określa, czy dane na formatce były wprowadzane cyrylicą (dotyczy niektórych pól)" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Formatka Cyr" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="17be702e-d9d7-4faa-98d7-09fe36264511" clarionname="TrEM:Zlom" sqlname="TrE_Zlom" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="Element jest traktowany jako złom" longdescription="0 - element,
+1 - złom" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Złom" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="f27ffdb6-0a54-453f-8241-c213f3c21272" clarionname="TrEM:IloscPrzedKorekta" sqlname="TrE_IloscPrzedKorekta" type="DECIMAL" clariontype="DECIMAL(11,4)" sqltype=""
+      size="11" places="4" description="Ilość na jaką opiewa transakcja oryginalna" longdescription="Ilość towaru w jednostkach podstawowych" options=""
+      picture="@n-13.4" initial="" justification.type="R" justification.indent="0"
+      header="Ilość" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="c8f189de-7010-4eb3-96d7-a5e5bc500364" clarionname="TrEM:CenaPrzedKorekta" sqlname="TrE_CenaPrzedKorekta" type="DECIMAL" clariontype="DECIMAL(15,4)" sqltype=""
+      size="15" places="4" description="Cena jednostkowa pozycji oryginału" longdescription="" options=""
+      picture="@n-20.4" initial="" justification.type="D" justification.indent="12"
+      header="Cena przed" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="5d90e10a-cac0-4ed8-b626-7e4710fb617b" clarionname="TrEM:WartoscPrzedKorekta" sqlname="TrE_WartoscPrzedKorekta" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="Wartość przed korektą" longdescription="Jeśli transakcja jest &quot;od netto&quot; wówczas= TrE_WartoscPoRabacie * TrE_KursL / TrE_KursM.Jeśli transakcja &quot;od brutto&quot;, wówczas = TrE_KsiegowaBrutto *   100 / (100 + TrE_StawkaPod)" options=""
+      picture="@n-14.2" initial="" justification.type="R" justification.indent="0"
+      header="Wartość przed" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <group ident="0bdebcce-e921-4a94-81b9-0791ff93dfdd" clarionname="TrEM:GroupPodPrzedKorekta" type="GROUP" clariontype="GROUP" description="Dane o podatku VAT oryginału" longdescription="">
+    <column ident="196b8955-da52-4b93-864d-7bab8cfc89e4" clarionname="TrEM:GrupaPodPrzedKorekta" sqlname="TrE_GrupaPodPrzedKorekta" type="CSTRING" clariontype="CSTRING(2)" sqltype=""
+      size="2" places="0" description="Grupa do jakiej należy podatek oryginalu" longdescription="Symbol grupy podatkowej (A,B,C,D,E,F)" options=""
+      picture="@s1" initial="" justification.type="L" justification.indent="0"
+      header="Grupa przed" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="8d52d48c-6948-447e-a4b8-01a0cc13b17a" clarionname="TrEM:StawkaPodPrzedKorekta" sqlname="TrE_StawkaPodPrzedKorekta" type="DECIMAL" clariontype="DECIMAL(5,2)" sqltype=""
+      size="5" places="2" description="Stawka podatku (%) oryginału" longdescription="" options=""
+      picture="@n-8.2~%~" initial="" justification.type="L" justification.indent="0"
+      header="Stawka przed" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="66bd71fd-5b8f-4f0c-9c26-03b81674f066" clarionname="TrEM:FlagaVatPrzedKorekta" sqlname="TrE_FlagaVatPrzedKorekta" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Rozróżnienie stawki zero oryginalu" longdescription="Rozróżnienie stawki zero:
+0-zwolniony;
+1-opodatkowany;
+2-nie podlega" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Rozróżnienie stawki zero przed" validation="INLIST" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="bb75721d-ce12-410a-890e-7da0cc29997f" clarionname="TrEM:ZrodlowaPrzedKorekta" sqlname="TrE_ZrodlowaPrzedKorekta" type="DECIMAL" clariontype="DECIMAL(5,2)" sqltype=""
+      size="5" places="2" description="Z jakiej stawki zaniżony oryginał" longdescription="Jeżeli towar jest sprzedawany ze stawką zaniżoną, jest tu wpisywana stawka początkowa. W przeciwnym wypadku 0" options=""
+      picture="@n-7.2" initial="" justification.type="L" justification.indent="0"
+      header="Źródłowa przed" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="b9b73359-cb90-4569-8e0f-949af28c7bae" clarionname="TrEM:AkcyzaPrzedKorekta" sqlname="TrE_AkcyzaPrzedKorekta" type="DECIMAL" clariontype="DECIMAL(5,2)" sqltype=""
+      size="5" places="2" description="Stawka podatku akcyzowego(%) oryginału" longdescription="" options=""
+      picture="@n-8.2~%~" initial="" justification.type="R" justification.indent="0"
+      header="Akcyza przed" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="3e9476da-b7a3-4448-a8b6-7a70675c4358" clarionname="TrEM:PrzyczynaKorekty" sqlname="TrE_PrzyczynaKorekty" type="CSTRING" clariontype="CSTRING(256)" sqltype=""
+      size="256" places="0" description="Treść pryczyny korekty" longdescription="" options=""
+      picture="@s255" initial="" justification.type="L" justification.indent="0"
+      header="Przyczyna Korekty" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="6e30006e-7e36-4475-8bab-abd8135ca8b1" clarionname="TrEM:KatDatyOP" sqlname="TrE_KatDatyOP" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="Kategoria daty obowiązku podatkowego" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Kat Daty OP" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="70d67665-c6b6-4e54-a6b7-8e69097c921d" clarionname="TrEM:RodzajKosztu" sqlname="TrE_RodzajKosztu" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="Rodzaj kosztu dodatkowego" longdescription="Zapisywany identyfikator ze słownika uniwersalnego" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Rodzaj kosztu dodatkowego" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="5e9a6b58-c3e7-42c5-a2b9-313174a1f030" clarionname="TrEM:PakietTwgNumer" sqlname="TrE_PakietTwgNumer" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Pakiet Twg Numer" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="befb5da0-a58e-4e0a-b333-b9cce570760a" clarionname="TrEM:PakietTwgTyp" sqlname="TrE_PakietTwgTyp" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Pakiet Twg Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="09c6bd9a-d1cc-40db-bf5f-f81516f2b47e" clarionname="TrEM:RabatOpeGen" sqlname="TrE_RabatOpeGen" type="DECIMAL" clariontype="DECIMAL(15,2)" sqltype=""
+      size="15" places="2" description="" longdescription="" options=""
+      picture="@n-8.2~%~" initial="" justification.type="D" justification.indent="12"
+      header="Rabat Ope Gen" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="918374cd-4f71-4a71-8669-6eb60f165565" clarionname="TrEM:PakietWymaganaPoz" sqlname="TrE_PakietWymaganaPoz" type="BYTE" clariontype="BYTE" sqltype=""
+      size="1" places="0" description="" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Pakiet Wymagana Poz" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="b7181777-bff0-4565-bab3-24f903fdbe29" clarionname="TrEM:SentId" sqlname="TrE_SentId" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="Identyfikator dokumentu ZPT(zgłoszenia systemu SENT)" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Sent Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="9f26a98f-0bca-48ff-bd01-78255d532eaf" clarionname="TrEM:Nagroda" sqlname="TrE_Nagroda" type="SHORT" clariontype="SHORT" sqltype=""
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Nagroda" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="59df2e8f-467f-4b8b-b057-f012c9a6b06d" clarionname="TrEM:OperatorPOS" sqlname="TrE_OperatorPOS" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="GidNumer operatora POS dodającego element" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Operator POS" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+    <column ident="98ba3c12-85bb-45ac-ab98-6b7c289fd52c" clarionname="TrEM:SentElemId" sqlname="TrE_SentElemId" type="LONG" clariontype="LONG" sqltype=""
+      size="4" places="0" description="Identyfikator elementu dokumentu ZPT(zgłoszenia systemu SENT)" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Sent Elem Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="Yes" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="3d38f7e4-30ae-4089-adc2-c2b83e307881" clarionname="TrEM:Primary" sqlname="TrEPrimary" description="Wg nagłówka" longdescription="Po numerze nagłówka dokumentu" options="NO_SQL" primary="Yes" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="Yes" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="89329428-1f5c-44a9-a3c1-b0b1364c1214" clarionname="TrEM:GIDTyp" sqlname="TrE_GIDTyp" nosql="No"/>
+         <indexcolumn ident="7d77cb8e-19aa-41e4-932a-a3242b0c455f" clarionname="TrEM:GIDNumer" sqlname="TrE_GIDNumer" nosql="No"/>
+         <indexcolumn ident="2109ddd3-101c-4f41-82ae-05c36d8e9b4b" clarionname="TrEM:GIDLp" sqlname="TrE_GIDLp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="fa35f90f-e89f-4b23-9d12-45cf9ce455ae" clarionname="TrEM:KeyTowar" sqlname="TrETowar" description="Wg towaru" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="377be89d-25a4-460f-9105-62557b6e06e6" clarionname="TrEM:TwrTyp" sqlname="TrE_TwrTyp" nosql="No"/>
+         <indexcolumn ident="571a34b0-3447-478d-bffd-5cc9e1e2f739" clarionname="TrEM:TwrNumer" sqlname="TrE_TwrNumer" nosql="No"/>
+         <indexcolumn ident="347a9d69-cbc7-49e6-835e-7412b9275e51" clarionname="TrEM:TrnTStamp" sqlname="TrE_TrnTStamp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="b2f59fdc-cfd9-40aa-acfa-25d60acf3238" clarionname="TrEM:KeyTowarNoType" sqlname="TrETowar" description="Wg towaru" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="571a34b0-3447-478d-bffd-5cc9e1e2f739" clarionname="TrEM:TwrNumer" sqlname="TrE_TwrNumer" nosql="No"/>
+         <indexcolumn ident="347a9d69-cbc7-49e6-835e-7412b9275e51" clarionname="TrEM:TrnTStamp" sqlname="TrE_TrnTStamp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="4fbeb7f2-4b24-47a7-9490-62cda0202074" clarionname="TrEM:KeyKontrah" sqlname="TrEKontrah" description="Wg kontrahenta" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="cf6af6f6-d514-4bd9-806a-b94764f0c0fb" clarionname="TrEM:KntTyp" sqlname="TrE_KntTyp" nosql="No"/>
+         <indexcolumn ident="7bce1437-16bc-42d1-a28c-6b3eee8172d0" clarionname="TrEM:KntNumer" sqlname="TrE_KntNumer" nosql="No"/>
+         <indexcolumn ident="347a9d69-cbc7-49e6-835e-7412b9275e51" clarionname="TrEM:TrnTStamp" sqlname="TrE_TrnTStamp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="bdde2af7-21c4-4433-9bed-f2377221b3fb" clarionname="TrEM:KeyTwrKod" sqlname="TreMTwrKod" description="Na potrzeby lokatora" longdescription="" options="" primary="No" unique="Yes" casesensitive="No"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="6b7f0a76-54f0-44a5-bf01-367910936a76" clarionname="TrEM:TwrKod" sqlname="TrE_TwrKod" nosql="No"/>
+         <indexcolumn ident="89329428-1f5c-44a9-a3c1-b0b1364c1214" clarionname="TrEM:GIDTyp" sqlname="TrE_GIDTyp" nosql="No"/>
+         <indexcolumn ident="7d77cb8e-19aa-41e4-932a-a3242b0c455f" clarionname="TrEM:GIDNumer" sqlname="TrE_GIDNumer" nosql="No"/>
+         <indexcolumn ident="2109ddd3-101c-4f41-82ae-05c36d8e9b4b" clarionname="TrEM:GIDLp" sqlname="TrE_GIDLp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="d88fe31e-a81c-418b-8fab-adc00981dad7" clarionname="TrEM:KeyKntTwr" sqlname="TrEKntTwr" description="Wg kontrahenta i towaru" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="cf6af6f6-d514-4bd9-806a-b94764f0c0fb" clarionname="TrEM:KntTyp" sqlname="TrE_KntTyp" nosql="No"/>
+         <indexcolumn ident="7bce1437-16bc-42d1-a28c-6b3eee8172d0" clarionname="TrEM:KntNumer" sqlname="TrE_KntNumer" nosql="No"/>
+         <indexcolumn ident="377be89d-25a4-460f-9105-62557b6e06e6" clarionname="TrEM:TwrTyp" sqlname="TrE_TwrTyp" nosql="No"/>
+         <indexcolumn ident="571a34b0-3447-478d-bffd-5cc9e1e2f739" clarionname="TrEM:TwrNumer" sqlname="TrE_TwrNumer" nosql="No"/>
+         <indexcolumn ident="347a9d69-cbc7-49e6-835e-7412b9275e51" clarionname="TrEM:TrnTStamp" sqlname="TrE_TrnTStamp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="3917e270-0fdc-4cbc-846c-441c779299af" clarionname="TrEM:KeyAkwizytor" sqlname="TrEAkwizytor" description="wg akwizytora" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="b3fc1ad2-81d0-4fce-a0cd-935f8cb87013" clarionname="TrEM:AkwTyp" sqlname="TrE_Akwtyp" nosql="No"/>
+         <indexcolumn ident="2ba4c459-81e5-49f3-8c26-1c4445251f0d" clarionname="TrEM:AkwNumer" sqlname="TrE_AkwNumer" nosql="No"/>
+         <indexcolumn ident="347a9d69-cbc7-49e6-835e-7412b9275e51" clarionname="TrEM:TrnTStamp" sqlname="TrE_TrnTStamp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="e4396622-c294-4ed9-abf8-290fb77f799c" clarionname="TrEM:KeyAkwTwr" sqlname="TrEAkwTwr" description="wg akwizytora i towaru" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="b3fc1ad2-81d0-4fce-a0cd-935f8cb87013" clarionname="TrEM:AkwTyp" sqlname="TrE_Akwtyp" nosql="No"/>
+         <indexcolumn ident="2ba4c459-81e5-49f3-8c26-1c4445251f0d" clarionname="TrEM:AkwNumer" sqlname="TrE_AkwNumer" nosql="No"/>
+         <indexcolumn ident="377be89d-25a4-460f-9105-62557b6e06e6" clarionname="TrEM:TwrTyp" sqlname="TrE_TwrTyp" nosql="No"/>
+         <indexcolumn ident="571a34b0-3447-478d-bffd-5cc9e1e2f739" clarionname="TrEM:TwrNumer" sqlname="TrE_TwrNumer" nosql="No"/>
+         <indexcolumn ident="347a9d69-cbc7-49e6-835e-7412b9275e51" clarionname="TrEM:TrnTStamp" sqlname="TrE_TrnTStamp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="89ff115e-0e95-475d-90c9-b6a307317f95" clarionname="TrEM:KeyTypData" sqlname="TrETypData" description="Wg typu i daty" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="89329428-1f5c-44a9-a3c1-b0b1364c1214" clarionname="TrEM:GIDTyp" sqlname="TrE_GIDTyp" nosql="No"/>
+         <indexcolumn ident="347a9d69-cbc7-49e6-835e-7412b9275e51" clarionname="TrEM:TrnTStamp" sqlname="TrE_TrnTStamp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="5ce406bd-e4ff-44ac-867e-bbb663f17cf4" clarionname="TrEM:KeyZlecenie" sqlname="TreZlecenie" description="wg pozycji zlecenia" longdescription="" options="" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="f4db5afb-c07c-4fbe-b709-d8b39b1d3316" clarionname="TrEM:ZlcTyp" sqlname="TRE_ZlcTyp" nosql="No"/>
+         <indexcolumn ident="cda802e7-19b9-45a9-a9a9-7b9877acbf9b" clarionname="TrEM:ZlcNumer" sqlname="TRE_ZlcNumer" nosql="No"/>
+         <indexcolumn ident="40474b56-b557-42f4-81ed-e210a6ca491b" clarionname="TrEM:ZlcLp" sqlname="TRE_ZlcLp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="c4032e66-9f5d-40a1-a909-84922a1a2570" clarionname="TrEM:KeyVat" sqlname="TrEVat" description="wg Vatu" longdescription="" options="" primary="No" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="a78d8fb9-8ce6-4041-9617-7255b91e3f5b" clarionname="TrEM:VatTyp" sqlname="TrE_VatTyp" nosql="No"/>
+         <indexcolumn ident="5504b7c8-4788-47e9-b60e-3e020cfb2c3d" clarionname="TrEM:VatNumer" sqlname="TrE_VatNumer" nosql="No"/>
+         <indexcolumn ident="2e7ce35d-9e34-46ad-9fec-4d2b0be6dbb5" clarionname="TrEM:VatLp" sqlname="TrE_VatLp" nosql="No"/>
+         <indexcolumn ident="2109ddd3-101c-4f41-82ae-05c36d8e9b4b" clarionname="TrEM:GIDLp" sqlname="TrE_GIDLp" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+    <relation type="MANY:1" onupdate="" ondelete=""
+        options=""
+        comments="" nosql="Yes" setnull="No"
+        conditional=""
+        parent="TraNag" primaryname="TrN:Primary" primarysqlname="TrNPrimary" parenthandler="" parentlink="TraNag"
+        child="TrEMMView" foreignname="TrEM:Primary" foreignsqlname="TrEPrimary" childhandler="" childlink="TrEMMView">
+      <relationcolumn
+        parentident="f18a0df4-9" parentname="TrN:GIDTyp" parentsqlname="TrN_GIDTyp"
+        childident="89329428-1f5c-44a9-a3c1-b0b1364c1214" childname="TrEM:GIDTyp" childsqlname="TrE_GIDTyp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="883cd542-c" parentname="TrN:GIDNumer" parentsqlname="TrN_GIDNumer"
+        childident="7d77cb8e-19aa-41e4-932a-a3242b0c455f" childname="TrEM:GIDNumer" childsqlname="TrE_GIDNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete=""
+        options=""
+        comments="" nosql="Yes" setnull="No"
+        conditional=""
+        parent="TwrKarty" primaryname="Twr:Primary" primarysqlname="TwrPrimary" parenthandler="" parentlink="TwrKarty"
+        child="TrEMMView" foreignname="TrEM:KeyTowarNoType" foreignsqlname="TrETowar" childhandler="" childlink="TrEMMView">
+      <relationcolumn
+        parentident="a2f6f0fe-d" parentname="Twr:GIDNumer" parentsqlname="Twr_GIDNumer"
+        childident="571a34b0-3447-478d-bffd-5cc9e1e2f739" childname="TrEM:TwrNumer" childsqlname="TrE_TwrNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+  </relations>
+</table>
+</ROOT>

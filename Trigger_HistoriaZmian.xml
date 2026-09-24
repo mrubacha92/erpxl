@@ -1,0 +1,1355 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza KntKarty_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'KntKarty_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.KntKarty_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza KntKarty_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.KntKarty_HistoriaZmian
+   ON cdn.KntKarty
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(3) = 0
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+	
+-------------	
+	
+	set @ObiTyp = 'KNT_GIDTyp'
+	set @ObiNumer = 'KNT_GIDNumer'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'KNT_Akronim'
+	set @CzasZmian = 'KNT_LastModL'
+	set @TabelaID = 10
+	set @Tabela = 'KntKarty'
+	set @TabelaPodlegla = 0
+	set @WarunekUpdate = 'i.KNT_GIDNumer=d.KNT_GIDNumer'
+	set @WarunekDelete = '1=1'
+	
+	
+-------		
+
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera KntKarty_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.KntKarty_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.KntKarty_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.KntKarty_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza KntGrupy_HistoriaZmian_KntKarty" hidden="True">
+if exists (select * from sysobjects where name = 'KntGrupy_HistoriaZmian_KntKarty' and xtype = 'TR')
+  drop trigger CDN.KntGrupy_HistoriaZmian_KntKarty;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza KntGrupy_HistoriaZmian_KntKarty" hidden="False">
+CREATE TRIGGER cdn.KntGrupy_HistoriaZmian_KntKarty
+   ON cdn.KntGrupy
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(3) = 0 
+		return
+	
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+-------------	
+	set @ObiTyp = 'KNG_GIDTyp'
+	set @ObiNumer = 'KNG_GIDNumer'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'KNG_Akronim'
+	set @CzasZmian = 'KNG_CzasModyfikacji'
+	set @TabelaID = 11
+	set @Tabela = 'KntGrupy'
+	set @TabelaPodlegla = 1
+	set @WarunekInsert = 'i.KNG_GIDTyp=32'
+	set @WarunekUpdate = 'i.KNG_GIDNumer=d.KNG_GIDNumer and (not i.KNG_GIDTyp is null and i.KNG_GIDTyp=32 or not d.KNG_GIDTyp is null and d.KNG_GIDTyp=32)'
+	set @WarunekDelete = 'd.KNG_GIDTyp=32'
+	set @WarunekWycofanieInsert = '1=1'
+	
+-------		
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+	
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera KntGrupy_HistoriaZmian_KntKarty" hidden="False">
+exec sp_settriggerorder 'cdn.KntGrupy_HistoriaZmian_KntKarty', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.KntGrupy_HistoriaZmian_KntKarty', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.KntGrupy_HistoriaZmian_KntKarty', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza KntOpiekun_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'KntOpiekun_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.KntOpiekun_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza KntOpiekun_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.KntOpiekun_HistoriaZmian
+   ON cdn.KntOpiekun
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+		
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+-------------	
+
+	if cdn.KonfHistoriaZmian(3) &lt;&gt; 0 --KNTKarty
+		or cdn.KonfHistoriaZmian(4) &lt;&gt; 0
+	begin
+		set @ColumnsUpdated = COLUMNS_UPDATED()
+		select * into #inserted from inserted
+		select * into #deleted from deleted
+	end
+	
+
+	if cdn.KonfHistoriaZmian(3) &lt;&gt; 0 --KNTKarty
+	begin
+	----------------
+		set @ObiTyp = 'KTO_KntTyp'
+		set @ObiNumer = 'KTO_KNTNumer'
+		set @ObiLp1 = 'KTO_PrcNumer'
+		set @ObiLp2 = 'KTO_DataOd'
+		set @ObiLp3 = 'KTO_DataDo'
+		set @ObiNazwa = NULL
+		set @CzasZmian = 'KTO_CzasModyfikacji'
+		set @TabelaID = 13
+		set @Tabela = 'KntOpiekun'
+		set @TabelaPodlegla = 1
+		set @WarunekInsert = 'i.KTO_KnTTyp=32'
+		set @WarunekUpdate = 'i.KTO_KntTyp=d.KTO_KNTTyp and i.KTO_KntNumer=d.KTO_KNTNumer and (not i.KTO_KntTyp is null and i.KTO_KntTyp=32 or not d.KTO_KntTyp is null and d.KTO_KntTyp=32)'
+		set @WarunekDelete = 'd.KTO_KnTTyp=32'
+		set @WarunekWycofanieInsert = '1=1'
+		
+	-------		
+			
+
+		exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+										@ObiNumer,
+										@ObiLp1,
+										@ObiLp2,
+										@ObiLp3,
+										@ObiNazwa,
+										@CzasZmian,
+										@TabelaID,
+										@Tabela,
+										@TabelaPodlegla,
+										@WarunekInsert,
+										@WarunekUpdate,
+										@WarunekDelete,
+										@WarunekWycofanieInsert,
+										@ColumnsUpdated
+	end
+
+
+	if cdn.KonfHistoriaZmian(4) &lt;&gt; 0 --Rejony
+	begin		
+	------------
+		set @ObiTyp = 'KTO_KntTyp'
+		set @ObiNumer = 'KTO_KNTNumer'
+		set @ObiLp1 = 'KTO_PrcNumer'
+		set @ObiLp2 = 'KTO_DataOd'
+		set @ObiLp3 = 'KTO_DataDo'
+		set @ObiNazwa = NULL
+		set @CzasZmian = 'KTO_CzasModyfikacji'
+		set @TabelaID = 31
+		set @Tabela = 'KntOpiekun'
+		set @TabelaPodlegla = 1
+		set @WarunekInsert = 'i.KTO_KnTTyp=948'
+		set @WarunekUpdate = 'i.KTO_KntTyp=d.KTO_KNTTyp and i.KTO_KntNumer=d.KTO_KNTNumer and (not i.KTO_KntTyp is null and i.KTO_KntTyp=948 or not d.KTO_KntTyp is null and d.KTO_KntTyp=948)'
+		set @WarunekDelete = 'd.KTO_KnTTyp=948'
+		set @WarunekWycofanieInsert = '1=1'
+		
+	-------		
+		
+		exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+										@ObiNumer,
+										@ObiLp1,
+										@ObiLp2,
+										@ObiLp3,
+										@ObiNazwa,
+										@CzasZmian,
+										@TabelaID,
+										@Tabela,
+										@TabelaPodlegla,
+										@WarunekInsert,
+										@WarunekUpdate,
+										@WarunekDelete,
+										@WarunekWycofanieInsert,
+										@ColumnsUpdated
+	end
+
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera KntOpiekun_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.KntOpiekun_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.KntOpiekun_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.KntOpiekun_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza TwrKarty_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'TwrKarty_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.TwrKarty_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza TwrKarty_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.TwrKarty_HistoriaZmian
+   ON cdn.TwrKarty
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(2) = 0 
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+	
+-------------	
+	
+	set @ObiTyp = 'TWR_GIDTyp'
+	set @ObiNumer = 'TWR_GIDNumer'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'TWR_Kod'
+	set @CzasZmian = 'TWR_LastModL'
+	set @TabelaID = 20
+	set @Tabela = 'TwrKarty'
+	set @TabelaPodlegla = 0
+	set @WarunekUpdate = 'i.Twr_GIDNumer=d.Twr_GIDNumer'
+	set @WarunekDelete = '1=1'
+	
+	
+-------		
+
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera TwrKarty_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.TwrKarty_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.TwrKarty_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.TwrKarty_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza TwrGrupy_HistoriaZmian_TwrKarty" hidden="True">
+if exists (select * from sysobjects where name = 'TwrGrupy_HistoriaZmian_TwrKarty' and xtype = 'TR')
+  drop trigger CDN.TwrGrupy_HistoriaZmian_TwrKarty;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza TwrGrupy_HistoriaZmian_TwrKarty" hidden="False">
+CREATE TRIGGER cdn.TwrGrupy_HistoriaZmian_TwrKarty
+   ON cdn.TwrGrupy
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(3) = 0 
+		return
+	
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+-------------	
+	set @ObiTyp = 'TWG_GIDTyp'
+	set @ObiNumer = 'TWG_GIDNumer'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'TWG_Kod'
+	set @CzasZmian = 'TWG_CzasModyfikacji'
+	set @TabelaID = 21
+	set @Tabela = 'TwrGrupy'
+	set @TabelaPodlegla = 1
+	set @WarunekInsert = 'i.TWG_GIDTyp=16'
+	set @WarunekUpdate = 'i.TWG_GIDNumer=d.TWG_GIDNumer and (not i.TWG_GIDTyp is null and i.TWG_GIDTyp=16 or not d.TWG_GIDTyp is null and d.TWG_GIDTyp=16)'
+	set @WarunekDelete = 'd.TWG_GIDTyp=16'
+	set @WarunekWycofanieInsert = '1=1'
+	
+-------		
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+	
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera TwrGrupy_HistoriaZmian_TwrKarty" hidden="False">
+exec sp_settriggerorder 'cdn.TwrGrupy_HistoriaZmian_TwrKarty', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.TwrGrupy_HistoriaZmian_TwrKarty', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.TwrGrupy_HistoriaZmian_TwrKarty', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza Rejony_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'Rejony_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.Rejony_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza Rejony_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.Rejony_HistoriaZmian
+   ON cdn.Rejony
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(4) = 0 
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+	
+-------------	
+	
+	set @ObiTyp = '948'
+	set @ObiNumer = 'REJ_ID'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'REJ_Nazwa'
+	set @CzasZmian = 'REJ_CzasModyfikacji'
+	set @TabelaID = 30
+	set @Tabela = 'Rejony'
+	set @TabelaPodlegla = 0
+	set @WarunekInsert = 'd.REJ_Nazwa like ''żźz%'' and d.REJ_Nazwa &lt;&gt; i.REJ_Nazwa'
+	set @WarunekUpdate = 'i.REJ_ID=d.REJ_ID'
+	set @WarunekDelete = '1=1'
+	set @WarunekWycofanieInsert = 'd.REJ_Nazwa like ''żźz%'''
+	
+	
+-------		
+
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera Rejony_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.Rejony_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.Rejony_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.Rejony_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza Banki_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'Banki_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.Banki_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza Banki_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.Banki_HistoriaZmian
+   ON cdn.Banki
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(8) = 0 
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+	
+-------------	
+	
+	set @ObiTyp = 'Bnk_GIDTyp'
+	set @ObiNumer = 'Bnk_GIDNumer'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'Bnk_Kod'
+	set @CzasZmian = 'Bnk_LastModL'
+	set @TabelaID = 40
+	set @Tabela = 'Banki'
+	set @TabelaPodlegla = 0
+	set @WarunekUpdate = 'i.Bnk_GIDNumer=d.Bnk_GIDNumer'
+	set @WarunekDelete = '1=1'
+	
+	
+-------		
+
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera Banki_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.Banki_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.Banki_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.Banki_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza KntAdresy_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'KntAdresy_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.KntAdresy_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza KntAdresy_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.KntAdresy_HistoriaZmian
+   ON cdn.KntAdresy
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+
+	if cdn.KonfHistoriaZmian(5) = 0
+		return
+	
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+-------------	
+
+	set @ObiTyp = 'KnA_GIDTyp'
+	set @ObiNumer = 'KnA_GIDNumer'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'KnA_Akronim'
+	set @CzasZmian = 'KnA_LastModL'
+	set @TabelaID = 14
+	set @Tabela = 'KntAdresy'
+	--Bug #357852
+	--set @TabelaPodlegla = 1
+	--set @WarunekInsert = 'd.KnA_Akronim = '''' and d.KnA_Akronim &lt;&gt; i.KnA_Akronim'
+	--set @WarunekWycofanieInsert = 'd.KnA_Akronim like '''' '
+		
+	set @TabelaPodlegla = 0
+	set @WarunekInsert = 'i.KnA_KnAPierwotny = 0'
+	set @WarunekWycofanieInsert = 'd.KnA_KnAPierwotny = 0'
+
+	set @WarunekUpdate = 'i.KnA_GIDNumer=d.KnA_GIDNumer'
+	set @WarunekDelete = '1=1'
+	
+-------		
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+	
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera KntAdresy_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.KntAdresy_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.KntAdresy_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.KntAdresy_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza KntPromocje_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'KntPromocje_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.KntPromocje_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza KntPromocje_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.KntPromocje_HistoriaZmian
+   ON cdn.KntPromocje
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+
+	if cdn.KonfHistoriaZmian(6) = 0
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+-------------	
+
+	set @ObiTyp = '5111' -- Typ_PromocjaKnt
+	set @ObiNumer = 'KPR_Id'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = NULL
+	set @CzasZmian = NULL
+	set @TabelaID = 15
+	set @Tabela = 'KntPromocje'
+	set @TabelaPodlegla = 1
+	set @WarunekInsert = 'i.KPR_KntTyp=32'
+	set @WarunekUpdate = 'i.KPR_Id=d.KPR_Id and (not i.KPR_KntTyp is null and i.KPR_KntTyp=32 or not d.KPR_KntTyp is null and d.KPR_KntTyp=32)'
+	set @WarunekDelete = 'd.KPR_KntTyp=32'
+	set @WarunekWycofanieInsert = '1=1'
+		
+-------		
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+	
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera KntPromocje_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.KntPromocje_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.KntPromocje_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.KntPromocje_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza KntLimityK_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'KntLimityK_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.KntLimityK_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza KntLimityK_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.KntLimityK_HistoriaZmian
+   ON cdn.KntLimityK
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+
+	if cdn.KonfHistoriaZmian(7) = 0
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+-------------	
+
+	set @ObiTyp = '5120' -- Typ_KntLimityK
+	set @ObiNumer = 'KLK_Id'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = NULL
+	set @CzasZmian = 'KLK_CzasModyfikacji'
+	set @TabelaID = 16
+	set @Tabela = 'KntLimityK'
+	set @TabelaPodlegla = 1
+	set @WarunekInsert = 'i.KLK_DataOd&gt;0'
+	set @WarunekUpdate = 'i.KLK_Id=d.KLK_Id and (not i.KLK_KntTyp is null and i.KLK_KntTyp=32 or not d.KLK_KntTyp is null and d.KLK_KntTyp=32)'
+	set @WarunekDelete = 'd.KLK_KntTyp=32'
+	set @WarunekWycofanieInsert = '1=1'
+		
+-------		
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+	
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera KntLimityK_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.KntLimityK_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.KntLimityK_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.KntLimityK_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza Konta_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'Konta_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.Konta_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza Konta_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.Konta_HistoriaZmian
+   ON cdn.Konta
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(9) = 0 
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+	
+-------------	
+	
+	set @ObiTyp = 'KKS_GIDTyp'
+	set @ObiNumer = 'KKS_GIDNumer'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'KKS_Konto'
+	set @CzasZmian = 'KKS_CzasModyfikacji'
+	set @TabelaID = 50
+	set @Tabela = 'Konta'
+	set @TabelaPodlegla = 0
+	set @WarunekUpdate = 'i.KKS_GIDNumer=d.KKS_GIDNumer'
+	set @WarunekDelete = '1=1'
+	
+	
+-------		
+
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera Konta_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.Konta_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.Konta_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.Konta_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza ZamNag_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'ZamNag_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.ZamNag_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza ZamNag_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.ZamNag_HistoriaZmian
+   ON cdn.ZamNag
+   AFTER  UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(7) = 0 or (not UPDATE(ZaN_LimitKredytowy) and not UPDATE(ZaN_LimitKredytowyKwota) and not UPDATE(ZaN_LimitKredytowyWaznyDo) and not UPDATE(ZaN_LimitKredytowyWaluta) and exists(select * from inserted))
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+-------------	
+	
+	set @ObiTyp = 'ZaN_GIDTyp'
+	set @ObiNumer = 'ZaN_GIDNumer'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'ZaN_GIDNumer'
+	set @CzasZmian = 'ZaN_LastMod'
+	set @TabelaID = 60
+	set @Tabela = 'ZamNag'
+	set @TabelaPodlegla = 0
+	set @WarunekUpdate = 'i.ZaN_GIDNumer=d.ZaN_GIDNumer'
+	set @WarunekDelete = '1=1'
+	
+	
+-------	
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+									
+	IF UPDATE(ZaN_LimitKredytowy)--TFS 297500	
+	BEGIN
+		declare @OpeIdent nvarchar(40)
+
+		select @OpeIdent = isnull(CDN.PolaczenieInfo(4),'') 
+		if @OpeIdent = ''
+		begin
+			select top 1 @OpeIdent = SES_OpeIdent from cdn.Sesje with(nolock) where (SES_ClarionSPID = @@SPID or SES_ADOSPID = @@SPID) and SES_Aktywna = 0 order by SES_Start desc
+			if @@ROWCOUNT = 0
+			begin 
+				set @OpeIdent = 'SQL:' + left(SYSTEM_USER,16)
+			end
+		end	
+		
+		insert into cdn.HistoriaZmian (HIS_ObiTyp,HIS_ObiNumer,HIS_ObiLp1,HIS_ObiLp2,HIS_ObiLp3,HIS_ObiNazwa,HIS_CzasZmian,HIS_TabelaID,HIS_CzasZmianDB,HIS_OpeIdent,HIS_TypZmiany,HIS_Kolumna,HIS_StaraWartosc,HIS_NowaWartosc)
+         select i.ZaN_GIDTyp , i.ZaN_GIDNumer, 0, 0, 0,'',i.ZaN_LastMod, 60, datediff(s,convert(datetime,'1990-01-01',120),getdate()), 
+         @OpeIdent, 1, 'ZaN_LimitKredytowyKwota', z.ZaN_LimitKredytowyKwota,z.ZaN_LimitKredytowyKwota
+         from inserted i
+         inner join CDN.ZamNag z on z.ZaN_GIDNumer = i .ZaN_GIDNumer 
+         where not EXISTS(Select * from CDN.HistoriaZmian where HIS_ObiTyp = z.ZaN_GIDTyp and HIS_ObiNumer = z.ZaN_GIDNumer and HIS_Kolumna = 'ZaN_LimitKredytowyKwota')
+		
+		insert into cdn.HistoriaZmian (HIS_ObiTyp,HIS_ObiNumer,HIS_ObiLp1,HIS_ObiLp2,HIS_ObiLp3,HIS_ObiNazwa,HIS_CzasZmian,HIS_TabelaID,HIS_CzasZmianDB,HIS_OpeIdent,HIS_TypZmiany,HIS_Kolumna,HIS_StaraWartosc,HIS_NowaWartosc)
+         select i.ZaN_GIDTyp , i.ZaN_GIDNumer, 0, 0, 0,'',i.ZaN_LastMod, 60, datediff(s,convert(datetime,'1990-01-01',120),getdate()), 
+         @OpeIdent, 1, 'ZaN_LimitKredytowyWaznyDo', z.ZaN_LimitKredytowyWaznyDo,z.ZaN_LimitKredytowyWaznyDo
+         from inserted i
+         inner join CDN.ZamNag z on z.ZaN_GIDNumer = i .ZaN_GIDNumer 
+         where not EXISTS(Select * from CDN.HistoriaZmian where HIS_ObiTyp = z.ZaN_GIDTyp and HIS_ObiNumer = z.ZaN_GIDNumer and HIS_Kolumna = 'ZaN_LimitKredytowyWaznyDo')
+	END						
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera ZamNag_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.ZamNag_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.ZamNag_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza KntOsoby_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'KntOsoby_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.KntOsoby_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza KntOsoby_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.KntOsoby_HistoriaZmian
+   ON cdn.KntOsoby
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(10) = 0 
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+	
+-------------	
+	
+	set @ObiTyp = 'KnS_KntTyp'
+	set @ObiNumer = 'KnS_KntNumer'
+	set @ObiLp1 = 'KnS_KntLp'
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'KnS_Nazwa'
+	set @CzasZmian = 'KnS_CzasModyfikacji'
+	set @TabelaID = 17
+	set @Tabela = 'KntOsoby'
+	set @TabelaPodlegla = 1
+	set @WarunekInsert = '1=1'
+	set @WarunekUpdate = 'i.KnS_KntTyp=d.KnS_KntTyp AND i.KnS_KntNumer=d.KnS_KntNumer AND i.KnS_KntLp=d.KnS_KntLp'
+	set @WarunekDelete = '1=1'
+	set @WarunekWycofanieInsert = ' d.KnS_Nazwa like '''''
+	
+	
+-------		
+
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera KntOsoby_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.KntOsoby_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.KntOsoby_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.KntOsoby_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza PrcKarty_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'PrcKarty_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.PrcKarty_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza PrcKarty_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.PrcKarty_HistoriaZmian
+   ON cdn.PrcKarty
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(11) = 0 
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+	
+-------------	
+	
+	set @ObiTyp = 'Prc_GIDTyp'
+	set @ObiNumer = 'Prc_GIDNumer'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'Prc_Akronim'
+	set @CzasZmian = 'Prc_CzasModyfikacji'
+	set @TabelaID = 110
+	set @Tabela = 'PrcKarty'
+	set @TabelaPodlegla = 0
+	set @WarunekUpdate = 'i.Prc_GIDNumer=d.Prc_GIDNumer'
+	set @WarunekDelete = '1=1'
+	
+	
+-------		
+
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera PrcKarty_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.PrcKarty_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.PrcKarty_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.PrcKarty_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza PrcAdresyEmail_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'PrcAdresyEmail_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.PrcAdresyEmail_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza PrcAdresyEmail_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.PrcAdresyEmail_HistoriaZmian
+   ON cdn.PrcAdresyEmail
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(11) = 0 
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+	
+-------------	
+	
+	set @ObiTyp = 945
+	set @ObiNumer = 'PRAE_Id'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'PRAE_AdresEmail'
+	set @CzasZmian = NULL
+	set @TabelaID = 111
+	set @Tabela = 'PrcAdresyEmail'
+	set @TabelaPodlegla = 1
+	set @WarunekInsert = '1=1'
+	set @WarunekUpdate = 'i.PRAE_ID=d.PRAE_ID'
+	set @WarunekDelete = '1=1'
+	set @WarunekWycofanieInsert = '1=1'
+	
+	
+-------		
+
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera PrcAdresyEmail_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.PrcAdresyEmail_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.PrcAdresyEmail_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.PrcAdresyEmail_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza RachunkiBankowe_HistoriaZmian" hidden="True">
+if exists (select * from sysobjects where name = 'RachunkiBankowe_HistoriaZmian' and xtype = 'TR')
+  drop trigger CDN.RachunkiBankowe_HistoriaZmian;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza RachunkiBankowe_HistoriaZmian" hidden="False">
+CREATE TRIGGER cdn.RachunkiBankowe_HistoriaZmian
+   ON cdn.RachunkiBankowe
+   AFTER INSERT, UPDATE, DELETE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	
+	if cdn.KonfHistoriaZmian(3) = 0
+		return
+	
+	--------------------
+	declare @ObiTyp nvarchar(50)
+	declare @ObiNumer nvarchar(50)
+	declare @ObiLp1 nvarchar(50)
+	declare @ObiLp2 nvarchar(50)
+	declare @ObiLp3 nvarchar(50)
+	declare @ObiNazwa nvarchar(50)
+	declare @CzasZmian nvarchar(50)
+	declare @TabelaID smallint
+	declare @Tabela nvarchar(20)
+	declare @TabelaPodlegla tinyint	
+	declare @WarunekInsert nvarchar(1000)
+	declare @WarunekUpdate nvarchar(1000)
+	declare @WarunekDelete nvarchar(1000)
+	declare @WarunekWycofanieInsert nvarchar(1000)
+	declare @ColumnsUpdated varbinary(512)
+	
+-------------	
+	
+	set @ObiTyp = '1648'
+	set @ObiNumer = 'RkB_Id'
+	set @ObiLp1 = NULL
+	set @ObiLp2 = NULL
+	set @ObiLp3 = NULL
+	set @ObiNazwa = 'RkB_NrRachunku'
+	set @CzasZmian = 'RkB_CzasModyfikacji'
+	set @TabelaID = 18
+	set @Tabela = 'RachunkiBankowe'
+	set @TabelaPodlegla = 0
+	set @WarunekInsert = 'i.RkB_BnkTyp = 0'
+	set @WarunekUpdate = 'i.RkB_Id = d.RkB_Id'
+	set @WarunekDelete = '1 = 1'
+	set @WarunekWycofanieInsert = 'd.RkB_BnkTyp = 0'
+	
+	
+-------		
+
+
+	set @ColumnsUpdated = COLUMNS_UPDATED()
+	select * into #inserted from inserted
+	select * into #deleted from deleted
+
+	exec cdn.HistoriaZmianRejestruj @ObiTyp, 
+									@ObiNumer,
+									@ObiLp1,
+									@ObiLp2,
+									@ObiLp3,
+									@ObiNazwa,
+									@CzasZmian,
+									@TabelaID,
+									@Tabela,
+									@TabelaPodlegla,
+									@WarunekInsert,
+									@WarunekUpdate,
+									@WarunekDelete,
+									@WarunekWycofanieInsert,
+									@ColumnsUpdated
+	
+END
+</scriptdef>
+<scriptdef name="Nadanie kolejności wywołania triggera RachunkiBankowe_HistoriaZmian" hidden="False">
+exec sp_settriggerorder 'cdn.RachunkiBankowe_HistoriaZmian', 'LAST', 'INSERT'
+exec sp_settriggerorder 'cdn.RachunkiBankowe_HistoriaZmian', 'LAST', 'UPDATE'
+exec sp_settriggerorder 'cdn.RachunkiBankowe_HistoriaZmian', 'LAST', 'DELETE'
+
+</scriptdef>
+</ROOT>

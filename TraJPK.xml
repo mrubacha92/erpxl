@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:26:30 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="TraJPK" ident="a65cc8fd-ebf5-42e2-b19e-7591845ed169" prefix="TrJ" filename="'Trans.Cdn\!TraJPK'" options="NO_FILTER"
+  description="Kody grup towarowych JPK" longdescription="" owner="Connect_DSN3" glbx="3" nosql="No"
+  aliases="">
+  <columns>
+    <group ident="1d16f141-de25-4fbe-ad73-4df2e89a835c" clarionname="TrJ:TrnGID" type="GROUP" clariontype="GROUP" description="GID transkcji" longdescription="">
+    <column ident="59aa2514-c0fa-4efd-998b-95da90a9b910" clarionname="TrJ:TrNTyp" sqlname="TrJ_TrNTyp" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Tr NT yp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="a2658e27-f3c8-4523-9cee-079eca032c66" clarionname="TrJ:TrNFirma" sqlname="TrJ_TrNFirma" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="Tr NF irma" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="ae345477-70ad-48fb-85e5-e1f84726729b" clarionname="TrJ:TrNNumer" sqlname="TrJ_TrNNumer" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="Tr NN umer" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="0ac309b6-46f8-498f-aa42-72ee930098e7" clarionname="TrJ:TrNLp" sqlname="TrJ_TrNLp" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Tr NL p" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    </group>
+    <column ident="ad21c825-264b-4972-9cf7-fc88fb15005f" clarionname="TrJ:Wartosc" sqlname="TrJ_Wartosc" type="CSTRING" clariontype="CSTRING(51)" sqltype="VARCHAR(50)"
+      size="51" places="0" description="Treść opisu" longdescription="" options=""
+      picture="@s50" initial="" justification.type="L" justification.indent="0"
+      header="Wartosc" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="ffda0b75-f8e9-4259-8df7-b849debfa8ff" clarionname="TrJ:Primary" sqlname="TrJPrimary" description="Wg transakcji" longdescription="" options="NF_TrnTyp" primary="Yes" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="Yes" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="59aa2514-c0fa-4efd-998b-95da90a9b910" clarionname="TrJ:TrNTyp" sqlname="TrJ_TrNTyp" nosql="Yes"/>
+         <indexcolumn ident="ae345477-70ad-48fb-85e5-e1f84726729b" clarionname="TrJ:TrNNumer" sqlname="TrJ_TrNNumer" nosql="No"/>
+         <indexcolumn ident="0ac309b6-46f8-498f-aa42-72ee930098e7" clarionname="TrJ:TrNLp" sqlname="TrJ_TrNLp" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+    <relation type="MANY:1" onupdate="" ondelete="CASCADE"
+        options=""
+        comments="" nosql="No" setnull="No"
+        conditional=""
+        parent="TraNag" primaryname="TrN:Primary" primarysqlname="TrNPrimary" parenthandler="" parentlink="TraNag"
+        child="TraJPK" foreignname="TrJ:Primary" foreignsqlname="TrJPrimary" childhandler="FK_TrJPrimary" childlink="TraJPK">
+      <relationcolumn
+        parentident="f18a0df4-9" parentname="TrN:GIDTyp" parentsqlname="TrN_GIDTyp"
+        childident="59aa2514-c0fa-4efd-998b-95da90a9b910" childname="TrJ:TrNTyp" childsqlname="TrJ_TrNTyp" isinsqlprimary="No" />
+      <relationcolumn
+        parentident="883cd542-c" parentname="TrN:GIDNumer" parentsqlname="TrN_GIDNumer"
+        childident="ae345477-70ad-48fb-85e5-e1f84726729b" childname="TrJ:TrNNumer" childsqlname="TrJ_TrNNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+  </relations>
+</table>
+</ROOT>

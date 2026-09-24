@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza Trigger_PTZ_UsunDomyslneTechnologieDlaZasobu" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'Trigger_PTZ_UsunDomyslneTechnologieDlaZasobu' AND xtype = 'TR')
+  DROP TRIGGER CDN.Trigger_PTZ_UsunDomyslneTechnologieDlaZasobu
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza Trigger_PTZ_UsunDomyslneTechnologieDlaZasobu" hidden="False">
+CREATE TRIGGER CDN.Trigger_PTZ_UsunDomyslneTechnologieDlaZasobu
+ON CDN.ProdTechnologiaZasoby
+FOR DELETE
+AS
+BEGIN
+IF (SELECT COUNT(*) FROM deleted d 
+				JOIN CDN.ProdTechnologiaCzynnosci c ON d.PTZ_TechnologiaCzynnosc = c.PTC_Id
+				JOIN CDN.TwrKarty t ON d.PTZ_TwrNumer = t.Twr_GIDNumer AND d.PTZ_TwrTyp = t.Twr_GIDTyp
+				JOIN CDN.ProdTechnologiaCzynnosci CI ON CI.PTC_Technologia = C.PTC_Technologia
+				JOIN CDN.ProdTechnologiaZasoby ZI ON ZI.PTZ_TechnologiaCzynnosc = CI.PTC_Id AND ZI.PTZ_TypZasobu = 0 AND ZI.PTZ_TwrNumer = T.Twr_GIDNumer AND ZI.PTZ_TwrTyp = 16 AND ZI.PTZ_PodstawowaTechnologiaDlaProduktu = 1
+			WHERE c.PTC_Technologia = t.Twr_ProdTechnologia AND d.PTZ_TypZasobu = 0) = 0
+	BEGIN
+			UPDATE TwrKarty SET Twr_ProdTechnologia = 0 
+			WHERE Twr_GIDNumer IN (SELECT PTZ_TwrNumer FROM deleted)
+	END
+END
+</scriptdef>
+</ROOT>

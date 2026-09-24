@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="Raporty_CzasModyfikacji_OFFL">
+CREATE TRIGGER CDN.Raporty_CzasModyfikacji_OFFL
+ON CDN.Raporty
+FOR UPDATE
+AS
+BEGIN
+  IF UPDATE(KRP_ZewnetrznyId)
+  BEGIN
+    UPDATE CDN.Raporty SET KRP_CzasModyfikacji = datediff(s,convert(datetime,'1990-01-01',120),getdate())
+    FROM CDN.Raporty R JOIN inserted I ON R.KRP_GIDNumer = I.KRP_GIDNumer 
+  END
+END
+</triggerdef>
+</ROOT>

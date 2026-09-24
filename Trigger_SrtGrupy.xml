@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="SrtGrupyInsertUpdate_CzasModyfikacji">
+CREATE  TRIGGER CDN.SrtGrupyInsertUpdate_CzasModyfikacji
+  ON CDN.SrtGrupy
+  FOR INSERT, UPDATE
+AS
+ BEGIN
+  UPDATE CDN.SrtGrupy SET SrG_CzasModyfikacji = DATEDIFF(s,CONVERT(datetime,'1990-01-01',120),GETDATE())
+       FROM  CDN.SrtGrupy T JOIN inserted I ON T.SrG_GIDNumer = I.SrG_GIDNumer AND T.SrG_GIDTyp = I.SrG_GIDTyp
+ END
+</triggerdef>
+<triggerdef name="SrtGrupyDelete_CzasModyfikacji">
+CREATE    TRIGGER CDN.SrtGrupyDelete_CzasModyfikacji
+  ON CDN.SrtGrupy
+  FOR DELETE
+AS
+BEGIN
+
+ UPDATE CDN.SrtGrupy SET SrG_CzasModyfikacji = DATEDIFF(s,CONVERT(datetime,'1990-01-01',120),GETDATE())
+       FROM  CDN.SrtGrupy T JOIN deleted D ON T.SrG_GIDNumer = D.SrG_GrONumer AND T.SrG_GIDTyp = D.SrG_GrOTyp
+ WHERE D.SrG_GIDTyp=-368
+
+ UPDATE CDN.SrtGrupy SET SrG_CzasModyfikacji = DATEDIFF(s,CONVERT(datetime,'1990-01-01',120),GETDATE())
+       FROM  CDN.SrtGrupy T JOIN deleted D ON T.SrG_GIDNumer = D.SrG_GIDNumer AND T.SrG_GIDTyp = D.SrG_GIDTyp
+ WHERE D.SrG_GIDTyp=368
+
+END
+</triggerdef>
+</ROOT>

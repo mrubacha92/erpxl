@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie wyzwalacza TraVat_Update_TraSVat" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'TraVat_Update_TraSVat' AND xtype = 'TR')
+  DROP TRIGGER CDN.TraVat_Update_TraSVat;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza SrsElem_UpdateWykonanie" hidden="False">
+-- =============================================
+-- Create date: 2018.07.24
+-- Description:	Projekt MetodaKasowa
+-- Podczas modyfikacji do TraVat dodawany jest podstawowy związany TraSVat
+-- =============================================
+CREATE TRIGGER [CDN].[TraVat_Update_TraSVat]
+   ON [CDN].[TraVat]
+   FOR UPDATE
+AS 
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for trigger here
+
+	BEGIN
+		UPDATE cdn.TraSVat SET TSV_NettoR=TSV_NettoR-deleted.TrV_NettoR+inserted.TrV_NettoR,TSV_NettoP=TSV_NettoP-deleted.TrV_NettoP+inserted.TrV_NettoP,
+		TSV_VATR=TSV_VATR-deleted.TrV_VATR+inserted.TrV_VATR,TSV_VATP=TSV_VATP-deleted.TrV_VATP+inserted.TrV_VATP,
+		TSV_DeklRok=inserted.TrV_DeklRok,TSV_DeklMiesiac=inserted.TrV_DeklMiesiac,TSV_RodzajZakupu=inserted.TrV_RodzajZakupu,
+		TSV_OdliczeniaVAT=inserted.TrV_OdliczeniaVAT,TSV_Rozliczac=inserted.TrV_Rozliczac,TSV_RozliczacP=inserted.TrV_RozliczacP,TSV_Opis=inserted.TrV_Opis,
+		TSV_KatDatyOP=inserted.TrV_KatDatyOP,TSV_DataOP=inserted.TrV_DataOP,TSV_DataPO=inserted.TrV_DataPO FROM inserted
+		JOIN deleted on inserted.TrV_GIDTyp=deleted.TrV_GIDTyp AND inserted.TrV_GIDNumer=deleted.TrV_GIDNumer AND inserted.TrV_GIDLp=deleted.TrV_GIDLp
+		WHERE TSV_GIDTyp=inserted.TrV_GIDTyp AND TSV_GIDNumer=inserted.TrV_GIDNumer AND TSV_GIDLp=inserted.TrV_GIDLp AND TSV_SubGIDLp=1
+					
+        -- Sprawdzenie poprawności operacji
+        IF @@error &lt;&gt; 0
+        BEGIN
+          RAISERROR('Wystąpił błąd podczas modyfikacji rekord tabeli CDN.TraSVat.', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT ON
+          RETURN
+        END
+	END
+    
+	SET NOCOUNT OFF
+END
+</scriptdef>
+</ROOT>

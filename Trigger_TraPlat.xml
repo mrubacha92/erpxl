@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza TraPlat_DataRoz" hidden="True">
+if exists (select * from sysobjects where name = 'TraPlat_DataRoz' and xtype = 'TR')
+  drop trigger CDN.TraPlat_DataRoz;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza TraPlat_DataRoz" hidden="False">
+create trigger CDN.TraPlat_DataRoz
+on CDN.TraPlat
+for insert, update
+as
+ if not update(Trp_Pozostaje)
+    return
+
+  declare @TrpTyp smallint
+  declare @TrpNumer int
+  declare @TrpLp smallint
+  declare @TrpPozostaje decimal(15,2)
+  declare @Tabela int
+  
+  if @@ROWCOUNT = 1
+  begin
+      select @TrpTyp=Trp_GIDTyp,@TrpNumer=Trp_GIDNumer,@TrpLp=Trp_GIDLp,@TrpPozostaje=Trp_Pozostaje  from inserted;
+      set @Tabela = CDN.GIDTyp2Tabela(@TrpTyp)
+      if @Tabela=1 --tranag
+      begin
+        update cdn.tranag set trn_DataRoz=
+           case when @TrpPozostaje&lt;&gt;0
+           then 0
+           else case when exists(select trp_gidnumer from cdn.traplat where
+                   trp_gidtyp=@TrpTyp and trp_gidnumer=@TrpNumer and trp_gidlp&lt;&gt;@TrpLp and trp_pozostaje&lt;&gt;0)
+                then 0
+                else (select isnull(max(r2_datarozliczenia),0) from
+			(select R2_Dok1Typ as R2_DokTyp, R2_Dok1Numer as R2_DokNumer, R2_Dok1Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia union all
+			select R2_Dok2Typ as R2_DokTyp, R2_Dok2Numer as R2_DokNumer, R2_Dok2Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia ) as pod
+			where R2_DokTyp = @TrpTyp and R2_DokNumer=@TrpNumer and R2_DokLp=@TrpLp)
+                end
+           end
+        where trn_gidtyp=@TrpTyp and trn_gidnumer=@TrpNumer
+      end
+      if @Tabela = 10 --sadnag
+      begin
+        update cdn.sadnag set san_DataRoz=
+           case when @TrpPozostaje&lt;&gt;0
+           then 0
+           else case when exists(select trp_gidnumer from cdn.traplat where
+                   trp_gidtyp=@TrpTyp and trp_gidnumer=@TrpNumer and trp_gidlp&lt;&gt;@TrpLp and trp_pozostaje&lt;&gt;0)
+                then 0
+                else (select isnull(max(r2_datarozliczenia),0) from
+			(select R2_Dok1Typ as R2_DokTyp, R2_Dok1Numer as R2_DokNumer, R2_Dok1Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia union all
+			select R2_Dok2Typ as R2_DokTyp, R2_Dok2Numer as R2_DokNumer, R2_Dok2Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia ) as pod
+			where R2_DokTyp = @TrpTyp and R2_DokNumer=@TrpNumer and R2_DokLp=@TrpLp)
+                end
+           end
+        where san_gidtyp=@TrpTyp and san_gidnumer=@TrpNumer
+      end
+      if @Tabela = 11 --impnag
+      begin
+        update cdn.impnag set imn_DataRoz=
+           case when @TrpPozostaje&lt;&gt;0
+           then 0
+           else case when exists(select trp_gidnumer from cdn.traplat where
+                   trp_gidtyp=@TrpTyp and trp_gidnumer=@TrpNumer and trp_gidlp&lt;&gt;@TrpLp and trp_pozostaje&lt;&gt;0)
+                then 0
+                else (select isnull(max(r2_datarozliczenia),0) from
+			(select R2_Dok1Typ as R2_DokTyp, R2_Dok1Numer as R2_DokNumer, R2_Dok1Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia union all
+			select R2_Dok2Typ as R2_DokTyp, R2_Dok2Numer as R2_DokNumer, R2_Dok2Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia ) as pod
+			where R2_DokTyp = @TrpTyp and R2_DokNumer=@TrpNumer and R2_DokLp=@TrpLp)
+                end
+           end
+        where imn_gidtyp=@TrpTyp and imn_gidnumer=@TrpNumer
+      end
+  end;
+  else
+  begin
+    declare rozrachunki_cur cursor local fast_forward for
+      select Trp_GIDTyp,Trp_GIDNumer,Trp_GIDLp,Trp_Pozostaje from inserted;
+    open rozrachunki_cur;
+    fetch next from rozrachunki_cur into @TrpTyp, @TrpNumer, @TrpLp, @TrpPozostaje;
+    while @@FETCH_STATUS = 0
+    begin
+      set @Tabela = CDN.GIDTyp2Tabela(@TrpTyp)
+      if @Tabela=1 --tranag
+      begin
+        update cdn.tranag set trn_DataRoz=
+           case when @TrpPozostaje&lt;&gt;0
+           then 0
+           else case when exists(select trp_gidnumer from cdn.traplat where
+                   trp_gidtyp=@TrpTyp and trp_gidnumer=@TrpNumer and trp_gidlp&lt;&gt;@TrpLp and trp_pozostaje&lt;&gt;0)
+                then 0
+                else (select isnull(max(r2_datarozliczenia),0) from
+			(select R2_Dok1Typ as R2_DokTyp, R2_Dok1Numer as R2_DokNumer, R2_Dok1Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia union all
+			select R2_Dok2Typ as R2_DokTyp, R2_Dok2Numer as R2_DokNumer, R2_Dok2Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia ) as pod
+			where R2_DokTyp = @TrpTyp and R2_DokNumer=@TrpNumer and R2_DokLp=@TrpLp)
+                end
+           end
+        where trn_gidtyp=@TrpTyp and trn_gidnumer=@TrpNumer
+      end
+      if @Tabela = 10 --sadnag
+      begin
+        update cdn.sadnag set san_DataRoz=
+           case when @TrpPozostaje&lt;&gt;0
+           then 0
+           else case when exists(select trp_gidnumer from cdn.traplat where
+                   trp_gidtyp=@TrpTyp and trp_gidnumer=@TrpNumer and trp_gidlp&lt;&gt;@TrpLp and trp_pozostaje&lt;&gt;0)
+                then 0
+                else (select isnull(max(r2_datarozliczenia),0) from
+			(select R2_Dok1Typ as R2_DokTyp, R2_Dok1Numer as R2_DokNumer, R2_Dok1Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia union all
+			select R2_Dok2Typ as R2_DokTyp, R2_Dok2Numer as R2_DokNumer, R2_Dok2Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia ) as pod
+			where R2_DokTyp = @TrpTyp and R2_DokNumer=@TrpNumer and R2_DokLp=@TrpLp)
+                end
+           end
+        where san_gidtyp=@TrpTyp and san_gidnumer=@TrpNumer
+      end
+      if @Tabela = 11 --impnag
+      begin
+        update cdn.impnag set imn_DataRoz=
+           case when @TrpPozostaje&lt;&gt;0
+           then 0
+           else case when exists(select trp_gidnumer from cdn.traplat where
+                   trp_gidtyp=@TrpTyp and trp_gidnumer=@TrpNumer and trp_gidlp&lt;&gt;@TrpLp and trp_pozostaje&lt;&gt;0)
+                then 0
+                else (select isnull(max(r2_datarozliczenia),0) from
+			(select R2_Dok1Typ as R2_DokTyp, R2_Dok1Numer as R2_DokNumer, R2_Dok1Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia union all
+			select R2_Dok2Typ as R2_DokTyp, R2_Dok2Numer as R2_DokNumer, R2_Dok2Lp as R2_DokLp, R2_DataRozliczenia
+			from CDN.Rozliczenia ) as pod
+			where R2_DokTyp = @TrpTyp and R2_DokNumer=@TrpNumer and R2_DokLp=@TrpLp)
+                end
+           end
+        where imn_gidtyp=@TrpTyp and imn_gidnumer=@TrpNumer
+      end
+
+      fetch next from rozrachunki_cur into @TrpTyp, @TrpNumer, @TrpLp, @TrpPozostaje;
+    end
+   close rozrachunki_cur;
+  end;
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza TraPlat_AktualizujWydatkiPrcPlatnosci" hidden="True">
+IF EXISTS (SELECT name FROM sysobjects WHERE  name = 'TraPlat_AktualizujWydatkiPrcPlatnosci' AND type = 'TR')
+  DROP TRIGGER CDN.TraPlat_AktualizujWydatkiPrcPlatnosci
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza TraPlat_AktualizujWydatkiPrcPlatnosci" hidden="False">
+CREATE TRIGGER CDN.TraPlat_AktualizujWydatkiPrcPlatnosci
+ON CDN.Traplat
+FOR DELETE
+AS 
+BEGIN
+
+	UPDATE w set 
+		WPP_DokTRPTyp = 0
+		,WPP_DokTRPFirma=0
+		,WPP_DokTRPNumer=0
+		,WPP_DokTRPLp=0
+	from deleted d join cdn.WydatkiPrcPlatnosci w
+		on d.TrP_GIDTyp=w.WPP_DokTRPTyp and d.TrP_GIDNumer=w.WPP_DokTRPNumer and d.TrP_GIDLp=w.WPP_DokTRPLp
+
+
+	if @@ERROR&lt;&gt;0
+	begin
+		rollback tran
+		raiserror('#CDN_BLAD/##CDN_1=Błąd aktualizacji wydatku delegacji (1)/#',16,1)
+		return
+	end	 
+	
+	
+	if exists(select 1 from deleted where TrP_GIDTyp = 2984)
+	begin
+		UPDATE w set 
+			WPP_DLGTRPPrzeciwTyp = 0
+			,WPP_DLGTRPPrzeciwFirma=0
+			,WPP_DLGTRPPrzeciwNumer=0
+			,WPP_DLGTRPPrzeciwLp=0
+		from deleted d join cdn.WydatkiPrcPlatnosci w
+			on d.TrP_GIDTyp=w.WPP_DLGTRPPrzeciwTyp and d.TrP_GIDNumer=w.WPP_DLGTRPPrzeciwNumer and d.TrP_GIDLp=w.WPP_DLGTRPPrzeciwLp
+
+
+		if @@ERROR&lt;&gt;0
+		begin
+			rollback tran
+			raiserror('#CDN_BLAD/##CDN_1=Błąd aktualizacji wydatku delegacji (2)/#',16,1)
+			return
+		end							
+	end
+END
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza TraPlat_AktualizujProlZrdGID" hidden="True">
+IF EXISTS (SELECT name FROM sysobjects WHERE  name = 'TraPlat_AktualizujProlZrdGID' AND type = 'TR')
+  DROP TRIGGER CDN.TraPlat_AktualizujProlZrdGID
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza TraPlat_AktualizujProlZrdGID" hidden="False">
+CREATE TRIGGER CDN.TraPlat_AktualizujProlZrdGID
+ON CDN.Traplat
+FOR INSERT
+AS 
+BEGIN
+	UPDATE trp
+	SET 
+	  trp.TrP_ProlZrdTyp=trp.TrP_GidTyp,
+	  trp.TrP_ProlZrdFirma=trp.Trp_GidFirma,
+	  trp.TrP_ProlZrdNumer=trp.Trp_GidNumer,
+	  trp.TrP_ProlZrdLp = trp.TrP_GidLp 
+	FROM cdn.traplat AS trp
+	INNER JOIN inserted i ON i.trp_gidtyp = trp.TrP_GIDTyp and i.trp_gidNumer = trp.TrP_GIDNumer  and i.TrP_GIDFirma = trp.TrP_GIDFirma and i.trp_gidLp = trp.TrP_GIDLp  
+	WHERE i.TrP_ProlZrdNumer=0
+
+	if @@ERROR&lt;&gt;0
+	begin
+		rollback tran
+		raiserror('#CDN_BLAD/##CDN_1=Błąd aktualizacji TrP_ProlZrodlGID(1)/#',16,1)
+		return
+	END	 
+END
+</scriptdef>
+</ROOT>

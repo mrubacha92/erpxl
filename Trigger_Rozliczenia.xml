@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza RozliczeniaInsert" hidden="True">
+IF EXISTS (SELECT name FROM sysobjects WHERE  name = 'RozliczeniaInsert' AND type = 'TR')
+  DROP TRIGGER CDN.RozliczeniaInsert
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza RozliczeniaInsert" hidden="False">
+CREATE TRIGGER CDN.RozliczeniaInsert
+ON CDN.Rozliczenia
+FOR INSERT
+AS 
+BEGIN
+  UPDATE R2 SET R2.R2_ParID = R2.R2_ID FROM CDN.Rozliczenia R2 JOIN inserted ON R2.R2_ID = inserted.R2_ID WHERE isnull(inserted.R2_ParID,0)=0
+END
+</scriptdef>
+</ROOT>

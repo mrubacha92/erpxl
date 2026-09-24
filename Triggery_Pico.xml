@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="PicoLog_TStamp">
+create trigger CDN.PicoLog_TStamp
+ON CDN.PicoLog
+For insert,update
+As
+SET NOCOUNT ON 
+    update CDN.PicoLog Set PcL_TStamp=DateDiff(second,convert(datetime,'1990-01-01',120),getdate()) 
+		FROM CDN.PicoLog join inserted ON CDN.PicoLog.PcL_ID=inserted.PcL_ID
+SET NOCOUNT OFF 
+</triggerdef>
+</ROOT>

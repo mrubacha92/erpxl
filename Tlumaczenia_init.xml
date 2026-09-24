@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Wypełnienie tabeli Tlumaczenia - Konfiguracja / Formy płatności " hidden="False">
+SET NOCOUNT ON;
+
+insert into CDN.Tlumaczenia(TLM_Typ,TLM_Numer,TLM_Lp,TLM_Pole,TLM_Jezyk,TLM_Tekst)
+select 736 Typ,T.Kon_Lp Numer, 0 Lp,P.Pole Pole, SLW_Id Jezyk, T.Tekst Tekst
+from (select * from (values (10,'francuski','Esp'+CHAR(232)+'ces'),
+							(10,'niemiecki','Barzahlung'),
+							(10,'ukraiński','Ăîňłâęŕ'),
+							(20,'francuski','Virement'),
+							(20,'niemiecki','Banküberweisung'),
+							(20,'ukraiński','Áŕíęłâńüęčé ďĺđĺęŕç'),
+							(30,'francuski','Crédit'),
+							(30,'niemiecki','Kredit'),
+							(30,'ukraiński','Ęđĺäčň'),
+							(40,'francuski','Ch'+CHAR(232)+'que'),
+							(40,'niemiecki','Scheck'),
+							(40,'ukraiński','Ďëŕňłćíĺ äîđó÷ĺíí˙'),
+							(50,'francuski','Carte'),
+							(50,'niemiecki','Karte'),
+							(50,'ukraiński','Ęŕđňŕ'),
+							(60,'francuski','Autre'),
+							(60,'niemiecki','Sonstige'),
+							(60,'ukraiński','˛ířĺ')) Tlm(Kon_Lp,Jezyk,Tekst)) T
+join cdn.Slowniki on SLW_WartoscS = T.Jezyk
+join cdn.SlownikiStruktura on SLS_Id = SLW_SLSId
+cross join (select * from (values (2), (3)) Pole(pole) ) P
+where SLS_Predefiniowany = 95 
+	and not exists(select * from cdn.Tlumaczenia where TLM_Typ = 736 and TLM_Numer = T.Kon_Lp and TLM_Pole in(2,3))
+
+SET NOCOUNT OFF;
+</scriptdef>
+</ROOT>

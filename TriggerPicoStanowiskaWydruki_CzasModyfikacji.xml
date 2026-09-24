@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza PicoStanowiskaWydruki_CzasModyfikacji" hidden="True">
+IF EXISTS (SELECT name FROM sysobjects WHERE name = 'PicoStanowiskaWydruki_CzasModyfikacji' AND type = 'TR')
+DROP TRIGGER CDN.PicoStanowiskaWydruki_CzasModyfikacji
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza PicoStanowiskaWydruki_CzasModyfikacji" hidden="False">
+CREATE TRIGGER [CDN].[PicoStanowiskaWydruki_CzasModyfikacji]
+ON [CDN].[PicoStanowiskaWydruki]
+FOR INSERT, UPDATE
+AS
+BEGIN
+SET NOCOUNT ON
+	UPDATE O SET O.Pwr_CzasModyfikacji = DATEDIFF(s,CONVERT(DATETIME,'1990-01-01',120),GETDATE())
+	FROM CDN.PicoStanowiskaWydruki O JOIN Inserted I ON I.pwr_Id = O.PWr_ID
+SET NOCOUNT OFF
+END
+</scriptdef>
+</ROOT>

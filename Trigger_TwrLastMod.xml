@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="[TwrLastModC]">
+CREATE TRIGGER [TwrLastModC]
+ON [CDN].[TwrKarty]
+FOR INSERT, UPDATE
+AS
+BEGIN
+	IF NOT UPDATE(Twr_Oddzialowy)
+		BEGIN
+			UPDATE T
+				SET T.Twr_LastModC = DATEDIFF(s,CONVERT(DATETIME,'1990-01-01',120),GETDATE())
+			FROM CDN.TwrKarty T, inserted
+			WHERE T.Twr_GIDNumer = inserted.Twr_GIDNumer
+		END
+END
+</triggerdef>
+</ROOT>

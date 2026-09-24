@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja tabeli ProdOkresy - kasowanie wyzwalacza ProdOkresy_Delete_AktualizujMRPwTWR" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'ProdOkresy_Delete_AktualizujMRPwTWR' AND xtype = 'TR')
+  DROP TRIGGER CDN.ProdOkresy_Delete_AktualizujMRPwTWR
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza ProdOkresy_Delete_AktualizujMRPwTWR" hidden="False">
+create TRIGGER CDN.ProdOkresy_Delete_AktualizujMRPwTWR
+  ON CDN.ProdOkresy
+  FOR DELETE
+AS
+SET NOCOUNT ON
+
+update TWR
+set twr_mrpid = isnull(POK_id,0)
+ FROM CDN.TwrKarty twr left join CDN.ProdOkresy on pok_obityp = 16 and POK_ObiNumer = Twr_GIDNumer
+ where twr_MRPid in (select POK_Id from deleted)
+
+        SET NOCOUNT OFF
+</scriptdef>
+</ROOT>

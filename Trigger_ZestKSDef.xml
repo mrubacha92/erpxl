@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza ZestKSDef_Konta_Init" hidden="True">
+if exists (select * from sysobjects where name = 'ZestKSDef_Konta_Init' and xtype = 'TR')
+  drop trigger CDN.ZestKSDef_Konta_Init;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza ZestKSDef_Konta_Init" hidden="False">
+CREATE trigger CDN.ZestKSDef_Konta_Init
+on CDN.ZestKSDef
+for insert,update
+as 
+begin 
+
+	if not UPDATE(ZKD_Wartosc)
+		return;
+
+
+	delete from cdn.ZestKSDefKonta 
+	where exists(select 1 from inserted i join deleted d
+							on i.ZKD_GIDNumer=d.ZKD_GIDNumer 
+							and i.ZKD_GIDLp=d.ZKD_GIDLp
+							and i.ZKD_SubGIDLp=d.ZKD_SubGIDLp														
+							and d.ZKD_GIDNumer=ZKDK_GIDNumer 
+							and d.ZKD_GIDLp=ZKDK_GIDLp
+							and d.ZKD_SubGIDLp=ZKDK_SubGIDLp
+				)
+
+	;with k as (
+		select distinct ZKD_GIDNumer, ZKD_GIDLp, ZKD_SubGIDLp
+			,k1.Konto
+			--,i.ZKD_Wartosc
+		from inserted i
+			cross apply cdn.KsiKontaWyrazeniaZestawienia(i.ZKD_Wartosc) k1
+	)
+
+	insert into cdn.ZestKSDefKonta (ZKDK_GIDNumer, ZKDK_GIDLp, ZKDK_SubGIDLp, ZKDK_ZKDKLp, ZKDK_Konto, ZKDK_KlasaKonta)
+	select ZKD_GIDNumer, ZKD_GIDLp, ZKD_SubGIDLp
+		, ROW_NUMBER() OVER(PARTITION BY ZKD_GIDNumer, ZKD_GIDLp, ZKD_SubGIDLp ORDER BY k.Konto ASC)
+		, case when left(k.Konto, 1) &lt;&gt; '@' then k.Konto else '' end
+		, case when left(k.Konto, 1) = '@' then SUBSTRING(k.Konto, 2, len(k.Konto)-1) else '' end	
+	from k
+	
+end; 
+</scriptdef>
+</ROOT>
