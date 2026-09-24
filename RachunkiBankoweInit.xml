@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Wypełnienie tabeli RachunkiBankowe" hidden="False">
+SET NOCOUNT ON;
+
+INSERT INTO [CDN].[RachunkiBankowe] (
+	[RkB_ObiTyp]
+	, [RkB_ObiFirma]
+	, [RkB_ObiNumer]
+	, [RkB_ObiLp]
+	, [RkB_NrRachunku]
+	, [RkB_NrRachunkuE]
+	, [RkB_IBAN]
+	, [RkB_BnkTyp]
+	, [RkB_BnkFirma]
+	, [RkB_BnkNumer]
+	, [RkB_BnkLp]
+	, [RkB_Waluta]
+	, [RkB_OpeUtworzyl]
+	, [RkB_CzasUtworzenia]
+	, [RkB_KntAdres]
+	, [RkB_TypRachunku]
+	, [RkB_Uwagi]
+	, [RkB_CzasArchiwizacji]
+	, [RkB_Domyslny]
+	)
+SELECT Knt_GIDTyp
+	, Knt_GIDFirma
+	, Knt_GIDNumer
+	, Knt_GIDLp
+	, REPLACE(REPLACE(Knt_NrRachunku, ' ', ''), '-', '')
+	, CASE WHEN Knt_NRB = 1 THEN CDN.FormatujNumerRachunku(CDN.TylkoCyfry(Knt_NrRachunku)) ELSE Knt_NrRachunku END
+	, Knt_NRB
+	, Knt_BnkTyp
+	, Knt_BnkFirma
+	, Knt_BnkNumer
+	, Knt_BnkLp
+	, ''
+	, 0
+	, DATEDIFF(S, '19900101', GETDATE())
+	, 0
+	, (
+		SELECT isnull((
+					SELECT TOP 1 KnA_GIDNumer
+					FROM cdn.KntAdresy
+					WHERE REPLACE(REPLACE(Knt_NrRachunku, ' ', ''), '-', '') = REPLACE(REPLACE(KnA_NrRachunku, ' ', ''), '-', '')
+					AND KnA_KntNumer = Knt_GIDNumer
+					ORDER BY KnA_GIDTyp
+						, KnA_DataArc
+						, KnA_LastModL DESC
+						, KnA_NRB DESC
+					), 0)
+		)
+	, ''
+	, 0
+	, 1
+FROM CDN.KntKarty domyslneZKontrahentow
+WHERE (
+		Knt_NrRachunku &lt;&gt; ''
+		OR Knt_BnkNumer &lt;&gt; 0
+		)
+	AND NOT EXISTS (
+		SELECT *
+		FROM CDN.RachunkiBankowe
+		WHERE RkB_ObiNumer = Knt_GIDNumer
+			AND RkB_ObiTyp = Knt_GIDTyp
+			AND RkB_NrRachunku = REPLACE(REPLACE(Knt_NrRachunku, ' ', ''), '-', '')
+		)
+
+INSERT INTO [CDN].[RachunkiBankowe] (
+	[RkB_ObiTyp]
+	, [RkB_ObiFirma]
+	, [RkB_ObiNumer]
+	, [RkB_ObiLp]
+	, [RkB_NrRachunku]
+	, [RkB_NrRachunkuE]
+	, [RkB_IBAN]
+	, [RkB_BnkTyp]
+	, [RkB_BnkFirma]
+	, [RkB_BnkNumer]
+	, [RkB_BnkLp]
+	, [RkB_Waluta]
+	, [RkB_OpeUtworzyl]
+	, [RkB_CzasUtworzenia]
+	, [RkB_KntAdres]
+	, [RkB_TypRachunku]
+	, [RkB_Uwagi]
+	, [RkB_CzasArchiwizacji]
+	, [RkB_Domyslny]
+	)
+SELECT KnA_KntTyp
+	, KnA_KntFirma
+	, KnA_KntNumer
+	, KnA_KntLp
+	, REPLACE(REPLACE(KnA_NrRachunku, ' ', ''), '-', '')
+	, CASE WHEN KnA_NRB = 1 THEN CDN.FormatujNumerRachunku(CDN.TylkoCyfry(KnA_NrRachunku)) ELSE KnA_NrRachunku END
+	, KnA_NRB
+	, KnA_BnkTyp
+	, KnA_BnkFirma
+	, KnA_BnkNumer
+	, KnA_BnkLp
+	, ''
+	, 0
+	, DATEDIFF(S, '19900101', GETDATE())
+	, KnA_GIDNumer
+	, 0
+	, ''
+	, KnA_DataArc
+	, 0
+FROM (
+	SELECT ROW_NUMBER() OVER (
+			PARTITION BY KnA_NrRachunku
+			, KnA_KntNumer ORDER BY KnA_GIDTyp
+				, KnA_DataArc
+				, KnA_LastModL DESC
+				, KnA_NRB DESC
+			) nr
+		, *
+	FROM CDN.KntAdresy
+	WHERE (
+			KnA_NrRachunku &lt;&gt; ''
+			OR KnA_BnkNumer &lt;&gt; 0
+			)
+		AND NOT EXISTS (
+			SELECT *
+			FROM CDN.RachunkiBankowe
+			WHERE RkB_ObiNumer = KnA_KntNumer
+				AND RkB_ObiTyp = KnA_KntTyp
+				AND RkB_NrRachunku = REPLACE(REPLACE(KnA_NrRachunku, ' ', ''), '-', '')
+			)
+	) resztaBrakujacychZAdresow
+WHERE resztaBrakujacychZAdresow.nr = 1
+
+INSERT INTO [CDN].[RachunkiBankowe] (
+	[RkB_ObiTyp]
+	, [RkB_ObiFirma]
+	, [RkB_ObiNumer]
+	, [RkB_ObiLp]
+	, [RkB_NrRachunku]
+	, [RkB_NrRachunkuE]
+	, [RkB_IBAN]
+	, [RkB_BnkTyp]
+	, [RkB_BnkFirma]
+	, [RkB_BnkNumer]
+	, [RkB_BnkLp]
+	, [RkB_Waluta]
+	, [RkB_OpeUtworzyl]
+	, [RkB_CzasUtworzenia]
+	, [RkB_KntAdres]
+	, [RkB_TypRachunku]
+	, [RkB_Uwagi]
+	, [RkB_CzasArchiwizacji]
+	, [RkB_Domyslny]
+	)
+SELECT Prc_GIDTyp
+	, Prc_GIDFirma
+	, Prc_GIDNumer
+	, Prc_GIDLp
+	, REPLACE(REPLACE(Prc_NrRachunku, ' ', ''), '-', '')
+	, CASE WHEN Prc_NRB = 1 THEN CDN.FormatujNumerRachunku(CDN.TylkoCyfry(Prc_NrRachunku)) ELSE Prc_NrRachunku END
+	, Prc_NRB
+	, Prc_BnkTyp
+	, Prc_BnkFirma
+	, Prc_BnkNumer
+	, Prc_BnkLp
+	, ''
+	, 0
+	, DATEDIFF(S, '19900101', GETDATE())
+	, 0
+	, 1
+	, ''
+	, 0
+	, 1
+FROM CDN.PrcKarty domyslneZPracownikow
+WHERE Prc_NrRachunku &lt;&gt; ''
+	OR Prc_BnkNumer &lt;&gt; 0
+
+INSERT INTO [CDN].[RachunkiBankowe] (
+	[RkB_ObiTyp]
+	, [RkB_ObiFirma]
+	, [RkB_ObiNumer]
+	, [RkB_ObiLp]
+	, [RkB_NrRachunku]
+	, [RkB_NrRachunkuE]
+	, [RkB_IBAN]
+	, [RkB_BnkTyp]
+	, [RkB_BnkFirma]
+	, [RkB_BnkNumer]
+	, [RkB_BnkLp]
+	, [RkB_Waluta]
+	, [RkB_OpeUtworzyl]
+	, [RkB_CzasUtworzenia]
+	, [RkB_KntAdres]
+	, [RkB_TypRachunku]
+	, [RkB_Uwagi]
+	, [RkB_CzasArchiwizacji]
+	, [RkB_Domyslny]
+	)
+SELECT URZ_GIdTyp
+	, URZ_GIDFirma
+	, URZ_GIDNumer
+	, URZ_GIDLp
+	, REPLACE(REPLACE(URZ_NrRachunku1, ' ', ''), '-', '')
+	, CASE WHEN URZ_NRB1 = 1 THEN CDN.FormatujNumerRachunku(CDN.TylkoCyfry(URZ_NrRachunku1)) ELSE URZ_NrRachunku1 END
+	, URZ_NRB1
+	, URZ_BnkTyp1
+	, URZ_BnkFirma1
+	, URZ_BnkNumer1
+	, URZ_BnkLp1
+	, ''
+	, 0
+	, DATEDIFF(S, '19900101', GETDATE())
+	, 0
+	, CASE URZ_Typ WHEN 1 THEN 1 WHEN 2 THEN 1 ELSE 0 END
+	, ''
+	, 0
+	, 1
+FROM CDN.Urzedy
+WHERE URZ_NrRachunku1 &lt;&gt; ''
+	OR URZ_BnkNumer1 &lt;&gt; 0
+
+UNION ALL
+
+SELECT URZ_GIdTyp
+	, URZ_GIDFirma
+	, URZ_GIDNumer
+	, URZ_GIDLp
+	, REPLACE(REPLACE(URZ_NrRachunku2, ' ', ''), '-', '')
+	, CASE WHEN URZ_NRB2 = 1 THEN CDN.FormatujNumerRachunku(CDN.TylkoCyfry(URZ_NrRachunku2)) ELSE URZ_NrRachunku2 END
+	, URZ_NRB2
+	, URZ_BnkTyp2
+	, URZ_BnkFirma2
+	, URZ_BnkNumer2
+	, URZ_BnkLp2
+	, ''
+	, 0
+	, DATEDIFF(S, '19900101', GETDATE())
+	, 0
+	, CASE URZ_Typ WHEN 1 THEN 2 WHEN 2 THEN 2 ELSE 0 END
+	, ''
+	, 0
+	, CASE URZ_Typ WHEN 1 THEN 1 WHEN 2 THEN 1 ELSE 0 END
+FROM CDN.Urzedy
+WHERE URZ_NrRachunku2 &lt;&gt; ''
+	OR URZ_BnkNumer2 &lt;&gt; 0
+
+UNION ALL
+
+SELECT URZ_GIdTyp
+	, URZ_GIDFirma
+	, URZ_GIDNumer
+	, URZ_GIDLp
+	, REPLACE(REPLACE(URZ_NrRachunku3, ' ', ''), '-', '')
+	, CASE WHEN URZ_NRB3 = 1 THEN CDN.FormatujNumerRachunku(CDN.TylkoCyfry(URZ_NrRachunku3)) ELSE URZ_NrRachunku3 END
+	, URZ_NRB3
+	, URZ_BnkTyp3
+	, URZ_BnkFirma3
+	, URZ_BnkNumer3
+	, URZ_BnkLp3
+	, ''
+	, 0
+	, DATEDIFF(S, '19900101', GETDATE())
+	, 0
+	, CASE URZ_Typ WHEN 1 THEN 3 WHEN 2 THEN 3 ELSE 0 END
+	, ''
+	, 0
+	, CASE URZ_Typ WHEN 1 THEN 1 WHEN 2 THEN 1 ELSE 0 END
+FROM CDN.Urzedy
+WHERE URZ_NrRachunku3 &lt;&gt; ''
+	OR URZ_BnkNumer3 &lt;&gt; 0
+
+UNION ALL
+
+SELECT URZ_GIdTyp
+	, URZ_GIDFirma
+	, URZ_GIDNumer
+	, URZ_GIDLp
+	, REPLACE(REPLACE(URZ_NrRachunku4, ' ', ''), '-', '')
+	, CASE WHEN URZ_NRB4 = 1 THEN CDN.FormatujNumerRachunku(CDN.TylkoCyfry(URZ_NrRachunku4)) ELSE URZ_NrRachunku4 END
+	, URZ_NRB4
+	, URZ_BnkTyp4
+	, URZ_BnkFirma4
+	, URZ_BnkNumer4
+	, URZ_BnkLp4
+	, ''
+	, 0
+	, DATEDIFF(S, '19900101', GETDATE())
+	, 0
+	, CASE URZ_Typ WHEN 1 THEN 4 WHEN 2 THEN 4 ELSE 0 END
+	, ''
+	, 0
+	, CASE URZ_Typ WHEN 1 THEN 1 WHEN 2 THEN 1 ELSE 0 END
+FROM CDN.Urzedy
+WHERE URZ_NrRachunku4 &lt;&gt; ''
+	OR URZ_BnkNumer4 &lt;&gt; 0
+
+UPDATE cdn.traplat
+SET trp_rachbank = isnull((
+			SELECT TOP 1 rkb_id
+			FROM cdn.rachunkibankowe
+			WHERE RkB_KntAdres = trp_knanumer
+			), 0)
+WHERE trp_knttyp = 32
+
+UPDATE A
+SET A.trp_rachbank = isnull(rkb_id, 0)
+FROM CDN.TraPlat A
+INNER JOIN CDN.KntAdresy ON TrP_KnANumer = KnA_GIDNumer
+INNER JOIN CDN.RachunkiBankowe ON REPLACE(REPLACE(KnA_NrRachunku, ' ', ''), '-', '') = RkB_NrRachunku
+	AND KnA_KntNumer = RkB_ObiNumer
+	AND kna_knttyp = RkB_ObiTyp
+WHERE trp_knttyp = 32
+	AND TrP_RachBank = 0
+
+UPDATE A
+SET A.trp_rachbank = isnull(rkb_id, 0)
+FROM CDN.TraPlat A
+INNER JOIN CDN.Urzedy ON TrP_KntNumer = URZ_GIDNumer
+	AND TrP_KntTyp = URZ_GIDTyp
+INNER JOIN CDN.RachunkiBankowe ON REPLACE(REPLACE(CASE WHEN TrP_NrKonta = 1 THEN URZ_NrRachunku1 WHEN TrP_NrKonta = 2 THEN URZ_NrRachunku2 WHEN TrP_NrKonta = 3 THEN URZ_NrRachunku3 ELSE URZ_NrRachunku4 END, ' ', ''), '-', '') = RkB_NrRachunku
+	AND RkB_ObiNumer = URZ_GIDNumer
+	AND RkB_ObiTyp = URZ_GIDTyp
+WHERE trp_knttyp = 4304
+	AND TrP_RachBank = 0
+
+UPDATE cdn.rachunkibankowe
+SET RkB_KntAdres = 0
+WHERE RkB_Domyslny = 1
+	AND RkB_CzasArchiwizacji = 0
+
+--Bug #378251: [Wiele rach. knt] Nie czyścić kolumn, wskazujących na dotychczasowy numer rachunku.
+--UPDATE CDN.KntKarty
+--SET Knt_BnkTyp = 0
+--	, Knt_BnkFirma = 0
+--	, Knt_BnkNumer = 0
+--	, Knt_BnkLp = 0
+--	, Knt_NrRachunku = ''
+--UPDATE CDN.KntAdresy
+--SET KnA_BnkTyp = 0
+--	, KnA_BnkFirma = 0
+--	, KnA_BnkNumer = 0
+--	, KnA_BnkLp = 0
+--	, KnA_NrRachunku = ''
+UPDATE CDN.Urzedy
+SET URZ_BnkTyp1 = 0
+	, URZ_BnkFirma1 = 0
+	, URZ_BnkNumer1 = 0
+	, URZ_BnkLp1 = 0
+	, URZ_NrRachunku1 = ''
+	, URZ_BnkTyp2 = 0
+	, URZ_BnkFirma2 = 0
+	, URZ_BnkNumer2 = 0
+	, URZ_BnkLp2 = 0
+	, URZ_NrRachunku2 = ''
+	, URZ_BnkTyp3 = 0
+	, URZ_BnkFirma3 = 0
+	, URZ_BnkNumer3 = 0
+	, URZ_BnkLp3 = 0
+	, URZ_NrRachunku3 = ''
+	, URZ_BnkTyp4 = 0
+	, URZ_BnkFirma4 = 0
+	, URZ_BnkNumer4 = 0
+	, URZ_BnkLp4 = 0
+	, URZ_NrRachunku4 = ''
+
+SET NOCOUNT OFF;
+</scriptdef>
+<scriptdef name="Wypełnienie tabeli RachunkiBankowe" hidden="False">
+SET NOCOUNT ON;
+
+INSERT INTO [CDN].[KntRejestr] (
+	[KRj_ObiTyp]
+	, [KRj_ObiFirma]
+	, [KRj_ObiNumer]
+	, [KRj_ObiLp]
+	, [KRj_TypRejestru]
+	, [KRj_Waluta]
+	, [KRj_PrzypiszDoPlatnosci]
+	, [KRj_NrRachunku]
+	, [KRj_KarNumer]
+	, [KRj_Uwagi]
+	, [KRj_CzasArchiwizacji]
+	)
+SELECT Knt_GIDTyp
+	, Knt_GIDFirma
+	, Knt_GIDNumer
+	, Knt_GIDLp
+	, 0
+	, KAR_Waluta
+	, 0
+	, ''
+	, Knt_KarNumer
+	, ''
+	, 0
+FROM CDN.KntKarty
+INNER JOIN CDN.Rejestry ON KAR_GIDNumer = Knt_KarNumer
+WHERE Knt_KarNumer &lt;&gt; 0
+
+SET NOCOUNT OFF;
+</scriptdef>
+</ROOT>

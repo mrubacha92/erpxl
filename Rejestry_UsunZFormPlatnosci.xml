@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="Rejestry_UsunZFormPlatnosci">
+CREATE TRIGGER CDN.Rejestry_UsunZFormPlatnosci
+  ON CDN.Rejestry
+  FOR DELETE
+AS
+SET NOCOUNT ON
+    UPDATE CDN.FrmObiekty
+      set FrO_GID2Numer = 0
+    FROM CDN.FrmObiekty, deleted
+    WHERE deleted.KAR_GIDNumer = CDN.FrmObiekty.FRO_GID2Numer
+      AND CDN.FrmObiekty.Fro_GIDTyp=736 AND CDN.FrmObiekty.Fro_GID2Typ=752
+SET NOCOUNT OFF
+</triggerdef>
+</ROOT>

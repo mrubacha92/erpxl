@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Inicjalizacja TrP_RachBank na dokumentach księgowych" hidden="False">
+SET NOCOUNT ON;
+	--Kontrahenci
+	UPDATE cdn.traplat set trp_rachbank = isnull((select top 1 RkB_Id from CDN.RachunkiBankowe where RkB_Obityp=TrP_KntTyp AND RkB_ObiNumer=TrP_KntNumer AND RkB_kntadres=TrP_KnANumer AND RkB_CzasArchiwizacji = 0 and RkB_Domyslny = 1 AND RkB_Waluta=trp_waluta),0)
+	WHERE trp_knttyp = 32 AND TrP_RachBank = 0 AND TrP_GidTyp in(7680,434,4144,4145,4146,2984,2832) AND TrP_Status &lt;&gt; 2
+
+	UPDATE cdn.traplat set trp_rachbank = isnull((select top 1 RkB_Id from CDN.RachunkiBankowe where RkB_Obityp=TrP_KntTyp AND RkB_ObiNumer=TrP_KntNumer AND RkB_kntadres=TrP_KnANumer AND RkB_Waluta='' AND RkB_CzasArchiwizacji = 0 and RkB_Domyslny = 1),0)
+	WHERE trp_knttyp = 32 AND TrP_RachBank = 0 AND TrP_GidTyp in(7680,434,4144,4145,4146,2984,2832) AND TrP_Status &lt;&gt; 2
+
+	UPDATE cdn.traplat set trp_rachbank = isnull((select top 1 RkB_Id from CDN.RachunkiBankowe where RkB_Obityp=TrP_KntTyp AND RkB_ObiNumer=TrP_KntNumer AND RkB_kntadres=0 AND RkB_CzasArchiwizacji = 0 AND RkB_Domyslny=1 AND RkB_Waluta=TrP_Waluta),0)
+	WHERE trp_knttyp = 32 AND TrP_RachBank = 0 AND TrP_GidTyp in(7680,434,4144,4145,4146,2984,2832) AND TrP_Status &lt;&gt; 2
+
+	UPDATE cdn.traplat set trp_rachbank = isnull((select top 1 RkB_Id from CDN.RachunkiBankowe where RkB_Obityp=TrP_KntTyp AND RkB_ObiNumer=TrP_KntNumer AND RkB_CzasArchiwizacji = 0 AND RkB_Domyslny=1 AND RkB_kntadres=0 AND RkB_Waluta=''),0)
+	WHERE trp_knttyp = 32 AND TrP_RachBank = 0 AND TrP_GidTyp in(7680,434,4144,4145,4146,2984,2832) AND TrP_Status &lt;&gt; 2
+
+
+	--Urzędy
+	UPDATE cdn.traplat set trp_rachbank = isnull((select top 1 RkB_Id from CDN.RachunkiBankowe where RkB_Obityp=TrP_KntTyp AND RkB_ObiNumer=TrP_KntNumer AND RkB_CzasArchiwizacji = 0 and RkB_Domyslny = 1 AND RkB_TypRachunku=TrP_NrKonta),0)
+	WHERE trp_knttyp = 4304 AND TrP_RachBank = 0 AND TrP_GidTyp in(7680,434,4144,4145,4146,2984,2832) AND TrP_Status &lt;&gt; 2
+
+	UPDATE cdn.traplat set trp_rachbank = isnull((select top 1 RkB_Id from CDN.RachunkiBankowe where RkB_Obityp=TrP_KntTyp AND RkB_ObiNumer=TrP_KntNumer AND RkB_CzasArchiwizacji = 0 and RkB_Domyslny = 1 AND RkB_TypRachunku=0),0)
+	WHERE trp_knttyp = 4304 AND TrP_RachBank = 0 AND TrP_GidTyp in(7680,434,4144,4145,4146,2984,2832) AND TrP_Status &lt;&gt; 2
+SET NOCOUNT OFF;
+</scriptdef>
+</ROOT>

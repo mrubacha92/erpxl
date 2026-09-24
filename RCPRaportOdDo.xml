@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="RCPRaportOdDo">
+CREATE FUNCTION CDN.RCPRaportOdDo (@FrsTyp smallint, @FrsNumer int,@DataOd datetime,@DataDo datetime)
+RETURNS @Raport TABLE (
+  FrsTyp smallint,
+  FrsNumer int,
+  Data datetime,
+  Typ smallint,
+  RcOId int,
+  Norma int,
+  Nieob int,
+  Czas int,
+  Korekty int,
+  Opisy int,
+  Braki int
+)
+as
+begin
+  declare @zapisy table ( RcZ_PrcTyp smallint, RcZ_PrcNumer int, RcZ_Data datetime,
+      RcZ_Id int, RcZ_Czas datetime, RcZ_Typ smallint, RcZ_RcOId int, RcZ_Korekta smallint)
+  insert into @zapisy
+    select RcZ_PrcTyp, RcZ_PrcNumer, CONVERT(datetime,CONVERT(varchar(10),RcZ_Czas,120),120),
+        RcZ_Id, RcZ_Czas, RcZ_Typ, RcZ_RcOId, RcZ_Korekta
+      from CDN.RCPZapisyOdDo(@FrsTyp,@FrsNumer,@DataOd,@DataDo,null)
+  declare @PrcTyp smallint
+  declare @PrcNumer int
+  declare @Czas datetime
+  declare @Data datetime
+  declare ZapisyCursor CURSOR LOCAL FAST_FORWARD READ_ONLY FOR
+    select RcZ_PrcTyp, RcZ_PrcNumer, RcZ_Czas, (
+        select top 1 Wej.RcZ_Data
+          from @zapisy as Wej
+          where Wej.RcZ_PrcTyp=Wyj.RcZ_PrcTyp and Wej.RcZ_PrcNumer=Wyj.RcZ_PrcNumer and Wej.RcZ_Czas&lt;Wyj.RcZ_Czas and Wej.RcZ_Typ&lt;&gt;4 and ISNULL(Wej.RcZ_Korekta,0)&lt;&gt;2
+          order by RcZ_Czas desc, RcZ_Typ asc
+        )
+      from @zapisy as Wyj
+      where Wyj.RcZ_Typ=1 and ISNULL(Wyj.RcZ_Korekta,0)&lt;&gt;2
+        and (select top 1 case when Wej.RcZ_Typ=0 then Wej.RcZ_Data else Wyj.RcZ_Data end from @zapisy as Wej
+               where Wej.RcZ_PrcTyp=Wyj.RcZ_PrcTyp and Wej.RcZ_PrcNumer=Wyj.RcZ_PrcNumer and Wej.RcZ_Czas&lt;Wyj.RcZ_Czas and Wej.RcZ_Typ&lt;&gt;4 and ISNULL(Wej.RcZ_Korekta,0)&lt;&gt;2
+               order by RcZ_Czas desc, RcZ_Typ asc)&lt;Wyj.RcZ_Data
+  open ZapisyCursor
+  while 1=1
+    begin
+      fetch next from ZapisyCursor into @PrcTyp, @PrcNumer, @Czas, @Data
+      if @@FETCH_STATUS &lt;&gt; 0 break
+      update @zapisy set RcZ_Data = @Data
+        where RcZ_PrcTyp=@PrcTyp and RcZ_PrcNumer=@PrcNumer and RcZ_Data&lt;&gt;@Data and RcZ_Czas between @Data and @Czas
+    end
+  close ZapisyCursor
+  deallocate ZapisyCursor
+  insert into @Raport
+    select RcN_FrsTyp, RcN_FrsNumer, RcN_Data, RcN_Typ, RcOId, Norma, Nieob,
+      case when RcO_Praca=2 and Norma&gt;Czas then Norma else Czas end, Korekty, Opisy, ISNULL(Braki,2) as Braki
+      from (
+        select RcN_FrsTyp, RcN_FrsNumer, RcN_Data, RcN_Typ, RcO_Id as RcOId,
+          case RcO_Praca when 3 then 0 else RcN_Norma end as Norma,
+          case RcO_Praca when 1 then RcN_Norma else 0 end as Nieob,
+          ISNULL(sum(RcZ_Praca),0) as Czas,
+          ISNULL(sum(RcZ_Korekty),0) as Korekty,
+          ISNULL(sum(RcZ_Opisy),0) as Opisy,
+          case when RcO_Id is not null then 0 else sum(RcZ_Braki) end as Braki, RcO_Praca
+        from CDN.RCPNormaOdDo(@FrsTyp,@FrsNumer,@DataOd,@DataDo)
+        left outer join (
+          select distinct RcZ_PrcTyp, RcZ_Prcnumer, RcZ_Czas, RcZ_RcOId
+            from @zapisy
+            where RcZ_Typ=4
+        ) as Opisy
+          on Opisy.RcZ_PrcTyp=RcN_FrsTyp and Opisy.RcZ_PrcNumer=RcN_FrsNumer and Opisy.RcZ_Czas=RcN_Data
+        left outer join CDN.RCPOpisy
+          on RcO_Id=ISNULL(RcZ_RcOId,RcN_RcOId)
+        left outer join (
+          select RcZ_PrcTyp, RcZ_PrcNumer, RcZ_Data,
+              case when RcZ_Typ=0 and ISNULL(RcZ_Korekta,0)&lt;&gt;2
+                then (
+                  select top 1 case Wyj.RcZ_Typ when 1 then DATEDIFF(minute,Zap.RcZ_Czas,Wyj.RcZ_Czas) else 0 end
+                    from @zapisy as Wyj
+                    where Wyj.RcZ_PrcTyp=Zap.RcZ_PrcTyp and Wyj.RcZ_PrcNumer=Zap.RcZ_PrcNumer
+                      and (Wyj.RcZ_Czas&gt;Zap.RcZ_Czas or (Wyj.RcZ_Czas=Zap.RcZ_Czas and Wyj.RcZ_Id&gt;Zap.RcZ_Id))
+                      and Wyj.RcZ_Typ&lt;&gt;4 and ISNULL(Wyj.RcZ_Korekta,0)&lt;&gt;2
+                    order by Wyj.RcZ_Czas asc, Wyj.RcZ_Id asc, Wyj.RcZ_Typ desc
+                )
+                else 0
+              end as RcZ_Praca,
+              case when ISNULL(RcZ_Korekta,0)&gt;0 and ISNULL(RcZ_Typ,0)&lt;4
+                then (select count(*) from CDN.RCPKorekty where RcK_RcZId=RcZ_Id)
+                else 0
+              end as RcZ_Korekty,
+              case when ISNULL(RcZ_Korekta,0)&gt;0 and ISNULL(RcZ_Typ,0)=4
+                then (select count(*) from CDN.RCPKorekty where RcK_RcZId=RcZ_Id)
+                else 0
+              end as RcZ_Opisy,
+              case
+                when ISNULL(RcZ_Korekta,0)=2 then 0
+                when RcZ_Typ=0 and ISNULL((
+                  select top 1 Wyj.RcZ_Typ
+                    from @zapisy as Wyj
+                    where Wyj.RcZ_PrcTyp=Zap.RcZ_PrcTyp and Wyj.RcZ_PrcNumer=Zap.RcZ_PrcNumer
+                      and (Wyj.RcZ_Czas&gt;Zap.RcZ_Czas or (Wyj.RcZ_Czas=Zap.RcZ_Czas and Wyj.RcZ_Id&gt;Zap.RcZ_Id))
+                      and Wyj.RcZ_Typ&lt;&gt;4 and ISNULL(Wyj.RcZ_Korekta,0)&lt;&gt;2
+                    order by Wyj.RcZ_Czas asc, Wyj.RcZ_Id asc, Wyj.RcZ_Typ desc
+                  ),0)&lt;&gt;1 then 1
+                when RcZ_Typ=1 and ISNULL((
+                  select top 1 Wej.RcZ_Typ
+                    from @zapisy as Wej
+                    where Wej.RcZ_PrcTyp=Zap.RcZ_PrcTyp and Wej.RcZ_PrcNumer=Zap.RcZ_PrcNumer
+                      and (Wej.RcZ_Czas&lt;Zap.RcZ_Czas or (Wej.RcZ_Czas=Zap.RcZ_Czas and Wej.RcZ_Id&lt;Zap.RcZ_Id))
+                      and Wej.RcZ_Typ&lt;&gt;4 and ISNULL(Wej.RcZ_Korekta,0)&lt;&gt;2
+                    order by Wej.RcZ_Czas desc, Wej.RcZ_Id desc, Wej.RcZ_Typ asc
+                  ),0)&lt;&gt;0 then 1
+                else 0
+              end as RcZ_Braki
+            from @zapisy as Zap
+        ) as Zapisy
+        on Zapisy.RcZ_PrcTyp=RcN_FrsTyp and Zapisy.RcZ_PrcNumer=RcN_FrsNumer and Zapisy.RcZ_Data=RcN_Data
+        group by RcN_FrsTyp, RcN_FrsNumer, RcN_Data, RcN_Typ, RcO_Id, RcN_Norma, RcO_Praca
+      ) as Raport
+  return
+end
+</functiondef>
+</ROOT>

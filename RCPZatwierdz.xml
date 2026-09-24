@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="RCPZatwierdz">
+CREATE PROCEDURE CDN.RCPZatwierdz @PrcNumer int, @FrsTyp smallint,@FrsNumer int,@DataOd datetime,@DataDo datetime,@Zatwierdz smallint,@Czas datetime = null
+AS
+begin
+  if @Czas is null set @Czas=GETDATE()
+  declare @IntOd int
+  declare @IntDo int
+  set @IntOd = DATEDIFF(day,CONVERT(datetime,'1800-12-28',120),@DataOd)
+  set @IntDo = DATEDIFF(day,CONVERT(datetime,'1800-12-28',120),@DataDo)
+  declare @wlasne smallint
+  set @wlasne = case when @FrsTyp=944 and @FrsNumer=@PrcNumer then 2 else 0 end
+  if not exists(select RolaId from CDN.FrsPodlega(@PrcNumer,@FrsTyp,@FrsNumer,@IntOd,@IntDo)
+          inner join CDN.RolePrawa on RlP_RolId=RolaId and (RlP_PraId=14+@wlasne or RlP_PraId=15+@wlasne))
+    begin
+      raiserror('Brak uprawnień do zatwierdzenia zapisu',16,1)
+      return
+    end
+  declare @Id int
+  declare @Zamkniety smallint
+  select @Id=RZN_Id, @Zamkniety=RZN_Zamkniety from CDN.RCPZatwNag
+    where RZN_DataOd=@DataOd and RZN_DataDo=@DataDo
+  if @Id is not null
+    begin
+      if ISNULL(@Zamkniety,0)=1
+        begin
+          raiserror('Zatwierdzenie jest zamknięte w tym okresie',16,1)
+          return
+        end
+      declare @ZatwTyp smallint
+      declare @ZatwNumer int
+      declare ZatwierdzeniaCursor CURSOR LOCAL FAST_FORWARD READ_ONLY FOR 
+        select distinct RZE_PrcTyp, RZE_PrcNumer
+        from (select FrS_GIDTyp, FrS_GIDNumer
+                from CDN.FrsDrzewo(3,@FrsTyp,@FrsNumer,@IntOd,@IntDo,0)
+              union
+              select FrS_GIDTyp, FrS_GIDNumer
+                from CDN.FrsCentra(3,@FrsTyp,@FrsNumer,@IntOd,@IntDo)
+             ) as Centra
+          inner join CDN.RCPZatwElem
+          on RZE_RZNId=@Id and FrS_GIDTyp=RZE_FrsTyp and FrS_GIDNumer=RZE_FrsNumer
+      open ZatwierdzeniaCursor
+      while 1=1
+      begin 
+        fetch next from ZatwierdzeniaCursor into @ZatwTyp, @ZatwNumer
+        if @@FETCH_STATUS&lt;&gt;0 break
+        if not exists(select RolaId
+          from CDN.FrsPodlega(@PrcNumer,@ZatwTyp,@ZatwNumer,@IntOd,@IntDo)
+          inner join CDN.RolePrawa on RlP_RolId=RolaId and (RlP_PraId=14 or RlP_PraId=15))
+          begin
+            raiserror('Zapis jest zatwierdzony przez pracownika z wyższymi uprawnieniami',16,1)
+            return
+          end
+      end
+      close ZatwierdzeniaCursor 
+      deallocate ZatwierdzeniaCursor
+    end
+  SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
+  begin transaction
+  if @Zatwierdz&gt;0
+    begin
+      if (select ISNULL(sum(Braki),0) from CDN.RCPRaportOdDo(@FrsTyp,@FrsNumer,@DataOd,@DataDo))&gt;0
+        begin
+          raiserror('Istnieją braki w zatwierdzanych zapisach RCP',16,1)
+          rollback
+          return
+        end
+      if @Id is null
+        begin
+          insert into CDN.RCPZatwNag (RZN_DataOd,RZN_DataDo,RZN_Zamkniety)
+            values (@DataOd,@DataDo,0)
+          set @Id=@@Identity
+        end
+      insert into CDN.RCPZatwElem (RZE_RZNId,RZE_Lp,
+          RZE_Czas,RZE_PrcTyp,RZE_PrcNumer,RZE_FrsTyp,RZE_FrsNumer)
+        select distinct @Id, ISNULL(Lp,0)+1, @Czas ,944 ,@PrcNumer ,FrS_GIDTyp ,FrS_GIDNumer
+        from CDN.FrsDrzewo(3,@FrsTyp,@FrsNumer,@IntOd,@IntDo,0)
+          left outer join (select RZE_FrsTyp, RZE_FrsNumer, max(RZE_Lp) as Lp
+            from CDN.RCPZatwElem
+            where RZE_RZNId=@Id
+            group by RZE_FrsTyp, RZE_FrsNumer
+          ) as MaxElem on FrS_GIDTyp=RZE_FrsTyp and FrS_GIDNumer=RZE_FrsNumer
+        where not exists (select RZE_Lp from CDN.RCPZatwElem where RZE_RZNId=@Id
+          and RZE_PrcTyp=944 and RZE_PrcNumer=@PrcNumer and RZE_FrsTyp=FrS_GIDTyp and RZE_FrsNumer=FrS_GIDNumer)
+    end
+  else
+    begin
+      delete CDN.RCPZatwElem from
+        CDN.RCPZatwElem inner join
+        (select distinct FrS_GIDTyp, FrS_GIDNumer
+           from CDN.FrsDrzewo(3,@FrsTyp,@FrsNumer,@IntOd,@IntDo,0)
+         union
+         select distinct FrS_GIDTyp, FrS_GIDNumer
+           from CDN.FrsCentra(3,@FrsTyp,@FrsNumer,@IntOd,@IntDo)
+        ) as Centra
+        on RZE_RZNId=@Id and FrS_GIDTyp=RZE_FrsTyp and FrS_GIDNumer=RZE_FrsNumer
+      if not exists(select RZE_Lp from CDN.RCPZatwElem where RZE_RZNId=@Id)
+        delete from CDN.RCPZatwNag where RZN_id=@Id
+    end
+  commit
+end
+</proceduredef>
+</ROOT>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:25:42 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="RachunkiBankoweVat" ident="08d4ce60-88c6-4f24-8aa9-62807805616c" prefix="RBV" filename="'kasa.cdn\!RachunkiBankoweVat'" options=""
+  description="" longdescription="" owner="Connect_DSN3" glbx="3" nosql="No"
+  aliases="">
+  <columns>
+    <column ident="44ac221a-2732-4d14-90b3-8ebceaef8733" clarionname="RBV:Id" sqlname="RBV_Id" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="" longdescription="" options="SQL_IDENTITY()"
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="e9bfae60-6760-44b9-9264-e26d849e04d0" clarionname="RBV:RkbId" sqlname="RBV_RkbId" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Rkb Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="cbdfa457-0c7a-4607-933f-de86d8d93316" clarionname="RBV:Nip" sqlname="RBV_Nip" type="CSTRING" clariontype="CSTRING(21)" sqltype="VARCHAR(20)"
+      size="21" places="0" description="" longdescription="" options=""
+      picture="@s20" initial="" justification.type="L" justification.indent="0"
+      header="Nip" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="4ff6693b-00f9-4448-a1f2-85d57811f4e2" clarionname="RBV:VatWynik" sqlname="RBV_VatWynik" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Vat Wynik" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="4b9eb5cd-4bcc-4f53-84b2-08f8216b26e2" clarionname="RBV:RequestId" sqlname="RBV_RequestId" type="CSTRING" clariontype="CSTRING(51)" sqltype="VARCHAR(50)"
+      size="51" places="0" description="" longdescription="" options=""
+      picture="@s50" initial="" justification.type="L" justification.indent="0"
+      header="Request Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="9a06e0c5-f316-4451-abe1-6c6cd7480397" clarionname="RBV:DataWeryfikacji" sqlname="RBV_DataWeryfikacji" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@D17B" initial="" justification.type="R" justification.indent="1"
+      header="Data" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="0a39ea44-a5d3-4616-8331-6057a8d26289" clarionname="RBV:Primary" sqlname="KeyPrimary" description="" longdescription="" options="" primary="Yes" unique="Yes" casesensitive="No"
+      excludenulls="No" autonum="Yes" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="44ac221a-2732-4d14-90b3-8ebceaef8733" clarionname="RBV:Id" sqlname="RBV_Id" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="c51a6214-0c22-4ba4-abf0-41c89e48832e" clarionname="RBV:KeyRkb" sqlname="RBVRkb" description="" longdescription="" options="" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="e9bfae60-6760-44b9-9264-e26d849e04d0" clarionname="RBV:RkbId" sqlname="RBV_RkbId" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+    <relation type="MANY:1" onupdate="" ondelete="CASCADE"
+        options=""
+        comments="" nosql="No" setnull="No"
+        conditional=""
+        parent="RachunkiBankowe" primaryname="RkB:Primary" primarysqlname="RkBPrimary" parenthandler="" parentlink="RachunkiBankowe"
+        child="RachunkiBankoweVat" foreignname="RBV:KeyRkb" foreignsqlname="RBVRkb" childhandler="FK_RBVRkb" childlink="RachunkiBankoweVat">
+      <relationcolumn
+        parentident="69e8c57f-f" parentname="RkB:Id" parentsqlname="RkB_Id"
+        childident="e9bfae60-6760-44b9-9264-e26d849e04d0" childname="RBV:RkbId" childsqlname="RBV_RkbId" isinsqlprimary="Yes" />
+    </relation>
+  
+  </relations>
+</table>
+</ROOT>

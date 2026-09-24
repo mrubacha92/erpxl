@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="RCPNormaOdDo">
+CREATE FUNCTION CDN.RCPNormaOdDo (@FrsTyp smallint, @FrsNumer int,@DataOd datetime,@DataDo datetime)
+RETURNS @Norma TABLE (
+  RcN_FrsTyp smallint,
+  RcN_FrsNumer int,
+  RcN_Data datetime,
+  RcN_Typ smallint,
+  RcN_RcOId int,
+  RcN_Norma smallint
+)
+as
+begin
+  declare @Baza datetime
+  set @Baza = CONVERT(datetime,'1800-12-28',120)
+  declare @IntOd int
+  set @IntOd = DATEDIFF(day,@Baza,@DataOd)
+  declare @IntDo int
+  set @IntDo = DATEDIFF(day,@Baza,@DataDo)
+  declare @centra table
+    (Typ smallint,Numer int,AktywnyOd int,AktywnyDo int,Poziom smallint,RodTyp smallint,RodNumer int)
+  insert into @centra
+    select FrS_GIDTyp, FrS_GIDNumer, FrS_AktywnyOd, FrS_AktywnyDo, FrS_Poziom, FrS_GROTyp, FrS_GRONumer
+    from CDN.FrsCentra(3,@FrsTyp,@FrsNumer,@IntOd,@IntDo)
+    union
+    select FrS_GIDTyp, FrS_GIDNumer, FrS_AktywnyOd, FrS_AktywnyDo, FrS_Poziom, FrS_GROTyp, FrS_GRONumer
+      from CDN.FrsDrzewo(3,@FrsTyp,@FrsNumer,@IntOd,@IntDo,0)
+  declare @Pocz datetime
+  declare @Opis int
+  declare @Czas smallint
+  select top 1 @Pocz = RcN_Data, @Opis = RcN_RcOId, @Czas = RcN_Norma
+    from (select 0 as Rodzaj, RcN_Data, RcN_RcOId, RcN_Norma, Poziom
+      from CDN.RCPNorma inner join @centra as Centra on Poziom&lt;=0 and RcN_FrsTyp=Typ and RcN_FrsNumer=Numer
+        where RcN_Typ=5 and RcN_Data&lt;=@DataOd
+      union select 1, null, null, 0, 0) as Norma
+    order by Rodzaj asc, RcN_Data desc, Poziom desc
+  declare @Data datetime
+  set @Data = @DataOd
+  while @Data &lt;= @DataDo
+    begin
+      insert into @Norma
+        select distinct Typ, Numer, @Data, 5, @Opis, @Czas from @centra
+          where Typ=944 and Poziom&gt;=0 and DATEDIFF(day,@Baza,@Data) between AktywnyOd and AktywnyDo
+      set @Data = DATEADD(day,1,@Data)
+    end
+  declare @Typ smallint
+  declare @Poziom smallint
+  declare @AktywnyOd int
+  declare @AktywnyDo int
+  declare NormaCursor CURSOR LOCAL FAST_FORWARD READ_ONLY FOR
+    select RcN_FrsTyp, RcN_FrsNumer, RcN_Data, RcN_Typ, RcN_RcOId, RcN_Norma, Poziom, AktywnyOd, AktywnyDo
+      from CDN.RCPNorma inner join @centra on Typ=RcN_FrsTyp and Numer=RcN_FrsNumer
+      where (RcN_Data&gt;@Pocz or @Pocz is null or (@Pocz=RcN_Data and (RcN_Typ&lt;5 or Poziom&gt;0)))
+        and (RcN_Data&gt;=@DataOd or RcN_Typ&gt;0) and RcN_Data&lt;=@DataDo
+      order by RcN_Data, RcN_Typ desc, Poziom
+  open NormaCursor
+  while 1=1
+    begin
+      fetch next from NormaCursor into @FrsTyp, @FrsNumer, @Data, @Typ, @Opis, @Czas, @Poziom, @AktywnyOd, @AktywnyDo
+      if @@FETCH_STATUS &lt;&gt; 0 break
+      if (@Poziom&gt;0)
+        begin
+          declare @podcentra table (Typ smallint,Numer int,
+            AktywnyOd int,AktywnyDo int,Poziom smallint,RodTyp smallint,RodNumer int)
+          insert into @podcentra values (@FrsTyp,@FrsNumer,@AktywnyOd,@AktywnyDo,@Poziom,0,0)
+          while exists(select Typ from @centra where Poziom=@Poziom+1)
+            begin
+              insert into @podcentra
+                select Elementy.Typ, Elementy.Numer, Elementy.AktywnyOd, Elementy.AktywnyDo,
+                    Elementy.Poziom, Elementy.RodTyp, Elementy.RodNumer
+                  from @centra as Elementy inner join @podcentra as Centrum
+                    on Elementy.RodTyp=Centrum.Typ and Elementy.RodNumer=Centrum.RodNumer
+                      and Elementy.Poziom=@Poziom+1
+                      and (Elementy.AktywnyOd&lt;Centrum.AktywnyDo or Centrum.AktywnyDo=0)
+                      and (Centrum.AktywnyOd&lt;Elementy.AktywnyDo or Elementy.AktywnyDo=0)
+              set @Poziom = @Poziom+1
+            end
+          update @Norma
+            set RcN_Typ=@Typ, RcN_RcOId=@Opis, RcN_Norma=@Czas
+            where DATEDIFF(day,@Baza,RcN_Data) between @AktywnyOd and @AktywnyDo
+              and (RcN_Data=@Data or (RcN_Data&gt;@Data and @Typ&gt;0)) and (@Typ=0 or @Typ=5 or
+                ((DATEPART(weekday,RcN_Data)+@@DATEFIRST)%7=0 and (@Typ=2 or @Typ=4)) or
+                ((DATEPART(weekday,RcN_Data)+@@DATEFIRST)%7=1 and (@Typ=3 or @Typ=4)) or
+                ((DATEPART(weekday,RcN_Data)+@@DATEFIRST)%7&gt;1 and @Typ=1) )
+              and exists(select Typ from @podcentra where Typ=RcN_FrsTyp and Numer=RcN_FrsNumer)
+      end
+      else
+        update @Norma
+          set RcN_Typ=@Typ, RcN_RcOId=@Opis, RcN_Norma=@Czas
+          where DATEDIFF(day,@Baza,RcN_Data) between @AktywnyOd and @AktywnyDo
+            and (RcN_Data=@Data or (RcN_Data&gt;@Data and @Typ&gt;0)) and (@Typ=0 or @Typ=5 or
+                 ((DATEPART(weekday,RcN_Data)+@@DATEFIRST)%7=0 and (@Typ=2 or @Typ=4)) or
+                 ((DATEPART(weekday,RcN_Data)+@@DATEFIRST)%7=1 and (@Typ=3 or @Typ=4)) or
+                 ((DATEPART(weekday,RcN_Data)+@@DATEFIRST)%7&gt;1 and @Typ=1) )
+    end
+  close NormaCursor
+  deallocate NormaCursor
+  return
+end
+</functiondef>
+</ROOT>

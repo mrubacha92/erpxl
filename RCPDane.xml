@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="RCPDane">
+CREATE PROCEDURE CDN.RCPDane @Dane smallint,@PrcNumer int,@FrsTyp smallint,@FrsNumer int,@DataOd datetime,@DataDo datetime,@Teraz datetime = null
+as
+begin
+
+  declare @IntOd int
+  declare @IntDo int
+  set @IntOd = DATEDIFF(day,CONVERT(datetime,'1800-12-28',120),@DataOd)
+  set @IntDo = DATEDIFF(day,CONVERT(datetime,'1800-12-28',120),@DataDo)
+  exec CDN.FrsPodlegaOkres @PrcNumer, @FrsTyp, @FrsNumer, @IntOd output, @IntDo output, '13'
+  if @IntOd is null or @IntDo is null
+    begin
+      raiserror('Brak uprawnień do wskazanego centrum',16,1)
+      return
+    end
+  declare @DaneOd datetime
+  declare @DaneDo datetime
+  set @DaneOd = DATEADD(day,@IntOd,CONVERT(datetime,'1800-12-28',120))
+  set @DaneDo = DATEADD(day,@IntDo,CONVERT(datetime,'1800-12-28',120))
+
+  declare @wlasne smallint
+  set @wlasne = case when @FrsTyp=944 and @FrsNumer=@PrcNumer then 2 else 0 end
+  declare @podlega table (DataOd datetime,DataDo datetime,Prawo smallint)
+  insert into @podlega
+    select DATEADD(day,DataOd,CONVERT(datetime,'1800-12-28',120)),
+           DATEADD(day,DataDo,CONVERT(datetime,'1800-12-28',120)),
+           case RlP_PraId when 18 then 0 when 14+@wlasne then 1 else 2 end
+    from CDN.FrsPodlega(@PrcNumer,@FrsTyp,@FrsNumer,@IntOd,@IntDo)
+      inner join CDN.RolePrawa on RolaId=RlP_RolId
+    where RlP_PraId=14+@wlasne or RlP_PraId=15+@wlasne or RlP_PraId=18
+
+  select
+    @FrsTyp as FrsTyp,
+    @FrsNumer as FrsNumer,
+    CONVERT(varchar(10),@DataOd,120) as Pocz,
+    CONVERT(varchar(10),@DataDo,120) as Data,
+    case when exists(select Prawo from @podlega where Prawo=0) then 1 else 0 end as Konfiguracja,
+    case when exists(select Prawo from @podlega where Prawo=1) then 1 else 0 end as Opisywanie,
+    case when exists(select Prawo from @podlega where Prawo=2) then 1 else 0 end as Korygowanie,
+    case @FrsTyp when 944 then (select Prc_OptimaId from CDN.PrcKarty where Prc_GIDNumer=@FrsNumer) end as OptimaId
+
+  if @FrsTyp=944
+	begin
+	--Pobranie zapisów RCP w okresie
+	  declare @zapisy table (RcZ_Id int,RcZ_Czas datetime,RcZ_Typ smallint,RcZ_RcOId int,RcZ_Korekta smallint)
+      if @Teraz is null set @Teraz=GETDATE()
+      insert into @zapisy
+        select distinct RcZ_Id, RcZ_Czas, RcZ_Typ, RcZ_RcOId, RcZ_Korekta
+          from CDN.RCPZapisyOdDo(@FrsTyp,@FrsNumer,@DaneOd,@DaneDo,@Teraz)
+
+    --Zwrócenie zapisów RCP
+      select RcZ_Id, RcZ_Czas, RcZ_Typ, RcZ_RcOId, RcZ_Korekta
+        from @zapisy order by RcZ_Czas, RcZ_Typ desc, RcZ_Id desc
+
+    --Zwrócenie ograniczeń zapisów
+      select
+        (select top 1 RcZ_Czas from CDN.RCPZapisy
+           where RcZ_PrcTyp=944 and RcZ_PrcNumer=@FrsNumer and RcZ_Typ&lt;&gt;4 and ISNULL(RcZ_Korekta,0)&lt;&gt;2
+             and RcZ_Czas&lt;ISNULL((select min(RcZ_Czas) from @zapisy
+               where RcZ_Typ&lt;&gt;4 and ISNULL(RcZ_Korekta,0)&lt;&gt;2),@DaneDo)
+           order by RcZ_Czas desc) as ZapisPrzed,
+        (select top 1 RcZ_Czas from CDN.RCPZapisy
+           where RcZ_PrcTyp=944 and RcZ_PrcNumer=@FrsNumer and RcZ_Typ&lt;&gt;4 and ISNULL(RcZ_Korekta,0)&lt;&gt;2
+             and RcZ_Czas&gt;ISNULL((select max(RcZ_Czas) from @zapisy
+               where RcZ_Typ&lt;&gt;4 and ISNULL(RcZ_Korekta,0)&lt;&gt;2),@DaneDo)
+           order by RcZ_Czas asc) as ZapisPo
+
+    --Korekty znalezionych zapisów
+      select RcK_RcZId, RcK_Lp, RcK_Czas, LTRIM(Prc_Imie1+' '+Prc_Nazwisko) as RcK_Pracownik, RcK_RcZCzas, RcK_RcZRcOId, RcK_RcZTyp
+        from CDN.RCPKorekty left outer join CDN.PrcKarty on Prc_GIDTyp=RcK_PrcTyp and Prc_GIDNumer=RcK_PrcNumer
+        where RcK_RcZId in (select RcZ_Id from @zapisy) order by RcK_RcZId, RcK_Lp
+
+    --Norma czasu pracy w okresie
+      select RcN_Data, RcN_Typ, RcN_RcOId, RcN_Norma, ISNULL((select sum(Prawo) from (
+                select distinct Prawo from @podlega where RcN_Data between DataOd and DataDo
+              ) as RPrawa),0) as RcN_Prawa
+        from CDN.RCPNormaOdDo(@FrsTyp,@FrsNumer,@DaneOd,@DaneDo)
+    end
+  else
+    begin
+    --Deklaracje zmiennych i tabeli z wynikiem raportu
+      declare @Typ smallint
+      declare @Numer int
+      declare @Nazwa varchar(50)
+      declare @Opis varchar(200)
+      declare @Raport table ( Nazwa varchar(50), Opis varchar(200), Osob int, Czas int,
+	Norma int, Nieob int, Korekt int, Opisow int, Braki int, Zatwierdz varchar(50)
+      )
+
+    --Przygotowanie listy nagłówków zatwierdzeń w okresie
+      declare @ZatwNag table ( Id int, DataOd datetime, DataDo datetime )
+      insert into @ZatwNag
+        select RZN_Id, RZN_DataOd, RZN_DataDo from CDN.RCPZatwNag
+          where @DaneOd&lt;=RZN_DataDo and RZN_DataOd&lt;=@DaneDo
+      declare @Liczba int
+      select @Liczba = count(*) from @ZatwNag
+      declare @PomOd datetime
+      declare @PomDo datetime
+      set @PomOd = @DaneOd
+      while @PomOd&lt;@DaneDo
+        if exists(select Id from @ZatwNag where @PomOd between DataOd and DataDo)
+          select @PomOd=max(DataDo)+1 from @ZatwNag where @PomOd between DataOd and DataDo
+        else
+          begin
+            set @PomDo = @DaneDo
+            select @PomDo=min(DataOd)-1 from @ZatwNag where DataOd&gt;@PomOd
+            if YEAR(@PomOd)&lt;&gt;YEAR(@PomDo) or MONTH(@PomOd)&lt;&gt;MONTH(@PomDo)
+              set @PomDo = DATEADD(month,1,DATEADD(day,1-DAY(@PomOd),@PomOd))
+            set @Liczba = @Liczba+1
+            set @PomOd = DATEADD(day,1,@PomDo)
+          end
+
+    --Kursor po jednym poziomie centrów podległych
+      declare RaportCursor CURSOR LOCAL FAST_FORWARD READ_ONLY FOR
+        select FrS_Nazwa, case when Prc_Nazwisko is not null then LTRIM(Prc_Nazwisko+' '+Prc_Imie1)
+            else FrS_Opis end, FrS_GIDTyp, FrS_GIDNumer
+          from CDN.FrsDrzewo(3,@FrsTyp,@FrsNumer,@IntOd,@IntDo,1) left outer join CDN.PrcKarty
+            on FrS_GIDTyp=Prc_GIDTyp and FrS_GIDNumer=Prc_GIDNumer
+          where FrS_Poziom&gt;0
+          order by case when Prc_Nazwisko is not null then LTRIM(Prc_Nazwisko+' '+Prc_Imie1)
+            when LTRIM(FrS_Opis)&lt;&gt;'' then FrS_Opis else FrS_Nazwa end
+      open RaportCursor
+
+    --Obliczenie raportu dla każdego centrum
+      while 1=1
+        begin
+          fetch next from RaportCursor into @Nazwa, @Opis, @Typ, @Numer
+          if @@FETCH_STATUS &lt;&gt; 0 break
+          insert into @Raport
+            select @Nazwa, @Opis, Count(*), ISNULL(sum(Czas),0), ISNULL(sum(Norma),0),
+		ISNULL(sum(Nieob),0), ISNULL(sum(Korekty),0), ISNULL(sum(Opisy),0),
+		ISNULL(sum(Braki),0),
+                case
+                  when @Liczba = (select count(*) from (
+                    select distinct RZE_RZNId from CDN.RCPZatwElem inner join @ZatwNag on Id=RZE_RZNId
+                      where RZE_FrsTyp=@Typ and RZE_FrsNumer=@Numer
+                    ) as ZatwElem)
+                  then (
+                    select top 1 (
+                      select LTRIM(Prc_Imie1+' '+Prc_Nazwisko) from CDN.PrcKarty
+                        where Prc_GIDTyp=RZE_PrcTyp and Prc_GIDNumer=RZE_PrcNumer
+                    )
+                    from CDN.RCPZatwElem
+                    where RZE_FrsTyp=@Typ and RZE_FrsNumer=@Numer
+                      and RZE_RZNId=(select top 1 Id from @ZatwNag order by DataOd desc)
+                    order by RZE_Lp desc
+                  )
+                  when ISNULL(sum(Zatw),0)&gt;0
+                  then
+                    CONVERT(varchar,ROUND(CONVERT(float,100*ISNULL(sum(Zatw),0))/@Liczba/count(*),2))+'%'
+                  else
+                    ''
+                  end as Zatwierdz
+              from (
+                select FrsTyp, FrsNumer, sum(Czas) as Czas, sum(Norma) as Norma,
+                    sum(Nieob) as Nieob, sum(Korekty) as Korekty, sum(Opisy) as Opisy,
+		    sum(Braki) as Braki
+                  from CDN.RCPRaportOdDo(@Typ,@Numer,@DaneOd,@DaneDo)
+                  group by FrsTyp, FrsNumer
+              ) as Raport
+              left outer join (
+                select RZE_FrsTyp, RZE_FrsNumer, count(RZE_RZNId) as Zatw from (
+                  select distinct RZE_FrsTyp, RZE_FrsNumer, RZE_RZNId
+                    from CDN.RCPZatwElem inner join @ZatwNag on Id=RZE_RZNId) as ZatwElem
+                  group by RZE_FrsTyp, RZE_FrsNumer
+                ) as Zatwierdz
+              on RZE_FrsTyp=FrsTyp and RZE_FrsNumer=FrsNumer
+        end
+      close RaportCursor
+      deallocate RaportCursor
+
+    --Zwrócenie wyniku raportu i podsumowania
+      select Nazwa, Opis, Osob, 
+          case Osob when 0 then Czas else Czas/Osob end as Czas,
+          case Osob when 0 then Norma else Norma/Osob end as Norma,
+          case Osob when 0 then Nieob else Nieob/Osob end as Nieob,
+          CONVERT(varchar,Korekt)+'+'+CONVERT(varchar,Opisow) as Korekt,
+	  Braki, Zatwierdz
+        from @Raport
+      select ISNULL(sum(Osob),0) as Osob, ISNULL(sum(Czas)/sum(Osob),0) as Czas,
+        ISNULL(sum(Norma)/sum(osob),0) as Norma, ISNULL(sum(Nieob)/sum(Osob),0) as Nieob,
+        CONVERT(varchar,ISNULL(sum(Korekt),0))+'+'+CONVERT(varchar,ISNULL(sum(Opisow),0))
+	as Korekt, ISNULL(sum(Braki),0) as Braki from @Raport
+    end
+
+  select RZN_Zamkniety as Zamkniety, RZN_DataOd as DataOd, RZN_DataDo as DataDo,
+	CONVERT(varchar(20),Dane.RZE_Czas,120) as Czas,
+	LTRIM(Prc_Imie1 + ' ' + Prc_Nazwisko) as Zatwierdzil
+    from CDN.RCPZatwNag inner join (
+      CDN.RCPZatwElem as Dane
+      inner join (select RZE_RZNId as Id, max(RZE_Lp) as Lp
+		from CDN.RCPZatwElem
+		where RZE_FrsTyp=@FrsTyp and RZE_FrsNumer=@FrsNumer
+		group by RZE_RZNId) as Maks
+      on Dane.RZE_RZNId=Maks.Id and Dane.RZE_Lp=Maks.Lp
+        and Dane.RZE_FrsTyp=@FrsTyp and Dane.RZE_FrsNumer=@FrsNumer
+    ) on RZN_Id = Dane.RZE_RZNId
+    inner join CDN.PrcKarty
+    on Dane.RZE_PrcTyp=Prc_GIDTyp and Dane.RZE_PrcNumer=Prc_GIDNumer
+  where RZN_DataOd&lt;=@DaneDo and @DaneOd&lt;=RZN_DataDo
+  order by RZN_DataDo
+
+  if @Dane=0
+    select RcO_Id, RcO_Kod, RcO_Nazwa, RcO_TypNieob, RcO_Kalendarz, RcO_OpisRCP, RcO_Styl, RcO_Praca,
+	RcO_KolorTla, RcO_KolorOpisu, RcO_KolorDaty, RcO_PogrubionaData from CDN.RCPOpisy
+
+end
+</proceduredef>
+</ROOT>

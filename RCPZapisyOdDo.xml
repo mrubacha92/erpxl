@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="RCPZapisyOdDo">
+CREATE FUNCTION CDN.RCPZapisyOdDo (@FrsTyp smallint,@FrsNumer int,@DataOd datetime,@DataDo datetime,@Teraz datetime)
+RETURNS @Zapisy TABLE (
+  RcZ_PrcTyp smallint,
+  RcZ_PrcNumer int,
+  RcZ_Id int,
+  RcZ_Czas datetime,
+  RcZ_Typ smallint,
+  RcZ_RcOId int,
+  RcZ_Korekta smallint
+)
+as
+begin
+  declare @Baza datetime
+  set @Baza = CONVERT(datetime,'1800-12-28',120)
+  declare @CzasOd datetime
+  declare @CzasDo datetime
+  declare @IntOd int
+  declare @IntDo int
+  set @IntOd = DATEDIFF(day,@Baza,@DataOd)
+  set @IntDo = DATEDIFF(day,@Baza,@DataDo)
+  declare CentraCursor CURSOR LOCAL FAST_FORWARD READ_ONLY FOR
+    select distinct FrS_GIDTyp, FrS_GIDNumer, DATEADD(day,FrS_AktywnyOd,@Baza), DATEADD(day,FrS_AktywnyDo+1,@Baza)
+      from CDN.FrsDrzewo(3,@FrsTyp,@FrsNumer,@IntOd,@IntDo,0)
+      where FrS_GIDTyp=944
+  open CentraCursor
+  while 1=1
+    begin
+      fetch next from CentraCursor into @FrsTyp, @FrsNumer, @DataOd, @DataDo
+      if @@FETCH_STATUS &lt;&gt; 0 break
+      set @CzasOd = DATEADD(minute,-1,@DataOd)
+      if (select top 1 RcZ_Typ from CDN.RCPZapisy
+            where RcZ_PrcTyp=@FrsTyp and RcZ_PrcNumer=@FrsNumer and RcZ_Czas&lt;@DataOd and ISNULL(RcZ_Korekta,0)&lt;&gt;2 and RcZ_Typ&lt;&gt;4
+            order by RcZ_Czas desc, RcZ_Typ asc)=0 and
+         (select top 1 RcZ_Typ from CDN.RCPZapisy
+            where RcZ_PrcTyp=@FrsTyp and RcZ_PrcNumer=@FrsNumer and RcZ_Czas&gt;=@DataOd and ISNULL(RcZ_Korekta,0)&lt;&gt;2 and RcZ_Typ&lt;&gt;4
+            order by RcZ_Czas asc, RcZ_Typ desc)=1
+        select top 1 @CzasOd = RcZ_Czas from CDN.RCPZapisy
+          where RcZ_PrcTyp=@FrsTyp and RcZ_PrcNumer=@FrsNumer and RcZ_Czas&gt;=@DataOd and ISNULL(RcZ_Korekta,0)&lt;&gt;2 and RcZ_Typ&lt;&gt;4
+          order by RcZ_Czas asc, RcZ_Typ desc
+      set @CzasDo = DATEADD(minute,-1,@DataDo)
+      if (select top 1 RcZ_Typ from CDN.RCPZapisy
+            where RcZ_PrcTyp=@FrsTyp and RcZ_PrcNumer=@FrsNumer and RcZ_Czas&lt;@DataDo and ISNULL(RcZ_Korekta,0)&lt;&gt;2 and RcZ_Typ&lt;&gt;4
+            order by RcZ_Czas desc, RcZ_Typ asc)=0
+        begin
+          if (select top 1 RcZ_Typ from CDN.RCPZapisy
+              where RcZ_PrcTyp=@FrsTyp and RcZ_PrcNumer=@FrsNumer and RcZ_Czas&gt;=@DataDo and ISNULL(RcZ_Korekta,0)&lt;&gt;2 and RcZ_Typ&lt;&gt;4
+              order by RcZ_Czas asc, RcZ_Typ desc)=1
+            select top 1 @CzasDo = RcZ_Czas from CDN.RCPZapisy
+              where RcZ_PrcTyp=@FrsTyp and RcZ_PrcNumer=@FrsNumer and RcZ_Czas&gt;=@DataDo and ISNULL(RcZ_Korekta,0)&lt;&gt;2 and RcZ_Typ&lt;&gt;4
+              order by RcZ_Czas asc, RcZ_Typ desc
+          else
+            if (select top 1 RcZ_Czas from CDN.RCPZapisy
+                where RcZ_PrcTyp=@FrsTyp and RcZ_PrcNumer=@FrsNumer and RcZ_Czas&lt;@CzasDo and ISNULL(RcZ_Korekta,0)&lt;&gt;2 and RcZ_Typ&lt;&gt;4
+                order by RcZ_Czas desc, RcZ_Typ asc) between DATEADD(day,-1,@Teraz) and @Teraz and
+               not exists(select * from CDN.RCPZapisy where RcZ_PrcTyp=@FrsTyp and RcZ_PrcNumer=@FrsNumer
+                and RcZ_Czas&gt;=@CzasDo and ISNULL(RcZ_Korekta,0)&lt;&gt;2 and RcZ_Typ&lt;&gt;4)
+              insert into @Zapisy values ( @FrsTyp, @FrsNumer, 0, @Teraz, 1, null, null )
+        end
+      insert into @Zapisy
+        select RcZ_PrcTyp, RcZ_PrcNumer, RcZ_Id, RcZ_Czas, RcZ_Typ, RcZ_RcOId, RcZ_Korekta
+          from CDN.RCPZapisy
+          where RcZ_PrcTyp=@FrsTyp and RcZ_PrcNumer=@FrsNumer
+	        and @DataOd&lt;=RcZ_Czas and @CzasOd&lt;RcZ_Czas
+	        and (RcZ_Czas&lt;@DataDo or RcZ_Czas&lt;=@CzasDo)
+    end
+  close CentraCursor
+  deallocate CentraCursor
+  return
+end
+</functiondef>
+</ROOT>
