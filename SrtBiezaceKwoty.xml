@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="SrtBiezaceKwoty">
+CREATE PROCEDURE cdn.SrtBiezaceKwoty (@Srt_GIDNumer INT, @NaDzien int = null, @DataDok int = null, @ZestTryb tinyint = 0) as
+begin
+set nocount on
+
+
+  declare @ZO int; 
+  declare @ZM int; 
+  declare @PK int; 
+  declare @OT int; 
+  declare @OTK int; 
+  declare @LT int; 
+  declare @LTK int; 
+  declare @AM int; 
+  declare @AMK int; 
+  declare @AMP int; 
+  declare @AK int; 
+  declare @ZW int; 
+  declare @RN int; 
+  declare @WN int; 
+
+  declare @MW int; 
+  declare @MWK int; 
+  declare @ZKZ int; 
+  declare @ZS int; 
+
+ 
+  set  @ZO = 2144; 
+  set  @ZM = 2160; 
+  set  @OT = 2048; 
+  set  @OTK = 2176; 
+  set  @PK = 2080; 
+  set  @LT = 2096; 
+  set  @LTK = 2224; 
+  set  @AM = 2064; 
+  set  @AMK = 2192; 
+  set  @AMP = 6208; 
+  set  @AK = 2304; 
+  set  @ZW = 2288; 
+  set  @RN = 2128;
+  set  @WN = 2112;
+
+  set @MW = 2432
+  set @MWK = 2496
+  set @ZKZ = 2552
+  set @ZS = 2556
+
+
+	declare @PoczT1 decimal(15,2)	
+	declare @PoczT2 decimal(15,2)
+	declare @BruttoT1 decimal(15,2)
+	declare @BruttoT2 decimal(15,2)
+	declare @odpisyT1 decimal(15,2)
+	declare @OdpisyT2 decimal(15,2)
+	declare @OdpisyT2_Likw decimal(15,2)
+	declare @KwotaZlom decimal(15,2)
+	declare @KwotaZlomAm decimal(15,2)
+	declare @DataPierwszeOT int
+	declare @DataZapPierwszeOT int
+	declare @SrtLpPierwszeOT int
+	
+	declare @PoczT1Sys decimal(15,2)
+	declare @PoczT2Sys decimal(15,2)
+	declare @BruttoT1Sys decimal(15,2)
+	declare @BruttoT2Sys decimal(15,2)
+	declare @odpisyT1Sys decimal(15,2)
+	declare @OdpisyT2Sys decimal(15,2)
+	declare @OdpisyT2_LikwSys decimal(15,2)
+	declare @KwotaZlomSys decimal(15,2)
+	declare @KwotaZlomAmSys decimal(15,2)
+	
+
+
+	if isnull(@NaDzien,0) = -1
+		set @NaDzien = null
+
+	if isnull(@DataDok,0) = -1
+		set @DataDok = null
+
+
+
+	select * into #tmpOT_LT from cdn.SrtHistElem where 1=2
+	insert into #tmpOT_LT exec cdn.SrtPrzyjecieLikwidacja @Srt_GIDNumer
+	
+
+	select @DataPierwszeOT = SHE_Data,
+		@DataZapPierwszeOT = SHE_DataZap,
+		@SrtLpPierwszeOT = SHE_SrtLp	
+	from #tmpOT_LT
+	where SHE_GIDTyp = @OT
+
+	drop table #tmpOT_LT
+
+	--czyli nie widzi OT
+	if not @DataDok is null
+		if @DataZapPierwszeOT &gt; @DataDok
+			set @DataPierwszeOT = 0
+
+
+	select 
+		@PoczT1 = sum(case she_gidtyp 
+			when @LT then -1*SHE_KwotaInw 
+			when @LTK then -1*SHE_KwotaInw
+			else SHE_KwotaInw
+		end)  ,
+		@PoczT2 = sum(case she_gidtyp 
+			when @LT then -1*SHE_PodstawaAm
+			when @LTK then -1*SHE_PodstawaAm 
+			else SHE_PodstawaAm
+		end),
+		@PoczT1Sys = sum(case she_gidtyp 
+			when @LT then -1*SHE_KwotaInwSys
+			when @LTK then -1*SHE_KwotaInwSys
+			else SHE_KwotaInwSys
+		end)  ,
+		@PoczT2Sys = sum(case she_gidtyp 
+			when @LT then -1*SHE_PodstawaAmSys
+			when @LTK then -1*SHE_PodstawaAmSys
+			else SHE_PodstawaAmSys
+		end)
+	from cdn.SrtHistElem
+	where She_SrtNumer = @Srt_GIDNumer and 
+		SHE_Data = @DataPierwszeOT and
+		(@DataDok is null or not @DataDok is null and SHE_DataZap &lt;= @DataDok) and
+		(SHE_GIDTyp in (@OT, @OTK, @MW, @MWK)
+		or SHE_GIDTyp = @LT and isnull(She_Likwidacja,0) = 0
+		or SHE_GIDTyp = @LTK and isnull(She_Likwidacja,0) = 0) and
+		not exists (Select E1.SHE_GIDtyp
+				from cdn.SrtHistElem as E1
+				where E1.She_SrtNumer = @Srt_GIDNumer and 
+					E1.SHE_Data = @DataPierwszeOT and
+					SHE_SrtLp &gt; E1.SHE_SrtLp and
+					(@DataDok is null or not @DataDok is null and E1.SHE_DataZap &lt;= @DataDok) and
+					(E1.SHE_GIDTyp in (@AM, @AMK, @AMP, @AK, @PK)
+					or E1.SHE_GIDTyp = @LT and isnull(E1.She_Likwidacja,0) &lt;&gt; 0
+					or E1.SHE_GIDTyp = @LTK and isnull(E1.She_Likwidacja,0) &lt;&gt; 0))
+
+
+
+	select 
+		@BruttoT1 = sum(case she_gidtyp 
+			when @LT then -1*SHE_KwotaInw 
+			when @LTK then -1*SHE_KwotaInw
+			else SHE_KwotaInw
+		end)  ,
+		@BruttoT2 = sum(case she_gidtyp 
+			when @LT then -1*SHE_PodstawaAm
+			when @LTK then -1*SHE_PodstawaAm 
+			else SHE_PodstawaAm
+		end),
+		@BruttoT1Sys = sum(case she_gidtyp 
+			when @LT then -1*SHE_KwotaInwSys
+			when @LTK then -1*SHE_KwotaInwSys
+			else SHE_KwotaInwSys
+		end)  ,
+		@BruttoT2Sys = sum(case she_gidtyp 
+			when @LT then -1*SHE_PodstawaAmSys
+			when @LTK then -1*SHE_PodstawaAmSys
+			else SHE_PodstawaAmSys
+		end)
+	from cdn.SrtHistElem
+	where She_SrtNumer = @Srt_GIDNumer and 
+		(@NaDzien is null or not @NaDzien is null and SHE_Data &lt;= @NaDzien) and
+		(@DataDok is null or not @DataDok is null and SHE_DataZap &lt;= @DataDok) and
+		SHE_GIDTyp in (@OT, @OTK, @MW, @MWK, @LT, @LTK, @PK )
+
+
+
+	select 
+		@OdpisyT1 = sum(case she_gidtyp 
+			when @LT then -1*SHE_KwotaUm
+			when @LTK then -1*SHE_KwotaUm
+			else SHE_KwotaUm
+		end)  ,
+		@OdpisyT2 = sum(case she_gidtyp 
+			when @LT then -1*SHE_KwotaAm
+			when @LTK then -1*SHE_KwotaAm
+			else SHE_KwotaAm
+		end),
+		@OdpisyT1Sys = sum(case she_gidtyp 
+			when @LT then -1*SHE_KwotaUmSys
+			when @LTK then -1*SHE_KwotaUmSys
+			else SHE_KwotaUmSys
+		end)  ,
+		@OdpisyT2Sys = sum(case she_gidtyp 
+			when @LT then -1*SHE_KwotaAmSys
+			when @LTK then -1*SHE_KwotaAmSys
+			else SHE_KwotaAmSys
+		end),
+		@OdpisyT2_Likw = sum(SHE_KwotaAm_Likw)
+		,		@OdpisyT2_LikwSys = 0 --sum(SHE_KwotaAm_LikwSys)
+	from cdn.SrtHistElem
+	where She_SrtNumer = @Srt_GIDNumer and 
+		(@NaDzien is null or not @NaDzien is null and SHE_Data &lt;= @NaDzien) and
+		(@DataDok is null or not @DataDok is null and SHE_DataZap &lt;= @DataDok) and
+		SHE_GIDTyp in (@AM, @AMK, @AMP, @AK, @LT, @LTK, @PK, @MW, @MWK )	
+
+
+
+	select 
+		@kwotaZlom = She_KwotaZlom,
+		@kwotaZlomAm = She_KwotaZlomAm,
+		@kwotaZlomSys = She_KwotaZlomSys,
+		@kwotaZlomAmSys = She_KwotaZlomAmSys
+        from cdn.SrtHistElem 
+        where SHE_SrtNumer = @Srt_GIDNumer and
+		(@NaDzien is null or not @NaDzien is null and SHE_Data &lt;= @NaDzien) and
+		(@DataDok is null or not @DataDok is null and SHE_DataZap &lt;= @DataDok) and
+		SHE_GIDTyp = @ZKZ
+                and SHE_Data = (select max(SHE_Data) from cdn.SrtHistElem 
+                                where SHE_SrtNumer = @Srt_GIDNumer and
+					(@NaDzien is null or not @NaDzien is null and SHE_Data &lt;= @NaDzien) and
+					(@DataDok is null or not @DataDok is null and SHE_DataZap &lt;= @DataDok) and
+					SHE_GIDTyp = @ZKZ)
+                and SHE_SrtLp = (select max(SHE_SrtLp) from cdn.SrtHistElem 
+                                        where SHE_SrtNumer = @Srt_GIDNumer and
+						(@NaDzien is null or not @NaDzien is null and SHE_Data &lt;= @NaDzien) and
+						(@DataDok is null or not @DataDok is null and SHE_DataZap &lt;= @DataDok) and
+						SHE_GIDTyp = @ZKZ
+                                                and SHE_Data = (select max(SHE_Data) from cdn.SrtHistElem 
+                                                                where SHE_SrtNumer = @Srt_GIDNumer and
+									(@NaDzien is null or not @NaDzien is null and SHE_Data &lt;= @NaDzien) and
+									(@DataDok is null or not @DataDok is null and SHE_DataZap &lt;= @DataDok) and
+									SHE_GIDTyp = @ZKZ))
+
+
+	if @KwotaZlom is null
+		select @KwotaZlom = Srt_KwotaZlom, @KwotaZlomAm = Srt_KwotaZlomAm from cdn.SrtKarty where Srt_GIDNumer = @Srt_GIDNumer
+
+
+	select @PoczT1 as PoczT1, 
+			@PoczT2 as PoczT2, 
+			@BruttoT1 as BruttoT1, 
+			@BruttoT2 as BruttoT2, 
+			@BruttoT1 - isnull(@OdpisyT1,0) as NettoT1, 
+			case when @BruttoT2 &gt; 0 then
+				@BruttoT2 - isnull(@OdpisyT2,0) -- - isnull(@OdpisyT2_Likw,0) 
+			else
+				0 -- w przypadku likwidacji po stronie amortyzacji nie ma kwoty amortyzacji
+			end as NettoT2, 
+			@KwotaZlom as KwotaZlomT1, 
+			@KwotaZlomAm as KwotaZlomT2,
+			
+			@PoczT1Sys as PoczT1Sys, 
+			@PoczT2Sys as PoczT2Sys, 
+			@BruttoT1Sys as BruttoT1Sys, 
+			@BruttoT2Sys as BruttoT2Sys, 
+			@BruttoT1Sys - isnull(@OdpisyT1Sys,0) as NettoT1Sys, 
+			case when @BruttoT2Sys &gt; 0 then
+				@BruttoT2Sys - isnull(@OdpisyT2Sys,0) -- - isnull(@OdpisyT2_LikwSys,0) 
+			else
+				0 -- w przypadku likwidacji po stronie amortyzacji nie ma kwoty amortyzacji
+			end as NettoT2Sys, 
+			@KwotaZlomSys as KwotaZlomT1Sys, 
+			@KwotaZlomAmSys as KwotaZlomT2Sys
+
+
+set nocount off
+end
+</proceduredef>
+</ROOT>

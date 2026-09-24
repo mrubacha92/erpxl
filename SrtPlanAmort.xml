@@ -1,0 +1,3036 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury SrtPlanAmort" hidden="True">
+if exists (select name from sysobjects where name = 'SrtPlanAmort' and type = 'P')
+  drop procedure CDN.SrtPlanAmort;
+</scriptdef>
+<scriptdef name="Tworzenie procedury SrtPlanAmort" hidden="False">
+CREATE PROCEDURE cdn.SrtPlanAmort (@Srt_GIDNumer INT, @RokDo varchar(4), @RokOd varchar(4) = NULL, @NaDzien varchar(20) = NULL, @DataZapisu varchar(20), @SHE_GIDTyp int, @SHE_GIDNumer int, @SHE_GIDLp int, @_Debug smallint, @ZestTryb smallint = 0, @ZestElemId int = 0, @ZestId int = 0) as
+begin
+set nocount on
+
+-- parametry wprowadzone w 2015.0 w związku z wprowadzeniem funkcjonalności zestawów w srt -------
+--  @ZestTryb	- co obliczamy: 0 - standardowo dla zwykłego środka, 2 - oblicz dla wskazanego elementu zestawu, 1 - dla zestawu, zwróć tabelkę dla wszystkich elementów, 3 - dla zestawu, zwróć tabelkę sumaryczną dla zestawu
+--  @ZestId		- GIDNumer zestawu
+--  @ZestElemId - SZE_Id - identyfikator elementu w ramach zestawu
+--
+	-- test 2014.06.20
+
+/*declare @Srt_GIDNumer INT = 62
+	, @RokDo varchar(4) = '2015'
+	, @RokOd varchar(4) = '2013'
+	, @NaDzien varchar(20) = NULL
+	, @DataZapisu varchar(20) = '2014-12-31'
+	, @SHE_GIDTyp int = 0
+	, @SHE_GIDNumer int = 0
+	, @SHE_GIDLp int = 0
+	, @_Debug smallint = 0
+	, @ZestTryb smallint = 1
+	, @ZestElemId int = 0
+	, @ZestId int = 0
+--62,'2015','2013',null,'2014-12-31',0,0,0,0,0,0,0
+*/
+
+  declare @ZO smallint;
+  declare @ZM smallint;
+  declare @PK smallint;
+  declare @OT smallint;
+  declare @OTK smallint;
+  declare @LT smallint;
+  declare @LTK smallint;
+  declare @AM smallint;
+  declare @AMK smallint;
+  declare @AMP smallint;
+  declare @AK smallint;
+  declare @ZW smallint;
+  declare @RN smallint;
+  declare @WN smallint;
+  declare @MW smallint;
+  declare @MWK smallint;
+  declare @ZKZ smallint;
+  declare @ZSA smallint;
+  declare @ZMT smallint;
+  declare @RT smallint;
+  declare @ZPA smallint
+  declare @ZPK smallint
+
+  set  @ZO = 2144;
+  set  @ZM = 2160;
+  set  @OT = 2048;
+  set  @OTK = 2176;
+  set  @PK = 2080;
+  set  @LT = 2096;
+  set  @LTK = 2224;
+  set  @AM = 2064;
+  set  @AMK = 2192;
+  set  @AMP = 6208;
+  set  @AK = 2304;
+  set  @ZW = 2288;
+  set  @RN = 2128;
+  set  @WN = 2112;  
+
+  set @MW = 2432
+  set @MWK = 2496
+  set @ZKZ = 2552
+  set @ZSA = 2556
+  set @ZMT = 2548
+  set @RT = 2532
+  set @ZPA = 2050
+  set @ZPK = 2051		-- korekta do ZPA, na potrzeby korekty dokumentu OT dla zestawu
+
+        declare @Srt_DataLikw int
+        declare @Sezonowosc smallint
+        declare @Srt_MsNaliczania smallint
+        declare @Srt_MsNaliczaniaAm smallint
+        declare @Srt_PodlegaAMP smallint
+        declare @Srt_Dwutorowosc smallint
+        declare @Srt_MetodaUm smallint
+        declare @Srt_MetodaAm smallint
+        declare @Srt_DataRozp int
+        declare @Srt_DataRozpAm int
+        declare @Srt_DataEksp int
+        declare @Srt_MiejsceUzyw varchar(30)
+        declare @Srt_PrcNumer int
+        declare @Srt_WspDegr decimal(7,2)
+        declare @Srt_WspDegrAm decimal(7,2)
+        declare @Srt_Stawka decimal(7,2)
+        declare @Srt_StawkaAm decimal(7,2)
+        declare @Srt_WspUmAm decimal(7,2)
+        declare @Srt_WspAm decimal(7,2)
+        declare @Srt_Data int
+        declare @Kon_DegresywnaPierwszyRok smallint
+
+		declare @Srt_DataRozpZestawu int
+        declare @Srt_DataRozpAmZestawu int
+        declare @SZE_DataPrzylaczenia int
+        
+
+        --poczatek RP
+        declare @RozpRPMies int
+        select @RozpRPMies = Kon_Wartosc from cdn.Konfig where Kon_Numer = 242
+
+        -- Czy w pierszym roku odliczamy zwiększenia w drugim miesiącu metodą degresywną
+        select @Kon_DegresywnaPierwszyRok = Kon_Wartosc from cdn.Konfig where Kon_Numer = 2411
+        
+--      set @RozpRPMies = 1
+
+        --koniec RP
+        declare @KoniecRPMies int
+
+        if @RozpRPMies = 1
+                set @KoniecRPMies = 12
+        else
+                set @KoniecRPMies = @RozpRPMies - 1
+
+
+
+        declare @IloscMiesRP int
+        declare @RokDoD datetime
+        declare @RokDoC int
+        declare @RokOdD datetime
+        declare @RokOdC int
+
+        declare @NaDzienD datetime
+        declare @NaDzienC int
+
+        declare @DataZapisuD datetime --data zapisu dokumentow
+        declare @DataZapisuC int
+
+        declare @msg as nvarchar(100) --komunikaty
+
+        declare @DataZapPierwszeOT int -- data zapisu z pierwszego OT
+        declare @DataPierwszeOT int     --data dokumentu z pierwszego OT
+        declare @DataPierwszeOT_D datetime      --data dokumentu z pierwszego OT
+        declare @SrtLpPierwszeOT smallint  --srtLP pierwszego OT
+        declare @SZELpPierwszeOT smallint	--SZELp pierwszego OT (lub ZPA po stronie przyłaczenia)
+        declare @DataOstatniLT int      --data ostatniego LT (bez korekty)
+        declare @DataZapOstatniLT int   -- data zapisu ostatniego LT
+        declare @SrtLpOstatniLT smallint  --srtLP ostatniego LT
+        declare @SZELpOstatniLT smallint  --SZELP ostatniego LT (lub ZPA po stronie odłączenia)
+        declare @SrtGIDNumerPierwszeOT int --gidnumer pierwszego OT
+        declare @DataKoniecPierwszyRP_C int -- data konca pierwszego RP
+
+		declare @GIDTypPierwszeOT smallint	-- OT, ZPA
+
+        declare @MiesRozpAmortT1 smallint --miesiac rozpoczecia amortyzacji
+        declare @MiesRozpAmortT2 smallint --miesiac rozpoczecia amortyzacji
+
+        declare @NieZalezyOdZapisu smallint --wypelniaj niezaleznie od daty zapisu (ustawiane w przypadku podana NaDzien)
+        if @Nadzien is null
+                set @NieZalezyOdZapisu = 0
+        else
+                set @NieZalezyOdZapisu = 1
+
+
+-- konfiguracja planu amortyzacji
+        --amor jednorazowa . liczba miesiecy od daty przyjecia po ktorej srodek ma byc amortyzwoany (0) ten sam/ (&lt;&gt; 0) kolejny
+        --sezonowosc - po uplywie podanych miesiecy bierze pierwszy mozliwy miesiac
+        declare @MiesiacJednorazowa smallint
+        select @MiesiacJednorazowa = Kon_Wartosc - 1 from cdn.Konfig where Kon_Numer = 243
+--      set @MiesiacJednorazowa = 1 --(kolejny miesiac od daty przyjecia)
+
+        --amortzacja miesieczna(0)/kwartalna(1)/roczna(2)
+        declare @MiesAmortyzacji smallint
+        select @MiesAmortyzacji = Kon_Wartosc from cdn.Konfig where Kon_Numer = 246
+--      set @MiesAmortyzacji = 0
+
+        --amortyzacja przyspieszona (pierwszy rok) miesieczna(0)/kwartalna(1)/roczna(2)
+        declare @MiesAmortyzacjiAMP smallint
+        select @MiesAmortyzacjiAMP = Kon_Wartosc from cdn.Konfig where Kon_Numer = 247
+--      set @MiesAmortyzacjiAMP = 1
+
+        --wielkosc odpisu jest dzielona przez liczbe wszystkich miesiecy w roku (0) lub przez liczbe aktywnych miesiecy (1)
+        declare @RodzajStawkaAktywnySezon smallint      -- 0 - przez ilosc wszystkich mies w roku
+        select @RodzajStawkaAktywnySezon = Kon_Wartosc from cdn.Konfig where Kon_Numer = 248
+--      set @RodzajStawkaAktywnySezon = 0               -- 1 - przez ilosc mies aktywnych w roku
+
+        --czy AMP dotyczy takze umorzenia
+        declare @AMPUmorzenie smallint  -- 0 dotyczy tylko amortyzacji
+        select @AMPUmorzenie = Kon_Wartosc from cdn.Konfig where Kon_Numer = 249
+--      set @AMPUmorzenie = 0           -- 1 dotyczy amortyzacji i umorzenia
+
+        --czy odpis AMP zaniza podstawe do naliczania odpisu dla degresywnej
+        declare @AMPUwzglDegresywna smallint -- 0 - nie zaniza/ 1 - zaniza
+        select @AMPUwzglDegresywna = Kon_Wartosc from cdn.Konfig where Kon_Numer = 2410
+--      set @AMPUwzglDegresywna = 1
+
+        --czy pokazywac wartosci przykrywane w zwiazku z pokazem na planie amortyzacji
+        declare @DebugPlan smallint
+        set @DebugPlan = 0
+
+
+
+
+        --ilosc miejsc po przecinku
+        declare @poz_decWsp smallint
+        declare @poz_decStawka smallint
+        declare @poz_decOdpis smallint
+        declare @poz_decOdpisTeoret smallint
+        set @poz_decWsp = 4
+        set @poz_decStawka = 4
+        set @poz_decOdpis = 2
+        set @poz_decOdpisTeoret = 3
+
+        declare @tmpInt1 int
+        declare @tmpInt2 int
+        declare @tmpInt3 int
+        declare @tmpInt4 int
+        declare @tmpInt5 int
+        declare @tmpDate1 datetime
+        declare @tmpDate2 datetime
+        declare @tmpDate3 datetime
+
+        declare @SaOdpisy smallint --czy sa jakies odpisy
+
+        declare @OldShnTyp int
+        declare @OldShnNumer int
+        declare @SheNumer int
+        declare @DataRT int
+
+
+		declare @ZestTrybSrodek  tinyint = 0
+		declare @ZestTrybZestaw  tinyint = 1
+		declare @ZestTrybElement tinyint = 2
+		
+		declare @ZestOdlaczenie		tinyint = 1
+		declare @ZestPrzylaczenie	tinyint = 2
+	
+
+        
+
+	
+
+
+		if @ZestTryb = @ZestTrybElement			
+		
+			select
+					@Sezonowosc = isnull(Srt_Sezonowy,0),
+					@Srt_MetodaUm = isnull(Srt_MetodaUm,0),
+					@Srt_MetodaAm = isnull(Srt_MetodaAm,0),
+					@Srt_GIDNumer = Srt_GIDNumer,
+					
+					@Srt_DataLikw = case when isnull(SZE_DataLikw,0) &lt;&gt; 0 then SZE_DataLikw else isnull(Srt_DataLikw,0) end,
+					--@Srt_DataLikw = isnull(SRT_DataLikw,0),
+					
+					@Srt_MsNaliczania = Srt_MsNaliczania,
+					@Srt_MsNaliczaniaAm = Srt_MsNaliczaniaAm,
+					@Srt_PodlegaAMP = isnull(Srt_PodlegaAMP,0),
+					@Srt_Dwutorowosc = isnull(Srt_Dwutorowosc,0),
+					
+					@Srt_DataRozp = case when isnull(SZE_DataRozp,0) &lt;&gt; 0 then SZE_DataRozp else isnull(Srt_DataRozp,0) end,
+					@Srt_DataRozpAm = case when isnull(SZE_DataRozpAm,0) &lt;&gt; 0 then SZE_DataRozpAm else isnull(Srt_DataRozpAm,0) end,
+					@Srt_DataEksp = case when isnull(SZE_DataEksp,0) &lt;&gt; 0 then SZE_DataEksp else isnull(Srt_DataEksp,0) end,
+					
+					@Srt_DataRozpZestawu = isnull(Srt_DataRozp,0),
+					@Srt_DataRozpAmZestawu = isnull(Srt_DataRozpAm,0),
+					@SZE_DataPrzylaczenia = ISNULL(SZE_DataPrzylaczenia,0),
+					
+					--@Srt_DataRozp = isnull(Srt_DataRozp,0),
+					--@Srt_DataRozpAm = isnull(Srt_DataRozpAm,0),
+					--@Srt_DataEksp = isnull(Srt_DataEksp,0),
+										
+					@Srt_MiejsceUzyw = Srt_MiejsceUzyw,
+					@Srt_PrcNumer = Srt_PrcNumer,
+					@Srt_WspDegr = isnull(Srt_WspDegr,0),
+					@Srt_WspDegrAm = isnull(Srt_WspDegrAm,0),
+					@Srt_Stawka = isnull(Srt_Stawka,0),
+					@Srt_StawkaAm = isnull(Srt_StawkaAm,0),
+					@Srt_WspUmAm = isnull(Srt_WspUmAm,0),
+					@Srt_WspAm = isnull(Srt_WspAm,0),
+					@Srt_Data = isnull(Srt_Data,0)
+			from cdn.SrtKarty
+			inner join cdn.SrtZestElem on Srt_GIDNumer = SZE_SrtZestNumer
+			where SZE_Id = @ZestElemId and
+				( @DataZapisuC is null or not @DataZapisuC is null and (Srt_Data is null or (not Srt_Data is null and Srt_Data &lt;= @DataZapisuC)) )
+				
+		else	
+			select
+					@Sezonowosc = isnull(Srt_Sezonowy,0),
+					@Srt_MetodaUm = isnull(Srt_MetodaUm,0),
+					@Srt_MetodaAm = isnull(Srt_MetodaAm,0),
+					@Srt_GIDNumer = Srt_GIDNumer,
+					@Srt_DataLikw = isnull(Srt_DataLikw,0),
+					@Srt_MsNaliczania = Srt_MsNaliczania,
+					@Srt_MsNaliczaniaAm = Srt_MsNaliczaniaAm,
+					@Srt_PodlegaAMP = isnull(Srt_PodlegaAMP,0),
+					@Srt_Dwutorowosc = isnull(Srt_Dwutorowosc,0),
+					@Srt_DataRozp = isnull(Srt_DataRozp,0),
+					@Srt_DataRozpAm = isnull(Srt_DataRozpAm,0),
+					@Srt_DataEksp = isnull(Srt_DataEksp,0),
+					@Srt_MiejsceUzyw = Srt_MiejsceUzyw,
+					@Srt_PrcNumer = Srt_PrcNumer,
+					@Srt_WspDegr = isnull(Srt_WspDegr,0),
+					@Srt_WspDegrAm = isnull(Srt_WspDegrAm,0),
+					@Srt_Stawka = isnull(Srt_Stawka,0),
+					@Srt_StawkaAm = isnull(Srt_StawkaAm,0),
+					@Srt_WspUmAm = isnull(Srt_WspUmAm,0),
+					@Srt_WspAm = isnull(Srt_WspAm,0),
+					@Srt_Data = isnull(Srt_Data,0)
+			from cdn.SrtKarty
+			where Srt_GIDNumer = @Srt_GIDNumer and
+				( @DataZapisuC is null or not @DataZapisuC is null and (Srt_Data is null or (not Srt_Data is null and Srt_Data &lt;= @DataZapisuC)) )				
+
+	
+	declare @Kon_ZestElemAmOdPrzylaczenia smallint = 0
+	select @Kon_ZestElemAmOdPrzylaczenia = Kon_Wartosc from cdn.Konfig where Kon_Numer = 2416
+
+
+		declare @SrtElemId int = case when @ZestTryb in (@ZestTrybSrodek, @ZestTrybZestaw) then @Srt_GIDNumer else @ZestElemId end
+        --wczytaj pierwsze OT i likwidacje (ostatnia bez korekty)
+        select * into #tmpOT_LT from cdn.SrtHistElem where 1=2
+        --insert into #tmpOT_LT exec CDN.SrtOstPrzylaczenieOdlaczenie @SrtElemId, null, @ZestTryb	--&amp;&amp;&amp; Zest
+        insert into #tmpOT_LT exec cdn.SrtPrzyjecieLikwidacja @SrtElemId	--, null, @ZestTryb	--&amp;&amp;&amp; Zest
+      
+
+        
+                
+        if not exists (select SHE_GIDTyp from #tmpOT_LT where SHE_GIDTyp = @OT)
+                goto lExit
+
+
+        select @DataPierwszeOT = SHE_Data,
+                @DataZapPierwszeOT = SHE_DataZap,
+                @SrtLpPierwszeOT = SHE_SrtLp,
+                @SrtGIDNumerPierwszeOT = SHE_GIDNumer,
+                @SZELpPierwszeOT = SHE_SZELp,
+                @GIDTypPierwszeOT = SHE_GIDTyp
+                
+        from #tmpOT_LT
+        where (SHE_GIDTyp = @OT)
+        
+
+
+		
+		if @ZestTryb = @ZestTrybElement and @GIDTypPierwszeOT = @ZPA 
+		begin
+			if @Kon_ZestElemAmOdPrzylaczenia = 1
+			begin
+				if @Srt_MetodaUm = 2 	-- jeśli degresywna
+				begin
+					select @Srt_DataRozp = @SZE_DataPrzylaczenia
+					if @Srt_DataRozp &lt; @Srt_DataRozpZestawu
+						set @Srt_DataRozp = @Srt_DataRozpZestawu					
+				end
+				
+				if @Srt_MetodaAm = 2 	-- jeśli degresywna
+				begin
+					select @Srt_DataRozpAm = @SZE_DataPrzylaczenia
+					if @Srt_DataRozpAm &lt; @Srt_DataRozpAmZestawu
+						set @Srt_DataRozpAm = @Srt_DataRozpAmZestawu
+				end
+			end
+			else
+			begin
+				if @Srt_MetodaUm = 2 	-- jeśli degresywna
+					select @Srt_DataRozp = cdn.Data(year(DateAdd(d, @SZE_DataPrzylaczenia, convert(datetime,'28-12-1800',105))) + 1, 1, 1)
+									
+				if @Srt_MetodaAm = 2 	-- jeśli degresywna
+					select @Srt_DataRozpAm = cdn.Data(year(DateAdd(d, @SZE_DataPrzylaczenia, convert(datetime,'28-12-1800',105))) + 1, 1, 1)
+				
+			end
+		end
+	
+	
+		/*select @Kon_ZestElemAmOdPrzylaczenia Kon_ZestElemAmOdPrzylaczenia, @GIDTypPierwszeOT GIDTypPierwszeOT, @Srt_MetodaUm Srt_MetodaUm, @Srt_MetodaAm Srt_MetodaAm, @ZestTryb ZestTryb, @ZestTrybElement ZestTrybElement
+			, @Srt_DataLikw Srt_DataLikw, @Srt_DataRozp Srt_DataRozp, @Srt_DataRozpAm Srt_DataRozpAm, @Srt_DataEksp Srt_DataEksp
+			, DateAdd(d,@Srt_DataLikw,convert(datetime,'28-12-1800',105)) Srt_DataLikw
+			, DateAdd(d,@Srt_DataRozp,convert(datetime,'28-12-1800',105)) Srt_DataRozp
+			, DateAdd(d,@Srt_DataRozpAm,convert(datetime,'28-12-1800',105)) Srt_DataRozpAm
+			, DateAdd(d,@Srt_DataEksp,convert(datetime,'28-12-1800',105)) Srt_DataEksp		--		yyy*/	
+
+        --pobierz korekty do pierwszego OT
+        set @tmpInt1 = @OT
+        Set @tmpInt2 = @SrtGIDNumerPierwszeOT
+        set @OldShnNumer = 1
+
+        create table #tmpOTK (ShnTyp int, ShnNumer int, SheNumer int)
+
+        while isnull(@OldShnNumer,0) &lt;&gt; 0
+        begin
+                set @OldShnNumer = 0
+                select @OldShnTyp = Shn_GIDTyp, @OldShnNumer = Shn_GIDNumer, @SheNumer = She_GIDNumer
+                from cdn.SrtHistNag
+                left outer join cdn.SrtHistElem
+                   on Shn_GIDTyp = She_GIDTyp and Shn_GIDNumer = She_GIDNumer
+                        and (She_SrtNumer = @Srt_GIDNumer)
+                        
+                        
+                where Shn_KorNumer = @tmpInt2 and Shn_KorTyp = @tmpInt1 and
+                        Shn_GIDTyp &lt;&gt; @OT
+
+                set @tmpInt2 = @OldShnNumer
+                set @tmpInt1 = @OldShnTyp
+
+                if isnull(@OldShnNumer,0) &lt;&gt; 0
+                        insert into #tmpOTK values(@OldShnTyp, @OldShnNumer, @SheNumer)
+        end
+
+        delete from #tmpOTK where isnull(SheNumer,0) = 0
+
+
+
+        set @DataPierwszeOT_D = dateadd(day,@DataPierwszeOT,convert(datetime,'18001228',120))
+
+        set @NaDzienD = convert(datetime,@NaDzien,120)
+        set @NaDzienC = datediff(day,convert(datetime,'18001228',120),@NaDzienD)
+
+        if not @NaDzien is null
+        begin
+                if @RozpRPMies &gt; 1
+                begin
+                        set @RokDoD = dateadd(day, -1, convert(datetime, convert(varchar,year(@NaDzienD))+'-'+convert(varchar,@RozpRPMies)+'-01',120))
+                        if datediff(month, @RokDoD, @NaDzienD) &gt;= 1
+                        --przesun o rok do przodu
+                                set @RokDoD = dateadd(year,1,@RokDoD)
+                end
+                else
+                        set @RokDoD = convert(datetime,convert(varchar,year(@NaDzienD))+'-12-31',120)
+
+        end
+        else
+        begin
+                if @RozpRPMies &gt; 1
+                        set @RokDoD = dateadd(day, -1, convert(datetime, convert(varchar,year(@RokDo))+'-'+convert(varchar,@RozpRPMies)+'-01',120))
+                else
+                        set @RokDoD = convert(datetime, @RokDo+'-12-31',120)
+        end
+
+
+        set @RokDoC = datediff(day,convert(datetime,'18001228',120),@RokDoD)
+
+        set @RokOdD = convert(datetime, convert(varchar, @RokOd)+'-'+convert(varchar, @RozpRPMies)+'-01',120)
+        set @RokOdC = datediff(day,convert(datetime,'18001228',120),@RokOdD)
+
+
+        if not @DataZapisu is null
+        begin
+                set @DataZapisuD = convert(datetime, @DataZapisu,120)
+                set @DataZapisuC = datediff(day, convert(datetime,'18001228',120),@DataZapisuD)
+        end
+
+
+        if datediff(day, @RokDoD, @NaDzienD) &gt; 0
+        begin
+                set @msg = 'Błędne parametry procedury odpisów ' + convert(varchar,@RokDoD) + ', ' +convert(varchar,@NaDzienD)
+                raiserror(@msg ,16,1)
+                goto lExit
+        end
+
+        set @IloscMiesRP = 12
+        set @tmpInt2 = @IloscMiesRP
+
+        create table #tmpOdpisy
+        (Rok INT, Miesiac smallint, RokAmort smallint, RokSezonowy smallint,
+        Sezonowosc smallint, MiesAmort smallint, MiesAmortAMP smallint, WN_RN smallint, MiesAkt smallint, MiesAktAMP smallint, Przyjety smallint,
+        Naliczaj smallint, NaliczajAMP smallint, OstatniNaliczaj smallint, OstatniNaliczajAMP smallint,
+        LiczbaMiesAkt smallint, LiczbaMiesAktAMP smallint, LiczbaMiesAktOd smallint, Dwutorowosc smallint,
+        MetodaAmT1 smallint, MetodaAmObowT1 smallint, StawkaRokT1 Decimal(7,2),
+        ZwiekszenieMsObow2T1 decimal(15,2), ZwiekszenieMiesT1 Decimal(15,2), ZwiekszenieLtT1 Decimal(15,2),
+        ZwiekszenieT1 Decimal(15,2), ZwiekszeniePlusT1 Decimal(15,2), BruttoT1 decimal(15,2), BruttoPodstT1 decimal(15,2),
+        TeoretOdpisT1 Decimal(16,3), TeoretOdpisNaliczajT1 Decimal(15,2), TeoretOdpisRPT1 Decimal(16,3), TeoretOdpisNaliczajRPT1 Decimal(15,2),
+        Teorettmp decimal(15,2), sumaodp decimal(15,2),
+        OdpisyT1 Decimal(15,2), OdpisyAMPT1 Decimal(15,2), OdpisyLtT1 Decimal(15,2), OdpisyPKT1 Decimal(15,2),
+        SumaOdpisyT1 decimal(15,2), SumaOdpisyLtT1 decimal(15,2), SumaOdpisyTeoretT1 decimal(15,2),
+        NettoT1 decimal(15,2), NettoPodstT1 decimal(15,2),
+        NettoTeoretT1 decimal(15,2), NettoTeoretRPT1 decimal(15,2),
+        WartOdpisuPoczT1 decimal(15,2), WartOdpisuRPT1 decimal(15,2),
+        MetodaAmT2 smallint, MetodaAmObowT2 smallint, StawkaRokT2 Decimal(7,2),
+        ZwiekszenieMsObow2T2 decimal(15,2), ZwiekszenieMiesT2 Decimal(15,2), ZwiekszenieLtT2 Decimal(15,2),
+        ZwiekszenieT2 Decimal(15,2), ZwiekszeniePlusT2 Decimal(15,2), BruttoT2 decimal(15,2), BruttoPodstT2 decimal(15,2),
+        TeoretOdpisT2 Decimal(16,3), TeoretOdpisNaliczajT2 Decimal(15,2), TeoretOdpisRPT2 Decimal(16,3), TeoretOdpisNaliczajRPT2 Decimal(15,2),
+        OdpisyT2 Decimal(15,2), OdpisyAMPT2 Decimal(15,2), OdpisyLtT2 Decimal(15,2), OdpisyPKT2 Decimal(15,2), OdpisyT2_Likw Decimal(15,2),
+        SumaOdpisyT2 decimal(15,2), SumaOdpisyLtT2 decimal(15,2), SumaOdpisyTeoretT2 decimal(15,2), SumaOdpisyT2_Likw decimal(15,2),
+        NettoT2 decimal(15,2), NettoPodstT2 decimal(15,2),
+        NettoTeoretT2 decimal(15,2), NettoTeoretRPT2 decimal(15,2),
+        WartOdpisuPoczT2 decimal(15,2), WartOdpisuRPT2 decimal(15,2),
+        MiesDoKonca smallint, MiesOdPrzyjecia smallint,
+        DataClarion1 int, DataClarion2 int,
+        WspT1 decimal(7,2), WspT2 decimal(7,2),
+        WspDegrT1 decimal(7,2), WspDegrT2 decimal(7,2),
+        MiejsceUzyw varchar(30) COLLATE Polish_CI_AS, PrcNumer int, KwotaZlomowaT1 decimal(15,2), KwotaZlomowaT2 decimal(15,2),
+        DataPierwszeOT int, DataZapPierwszeOT int, SrtLpPierwszeOT smallint, DataOstatniLT int, DataZapOstatniLT int, SrtLpOstatniLT smallint,
+        Lp int identity(1,1), WartRezydCol smallint, PodstBilansCol smallint, PodstPodatCol smallint, OdpisyAktZw decimal(15,2) default(0.00), OdpisyAktZm decimal(15,2) default(0.00),
+        OdpisyPlusT1 decimal(15,2) default(0.00), OdpisyPlusT2 decimal(15,2) default(0.00),
+        OdpisyZwT1 decimal(15,2) default(0.00), OdpisyZwT2 decimal(15,2) default(0.00),OdpisyZmT1 decimal(15,2) default(0.00), OdpisyZmT2 decimal(15,2) default(0.00),
+        ZwiekszenieT1w decimal(15,2) default(0.00), ZwiekszenieT2w decimal(15,2) default(0.00), ZmniejszenieT1w decimal(15,2) default(0.00), ZmniejszenieT2w decimal(15,2) default(0.00),
+        --- sys
+                
+        ZwiekszenieMsObow2T1Sys decimal(15,2), ZwiekszenieMiesT1Sys Decimal(15,2), ZwiekszenieLtT1Sys Decimal(15,2),
+        ZwiekszenieT1Sys Decimal(15,2), ZwiekszeniePlusT1Sys Decimal(15,2), BruttoT1Sys decimal(15,2), BruttoPodstT1Sys decimal(15,2),
+        TeoretOdpisT1Sys Decimal(16,3), TeoretOdpisNaliczajT1Sys Decimal(15,2), TeoretOdpisRPT1Sys Decimal(16,3), TeoretOdpisNaliczajRPT1Sys Decimal(15,2),
+        TeorettmpSys decimal(15,2), sumaodpSys decimal(15,2),
+        OdpisyT1Sys Decimal(15,2), OdpisyAMPT1Sys Decimal(15,2), OdpisyLtT1Sys Decimal(15,2), OdpisyPKT1Sys Decimal(15,2),
+        SumaOdpisyT1Sys decimal(15,2), SumaOdpisyLtT1Sys decimal(15,2), SumaOdpisyTeoretT1Sys decimal(15,2),
+        NettoT1Sys decimal(15,2), NettoPodstT1Sys decimal(15,2),
+        NettoTeoretT1Sys decimal(15,2), NettoTeoretRPT1Sys decimal(15,2),
+        WartOdpisuPoczT1Sys decimal(15,2), WartOdpisuRPT1Sys decimal(15,2),        
+        ZwiekszenieMsObow2T2Sys decimal(15,2), ZwiekszenieMiesT2Sys Decimal(15,2), ZwiekszenieLtT2Sys Decimal(15,2),
+        ZwiekszenieT2Sys Decimal(15,2), ZwiekszeniePlusT2Sys Decimal(15,2), BruttoT2Sys decimal(15,2), BruttoPodstT2Sys decimal(15,2),
+        TeoretOdpisT2Sys Decimal(16,3), TeoretOdpisNaliczajT2Sys Decimal(15,2), TeoretOdpisRPT2Sys Decimal(16,3), TeoretOdpisNaliczajRPT2Sys Decimal(15,2),
+        OdpisyT2Sys Decimal(15,2), OdpisyAMPT2Sys Decimal(15,2), OdpisyLtT2Sys Decimal(15,2), OdpisyPKT2Sys Decimal(15,2), OdpisyT2_LikwSys Decimal(15,2),
+        SumaOdpisyT2Sys decimal(15,2), SumaOdpisyLtT2Sys decimal(15,2), SumaOdpisyTeoretT2Sys decimal(15,2), SumaOdpisyT2_LikwSys decimal(15,2),
+        NettoT2Sys decimal(15,2), NettoPodstT2Sys decimal(15,2),
+        NettoTeoretT2Sys decimal(15,2), NettoTeoretRPT2Sys decimal(15,2),
+        WartOdpisuPoczT2Sys decimal(15,2), WartOdpisuRPT2Sys decimal(15,2),        
+        KwotaZlomowaT1Sys decimal(15,2), KwotaZlomowaT2Sys decimal(15,2),        
+        OdpisyAktZwSys decimal(15,2) default(0.00), OdpisyAktZmSys decimal(15,2) default(0.00),
+        OdpisyPlusT1Sys decimal(15,2) default(0.00), OdpisyPlusT2Sys decimal(15,2) default(0.00),
+        OdpisyZwT1Sys decimal(15,2) default(0.00), OdpisyZwT2Sys decimal(15,2) default(0.00),OdpisyZmT1Sys decimal(15,2) default(0.00), OdpisyZmT2Sys decimal(15,2) default(0.00),
+        ZwiekszenieT1wSys decimal(15,2) default(0.00), ZwiekszenieT2wSys decimal(15,2) default(0.00), ZmniejszenieT1wSys decimal(15,2) default(0.00), ZmniejszenieT2wSys decimal(15,2) default(0.00)
+        
+        , SZELpPierwszeOT smallint, SZELpOstatniLT smallint
+        , PrzylaczenieT1 decimal(15,2) default(0.00), PrzylaczenieT2 decimal(15,2) default(0.00), OdlaczenieT1 decimal(15,2) default(0.00), OdlaczenieT2 decimal(15,2) default(0.00)
+        , PrzylaczenieT1Sys decimal(15,2) default(0.00), PrzylaczenieT2Sys decimal(15,2) default(0.00), OdlaczenieT1Sys decimal(15,2) default(0.00), OdlaczenieT2Sys decimal(15,2) default(0.00)
+        )
+
+        --data poczatkowa zakresu
+        set @tmpDate1 = convert(datetime, convert(varchar, year(@DataPierwszeOT_D))+'-'+convert(varchar, @RozpRPMies)+'-01',120)
+        if @tmpDate1 &gt; @DataPierwszeOT_D --data rozp RP jest pozniejsza od daty pierwszego OT ; cofnij rok
+                set @tmpDate1 = convert(datetime, convert(varchar, year(@DataPierwszeOT_D) - 1)+'-'+convert(varchar, @RozpRPMies)+'-01',120)
+
+        set @tmpInt5 = 1
+
+        set @DataKoniecPierwszyRP_C = datediff(day,convert(datetime,'18001228',120),(dateadd(year, 1, @tmpDate1) - 1))
+
+
+        --wypelnij tabele miesiacami RP
+        while datediff(month, @tmpDate1, @RokDoD) &gt;= 0
+        begin
+                set @tmpDate2 = dateadd(month, 1, @tmpDate1)
+                set @tmpInt3 = datediff(day,convert(datetime,'1800-12-28',120),@tmpDate1)
+                set @tmpInt4 = datediff(day,convert(datetime,'1800-12-28',120),@tmpDate2-1)
+                set @tmpInt1 = month(@tmpDate1)
+
+
+                insert into #tmpOdpisy (RokAmort, MiesAmortAMP, LiczbaMiesAkt,
+                                Rok, Miesiac, MiesDoKonca, DataClarion1, DataClarion2,
+                                Sezonowosc)
+                        values (@tmpInt5, 1, 12,
+                                year(@tmpDate1), @tmpInt1, @tmpInt2, @tmpInt3, @tmpInt4,
+                                1)
+
+                set @tmpDate1 = dateadd(month, 1, @tmpDate1)
+                set @tmpInt2 = @tmpInt2 - 1
+                if @tmpInt2 &lt;= 0
+                begin
+                        set @tmpInt2 = @IloscMiesRP
+                        set @tmpInt5 = @tmpInt5 + 1
+                end
+        end
+
+
+
+        if  (not @NaDzienC is null and @DataPierwszeOT &gt; @NaDzienC) or
+            (not @DataZapisuC is null and @DataZapisuC &lt; @DataZapPierwszeOT) or
+            (
+				@SHE_GIDNumer &lt;&gt; 0 and exists
+				(
+					select SHE_GIDTyp
+                    from #tmpOT_LT
+                    where ( @SHE_GIDTyp = @OT ) -- or (@SHE_GIDTyp = @ZPA and @ZestTryb = @ZestTrybElement and SHE_PrzesStrona = @ZestPrzylaczenie) ) 
+						and SHE_GIDTyp = @SHE_GIDTyp and SHE_GIDNumer = @SHE_GIDNumer and SHE_GIDLp = @SHE_GIDLp
+				) 
+			)
+                delete from #tmpOT_LT where SHE_GIDTyp = @OT or (@SHE_GIDTyp = @ZPA and @ZestTryb = @ZestTrybElement and SHE_PrzesStrona = @ZestPrzylaczenie)
+
+
+	/*select she_gidtyp, StawkaRokT1 = SHE_Stawka,
+                StawkaRokT2 = SHE_StawkaAm,
+                KwotaZlomowaT1 = SHE_KwotaZlom,
+                KwotaZlomowaT2 = SHE_KwotaZlomAm,
+                WspT1 = SHE_WspUmAm,
+                WspT2 = SHE_WspAm,
+                WspDegrT1 = SHE_WspDegr,
+                WspDegrT2 = SHE_WspDegrAm,
+                Dwutorowosc = @Srt_Dwutorowosc,
+                
+                KwotaZlomowaT1Sys = SHE_KwotaZlomSys,
+                KwotaZlomowaT2Sys = SHE_KwotaZlomAmSys
+        from #tmpOdpisy inner join #tmpOT_LT on (1=1)
+        where cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 0  and (SHE_GIDTyp = @OT OR (SHE_GIDTyp = @ZPA AND @ZestTryb = @ZestTrybElement and SHE_PrzesStrona = @ZestPrzylaczenie))	--&amp;&amp;&amp; Zest
+*/
+        --wstawienie danych z pierwszego OT (stawki, wspolczynniki, kwoty zlomowe)
+        
+        update #tmpOdpisy set		
+                StawkaRokT1 = SHE_Stawka,
+                StawkaRokT2 = SHE_StawkaAm,
+                KwotaZlomowaT1 = SHE_KwotaZlom,
+                KwotaZlomowaT2 = SHE_KwotaZlomAm,
+                WspT1 = SHE_WspUmAm,
+                WspT2 = SHE_WspAm,
+                WspDegrT1 = SHE_WspDegr,
+                WspDegrT2 = SHE_WspDegrAm,
+                Dwutorowosc = @Srt_Dwutorowosc,
+                
+                KwotaZlomowaT1Sys = SHE_KwotaZlomSys,
+                KwotaZlomowaT2Sys = SHE_KwotaZlomAmSys
+        from #tmpOdpisy inner join #tmpOT_LT on (1=1)
+        where cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 0  and SHE_GIDTyp = @OT 
+																		--OR (SHE_GIDTyp = @ZPA AND @ZestTryb = @ZestTrybElement and SHE_PrzesStrona = @ZestPrzylaczenie)
+																		--OR (SHE_GIDTyp = @ZPA AND @ZestTryb = @ZestTrybSrodek and SHE_PrzesStrona = @ZestOdlaczenie))
+
+
+
+
+        --ustaw dwutorowosc z dokumentow RT
+        if isnull(@Srt_Dwutorowosc,0) = 0
+        begin        
+                select @DataRT = min(SHE_Data)
+                from cdn.SrtHistElem
+                where 
+					SHE_SrtNumer = @Srt_GIDNumer                        
+                        and SHE_GIDTyp = @RT
+                        and (@NaDzienC is null or ( not @NaDzienC is null and SHE_Data &lt;= @NaDzienC))
+                        and (@DataZapisuC is null or (not @DataZapisuC is null and SHE_DataZap &lt;= @DataZapisuC))
+                        and ((@SHE_GIDNumer &lt;&gt; 0 and not (SHE_GIDTyp = @SHE_GIDTyp and SHE_GIDNumer = @SHE_GIDNumer and SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+
+
+                update #tmpOdpisy set Dwutorowosc = 1
+                where cdn.DateDiffClarion(2, @DataRT, DataClarion2) &gt;= 0          
+        end
+        /*else
+			update #tmpOdpisy set
+                        Dwutorowosc = @Srt_Dwutorowosc
+                where cdn.DateDiffClarion(2, @DataRT, DataClarion2) &gt;= 0
+		*/
+
+        --wstawienie stawek z dokumentow ZSA, ZMT (uwzgl. miesiac obowiazywania)
+        declare @cursData int
+        declare @cursSrtLp int
+        declare @cursMsObowT1 smallint
+        declare @cursMsObowT2 smallint
+        declare @cursMetodaT1 smallint
+        declare @cursMetodaT2 smallint
+        declare @cursStawkaT1 decimal(7,2)
+        declare @cursStawkaT2 decimal(7,2)
+        declare @cursWspT1 decimal(7,2)
+        declare @cursWspT2 decimal(7,2)
+        declare @cursWspDegrT1 decimal(7,2)
+        declare @cursWspDegrT2 decimal(7,2)
+        declare @cursGIDTyp smallint
+        declare @cursTor smallint
+
+        DECLARE StawkaCursor CURSOR
+        FOR
+                select She_Data, She_SrtLp, She_MsObow, She_MsObowAm, She_GIDTyp, She_Stawka, She_StawkaAm, She_Tor
+                from cdn.SrtHistElem
+                where 
+                        SHE_SrtNumer = @Srt_GIDNumer
+                        and SHE_GIDTyp in (@ZSA, @ZMT)
+                        and (@DataZapisuC is null or (not @DataZapisuC is null and SHE_DataZap &lt;= @DataZapisuC))
+                        and ((@SHE_GIDNumer &lt;&gt; 0 and not (SHE_GIDTyp = @SHE_GIDTyp and SHE_GIDNumer = @SHE_GIDNumer and SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+                order by She_Data, She_SrtLp
+
+
+        OPEN StawkaCursor
+
+        FETCH NEXT FROM StawkaCursor into @cursData, @cursSrtLp, @cursMsObowT1, @cursMsObowT2, @cursGIDTyp, @cursStawkaT1, @cursStawkaT2, @cursTor
+        WHILE (@@fetch_status &lt;&gt; -1)
+        BEGIN
+                IF (@@fetch_status &lt;&gt; -2)
+                BEGIN
+                        update #tmpOdpisy set
+                                StawkaRokT1 = @cursStawkaT1
+                        where (@cursGIDTyp = @ZSA and cdn.DateDiffClarion(2, @cursData, DataClarion2) &gt;= 1) or
+                                (@cursGIDTyp = @ZMT and (@cursTor = 1 or @cursTor = 0) and
+                                        ((@cursMsObowT1 = 1 and DataClarion2 &gt;= @cursData) or
+                                        (@cursMsObowT1 = 2 and cdn.DateDiffClarion(2, @cursData, DataClarion2) &gt;= 1)))
+
+                        update #tmpOdpisy set
+                                StawkaRokT2 = @cursStawkaT2
+                        where (@cursGIDTyp = @ZSA and cdn.DateDiffClarion(2, @cursData, DataClarion2) &gt;= 1) or
+                                (@cursGIDTyp = @ZMT and (@cursTor = 2 or @cursTor = 0) and
+                                        ((@cursMsObowT2 = 1 and DataClarion2 &gt;= @cursData) or
+                                        (@cursMsObowT2 = 2 and cdn.DateDiffClarion(2, @cursData, DataClarion2) &gt;= 1)))
+                END
+                FETCH NEXT FROM StawkaCursor into @cursData, @cursSrtLp, @cursMsObowT1, @cursMsObowT2, @cursGIDTyp, @cursStawkaT1, @cursStawkaT2, @cursTor
+        END
+
+        CLOSE StawkaCursor
+        DEALLOCATE StawkaCursor
+
+
+
+
+
+
+        --wczytaj metody amortyzacji
+        -- z karty
+        update #tmpOdpisy set
+                MetodaAmT1 = @Srt_MetodaUm,
+                MetodaAmT2 = @Srt_MetodaAm,
+                MetodaAmObowT1 = @Srt_MetodaUm,
+                MetodaAmObowT2 = @Srt_MetodaAm
+
+
+
+        --z dokumentow
+        if @Srt_MetodaUm = 3 or @Srt_MetodaAm = 3
+        begin
+                DECLARE MetodaCursor CURSOR
+                FOR
+                        select She_Data, She_SrtLp, She_MsObow, She_MsObowAm, She_MetodaUm, She_MetodaAm, She_Tor
+                        from cdn.SrtHistElem
+                        where 
+                                SHE_SrtNumer = @Srt_GIDNumer
+                                and SHE_GIDTyp = @ZMT
+                                and (@DataZapisuC is null or (not @DataZapisuC is null and SHE_DataZap &lt;= @DataZapisuC))
+                                and ((@SHE_GIDNumer &lt;&gt; 0 and not (SHE_GIDTyp = @SHE_GIDTyp and SHE_GIDNumer = @SHE_GIDNumer and SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+                        order by She_Data, She_SrtLp
+
+
+                OPEN MetodaCursor
+
+                FETCH NEXT FROM MetodaCursor into @cursData, @cursSrtLp, @cursMsObowT1, @cursMsObowT2, @cursMetodaT1, @cursMetodaT2, @cursTor
+                WHILE (@@fetch_status &lt;&gt; -1)
+                BEGIN
+                        IF (@@fetch_status &lt;&gt; -2)
+                        BEGIN
+                                --ustaw metody wg miesiaca obowiazywania
+                                update #tmpOdpisy set
+                                        MetodaAmObowT1 = @cursMetodaT1
+                                where (@cursTor = 1 or @cursTor = 0) and
+                                        ((@cursMsObowT1 = 1 and DataClarion2 &gt;= @cursData) or
+                                        (@cursMsObowT1 = 2 and cdn.DateDiffClarion(2, @cursData, DataClarion2) &gt;= 1))
+
+                                update #tmpOdpisy set
+                                        MetodaAmObowT2 = @cursMetodaT2
+                                where (@cursTor = 2 or @cursTor = 0) and
+                                        ((@cursMsObowT2 = 1 and DataClarion2 &gt;= @cursData) or
+                                        (@cursMsObowT2 = 2 and cdn.DateDiffClarion(2, @cursData, DataClarion2) &gt;= 1))
+
+                                --ustaw metody
+                                update #tmpOdpisy set
+                                        MetodaAmT1 = @cursMetodaT1
+                                where (DataClarion2 &gt;= @cursData) and (@cursTor = 1 or @cursTor = 0)
+
+                                update #tmpOdpisy set
+                                        MetodaAmT2 = @cursMetodaT2
+                                where (DataClarion2 &gt;= @cursData) and (@cursTor = 2 or @cursTor = 0)
+
+                        END
+                        FETCH NEXT FROM MetodaCursor into @cursData, @cursSrtLp, @cursMsObowT1, @cursMsObowT2, @cursMetodaT1, @cursMetodaT2, @cursTor
+                END
+
+                CLOSE MetodaCursor
+                DEALLOCATE MetodaCursor
+        end
+
+
+
+        --wczytaj kwoty zlomowe uwzgl. pierwsze OT, ZKZ (ostatnie z danego dnia)
+        select E1.* into #tmpElementy
+        from cdn.SrtHistElem as E1 inner join
+                (select E2.SHE_Data, max(E2.SHE_SrtLp) as maxLp
+                from cdn.SrtHistElem as E2
+                where 
+					E2.SHE_SrtNumer = @Srt_GIDNumer
+                        and (E2.SHE_GIDTyp = @ZKZ)
+                        and (@NaDzienC is null or ( not @NaDzienC is null and E2.SHE_Data &lt;= @NaDzienC))
+                        and (@DataZapisuC is null or (not @DataZapisuC is null and E2.SHE_DataZap &lt;= @DataZapisuC))
+                        and ((@SHE_GIDNumer &lt;&gt; 0 and not (E2.SHE_GIDTyp = @SHE_GIDTyp and E2.SHE_GIDNumer = @SHE_GIDNumer and E2.SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+                group by SHE_SrtNumer, SHE_Data) as E3
+        on 
+			E1.SHE_SrtNumer = @Srt_GIDNumer
+                and (E1.SHE_GIDTyp = @ZKZ)
+                and E1.SHE_Data = E3.SHE_Data
+                and E1.SHE_SrtLp = E3.maxLp
+                and (@DataZapisuC is null or (not @DataZapisuC is null and E1.SHE_DataZap &lt;= @DataZapisuC))
+                and ((@SHE_GIDNumer &lt;&gt; 0 and not (E1.SHE_GIDTyp = @SHE_GIDTyp and E1.SHE_GIDNumer = @SHE_GIDNumer and E1.SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+
+
+
+
+        --wstawienie kwoty zlomowej z dokumentow ZKZ
+        update #tmpOdpisy set
+                KwotaZlomowaT1 = SHE_KwotaZlom,
+                WartRezydCol      = SHE_WartRezyd,
+                PodstBilansCol = SHE_PodstBilans,
+                PodstPodatCol = SHE_PodstPodat,
+                
+                KwotaZlomowaT1Sys = SHE_KwotaZlomSys                
+        from #tmpOdpisy inner join #tmpElementy on (1=1)
+        where SHE_Data = (select max(SHE_Data)
+                            from #tmpElementy join cdn.srtkarty on srt_gidtyp = she_srttyp and srt_gidnumer = she_srtnumer
+                             where
+                               cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 1
+                               or ( cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 0 and  srt_metodaum=3 and srt_msnaliczania=1)
+                          )
+
+
+        update #tmpOdpisy set							
+                KwotaZlomowaT2 = SHE_KwotaZlomAm,
+                KwotaZlomowaT2Sys = SHE_KwotaZlomAmSys
+        from #tmpOdpisy inner join #tmpElementy on (1=1)
+        where SHE_Data = (select max(SHE_Data)
+                           from #tmpElementy join cdn.srtkarty on srt_gidtyp = she_srttyp and srt_gidnumer = she_srtnumer
+                            where cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 1
+                                 or (cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 0  and  srt_metodaam=3 and srt_msnaliczaniaam=1)
+                         )
+
+        delete from #tmpElementy
+
+        --wstawienie wspolczynnikow z dokumentow ZW, ZMT (uwzgl miesiac obowiazywania)
+        DECLARE WspCursor CURSOR
+        FOR
+                select She_Data, She_SrtLp, She_MsObow, She_MsObowAm, She_GIDTyp, She_WspUmAm, She_WspAm, She_WspDegr, She_WspDegrAm, She_Tor
+                from cdn.SrtHistElem
+                where 
+					SHE_SrtNumer = @Srt_GIDNumer
+                        and (SHE_GIDTyp in (@ZW, @ZMT))
+                        and (@DataZapisuC is null or (not @DataZapisuC is null and SHE_DataZap &lt;= @DataZapisuC))
+                        and ((@SHE_GIDNumer &lt;&gt; 0 and not (SHE_GIDTyp = @SHE_GIDTyp and SHE_GIDNumer = @SHE_GIDNumer and SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+                order by She_Data, She_SrtLp
+
+
+        OPEN WspCursor
+
+        FETCH NEXT FROM WspCursor into @cursData, @cursSrtLp, @cursMsObowT1, @cursMsObowT2, @cursGIDTyp, @cursWspT1, @cursWspT2, @cursWspDegrT1, @cursWspDegrT2, @cursTor
+        WHILE (@@fetch_status &lt;&gt; -1)
+        BEGIN
+                IF (@@fetch_status &lt;&gt; -2)
+                BEGIN
+                        update #tmpOdpisy set
+                                WspT1 = @cursWspT1,
+                                WspDegrT1 = @cursWspDegrT1
+                        where (@cursGIDTyp = @ZW and cdn.DateDiffClarion(2, @cursData, DataClarion2) &gt;= 1) or
+                                (@cursGIDTyp = @ZMT and (@cursTor = 1 or @cursTor = 0) and
+                                        ((@cursMsObowT1 = 1 and DataClarion2 &gt;= @cursData) or
+                                        (@cursMsObowT1 = 2 and cdn.DateDiffClarion(2, @cursData, DataClarion2) &gt;= 1)))
+
+                        update #tmpOdpisy set
+                                WspT2 = @cursWspT2,
+                                WspDegrT2 = @cursWspDegrT2
+                        where (@cursGIDTyp = @ZW and cdn.DateDiffClarion(2, @cursData, DataClarion2) &gt;= 1) or
+                                (@cursGIDTyp = @ZMT and (@cursTor = 2 or @cursTor = 0) and
+                                        ((@cursMsObowT2 = 1 and DataClarion2 &gt;= @cursData) or
+                                        (@cursMsObowT2 = 2 and cdn.DateDiffClarion(2, @cursData, DataClarion2) &gt;= 1)))
+
+                END
+                FETCH NEXT FROM WspCursor into @cursData, @cursSrtLp, @cursMsObowT1, @cursMsObowT2, @cursGIDTyp, @cursWspT1, @cursWspT2, @cursWspDegrT1, @cursWspDegrT2, @cursTor
+        END
+
+        CLOSE WspCursor
+        DEALLOCATE WspCursor
+
+
+
+
+
+        --ustaw WN(1)/RN(2) (jesli NaDzien bierze wszystkie niezaleznie od daty zapisu)
+        delete from #tmpElementy
+
+
+        insert into #tmpElementy
+        select E1.*
+        from cdn.SrtHistElem as E1 inner join
+                (select E2.SHE_Data, max(E2.SHE_SrtLp) as maxLp
+                from cdn.SrtHistElem as E2
+                where E2.SHE_SrtNumer = @Srt_GIDNumer                        
+                        and (E2.SHE_GIDTyp = @RN or E2.SHE_GIDTyp = @WN)
+                        and (@NaDzienC is null or ( not @NaDzienC is null and E2.SHE_Data &lt;= @NaDzienC))
+                        and (@NieZalezyOdZapisu = 1 or (@NieZalezyOdZapisu = 0 and (@DataZapisuC is null or (not @DataZapisuC is null and E2.SHE_DataZap &lt;= @DataZapisuC))))
+                        and ((@SHE_GIDNumer &lt;&gt; 0 and not (E2.SHE_GIDTyp = @SHE_GIDTyp and E2.SHE_GIDNumer = @SHE_GIDNumer and E2.SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+                group by SHE_SrtNumer, SHE_Data) as E3
+        on 
+			E1.SHE_SrtNumer = @Srt_GIDNumer
+                and (E1.SHE_GIDTyp = @RN or E1.SHE_GIDTyp = @WN)
+                and E1.SHE_Data = E3.SHE_Data
+                and E1.SHE_SrtLp = E3.maxLp
+                and (@NieZalezyOdZapisu = 1 or (@NieZalezyOdZapisu = 0 and (@DataZapisuC is null or (not @DataZapisuC is null and E1.SHE_DataZap &lt;= @DataZapisuC))))
+                and ((@SHE_GIDNumer &lt;&gt; 0 and not (E1.SHE_GIDTyp = @SHE_GIDTyp and E1.SHE_GIDNumer = @SHE_GIDNumer and E1.SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+
+
+
+        update #tmpOdpisy set
+                WN_RN = (case SHE_GIDTyp when @WN then 1 when @RN then 2 else null end)
+        from #tmpOdpisy inner join #tmpElementy on (1=1)
+        where SHE_Data = (select max(SHE_Data)
+                        from #tmpElementy
+                        where cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 1)
+
+
+
+        --ustaw miejsce uzytkowania (uwzgl. pierwsze OT, ZM)
+
+        --z pierwszego OT
+        update #tmpOdpisy set
+                MiejsceUzyw = SHE_MiejsceUzyw
+        from #tmpOdpisy inner join #tmpOT_LT on (1=1)
+        where cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 0
+                and 
+                (
+					SHE_GIDTyp = @OT 
+				)
+
+
+
+
+        --a teraz z ZM
+        delete from #tmpElementy
+
+        insert into #tmpElementy
+        select E1.*
+        from cdn.SrtHistElem as E1 inner join                
+                (select E2.SHE_Data, max(E2.SHE_SrtLp) as maxLp
+                from cdn.SrtHistElem as E2
+                where ( (E2.SHE_SrtNumer = @Srt_GIDNumer and @ZestTryb &lt;&gt; @ZestTrybElement) or (E2.SHE_SZEId = @ZestElemId AND @ZestTryb = @ZestTrybElement))
+                        and (E2.SHE_GIDTyp = @ZM)
+                        and (@NaDzienC is null or ( not @NaDzienC is null and E2.SHE_Data &lt;= @NaDzienC))
+                        and (@DataZapisuC is null or (not @DataZapisuC is null and E2.SHE_DataZap &lt;= @DataZapisuC))
+                        and ((@SHE_GIDNumer &lt;&gt; 0 and not (E2.SHE_GIDTyp = @SHE_GIDTyp and E2.SHE_GIDNumer = @SHE_GIDNumer and E2.SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+                group by SHE_SrtNumer, SHE_Data) as E3
+        on 
+			E1.SHE_SrtNumer = @Srt_GIDNumer
+                and (E1.SHE_GIDTyp = @ZM)
+                and E1.SHE_Data = E3.SHE_Data
+                
+                and ( E1.SHE_SrtLp = E3.maxLp )
+                and (@DataZapisuC is null or (not @DataZapisuC is null and E1.SHE_DataZap &lt;= @DataZapisuC))
+                and ((@SHE_GIDNumer &lt;&gt; 0 and not (E1.SHE_GIDTyp = @SHE_GIDTyp and E1.SHE_GIDNumer = @SHE_GIDNumer and E1.SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+
+
+
+        update #tmpOdpisy set
+                MiejsceUzyw = SHE_MiejsceUzyw
+        from #tmpOdpisy inner join #tmpElementy on (1=1)
+        where SHE_Data = (select max(SHE_Data)
+                        from #tmpElementy
+                        where cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 1)
+
+
+
+
+        --ustaw miejsce osobe (uwzgl. pierwsze OT, ZO)
+        --z pierwszego OT
+        update #tmpOdpisy set
+                PrcNumer = SHE_PrcNumer
+        from #tmpOdpisy inner join #tmpOT_LT on (1=1)
+        where cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 0
+                and 
+                (
+					SHE_GIDTyp = @OT 
+				)	
+
+
+        --a teraz z ZO
+        delete from #tmpElementy
+
+        insert into #tmpElementy
+        select E1.*
+        from cdn.SrtHistElem as E1 inner join
+                
+                (select E2.SHE_Data, max(E2.SHE_SrtLp) as maxLp
+                from cdn.SrtHistElem as E2
+                where 
+					( (E2.SHE_SrtNumer = @Srt_GIDNumer and @ZestTryb &lt;&gt; @ZestTrybElement) or (E2.SHE_SZEId = @ZestElemId AND @ZestTryb = @ZestTrybElement))
+                        and (E2.SHE_GIDTyp = @ZO)
+                        and (@NaDzienC is null or ( not @NaDzienC is null and E2.SHE_Data &lt;= @NaDzienC))
+                        and (@DataZapisuC is null or (not @DataZapisuC is null and E2.SHE_DataZap &lt;= @DataZapisuC))
+                        and ((@SHE_GIDNumer &lt;&gt; 0 and not (E2.SHE_GIDTyp = @SHE_GIDTyp and E2.SHE_GIDNumer = @SHE_GIDNumer and E2.SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+                group by SHE_SrtNumer, SHE_Data) as E3
+        on 
+			E1.SHE_SrtNumer = @Srt_GIDNumer
+                and (E1.SHE_GIDTyp = @ZO)
+                and E1.SHE_Data = E3.SHE_Data
+                
+                and E1.SHE_SrtLp = E3.maxLp 
+                and (@DataZapisuC is null or (not @DataZapisuC is null and E1.SHE_DataZap &lt;= @DataZapisuC))
+                and ((@SHE_GIDNumer &lt;&gt; 0 and not (E1.SHE_GIDTyp = @SHE_GIDTyp and E1.SHE_GIDNumer = @SHE_GIDNumer and E1.SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+
+
+
+        update #tmpOdpisy set
+                PrcNumer = SHE_PrcNumer
+        from #tmpOdpisy inner join #tmpElementy on (1=1)
+        where SHE_Data = (select max(SHE_Data)
+                        from #tmpElementy
+                        where cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 1)
+
+
+
+
+
+
+
+        --ustaw znaczniki przyjecia/likwidacji srodka (jesli NaDzien ustaw co do dnia)
+        update #tmpOdpisy set
+                        Przyjety = 1,
+                        MiesOdPrzyjecia = Lp
+        where DataClarion2 &gt;= (select max(SHE_Data) from #tmpOT_LT where (SHE_GIDTyp = @OT 
+																	 
+																	 ))	
+								
+
+
+        select
+                @DataOstatniLT = SHE_Data,
+                @DataZapOstatniLT = SHE_DataZap,
+                @SrtLpOstatniLT = SHE_SrtLp,
+                @SZELpOstatniLT = SHE_SZELp
+        from #tmpOT_LT
+        where SHE_GIDTyp = @LT
+
+
+        delete from #tmpElementy
+
+        insert into #tmpElementy
+        select E1.*
+        from cdn.SrtHistElem as E1 inner join
+                (select E2.SHE_Data, max(E2.SHE_SrtLp) as maxLp
+                from cdn.SrtHistElem as E2
+                where 					
+					E2.SHE_SrtNumer = @Srt_GIDNumer
+                        and   (E2.SHE_GIDTyp = @LT or E2.SHE_GIDTyp = @LTK) and isnull(E2.SHE_Likwidacja,0) &lt;&gt; 0
+                        and (@NaDzienC is null or ( not @NaDzienC is null and E2.SHE_Data &lt;= @NaDzienC))
+                        and (@DataZapisuC is null or (not @DataZapisuC is null and E2.SHE_DataZap &lt;= @DataZapisuC))
+                        and ((@SHE_GIDNumer &lt;&gt; 0 and not (E2.SHE_GIDTyp = @SHE_GIDTyp and E2.SHE_GIDNumer = @SHE_GIDNumer and E2.SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+                group by SHE_SrtNumer, SHE_Data) as E3
+        on 	
+			
+			E1.SHE_SrtNumer = @Srt_GIDNumer
+                and  E1.SHE_GIDTyp in (@LT, @LTK) and isnull(E1.SHE_Likwidacja,0) &lt;&gt; 0 
+                and E1.SHE_Data = E3.SHE_Data                
+                
+                and ( E1.SHE_SrtLp = E3.maxLp and @ZestTryb &lt;&gt; @ZestTrybElement )
+                and (@NaDzienC is null or ( not @NaDzienC is null and E1.SHE_Data &lt;= @NaDzienC))
+                and (@DataZapisuC is null or (not @DataZapisuC is null and E1.SHE_DataZap &lt;= @DataZapisuC))
+                and ((@SHE_GIDNumer &lt;&gt; 0 and not (E1.SHE_GIDTyp = @SHE_GIDTyp and E1.SHE_GIDNumer = @SHE_GIDNumer and E1.SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+
+
+        update #tmpOdpisy set Przyjety =
+                (case
+                        when SHE_GIDTyp = @LT 
+							 then -1
+                        when SHE_GIDTyp = @LTK 
+							 then 1
+                end)
+        from #tmpOdpisy inner join #tmpElementy on (1=1)
+        where SHE_Data = (select max(SHE_Data)
+                        from #tmpElementy
+                        where cdn.DateDiffClarion(2, SHE_Data, DataClarion2) &gt;= 0)
+
+
+
+        --ustaw liczbe miesiecy od daty przyjecia
+        update #tmpOdpisy set MiesOdPrzyjecia = MiesOdPrzyjecia -
+                        (select min(MiesOdPrzyjecia) from #tmpOdpisy
+                        where not MiesOdPrzyjecia is null) + 1
+        where not MiesOdPrzyjecia is null
+
+
+
+
+        --ustaw miesiace sezonowosci
+        if @Sezonowosc &lt;&gt; 0
+        begin
+                update #tmpOdpisy Set
+                        Sezonowosc = 0,
+                        RokSezonowy = 1
+                from #tmpOdpisy inner join cdn.SrtSezon
+                        on Rok = SEZ_Rok
+                                and ((Miesiac = SEZ_Miesiac and SEZ_Miesiac &gt; 0) or (Miesiac = 12 and SEZ_Miesiac = 0))
+                                and SEZ_GIDTyp = 368
+                                and SEZ_GIDNumer = @Srt_GIDNumer
+
+                --ustaw znacznik roku sezonowego (rok kalendarzowy)
+                update #tmpOdpisy set
+                        RokSezonowy = 1
+                where RokAmort in (select RokAmort from #tmpOdpisy where isnull(RokSezonowy,0) &lt;&gt; 0)
+        end
+
+
+
+
+
+        --ustaw miesiace amortyzacji
+        update #tmpOdpisy set MiesAmort = 1
+        where
+                (@MiesAmortyzacji = 0) or --miesieczna
+                (MiesDoKonca in (10,7,4,1) and @MiesAmortyzacji = 1) or --kwartalna
+                (MiesDoKonca = 1 and @MiesAmortyzacji = 2) --roczna
+
+
+
+        --dla jednorazowej
+--      if @MetodaAm = 3
+--              update #tmpOdpisy set MiesAmort = 0
+--              where @MiesiacJednorazowa &gt;= MiesOdPrzyjecia
+
+
+
+        --ustaw miesiace amortyzacji przyspieszonej (tylko dla pierwszego roku amortyzacji)
+        if @Srt_PodlegaAMP &lt;&gt; 0
+        begin
+                update #tmpOdpisy set MiesAmortAMP = 0 where RokAmort = 1
+                update #tmpOdpisy set MiesAmortAMP = 1
+                where
+                        ((@MiesAmortyzacjiAMP = 0) or --miesieczna
+                        (MiesDoKonca in (10,7,4,1) and @MiesAmortyzacjiAMP = 1) or --kwartalna
+                        (@MiesAmortyzacjiAMP = 2)) --roczna
+                        and RokAmort = 1
+        end
+
+
+        --ustaw miesiace aktywne (uwzgl. sezonowosc)
+        --miesAkt sa wykorzystywane do liczenia wielkosci odpisu uwzgl miesiace aktywne jedynie sezonowo.
+        -- Jesl rok jest sezonowy miesiacami akt sa miesiace z czesci wspolnej sezonowosci i miesiecy amortyzacji
+        update #tmpOdpisy set MiesAkt =
+                (case
+                        when isnull(Sezonowosc,0) &lt;&gt; 0
+                                and (isnull(RokSezonowy,0) &lt;&gt; 0 and isnull(MiesAmort,0) &lt;&gt; 0 or isnull(RokSezonowy,0) = 0)
+                                then 1
+                        else 0
+                end)
+
+
+        --ustaw miesiace aktywne dla AMP
+        update #tmpOdpisy set MiesAktAMP = 1 --w przyspieszonej nie bierzemy pod uwage sezonowosci
+
+
+
+        --ustaw miesiace naliczania (uwzgl. sezonowosc, dok RN, WN, przyjecie)
+        update #tmpOdpisy set Naliczaj =
+                (case
+                        when isnull(Sezonowosc,0) &lt;&gt; 0
+                                and isnull(MiesAmort,0) &lt;&gt; 0
+                                and isnull(WN_RN,0) &lt;&gt; 1
+                                and isnull(Przyjety,0) &gt; 0 then 1
+                        else 0
+                end)
+
+
+        --ustaw miesiace naliczania AMP (uwzgl. dok RN, WN, przyjecie)
+        update #tmpOdpisy set NaliczajAMP =
+                (case
+                        when isnull(MiesAmortAMP,0) &lt;&gt; 0
+                                and isnull(WN_RN,0) &lt;&gt; 1
+                                and isnull(Przyjety,0) &gt; 0 then 1
+                        else 0
+                end)
+
+
+        --ustaw ostatni miesiac naliczania w danym RP
+        update #tmpOdpisy set OstatniNaliczaj = 1
+        where Lp = (select max(a2.Lp) from #tmpOdpisy as a2 where a2.RokAmort = #tmpOdpisy.RokAmort and isnull(Naliczaj,0) &lt;&gt; 0 )
+
+        update #tmpOdpisy set OstatniNaliczajAMP = 1
+        where Lp = (select max(a2.Lp) from #tmpOdpisy as a2 where a2.RokAmort = #tmpOdpisy.RokAmort and isnull(NaliczajAMP,0) &lt;&gt; 0 )
+
+
+        --wylicz liczbe miesiecy aktywnych w RP
+        update #tmpOdpisy set LiczbaMiesAkt = E1.ilosc
+        from #tmpOdpisy inner join
+                                (select rokamort, count(MiesAkt) as ilosc
+                                from #tmpOdpisy
+                                where MiesAkt = 1
+                                group by RokAmort) as E1
+        on #tmpOdpisy.RokAmort = E1.RokAmort
+
+
+        --wylicz liczbe miesiecy aktywnych w RP dla AMP
+        update #tmpOdpisy set LiczbaMiesAktAMP = E1.ilosc
+        from #tmpOdpisy inner join
+                                (select rokamort, count(MiesAktAMP) as ilosc
+                                from #tmpOdpisy
+                                where MiesAktAMP = 1
+                                group by RokAmort) as E1
+        on #tmpOdpisy.RokAmort = E1.RokAmort
+
+
+
+        --wylicz liczbe miesiecy aktywnych do naliczania w RP od danego miesiaca
+        --dla roku sezonowego tylko miesiace aktywne (sezonowosc, miesamort, WN, Przyjety) = Naliczaj
+        --dla roku nie sezonowego miesiace aktywne (tylko WN, Przyjety)
+        --potrzebne do wyliczenia wielkosci planowanego rocznego odpisu
+        update #tmpOdpisy set LiczbaMiesAktOd =
+                                isnull((select count(a1.Rok)
+                                from #tmpOdpisy as a1
+                                where ((isnull(a1.RokSezonowy,0) = 1 and isnull(a1.Naliczaj,0) = 1) or isnull(a1.RokSezonowy,0) = 0)
+                                        and isnull(a1.WN_RN,0) &lt;&gt; 1
+                                        and isnull(a1.Przyjety,0) &lt;&gt; 0 --zlikwidowane bierze pod uwage do odpisu rocznego
+                                        and a1.MiesDoKonca &lt;= #tmpOdpisy.MiesDoKonca
+                                        and a1.RokAmort = #tmpOdpisy.RokAmort
+                                group by a1.RokAmort),0)
+
+	
+
+        --ustaw zwiekszenia/zmniejszenia uwzgl. OT+OTK+MW+MWK-LT-LTK+PK (z dokl do miesiaca) (PK z tego samego miesiaca (z dokl do dnia))
+        select
+                mies,
+                sum(case she_gidtyp
+                        when @LT then -1*s1
+                        when @LTK then -1*s1
+                        when @ZPA then
+							case when @ZestTryb = @ZestTrybElement and SHE_PrzesStrona = @ZestOdlaczenie then -1*s1 else s1 end
+                        else s1
+                end) as s1 ,
+                sum(case she_gidtyp
+                        when @LT then -1*s2
+                        when @LTK then -1*s2
+                        
+                        else s2
+                end) as s2,
+                sum(case she_gidtyp
+                        when @LT then -1*n1
+                        when @LTK then -1*n1
+                        
+                        else n1
+                end) as n1 ,
+                sum(case she_gidtyp
+                        when @LT then -1*n2
+                        when @LTK then -1*n2
+                        
+                        else n2
+                end) as n2,
+                cast(0 as decimal(15,2)) as s3,
+                sum(case
+                        when she_gidtyp = @LT or she_gidtyp = @LTK then -1*s1
+                        
+                        when s1 &lt; 0 then s1
+                        else 0
+                end) as s_min1 ,
+                sum(case when she_gidtyp = @LT or she_gidtyp = @LTK then -1*s2
+						
+                        when s2 &lt; 0 then s2
+                        else 0
+                end) as s_min2,
+                sum(case
+                        when she_gidtyp = @LT or she_gidtyp = @LTK then -1*n1
+                        
+                        when n1 &lt; 0 then n1
+                        else 0
+                end) as n_min1 ,
+                sum(case
+                        when she_gidtyp = @LT or she_gidtyp = @LTK then -1*n2
+                        
+                        when n2 &lt; 0 then n2
+                        else 0
+                end) as n_min2,
+                sum(case
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s1
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s1
+                        
+                        else 0
+                end) as Lt1 ,
+                sum(case
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s2
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s2
+                        
+                        else 0
+                end) as Lt2,                
+                0 as ZwAK, 0 as ZmAK,
+                
+                ---------------------------
+                sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) 
+							then 0
+						when she_gidtyp in (@OTK, @AMK, @MWK, @ZPK) then
+							case when ZnakDokPierwotnego IN (1, 3) then 
+								s1
+							else
+								0
+							end
+						else 
+							case when s1 &lt; 0 then 0 else s1 end
+					end else 0 end
+				) as s1w,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) 
+							then 0
+						when she_gidtyp in (@OTK, @AMK, @MWK, @ZPK) then
+							case when ZnakDokPierwotnego IN (2, 3) then 
+								s2
+							else
+								0
+							end
+						else
+							case when s2 &lt; 0 then 0 else s2 end
+						end else 0 end
+				) as s2w,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) 
+							then -1*s1
+						when she_gidtyp in (@OTK, @AMK, @MWK, @ZPK) then
+							case when ZnakDokPierwotnego IN (0, 2) then 
+								s1
+							else
+								0
+							end
+						else
+							case when s1 &gt; 0 then 0 else s1 end
+						end else 0 end						
+				) as s3w,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) 
+							then -1*s2
+						when she_gidtyp in (@OTK, @AMK, @MWK, @ZPK) then
+							case when ZnakDokPierwotnego IN (0, 1) then 
+								s2
+							else
+								0
+							end
+						else
+							case when s2 &gt; 0 then 0 else s2 end
+						end else 0 end
+				) as s4w,
+				
+				---------------------------
+				
+				sum(case she_gidtyp
+                        when @LT then -1*s1Sys
+                        when @LTK then -1*s1Sys
+                        
+                        else s1Sys
+                end) as s1Sys ,
+                sum(case she_gidtyp
+                        when @LT then -1*s2Sys
+                        when @LTK then -1*s2Sys
+                        
+                        else s2Sys
+                end) as s2Sys,
+                sum(case she_gidtyp
+                        when @LT then -1*n1Sys
+                        when @LTK then -1*n1Sys
+                        
+                        else n1Sys
+                end) as n1Sys ,
+                sum(case she_gidtyp
+                        when @LT then -1*n2Sys
+                        when @LTK then -1*n2Sys
+                        
+                        else n2Sys
+                end) as n2Sys,
+                cast(0 as decimal(15,2)) as s3Sys,
+                sum(case
+                        when she_gidtyp = @LT or she_gidtyp = @LTK then -1*s1Sys
+                        
+                        when s1 &lt; 0 then s1Sys
+                        else 0
+                end) as s_min1Sys ,
+                sum(case when she_gidtyp = @LT or she_gidtyp = @LTK then -1*s2Sys
+						
+                        when s2 &lt; 0 then s2Sys
+                        else 0
+                end) as s_min2Sys,
+                sum(case
+                        when she_gidtyp = @LT or she_gidtyp = @LTK then -1*n1Sys
+                        
+                        when n1 &lt; 0 then n1Sys
+                        else 0
+                end) as n_min1Sys ,
+                sum(case
+                        when she_gidtyp = @LT or she_gidtyp = @LTK then -1*n2Sys
+                        
+                        when n2 &lt; 0 then n2Sys
+                        else 0
+                end) as n_min2Sys,
+                sum(case
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s1Sys
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s1Sys
+                        
+                        else 0
+                end) as Lt1Sys ,
+                sum(case
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s2Sys
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s2Sys
+                        
+                        else 0
+                end) as Lt2Sys,
+                0 as ZwAKSys, 0 as ZmAKSys,
+                
+                ---------------------------
+                sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) 
+							then 0
+						when she_gidtyp in (@OTK, @AMK, @MWK, @ZPK) then
+							case when ZnakDokPierwotnego IN (1, 3) then 
+								s1Sys
+							else
+								0
+							end
+						else 
+							case when s1 &lt; 0 then 0 else s1Sys end
+					end else 0 end
+				) as s1wSys,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) 
+							then 0
+						when she_gidtyp in (@OTK, @AMK, @MWK, @ZPK) then
+							case when ZnakDokPierwotnego IN (2, 3) then 
+								s2Sys
+							else
+								0
+							end
+						else
+							case when s2 &lt; 0 then 0 else s2Sys end
+						end else 0 end
+				) as s2wSys,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) 
+							then -1*s1Sys
+						when she_gidtyp in (@OTK, @AMK, @MWK, @ZPK) then	
+							case when ZnakDokPierwotnego IN (0, 2) then 
+								s1Sys
+							else
+								0
+							end
+						else
+							case when s1 &gt; 0 then 0 else s1Sys end
+						end else 0 end						
+				) as s3wSys,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) 
+							then -1*s2Sys
+						when she_gidtyp in (@OTK, @AMK, @MWK, @ZPK) then
+							case when ZnakDokPierwotnego IN (0, 1) then 
+								s2Sys
+							else
+								0
+							end
+						else
+							case when s2 &gt; 0 then 0 else s2Sys end
+						end else 0 end
+				) as s4wSys
+				
+				, 0 as przylaczenie1
+				, 0 as odlaczenie1
+				, 0 as przylaczenie2
+				, 0 as odlaczenie2
+				
+				, 0 as przylaczenie1Sys
+				, 0 as odlaczenie1Sys
+				, 0 as przylaczenie2Sys
+				, 0 as odlaczenie2Sys
+					
+        into #tmpZwiekszenia
+        from (  select she_gidtyp, she_data, cdn.datediffclarion(2, 0, she_data) as mies,
+                        SHE_KwotaInw as s1, SHE_PodstawaAm as s2, --wg daty wystawienia
+                        case --wg miesiaca obowiazywania
+                        when ((she_gidtyp = @MW or she_gidtyp = @MWK ) and She_MsObow = 1)
+                                or ( (she_gidtyp = @MW or she_gidtyp = @MWK)
+									 and She_MsObow = 2 and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- dla przyspieszonej z miesiaca przyjecia
+                                or she_gidtyp = @PK
+                                or ((she_gidtyp = @LT or she_gidtyp = @LTK) and isnull(she_likwidacja,0) &lt;&gt; 0)
+                                or ( she_gidtyp = @OT and @Srt_MsNaliczania = 1 and she_gidnumer = @SrtGIDNumerPierwszeOT )	
+                                or ( she_gidtyp = @OT and @Srt_MsNaliczania = 2 and she_gidnumer = @SrtGIDNumerPierwszeOT and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0)
+                                or ( she_gidtyp = @OTK and @Srt_MsNaliczania = 1 and isnull(#tmpOTK.shenumer,0) &lt;&gt; 0) --jesli korekta pierwszego OT	
+                                or ( she_gidtyp = @OTK and @Srt_MsNaliczania = 2 and isnull(#tmpOTK.shenumer,0) &lt;&gt; 0 and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0)	
+                                or ( she_gidtyp = @OT  and she_gidnumer &lt;&gt; @SrtGIDNumerPierwszeOT and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- zwiekszenie sprzed 4.0 dla przysp z mies przyjecia	
+                                or ( she_gidtyp = @OTK and #tmpOTK.shenumer is null and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- korekta zwiekszenie sprzed 4.0 dla przysp z mies przyjecia		
+                                or ((she_gidtyp = @LT or she_gidtyp = @LTK) and isnull(she_likwidacja,0) = 0 and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- zmniejszenie sprzed 4.0 dla przysp z mies przyjecia
+                                then 0
+                        else
+                                SHE_KwotaInw
+                        end as n1,
+                        case
+                        when ((she_gidtyp = @MW or she_gidtyp = @MWK ) and She_MsObowAm = 1)
+                                or ( (she_gidtyp = @MW or she_gidtyp = @MWK ) 
+									 and She_MsObowAm = 2 and @Srt_PodlegaAMP &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- dla przyspieszonej z miesiaca przyjecia
+                                or she_gidtyp = @PK
+                                or ((she_gidtyp = @LT or she_gidtyp = @LTK) and isnull(she_likwidacja,0) &lt;&gt; 0)
+                                or ( she_gidtyp = @OT  and @Srt_MsNaliczaniaAm = 1 and she_gidnumer = @SrtGIDNumerPierwszeOT)	
+                                or ( she_gidtyp = @OT  and @Srt_MsNaliczaniaAm = 2 and she_gidnumer = @SrtGIDNumerPierwszeOT and @Srt_PodlegaAMP &lt;&gt; 0)	
+                                or ( she_gidtyp = @OTK and @Srt_MsNaliczaniaAm = 1 and isnull(#tmpOTK.shenumer,0) &lt;&gt; 0) --jesli korekta pierwszego OT	
+                                or ( she_gidtyp = @OTK and @Srt_MsNaliczaniaAm = 2 and isnull(#tmpOTK.shenumer,0) &lt;&gt; 0 and @Srt_PodlegaAMP &lt;&gt; 0)	
+                                or ( she_gidtyp = @OT  and she_gidnumer &lt;&gt; @SrtGIDNumerPierwszeOT and @Srt_PodlegaAMP &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- zwiekszenie sprzed 4.0 dla przysp z mies przyjecia	
+                                or ( she_gidtyp = @OTK and #tmpOTK.shenumer is null and @Srt_PodlegaAMP &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- korekta zwiekszenie sprzed 4.0 dla przysp z mies przyjecia	
+                                or ((she_gidtyp = @LT or she_gidtyp = @LTK) and isnull(she_likwidacja,0) = 0 and @Srt_PodlegaAMP &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- zmniejszenie sprzed 4.0 dla przysp z mies przyjecia
+                                then 0
+                        else
+                                SHE_PodstawaAm
+                        end as n2,
+                        She_Likwidacja,
+                        case when SHE_GIDTyp IN (@OTK, @LTK, @AMK, @MWK, @ZPK) then CDN.SrtKorDokPierwotnyZnak(SHE_GIDTyp, SHE_GIDNumer) else -1 end ZnakDokPierwotnego
+                        
+                        ,SHE_KwotaInwSys as s1Sys, SHE_PodstawaAmSys as s2Sys,
+                        case --wg miesiaca obowiazywania
+                        when ((she_gidtyp = @MW or she_gidtyp = @MWK ) and She_MsObow = 1)
+                                or ((she_gidtyp = @MW or she_gidtyp = @MWK ) 
+									 and She_MsObow = 2 and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- dla przyspieszonej z miesiaca przyjecia
+                                or she_gidtyp = @PK
+                                or ((she_gidtyp = @LT or she_gidtyp = @LTK) and isnull(she_likwidacja,0) &lt;&gt; 0) 
+                                or ( she_gidtyp = @OT and @Srt_MsNaliczania = 1 and she_gidnumer = @SrtGIDNumerPierwszeOT )	
+                                or ( she_gidtyp = @OT and @Srt_MsNaliczania = 2 and she_gidnumer = @SrtGIDNumerPierwszeOT and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0)	
+                                or ( she_gidtyp = @OTK and @Srt_MsNaliczania = 1 and isnull(#tmpOTK.shenumer,0) &lt;&gt; 0) --jesli korekta pierwszego OT	
+                                or ( she_gidtyp = @OTK and @Srt_MsNaliczania = 2 and isnull(#tmpOTK.shenumer,0) &lt;&gt; 0 and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0)	
+                                or ( she_gidtyp = @OT and she_gidnumer &lt;&gt; @SrtGIDNumerPierwszeOT and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- zwiekszenie sprzed 4.0 dla przysp z mies przyjecia	
+                                or ( she_gidtyp = @OTK and #tmpOTK.shenumer is null and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- korekta zwiekszenie sprzed 4.0 dla przysp z mies przyjecia	
+                                or ((she_gidtyp = @LT or she_gidtyp = @LTK) and isnull(she_likwidacja,0) = 0 and @Srt_PodlegaAMP &lt;&gt; 0 and @AMPUmorzenie &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- zmniejszenie sprzed 4.0 dla przysp z mies przyjecia
+                                then 0
+                        else
+                                SHE_KwotaInwSys
+                        end as n1Sys,
+                        case
+                        when ((she_gidtyp = @MW or she_gidtyp = @MWK) and She_MsObowAm = 1)
+                                or ((she_gidtyp = @MW or she_gidtyp = @MWK ) and She_MsObowAm = 2 and @Srt_PodlegaAMP &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- dla przyspieszonej z miesiaca przyjecia
+                                or she_gidtyp = @PK
+                                or ((she_gidtyp = @LT or she_gidtyp = @LTK) and isnull(she_likwidacja,0) &lt;&gt; 0) 
+                                or ( she_gidtyp = @OT and @Srt_MsNaliczaniaAm = 1 and she_gidnumer = @SrtGIDNumerPierwszeOT)	
+                                or ( she_gidtyp = @OT and @Srt_MsNaliczaniaAm = 2 and she_gidnumer = @SrtGIDNumerPierwszeOT and @Srt_PodlegaAMP &lt;&gt; 0)	
+                                or ( she_gidtyp = @OTK and @Srt_MsNaliczaniaAm = 1 and isnull(#tmpOTK.shenumer,0) &lt;&gt; 0) --jesli korekta pierwszego OT	
+                                or ( she_gidtyp = @OTK and @Srt_MsNaliczaniaAm = 2 and isnull(#tmpOTK.shenumer,0) &lt;&gt; 0 and @Srt_PodlegaAMP &lt;&gt; 0)	
+                                or ( she_gidtyp = @OTK and she_gidnumer &lt;&gt; @SrtGIDNumerPierwszeOT and @Srt_PodlegaAMP &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- zwiekszenie sprzed 4.0 dla przysp z mies przyjecia	
+                                or ( she_gidtyp = @OTK and #tmpOTK.shenumer is null and @Srt_PodlegaAMP &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- korekta zwiekszenie sprzed 4.0 dla przysp z mies przyjecia	
+                                or ((she_gidtyp = @LT or she_gidtyp = @LTK) and isnull(she_likwidacja,0) = 0 and @Srt_PodlegaAMP &lt;&gt; 0 and @DataKoniecPierwszyRP_C &gt;= She_Data ) -- zmniejszenie sprzed 4.0 dla przysp z mies przyjecia
+                                then 0
+                        else
+                                SHE_PodstawaAmSys
+                        end as n2Sys,
+                        SHE_PrzesStrona
+                from cdn.srthistelem left outer join #tmpOTK on she_gidTyp = shnTyp and she_gidNumer = sheNumer
+                where she_srtnumer = @Srt_GIDNumer and
+                        (@NaDzienC is null or ( not @NaDzienC is null and SHE_Data &lt;= @NaDzienC)) and
+                        (@DataZapisuC is null or (not @DataZapisuC is null and SHE_DataZap &lt;= @DataZapisuC)) and
+                        (she_gidtyp = @OT or she_gidtyp = @OTK or she_gidtyp = @LT or she_gidtyp = @LTK or she_gidtyp = @MW or she_gidtyp = @MWK or
+                        she_gidtyp = @PK)
+                        and ((@SHE_GIDNumer &lt;&gt; 0 and not (SHE_GIDTyp = @SHE_GIDTyp and SHE_GIDNumer = @SHE_GIDNumer and SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+                        
+                        
+			) as a1
+        group by mies
+		
+
+        update #tmpOdpisy
+        set
+                ZwiekszenieT1 = s1 - n1, --zwiekszenie obowiazujace jako podstawa w danym miesiacu (miesiac obow ten sam)
+                ZwiekszenieT2 = s2 - n2,
+                ZwiekszeniePlusT1 = s1 - n1 - (s_min1 - n_min1), --zwiekszenie obowiazujace jako podstawa w danym miesiacu (miesiac obow ten sam) tylko z wartoscia dodatnia
+                ZwiekszeniePlusT2 = s2 - n2 - (s_min2 - n_min2),
+                ZwiekszenieMiesT1 = s1, --zwiekszenie wystawione w danym miesiacu
+                ZwiekszenieMiesT2 = s2,
+                ZwiekszenieMsObow2T1 = n1, --zwiekszenie wystawione w danym miesiacu, obowiazujace w nastepnym
+                ZwiekszenieMsObow2T2 = n2,
+                ZwiekszenieLtT1 = Lt1, --zmiana wartosci przez calkowita likwidacje
+                ZwiekszenieLtT2 = Lt2,
+                ZwiekszenieT1w = s1w,	-- zwiekszenia wartosci inw. korekty po tej samej stronie co pierwotny T1
+                ZwiekszenieT2w = s2w,
+                ZmniejszenieT1w = s3w,	-- zmniejszenia wartosci inw. korekty po tej samej stronie co pierwotny T1
+                ZmniejszenieT2w = s4w,
+                
+                ZwiekszenieT1Sys = s1Sys - n1Sys, --zwiekszenie obowiazujace jako podstawa w danym miesiacu (miesiac obow ten sam)
+                ZwiekszenieT2Sys = s2Sys - n2Sys,
+                ZwiekszeniePlusT1Sys = s1Sys - n1Sys - (s_min1Sys - n_min1Sys), --zwiekszenie obowiazujace jako podstawa w danym miesiacu (miesiac obow ten sam) tylko z wartoscia dodatnia
+                ZwiekszeniePlusT2Sys = s2Sys - n2Sys - (s_min2Sys - n_min2Sys),
+                ZwiekszenieMiesT1Sys = s1Sys, --zwiekszenie wystawione w danym miesiacu
+                ZwiekszenieMiesT2Sys = s2Sys,
+                ZwiekszenieMsObow2T1Sys = n1Sys, --zwiekszenie wystawione w danym miesiacu, obowiazujace w nastepnym
+                ZwiekszenieMsObow2T2Sys = n2Sys,
+                ZwiekszenieLtT1Sys = Lt1Sys, --zmiana wartosci przez calkowita likwidacje
+                ZwiekszenieLtT2Sys = Lt2Sys,
+                ZwiekszenieT1wSys = s1wSys,	-- zwiekszenia wartosci inw. korekty po tej samej stronie co pierwotny T1
+                ZwiekszenieT2wSys = s2wSys,
+                ZmniejszenieT1wSys = s3wSys,	-- zmniejszenia wartosci inw. korekty po tej samej stronie co pierwotny T1
+                ZmniejszenieT2wSys = s4wSys
+                
+                , PrzylaczenieT1 = przylaczenie1
+				, OdlaczenieT1 = odlaczenie1
+				, PrzylaczenieT2 = przylaczenie2
+				, OdlaczenieT2 = odlaczenie2
+				
+				, PrzylaczenieT1Sys = przylaczenie1Sys
+				, OdlaczenieT1Sys = odlaczenie1Sys
+				, PrzylaczenieT2Sys = przylaczenie2Sys
+				, OdlaczenieT2Sys = odlaczenie2Sys
+        from #tmpOdpisy inner join #tmpZwiekszenia on cdn.DateDiffClarion(2, 0, DataClarion1) = mies
+
+        --miesiac nastepny
+        update #tmpOdpisy
+        set
+                ZwiekszenieT1 = isnull(ZwiekszenieT1,0) + isnull(n1,0), --zwiekszenie obowiazujace jako podstawa w danym miesiacu (miesiac nastepny)
+                ZwiekszenieT2 = isnull(ZwiekszenieT2,0) + isnull(n2,0),
+                ZwiekszeniePlusT1 = isnull(ZwiekszeniePlusT1,0) + (isnull(n1,0) - isnull(n_min1,0)), --zwiekszenie dodatne
+                ZwiekszeniePlusT2 = isnull(ZwiekszeniePlusT2,0) + (isnull(n2,0) - isnull(n_min2,0)),
+                
+                ZwiekszenieT1Sys = isnull(ZwiekszenieT1Sys,0) + isnull(n1Sys,0), --zwiekszenie obowiazujace jako podstawa w danym miesiacu (miesiac nastepny)
+                ZwiekszenieT2Sys = isnull(ZwiekszenieT2Sys,0) + isnull(n2Sys,0),
+                ZwiekszeniePlusT1Sys = isnull(ZwiekszeniePlusT1Sys,0) + (isnull(n1Sys,0) - isnull(n_min1Sys,0)), --zwiekszenie dodatne
+                ZwiekszeniePlusT2Sys = isnull(ZwiekszeniePlusT2Sys,0) + (isnull(n2Sys,0) - isnull(n_min2Sys,0))
+        from #tmpZwiekszenia where cdn.DateDiffClarion(2, 0, DataClarion1) = mies + 1
+
+
+        delete from #tmpZwiekszenia
+
+
+        --ustaw odpisy uwzgl. AM+AMK+AK+AMP-LT-LTK+PK+MW+MWK (z dokladnoscia do dnia) (MW, MWK wg mies obow)
+        insert into #tmpZwiekszenia
+        select
+                mies,
+                sum(case she_gidtyp
+                        when @LT then -1*s1
+                        when @LTK then -1*s1
+                        else s1
+                end) as s1,
+                sum(case she_gidtyp
+                        when @LT then -1*s2
+                        when @LTK then -1*s2
+                        else s2
+                end) as s2,
+                sum(case
+                        when (she_gidtyp = @MW or she_gidtyp = @MWK or she_gidtyp = @AK or she_gidtyp = @PK) then s1
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) = 0 then -1*s1
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) = 0 then -1*s1
+                        else 0
+                end) as n1, --odpisy zmieniajace netto teoret / T1
+                sum(case
+                        when (she_gidtyp = @MW or she_gidtyp = @MWK or she_gidtyp = @PK) then s2
+                        else 0
+                end) as n2, --odpisy zmieniajace netto teoret / T2
+                sum(case
+                        when (she_gidtyp = @MW or she_gidtyp = @MWK) then s3
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) = 0 then -1*s3
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) = 0 then -1*s3
+                        else 0
+                end) as s3, --odpisy zmieniajace netto teoret (tylko dla toru amortyzacji zmniejszenie/likwidacja czesciowa)
+                sum(case she_gidtyp
+                        when @AMP then s1
+                        else 0
+                end) as s_min1, --odpisy przyspieszone
+                sum(case she_gidtyp
+                when @AMP then s2
+                        else 0
+                end) as s_min2, --odpisy przyspieszone
+                cast(0 as decimal(15,2)) as n_min1,
+                cast(0 as decimal(15,2)) as n_min2,
+                sum(case
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s1
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s1
+                        else 0
+                end) as Lt1 ,
+                sum(case
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s2
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s2
+                        else 0
+                end) as Lt2,
+                SUM(case when SHE_GIDTyp = @AK and s1 &gt; 0 then s1 else 0 end) ZwAK,
+                SUM(case when SHE_GIDTyp = @AK and s1 &lt; 0 then s1 else 0 end) ZmAK,
+                
+                ---------------------------
+                sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) then 0
+						when she_gidtyp in (@OTK, @MWK) 
+							then		
+							case when ZnakDokPierwotnego IN (1, 3) then 
+								s1
+							else
+								0
+							end
+						else
+							case when s1 &gt; 0 OR SHE_GIDTyp in (@AM, @AMK) then s1 else 0 end
+						end else 0 end						
+				) as s1w
+				,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) then 0
+						when she_gidtyp in (@OTK, @MWK) 
+							then 		
+							case when ZnakDokPierwotnego IN (2, 3) then 
+								s2
+							else
+								0
+							end
+						else
+							case when s2 &gt; 0 OR SHE_GIDTyp in (@AM, @AMK) then s2 else 0 end
+						end else 0 end
+				) as s2w,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) then -1*s1
+						when she_gidtyp in (@OTK, @MWK) 
+							then
+							case when ZnakDokPierwotnego IN (0, 2) then 
+								s1
+							else
+								0
+							end
+						else
+							case when s1 &gt; 0 OR SHE_GIDTyp in (@AM, @AMK) then 0 else s1 end
+						end else 0 end
+				) as s3w,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) then -1*s2
+						when she_gidtyp in (@OTK, @MWK) 
+							then 
+							case when ZnakDokPierwotnego IN (0, 1) then 
+								s2
+							else
+								0
+							end
+						else
+							case when s2 &gt; 0 OR SHE_GIDTyp in (@AM, @AMK) then 0 else s2 end
+						end else 0 end
+				) as s4w,
+				--- sys
+								
+                sum(case she_gidtyp
+                        when @LT then -1*s1Sys
+                        when @LTK then -1*s1Sys
+                        else s1Sys
+                end) as s1Sys,
+                sum(case she_gidtyp
+                        when @LT then -1*s2Sys
+                        when @LTK then -1*s2Sys
+                        else s2Sys
+                end) as s2Sys,
+                sum(case
+                        when (she_gidtyp = @MW or she_gidtyp = @MWK or she_gidtyp = @AK or she_gidtyp = @PK ) then s1Sys		
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) = 0 then -1*s1Sys
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) = 0 then -1*s1Sys
+                        else 0
+                end) as n1Sys, --odpisy zmieniajace netto teoret / T1
+                sum(case
+                        when (she_gidtyp = @MW or she_gidtyp = @MWK or she_gidtyp = @PK ) then s2Sys		
+                        else 0
+                end) as n2Sys, --odpisy zmieniajace netto teoret / T2
+                sum(case
+                        when (she_gidtyp = @MW or she_gidtyp = @MWK ) then s3Sys		--&amp;&amp;&amp; Zest
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) = 0 then -1*s3Sys
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) = 0 then -1*s3Sys
+                        else 0
+                end) as s3Sys, --odpisy zmieniajace netto teoret (tylko dla toru amortyzacji zmniejszenie/likwidacja czesciowa)
+                sum(case she_gidtyp
+                        when @AMP then s1Sys
+                        else 0
+                end) as s_min1Sys, --odpisy przyspieszone
+                sum(case she_gidtyp
+                when @AMP then s2Sys
+                        else 0
+                end) as s_min2Sys, --odpisy przyspieszone
+                cast(0 as decimal(15,2)) as n_min1Sys,
+                cast(0 as decimal(15,2)) as n_min2Sys,
+                sum(case
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s1Sys
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s1Sys
+                        else 0
+                end) as Lt1Sys ,
+                sum(case
+                        when she_gidtyp = @LT and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s2Sys
+                        when she_gidtyp = @LTK and isnull(She_Likwidacja,0) &lt;&gt; 0 then -1*s2Sys
+                        else 0
+                end) as Lt2Sys,
+                SUM(case when SHE_GIDTyp = @AK and s1 &gt; 0 then s1Sys else 0 end) ZwAKSys,
+                SUM(case when SHE_GIDTyp = @AK and s1 &lt; 0 then s1Sys else 0 end) ZmAKSys,
+                
+                ---------------------------
+                sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) then 0
+						when she_gidtyp in (@OTK, @MWK) 
+						then
+							case when ZnakDokPierwotnego IN (1, 3) then 
+								s1Sys
+							else
+								0
+							end
+						else
+							case when s1 &gt; 0 OR SHE_GIDTyp in (@AM, @AMK) then s1Sys else 0 end
+						end else 0 end						
+				) as s1wSys
+				,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) then 0
+						when she_gidtyp in (@OTK, @MWK) 
+						then
+							case when ZnakDokPierwotnego IN (2, 3) then 
+								s2Sys
+							else
+								0
+							end
+						else
+							case when s2 &gt; 0 OR SHE_GIDTyp in (@AM, @AMK) then s2Sys else 0 end
+						end else 0 end
+				) as s2wSys,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) then -1*s1Sys
+						when she_gidtyp in (@OTK, @MWK) 
+						then		
+							case when ZnakDokPierwotnego IN (0, 2) then 
+								s1Sys
+							else
+								0
+							end
+						else
+							case when s1 &gt; 0 OR SHE_GIDTyp in (@AM, @AMK) then 0 else s1Sys end
+						end else 0 end
+				) as s3wSys,
+				
+				sum(
+					case when SHE_Data between @RokOdC and @RokDoC then
+						case when she_gidtyp in (@LT, @LTK) then -1*s2Sys
+						when she_gidtyp in (@OTK, @MWK) 
+						then		
+							case when ZnakDokPierwotnego IN (0, 1) then 
+								s2Sys
+							else
+								0
+							end
+						else
+							case when s2 &gt; 0 OR SHE_GIDTyp in (@AM, @AMK) then 0 else s2Sys end
+						end else 0 end
+				) as s4wSys
+				
+				, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00
+				
+        from (  select she_data, cdn.datediffclarion(2, 0, she_data) as mies, she_gidtyp, SHE_KwotaUm as s1, SHE_KwotaAm as s2, isnull(SHE_KwotaAm_Likw,0) as s3,
+                She_Likwidacja, She_KwotaUm,
+                SHE_KwotaUmSys as s1Sys, SHE_KwotaAmSys as s2Sys, isnull(SHE_KwotaAm_LikwSys,0) as s3Sys,                
+                case when SHE_GIDTyp IN (@OTK, @LTK, @AMK, @MWK)  --or ( SHE_GIDTyp = @ZPK and @ZestTryb = 1) 
+                then CDN.SrtKorDokPierwotnyZnak(SHE_GIDTyp, SHE_GIDNumer) else -1 end ZnakDokPierwotnego	
+                from cdn.srthistelem                
+                where she_srtnumer = @Srt_GIDNumer  and
+                        (@NaDzienC is null or ( not @NaDzienC is null and SHE_Data &lt;= @NaDzienC)) and
+                        (@DataZapisuC is null or (not @DataZapisuC is null and SHE_DataZap &lt;= @DataZapisuC)) and
+                        (she_gidtyp = @AM or she_gidtyp = @AMK or she_gidtyp = @AK or she_gidtyp = @AMP or
+                        she_gidtyp = @LT or she_gidtyp = @LTK or she_gidtyp = @PK or she_gidtyp = @MW or she_gidtyp = @MWK )	
+                        and ((@SHE_GIDNumer &lt;&gt; 0 and not (SHE_GIDTyp = @SHE_GIDTyp and SHE_GIDNumer = @SHE_GIDNumer and SHE_GIDLp = @SHE_GIDLp)) or @SHE_GIDNumer = 0)
+                        
+                        ) as a1
+        group by mies
+  
+        
+
+        update #tmpOdpisy
+        set
+                OdpisyT1 = s1,
+                OdpisyT2 = s2,
+                OdpisyAMPT1 = s_min1,
+                OdpisyAMPT2 = s_min2,
+                OdpisyPKT1 = n1,
+                OdpisyPKT2 = n2,
+                OdpisyT2_Likw = s3,
+                OdpisyLtT1 = Lt1,
+                OdpisyLtT2 = Lt2,
+                OdpisyAktZw = ZwAK,
+                OdpisyAktZm = ZmAK,
+                OdpisyZwT1 = s1w,	-- zwiekszenia amortyzacji łącznie z mwk (korekty po tej samej stronie co pierwotny)
+                OdpisyZwT2 = s2w,
+                OdpisyZmT1 = s3w,	-- zmniejszenia amortyzacji łącznie z mwk (korekty po tej samej stronie co pierwotny
+                OdpisyZmT2 = s4w,
+                -- sys
+                
+                OdpisyT1Sys = s1Sys,
+                OdpisyT2Sys = s2Sys,
+                OdpisyAMPT1Sys = s_min1Sys,
+                OdpisyAMPT2Sys = s_min2Sys,
+                OdpisyPKT1Sys = n1Sys,
+                OdpisyPKT2Sys = n2Sys,
+                OdpisyT2_LikwSys = s3Sys,
+                OdpisyLtT1Sys = Lt1Sys,
+                OdpisyLtT2Sys = Lt2Sys,
+                OdpisyAktZwSys = ZwAKSys,
+                OdpisyAktZmSys = ZmAKSys,
+                OdpisyZwT1Sys = s1wSys,	-- zwiekszenia amortyzacji łącznie z mwk (korekty po tej samej stronie co pierwotny)
+                OdpisyZwT2Sys = s2wSys,
+                OdpisyZmT1Sys = s3wSys,	-- zmniejszenia amortyzacji łącznie z mwk (korekty po tej samej stronie co pierwotny
+                OdpisyZmT2Sys = s4wSys
+        from #tmpZwiekszenia where cdn.DateDiffClarion(2, 0, DataClarion1) = mies
+        
+        if @@ROWCOUNT &gt; 0
+                set @SaOdpisy = 1
+
+        
+        if object_id('tempdb..#tmpZwiekszenia') is not null 
+                Drop table #tmpZwiekszenia
+        
+        
+
+        --ustaw podstawy
+        declare @OldZwiekszenieT1 decimal(15,2)
+        declare @OldZwiekszenieT2 decimal(15,2)
+        declare @ZwiekszenieT1 decimal(15,2)
+        declare @ZwiekszenieT2 decimal(15,2)
+        declare @ZwiekszeniePlusT1 decimal(15,2)
+        declare @ZwiekszeniePlusT2 decimal(15,2)
+        declare @ZwiekszenieMiesT1 decimal(15,2)
+        declare @ZwiekszenieMiesT2 decimal(15,2)
+        declare @ZwiekszenieMsObow2T1 decimal(15,2)
+        declare @ZwiekszenieMsObow2T2 decimal(15,2)
+        declare @OdpisyT1 decimal(15,2)
+        declare @OdpisyT2 decimal(15,2)
+        declare @OldOdpisyT1 decimal(15,2)
+        declare @OldOdpisyT2 decimal(15,2)
+        declare @SumaOdpisyT1 decimal(15,2)
+        set @SumaOdpisyT1 = 0
+        declare @SumaOdpisyT2 decimal(15,2)
+        set @SumaOdpisyT2 = 0
+
+        declare @OdpisyAMPT1 decimal(15,2)
+        declare @OdpisyAMPT2 decimal(15,2)
+        declare @OldOdpisyAMPT1 decimal(15,2)
+        declare @OldOdpisyAMPT2 decimal(15,2)
+        declare @SumaOdpisyAMPT1 decimal(15,2)
+        set @SumaOdpisyAMPT1 = 0
+        declare @SumaOdpisyAMPT2 decimal(15,2)
+        set @SumaOdpisyAMPT2 = 0
+
+        declare @SumaOdpisyRoczneTeoretT1 decimal(15,2)
+        set @SumaOdpisyRoczneTeoretT1 = 0
+        declare @SumaOdpisyRoczneTeoretT2 decimal(15,2)
+        set @SumaOdpisyRoczneTeoretT2 = 0
+        declare @SumaOdpisyRoczneTeoretRPT1 decimal(15,2)
+        set @SumaOdpisyRoczneTeoretRPT1 = 0
+        declare @SumaOdpisyRoczneTeoretRPT2 decimal(15,2)
+        set @SumaOdpisyRoczneTeoretRPT2 = 0
+        declare @SumaOdpisyTeoretT1 decimal(15,2)
+        set @SumaOdpisyTeoretT1 = 0
+        declare @SumaOdpisyTeoretT2 decimal(15,2)
+        set @SumaOdpisyTeoretT2 = 0
+        declare @SumaOdpisyAMPTeoretT1 decimal(15,2)
+        set @SumaOdpisyAMPTeoretT1 = 0
+        declare @SumaOdpisyAMPTeoretT2 decimal(15,2)
+        set @SumaOdpisyAMPTeoretT2 = 0
+        declare @OdpisyLtT1 decimal(15,2)
+        declare @OdpisyLtT2 decimal(15,2)
+        declare @OldOdpisyLtT1 decimal(15,2)
+        declare @OldOdpisyLtT2 decimal(15,2)
+        declare @SumaOdpisyLtT1 decimal(15,2)
+        set @SumaOdpisyLtT1 = 0
+        declare @SumaOdpisyLtT2 decimal(15,2)
+        set @SumaOdpisyLtT2 = 0
+        declare @OdpisyPKT1 decimal(15,2)
+        declare @OdpisyPKT2 decimal(15,2)
+        declare @OdpisyT2_Likw decimal(15,2)
+        declare @OldOdpisyT2_Likw decimal(15,2)
+        declare @SumaOdpisyT2_Likw decimal(15,2)
+        set @SumaOdpisyT2_Likw = 0
+        declare @tmpT1 decimal(15,2)
+        declare @tmpT2 decimal(15,2)
+        declare @WartOdpisuPoczT1 decimal(15,2)
+        declare @WartOdpisuPoczT2 decimal(15,2)
+        declare @WartOdpisuRPT1 decimal(15,2)
+        declare @WartOdpisuRPT2 decimal(15,2)
+        declare @OldWartOdpisuT1 decimal(15,2)
+        declare @OldWartOdpisuT2 decimal(15,2)
+        declare @StawkaRokT1 decimal(7,2)
+        declare @StawkaRokT2 decimal(7,2)
+        declare @OldStawkaRokT1 decimal(7,2)
+        declare @OldStawkaRokT2 decimal(7,2)
+        declare @WspT1 decimal(7,2)
+        declare @WspT2 decimal(7,2)
+        declare @OldWspT1 decimal(7,2)
+        declare @OldWspT2 decimal(7,2)
+        declare @WspDegrT1 decimal(7,2)
+        declare @WspDegrT2 decimal(7,2)
+        declare @LiczbaMiesAkt smallint
+        declare @LiczbaMiesAktAMP smallint
+        declare @LiczbaMiesAktOd smallint
+        declare @LiczbaMiesAktT1 smallint
+        declare @LiczbaMiesAktT2 smallint
+        declare @OldLiczbaMiesAktT1 smallint
+        declare @OldLiczbaMiesAktT2 smallint
+        declare @TeoretOdpisT1 decimal(16,3)
+        declare @TeoretOdpisT2 decimal(16,3)
+        declare @TeoretOdpisRPT1 decimal(16,3)
+        declare @TeoretOdpisRPT2 decimal(16,3)
+        declare @TeoretOdpisNaliczajT1 decimal(15,2)
+        declare @TeoretOdpisNaliczajT2 decimal(15,2)
+        declare @OldTeoretOdpisNaliczajT1 decimal(15,2)
+        set @OldTeoretOdpisNaliczajT1 = 0
+        declare @OldTeoretOdpisNaliczajT2 decimal(15,2)
+        set @OldTeoretOdpisNaliczajT2 = 0
+        declare @TeoretOdpisNaliczajRPT1 decimal(15,2)
+        declare @TeoretOdpisNaliczajRPT2 decimal(15,2)
+        declare @OldTeoretOdpisNaliczajRPT1 decimal(15,2)
+        set @OldTeoretOdpisNaliczajRPT1 = 0
+        declare @OldTeoretOdpisNaliczajRPT2 decimal(15,2)
+        set @OldTeoretOdpisNaliczajRPT2 = 0
+
+        declare @TeoretOdpisLiniowyT1 decimal(16,3)
+        declare @TeoretOdpisLiniowyT2 decimal(16,3)
+        declare @TeoretOdpisRocznyT1 decimal(15,2)
+        set @TeoretOdpisRocznyT1 = 0
+        declare @TeoretOdpisRocznyT2 decimal(15,2)
+        set @TeoretOdpisRocznyT2 = 0
+        declare @TeoretOdpisRocznyRPT1 decimal(15,2)
+        set @TeoretOdpisRocznyRPT1 = 0
+        declare @TeoretOdpisRocznyRPT2 decimal(15,2)
+        set @TeoretOdpisRocznyRPT2 = 0
+
+        declare @MetodaAmObowT1 smallint
+        declare @MetodaAmObowT2 smallint
+
+        declare @Naliczaj smallint
+        declare @NaliczajAMP smallint
+        declare @OstatniNaliczaj smallint
+        declare @OstatniNaliczajAMP smallint
+        declare @Dwutorowosc smallint
+        declare @Przyjety smallint
+        declare @OldPrzyjety smallint
+        declare @MiesOdPrzyjecia smallint
+        declare @MiesDoKonca smallint
+        declare @BruttoPodstT1 decimal(15,2)
+        set @BruttoPodstT1 = 0
+        declare @BruttoPodstT2 decimal(15,2)
+        set @BruttoPodstT2 = 0
+        declare @NettoPodstT1 decimal(15,2)
+        set @NettoPodstT1 = 0
+        declare @NettoPodstT2 decimal(15,2)
+        set @NettoPodstT2 = 0
+        declare @NettoTeoretT1 decimal(15,2)
+        set @NettoTeoretT1 = 0
+        declare @NettoTeoretT2 decimal(15,2)
+        set @NettoTeoretT2 = 0
+        declare @OldNettoTeoretT1 decimal(15,2)
+        set @OldNettoTeoretT1 = 0
+        declare @OldNettoTeoretT2 decimal(15,2)
+        set @OldNettoTeoretT2 = 0
+        declare @NettoTeoretRPT1 decimal(15,2)
+        set @NettoTeoretRPT1 = 0
+        declare @NettoTeoretRPT2 decimal(15,2)
+        set @NettoTeoretRPT2 = 0
+        declare @OldNettoTeoretRPT1 decimal(15,2)
+        set @OldNettoTeoretRPT1 = 0
+        declare @OldNettoTeoretRPT2 decimal(15,2)
+        set @OldNettoTeoretRPT2 = 0
+        declare @RokAmort int
+        declare @RokSezonowy smallint
+        declare @KwotaZlomowaT1 decimal(15,2)
+        declare @KwotaZlomowaT2 decimal(15,2)
+        declare @OldKwotaZlomowaT1 decimal(15,2)
+        set @OldKwotaZlomowaT1 = 0
+        declare @OldKwotaZlomowaT2 decimal(15,2)
+        set @OldKwotaZlomowaT2 = 0
+        declare @tmpDec1 decimal(15,2)
+        declare @tmpDec2 decimal(15,2)
+        declare @tmpDec3 decimal(15,2)
+        declare @tmpDec4 decimal(15,2)
+
+        declare @DzielLiczbaMies decimal(3,1)
+
+        declare @BruttoT1 decimal(15,2)
+        set @BruttoT1 = 0
+        declare @NettoT1 decimal(15,2)
+        set @NettoT1 = 0
+        declare @BruttoT2 decimal(15,2)
+        set @BruttoT2 = 0
+        declare @NettoT2 decimal(15,2)
+        set @NettoT2 = 0
+
+        declare @ZwiekszenieLtT1 decimal(15,2)
+        declare @ZwiekszenieLtT2 decimal(15,2)
+        declare @WN_RN smallint
+        declare @IloscMiesRP_AMP smallint
+        set @IloscMiesRP_AMP = 0
+        declare @CurWartRezyd smallint
+        declare @CurPodstBilans smallint
+        declare @CurPodstPodat smallint
+        declare @WartRezydT1 smallint
+        declare @WartRezydT2 smallint
+        --zaokragla w gore w dol tylko w przypadku wartosci od 5 na trzecim miejscu, ponizej tej wartosci zaokraglanie jest zawsze w dol
+        --korekta jest robiona w ostatnim odpisie w roku
+        declare @ZaokT1 smallint --zaokraglanie
+        set @ZaokT1 = 0 --0 w gore/ 1 w dol
+        declare @ZaokT2 smallint --zaokraglanie
+        set @ZaokT2 = 0 --0 w gore/ 1 w dol
+
+
+		--sys
+		declare @OldZwiekszenieT1Sys decimal(15,2)
+        declare @OldZwiekszenieT2Sys decimal(15,2)
+        declare @ZwiekszenieT1Sys decimal(15,2)
+        declare @ZwiekszenieT2Sys decimal(15,2)
+        declare @ZwiekszeniePlusT1Sys decimal(15,2)
+        declare @ZwiekszeniePlusT2Sys decimal(15,2)
+        declare @ZwiekszenieMiesT1Sys decimal(15,2)
+        declare @ZwiekszenieMiesT2Sys decimal(15,2)
+        declare @ZwiekszenieMsObow2T1Sys decimal(15,2)
+        declare @ZwiekszenieMsObow2T2Sys decimal(15,2)
+        declare @OdpisyT1Sys decimal(15,2)
+        declare @OdpisyT2Sys decimal(15,2)
+        declare @OldOdpisyT1Sys decimal(15,2)
+        declare @OldOdpisyT2Sys decimal(15,2)
+        declare @SumaOdpisyT1Sys decimal(15,2)
+        set @SumaOdpisyT1Sys = 0
+        declare @SumaOdpisyT2Sys decimal(15,2)
+        set @SumaOdpisyT2Sys = 0
+
+        declare @OdpisyAMPT1Sys decimal(15,2)
+        declare @OdpisyAMPT2Sys decimal(15,2)
+        declare @OldOdpisyAMPT1Sys decimal(15,2)
+        declare @OldOdpisyAMPT2Sys decimal(15,2)
+        declare @SumaOdpisyAMPT1Sys decimal(15,2)
+        set @SumaOdpisyAMPT1Sys = 0
+        declare @SumaOdpisyAMPT2Sys decimal(15,2)
+        set @SumaOdpisyAMPT2Sys = 0
+
+        declare @SumaOdpisyRoczneTeoretT1Sys decimal(15,2)
+        set @SumaOdpisyRoczneTeoretT1Sys = 0
+        declare @SumaOdpisyRoczneTeoretT2Sys decimal(15,2)
+        set @SumaOdpisyRoczneTeoretT2Sys = 0
+        declare @SumaOdpisyRoczneTeoretRPT1Sys decimal(15,2)
+        set @SumaOdpisyRoczneTeoretRPT1Sys = 0
+        declare @SumaOdpisyRoczneTeoretRPT2Sys decimal(15,2)
+        set @SumaOdpisyRoczneTeoretRPT2Sys = 0
+        declare @SumaOdpisyTeoretT1Sys decimal(15,2)
+        set @SumaOdpisyTeoretT1Sys = 0
+        declare @SumaOdpisyTeoretT2Sys decimal(15,2)
+        set @SumaOdpisyTeoretT2Sys = 0
+        declare @SumaOdpisyAMPTeoretT1Sys decimal(15,2)
+        set @SumaOdpisyAMPTeoretT1Sys = 0
+        declare @SumaOdpisyAMPTeoretT2Sys decimal(15,2)
+        set @SumaOdpisyAMPTeoretT2Sys = 0
+        declare @OdpisyLtT1Sys decimal(15,2)
+        declare @OdpisyLtT2Sys decimal(15,2)
+        declare @OldOdpisyLtT1Sys decimal(15,2)
+        declare @OldOdpisyLtT2Sys decimal(15,2)
+        declare @SumaOdpisyLtT1Sys decimal(15,2)
+        set @SumaOdpisyLtT1Sys = 0
+        declare @SumaOdpisyLtT2Sys decimal(15,2)
+        set @SumaOdpisyLtT2Sys = 0
+        declare @OdpisyPKT1Sys decimal(15,2)
+        declare @OdpisyPKT2Sys decimal(15,2)
+        declare @OdpisyT2_LikwSys decimal(15,2)
+        declare @OldOdpisyT2_LikwSys decimal(15,2)
+        declare @SumaOdpisyT2_LikwSys decimal(15,2)
+        set @SumaOdpisyT2_LikwSys = 0
+        declare @tmpT1Sys decimal(15,2)
+        declare @tmpT2Sys decimal(15,2)
+        declare @WartOdpisuPoczT1Sys decimal(15,2)
+        declare @WartOdpisuPoczT2Sys decimal(15,2)
+        declare @WartOdpisuRPT1Sys decimal(15,2)
+        declare @WartOdpisuRPT2Sys decimal(15,2)
+        declare @OldWartOdpisuT1Sys decimal(15,2)
+        declare @OldWartOdpisuT2Sys decimal(15,2)
+                
+        declare @LiczbaMiesAktT1Sys smallint
+        declare @LiczbaMiesAktT2Sys smallint
+        
+        declare @TeoretOdpisT1Sys decimal(16,3)
+        declare @TeoretOdpisT2Sys decimal(16,3)
+        declare @TeoretOdpisRPT1Sys decimal(16,3)
+        declare @TeoretOdpisRPT2Sys decimal(16,3)
+        declare @TeoretOdpisNaliczajT1Sys decimal(15,2)
+        declare @TeoretOdpisNaliczajT2Sys decimal(15,2)
+        declare @OldTeoretOdpisNaliczajT1Sys decimal(15,2)
+        set @OldTeoretOdpisNaliczajT1Sys = 0
+        declare @OldTeoretOdpisNaliczajT2Sys decimal(15,2)
+        set @OldTeoretOdpisNaliczajT2Sys = 0
+        declare @TeoretOdpisNaliczajRPT1Sys decimal(15,2)
+        declare @TeoretOdpisNaliczajRPT2Sys decimal(15,2)
+        declare @OldTeoretOdpisNaliczajRPT1Sys decimal(15,2)
+        set @OldTeoretOdpisNaliczajRPT1Sys = 0
+        declare @OldTeoretOdpisNaliczajRPT2Sys decimal(15,2)
+        set @OldTeoretOdpisNaliczajRPT2Sys = 0
+
+        declare @TeoretOdpisLiniowyT1Sys decimal(16,3)
+        declare @TeoretOdpisLiniowyT2Sys decimal(16,3)
+        declare @TeoretOdpisRocznyT1Sys decimal(15,2)
+        set @TeoretOdpisRocznyT1Sys = 0
+        declare @TeoretOdpisRocznyT2Sys decimal(15,2)
+        set @TeoretOdpisRocznyT2Sys = 0
+        declare @TeoretOdpisRocznyRPT1Sys decimal(15,2)
+        set @TeoretOdpisRocznyRPT1Sys = 0
+        declare @TeoretOdpisRocznyRPT2Sys decimal(15,2)
+        set @TeoretOdpisRocznyRPT2Sys = 0
+        
+        declare @BruttoPodstT1Sys decimal(15,2)
+        set @BruttoPodstT1Sys = 0
+        declare @BruttoPodstT2Sys decimal(15,2)
+        set @BruttoPodstT2Sys = 0
+        declare @NettoPodstT1Sys decimal(15,2)
+        set @NettoPodstT1Sys = 0
+        declare @NettoPodstT2Sys decimal(15,2)
+        set @NettoPodstT2Sys = 0
+        declare @NettoTeoretT1Sys decimal(15,2)
+        set @NettoTeoretT1Sys = 0
+        declare @NettoTeoretT2Sys decimal(15,2)
+        set @NettoTeoretT2Sys = 0
+        declare @OldNettoTeoretT1Sys decimal(15,2)
+        set @OldNettoTeoretT1Sys = 0
+        declare @OldNettoTeoretT2Sys decimal(15,2)
+        set @OldNettoTeoretT2Sys = 0
+        declare @NettoTeoretRPT1Sys decimal(15,2)
+        set @NettoTeoretRPT1Sys = 0
+        declare @NettoTeoretRPT2Sys decimal(15,2)
+        set @NettoTeoretRPT2Sys = 0
+        declare @OldNettoTeoretRPT1Sys decimal(15,2)
+        set @OldNettoTeoretRPT1Sys = 0
+        declare @OldNettoTeoretRPT2Sys decimal(15,2)
+        set @OldNettoTeoretRPT2Sys = 0        
+        declare @KwotaZlomowaT1Sys decimal(15,2)
+        declare @KwotaZlomowaT2Sys decimal(15,2)
+        declare @OldKwotaZlomowaT1Sys decimal(15,2)
+        set @OldKwotaZlomowaT1Sys = 0
+        declare @OldKwotaZlomowaT2Sys decimal(15,2)
+        set @OldKwotaZlomowaT2Sys = 0
+        declare @tmpDec1Sys decimal(15,2)
+        declare @tmpDec2Sys decimal(15,2)
+        declare @tmpDec3Sys decimal(15,2)
+        declare @tmpDec4Sys decimal(15,2)
+
+        declare @DzielLiczbaMiesSys decimal(3,1)
+
+        declare @BruttoT1Sys decimal(15,2)
+        set @BruttoT1Sys = 0
+        declare @NettoT1Sys decimal(15,2)
+        set @NettoT1Sys = 0
+        declare @BruttoT2Sys decimal(15,2)
+        set @BruttoT2Sys = 0
+        declare @NettoT2Sys decimal(15,2)
+        set @NettoT2Sys = 0
+
+        declare @ZwiekszenieLtT1Sys decimal(15,2)
+        declare @ZwiekszenieLtT2Sys decimal(15,2)
+        
+        declare @IloscMiesRP_AMPSys smallint
+        set @IloscMiesRP_AMPSys = 0
+                
+        --zaokragla w gore w dol tylko w przypadku wartosci od 5 na trzecim miejscu, ponizej tej wartosci zaokraglanie jest zawsze w dol
+        --korekta jest robiona w ostatnim odpisie w roku
+        declare @ZaokT1Sys smallint --zaokraglanie
+        set @ZaokT1Sys = 0 --0 w gore/ 1 w dol
+        declare @ZaokT2Sys smallint --zaokraglanie
+        set @ZaokT2Sys = 0 --0 w gore/ 1 w dol
+        -- kon sys
+		
+		-- zestawy na potrzeby am degresywnej
+		declare @PrzylaczenieT1 decimal(15,2),				-- wartość przyłączeń
+				@OdlaczenieT1 decimal(15,2),				-- wartość odłączeń
+				@PrzylaczenieT2 decimal(15,2),				-- wartość przyłączeń
+				@OdlaczenieT2 decimal(15,2),				-- wartość odłączeń
+				
+				@PrzylaczenieT1Sys decimal(15,2),			-- wartość przyłączeń
+				@OdlaczenieT1Sys decimal(15,2),				-- wartość odłączeń
+				@PrzylaczenieT2Sys decimal(15,2),			-- wartość przyłączeń
+				@OdlaczenieT2Sys decimal(15,2),				-- wartość odłączeń			
+
+				@Zestaw smallint = case when @ZestTryb = @ZestTrybZestaw then 1 else 0 end	-- czy zestaw
+
+        --ustaw miesiac rozp amortyzacji (domyslnie nastepny)
+        select @MiesDoKonca = MiesDoKonca from #tmpOdpisy where DataClarion1 &lt;= @DataPierwszeOT and DataClarion2 &gt;= @DataPierwszeOT
+        set @MiesRozpAmortT1 = 13 - @MiesDoKonca + 1
+        set @MiesRozpAmortT2 = @MiesRozpAmortT1
+
+
+
+        DECLARE OdpisCursor CURSOR
+        FOR SELECT Przyjety, MiesOdPrzyjecia, Naliczaj, NaliczajAMP, DataClarion1, DataClarion2, ZwiekszenieT1, OdpisyT1, OdpisyAMPT1, OdpisyLtT1, ZwiekszenieT2, OdpisyT2, OdpisyAMPT2, OdpisyLtT2, StawkaRokT1, StawkaRokT2, WspT1, WspT2, LiczbaMiesAkt, LiczbaMiesAktAMP, LiczbaMiesAktOd, MiesDoKonca, RokAmort, KwotaZlomowaT1, KwotaZlomowaT2, RokSezonowy, ZwiekszenieMiesT1, ZwiekszenieMiesT2, ZwiekszenieLtT1, ZwiekszenieLtT2, WN_RN, OdpisyPKT1, OdpisyPKT2, ZwiekszenieMsObow2T1, ZwiekszenieMsObow2T2, OstatniNaliczaj, OstatniNaliczajAMP, OdpisyT2_Likw, ZwiekszeniePlusT1, ZwiekszeniePlusT2, MetodaAmObowT1, MetodaAmObowT2, WspDegrT1, WspDegrT2, Dwutorowosc, WartRezydCol, PodstBilansCol, PodstPodatCol,
+			ZwiekszenieT1Sys, OdpisyT1Sys, OdpisyAMPT1Sys, OdpisyLtT1Sys, ZwiekszenieT2Sys, OdpisyT2Sys, OdpisyAMPT2Sys, OdpisyLtT2Sys, KwotaZlomowaT1Sys, KwotaZlomowaT2Sys, ZwiekszenieMiesT1Sys, ZwiekszenieMiesT2Sys, ZwiekszenieLtT1Sys, ZwiekszenieLtT2Sys, OdpisyPKT1Sys, OdpisyPKT2Sys, ZwiekszenieMsObow2T1Sys, ZwiekszenieMsObow2T2Sys, OdpisyT2_LikwSys, ZwiekszeniePlusT1Sys, ZwiekszeniePlusT2Sys, PrzylaczenieT1, PrzylaczenieT2, OdlaczenieT1, OdlaczenieT2, PrzylaczenieT1Sys, PrzylaczenieT2Sys, OdlaczenieT1Sys, OdlaczenieT2Sys
+        
+        from #tmpOdpisy order by DataClarion1        
+
+
+        OPEN OdpisCursor
+        FETCH NEXT FROM OdpisCursor INTO @Przyjety, @MiesOdPrzyjecia, @Naliczaj, @NaliczajAMP, @tmpInt3, @tmpInt4, @ZwiekszenieT1, @OdpisyT1, @OdpisyAMPT1, @OdpisyLtT1, @ZwiekszenieT2, @OdpisyT2, @OdpisyAMPT2, @OdpisyLtT2, @StawkaRokT1, @StawkaRokT2, @WspT1, @WspT2, @LiczbaMiesAkt, @LiczbaMiesAktAMP, @LiczbaMiesAktOd, @MiesDoKonca, @RokAmort, @KwotaZlomowaT1, @KwotaZlomowaT2, @RokSezonowy, @ZwiekszenieMiesT1, @ZwiekszenieMiesT2, @ZwiekszenieLtT1, @ZwiekszenieLtT2, @WN_RN, @OdpisyPKT1, @OdpisyPKT2, @ZwiekszenieMsObow2T1, @ZwiekszenieMsObow2T2, @OstatniNaliczaj, @OstatniNaliczajAMP, @OdpisyT2_Likw, @ZwiekszeniePlusT1, @ZwiekszeniePlusT2, @MetodaAmObowT1, @MetodaAmObowT2, @WspDegrT1, @WspDegrT2, @Dwutorowosc, @CurWartRezyd, @CurPodstBilans, @CurPodstPodat,
+			@ZwiekszenieT1Sys, @OdpisyT1Sys, @OdpisyAMPT1Sys, @OdpisyLtT1Sys, @ZwiekszenieT2Sys, @OdpisyT2Sys, @OdpisyAMPT2Sys, @OdpisyLtT2Sys, @KwotaZlomowaT1Sys, @KwotaZlomowaT2Sys, @ZwiekszenieMiesT1Sys, @ZwiekszenieMiesT2Sys, @ZwiekszenieLtT1Sys, @ZwiekszenieLtT2Sys, @OdpisyPKT1Sys, @OdpisyPKT2Sys, @ZwiekszenieMsObow2T1Sys, @ZwiekszenieMsObow2T2Sys, @OdpisyT2_LikwSys, @ZwiekszeniePlusT1Sys, @ZwiekszeniePlusT2Sys
+			, @PrzylaczenieT1, @PrzylaczenieT2, @OdlaczenieT1, @OdlaczenieT2, @PrzylaczenieT1Sys, @PrzylaczenieT2Sys, @OdlaczenieT1Sys, @OdlaczenieT2Sys
+
+        WHILE (@@fetch_status &lt;&gt; -1)
+        BEGIN
+                IF (@@fetch_status &lt;&gt; -2)
+                BEGIN
+                        if @Dwutorowosc = 0
+                        begin
+                                set @StawkaRokT2 = @StawkaRokT1
+                                set @WspT2 = @WspT1
+                                set @WspDegrT2 = @WspDegrT1
+                                set @MetodaAmObowT2 = @MetodaAmObowT1
+                        end
+
+                        set @ZwiekszenieT1 = isnull(@ZwiekszenieT1, 0)
+                        set @ZwiekszeniePlusT1 = isnull(@ZwiekszeniePlusT1, 0)
+                        set @ZwiekszenieMiesT1 = isnull(@ZwiekszenieMiesT1, 0)
+                        set @ZwiekszenieT2 = isnull(@ZwiekszenieT2, 0)
+                        set @ZwiekszeniePlusT2 = isnull(@ZwiekszeniePlusT2, 0)
+                        set @ZwiekszenieMiesT2 = isnull(@ZwiekszenieMiesT2, 0)
+                        set @ZwiekszenieMsObow2T1 = isnull(@ZwiekszenieMsObow2T1, 0)
+                        set @ZwiekszenieMsObow2T2 = isnull(@ZwiekszenieMsObow2T2, 0)
+                        set @OdpisyT1 = isnull(@OdpisyT1, 0)
+                        set @OdpisyT2 = isnull(@OdpisyT2, 0)
+                        set @OdpisyAMPT1 = isnull(@OdpisyAMPT1, 0)
+                        set @OdpisyAMPT2 = isnull(@OdpisyAMPT2, 0)
+                        set @OdpisyLtT1 = isnull(@OdpisyLtT1, 0)
+                        set @OdpisyLtT2 = isnull(@OdpisyLtT2, 0)
+                        set @OdpisyPKT1 = isnull(@OdpisyPKT1, 0)
+                        set @OdpisyPKT2 = isnull(@OdpisyPKT2, 0)
+                        set @OdpisyT2_Likw = isnull(@OdpisyT2_Likw, 0)
+                        set @KwotaZlomowaT1 = isnull(@KwotaZlomowaT1, 0)
+                        set @KwotaZlomowaT2 = isnull(@KwotaZlomowaT2, 0)
+                        set @Przyjety = isnull(@Przyjety, 0)
+                        set @ZwiekszenieLtT1 = isnull(@ZwiekszenieLtT1, 0)
+                        set @ZwiekszenieLtT2 = isnull(@ZwiekszenieLtT2, 0)
+                        set @WN_RN = isnull(@WN_RN, 0)
+                        set @OstatniNaliczaj = isnull(@OstatniNaliczaj,0)
+                        set @OstatniNaliczajAMP = isnull(@OstatniNaliczajAMP,0)
+                        set @LiczbaMiesAktOd = isnull(@LiczbaMiesAktOd,0)
+                        set @MetodaAmObowT1 = isnull(@MetodaAmObowT1,0)
+                        set @MetodaAmObowT2 = isnull(@MetodaAmObowT2,0)
+                        set @CurWartRezyd = isnull( @CurWartRezyd,0)
+                        set @CurPodstBilans = isnull(@CurPodstBilans,0)
+                        set @CurPodstPodat = isnull(@CurPodstPodat,0)
+
+                        --oblicz sume odpisow
+                        set @SumaOdpisyT1 = @SumaOdpisyT1 + isnull(@OldOdpisyT1,0)
+                        set @SumaOdpisyT2 = @SumaOdpisyT2 + isnull(@OldOdpisyT2,0)
+
+                        set @SumaOdpisyAMPT1 = @SumaOdpisyAMPT1 + isnull(@OldOdpisyAMPT1,0)
+                        set @SumaOdpisyAMPT2 = @SumaOdpisyAMPT2 + isnull(@OldOdpisyAMPT2,0)
+
+                        set @SumaOdpisyLtT1 = @SumaOdpisyLtT1 + isnull(@OldOdpisyLtT1,0)
+                        set @SumaOdpisyLtT2 = @SumaOdpisyLtT2 + isnull(@OldOdpisyLtT2,0)
+
+                        set @SumaOdpisyT2_Likw = @SumaOdpisyT2_Likw + isnull(@OldOdpisyT2_Likw,0)
+                        
+                        --sys
+                        set @ZwiekszenieT1Sys = isnull(@ZwiekszenieT1Sys, 0)
+                        set @ZwiekszeniePlusT1Sys = isnull(@ZwiekszeniePlusT1Sys, 0)
+                        set @ZwiekszenieMiesT1Sys = isnull(@ZwiekszenieMiesT1Sys, 0)
+                        set @ZwiekszenieT2Sys = isnull(@ZwiekszenieT2Sys, 0)
+                        set @ZwiekszeniePlusT2Sys = isnull(@ZwiekszeniePlusT2Sys, 0)
+                        set @ZwiekszenieMiesT2Sys = isnull(@ZwiekszenieMiesT2Sys, 0)
+                        set @ZwiekszenieMsObow2T1Sys = isnull(@ZwiekszenieMsObow2T1Sys, 0)
+                        set @ZwiekszenieMsObow2T2Sys = isnull(@ZwiekszenieMsObow2T2Sys, 0)
+                        set @OdpisyT1Sys = isnull(@OdpisyT1Sys, 0)
+                        set @OdpisyT2Sys = isnull(@OdpisyT2Sys, 0)
+                        set @OdpisyAMPT1Sys = isnull(@OdpisyAMPT1Sys, 0)
+                        set @OdpisyAMPT2Sys = isnull(@OdpisyAMPT2Sys, 0)
+                        set @OdpisyLtT1Sys = isnull(@OdpisyLtT1Sys, 0)
+                        set @OdpisyLtT2Sys = isnull(@OdpisyLtT2Sys, 0)
+                        set @OdpisyPKT1Sys = isnull(@OdpisyPKT1Sys, 0)
+                        set @OdpisyPKT2Sys = isnull(@OdpisyPKT2Sys, 0)
+                        set @OdpisyT2_LikwSys = isnull(@OdpisyT2_LikwSys, 0)
+                        set @KwotaZlomowaT1Sys = isnull(@KwotaZlomowaT1Sys, 0)
+                        set @KwotaZlomowaT2Sys = isnull(@KwotaZlomowaT2Sys, 0)
+                        
+                        set @ZwiekszenieLtT1Sys = isnull(@ZwiekszenieLtT1Sys, 0)
+                        set @ZwiekszenieLtT2Sys = isnull(@ZwiekszenieLtT2Sys, 0)
+                                                
+                        --oblicz sume odpisow
+                        set @SumaOdpisyT1Sys = @SumaOdpisyT1Sys + isnull(@OldOdpisyT1Sys,0)
+                        set @SumaOdpisyT2Sys = @SumaOdpisyT2Sys + isnull(@OldOdpisyT2Sys,0)
+
+                        set @SumaOdpisyAMPT1Sys = @SumaOdpisyAMPT1Sys + isnull(@OldOdpisyAMPT1Sys,0)
+                        set @SumaOdpisyAMPT2Sys = @SumaOdpisyAMPT2Sys + isnull(@OldOdpisyAMPT2Sys,0)
+
+                        set @SumaOdpisyLtT1Sys = @SumaOdpisyLtT1Sys + isnull(@OldOdpisyLtT1Sys,0)
+                        set @SumaOdpisyLtT2Sys = @SumaOdpisyLtT2Sys + isnull(@OldOdpisyLtT2Sys,0)
+
+                        set @SumaOdpisyT2_LikwSys = @SumaOdpisyT2_LikwSys + isnull(@OldOdpisyT2_LikwSys,0)
+                        --kon sys
+
+						-- zestawy degresywna
+						set @PrzylaczenieT1 = ISNULL(@PrzylaczenieT1,0)
+						set @PrzylaczenieT2 = ISNULL(@PrzylaczenieT2,0)
+						set @OdlaczenieT1	= ISNULL(@OdlaczenieT1,0)
+						set @OdlaczenieT2	= ISNULL(@OdlaczenieT2,0)
+						set @PrzylaczenieT1Sys	= ISNULL(@PrzylaczenieT1Sys,0)
+						set @PrzylaczenieT2Sys	= ISNULL(@PrzylaczenieT2Sys,0)
+						set @OdlaczenieT1Sys	= ISNULL(@OdlaczenieT1Sys,0)
+						set @OdlaczenieT2Sys	= ISNULL(@OdlaczenieT2Sys,0)						
+						--
+
+
+
+                        --wartosci jako podstawy do naliczania odpisu
+                        --oblicz brutto
+                        if not (@Przyjety = -1 or @OldPrzyjety = -1)
+                        begin --nie ma likwidacji w danym miesiacu
+
+                               -- Jeżeli metoda uwazględniania wartośći rezydualnej jest ustawiona na 0 - wartość graniczna
+                               -- lub metoda uwzglęniania jest w.r. w w podstawie amortyzacji jest ustawiona na T2 - liczymy po staremu
+                               set @BruttoPodstT1 = @BruttoPodstT1 + isnull(@ZwiekszenieT1,0)
+                               set @BruttoPodstT1Sys = @BruttoPodstT1Sys + isnull(@ZwiekszenieT1Sys,0)
+
+                                --oblicz netto
+                                set @NettoPodstT1 = @BruttoPodstT1 - @SumaOdpisyT1
+                                set @NettoPodstT1Sys = @BruttoPodstT1Sys - @SumaOdpisyT1Sys
+                        end
+                        else
+                        begin -- w przypadku likiwdacji licz dalej TeoretOdpis, bo po korekcie LT nalezy uwzglednic zalegle odpisy
+                                --czyli nie uwzgledniaj zwiekszen i odpisow likwidacji
+                                 set @BruttoPodstT1 = @BruttoPodstT1 + isnull(@ZwiekszenieT1,0) - isnull(@ZwiekszenieLtT1,0) - isnull(@KwotaZlomowaT1, 0)
+                                 set @BruttoPodstT1Sys = @BruttoPodstT1Sys + isnull(@ZwiekszenieT1Sys,0) - isnull(@ZwiekszenieLtT1Sys,0) - isnull(@KwotaZlomowaT1Sys, 0)
+
+                                --oblicz netto
+                                set @NettoPodstT1 = @BruttoPodstT1 - @SumaOdpisyT1 + @SumaOdpisyLtT1
+                                set @NettoPodstT1Sys = @BruttoPodstT1Sys - @SumaOdpisyT1Sys + @SumaOdpisyLtT1Sys
+                        end
+
+
+
+
+                        --wartosci jako podstawy do naliczania odpisu
+                        --oblicz brutto
+                        if not (@Przyjety = -1 or @OldPrzyjety = -1)
+                        begin --nie ma likwidacji w danym miesiacu
+                                -- W przypadku gdy wartość rezydualna jest liczona jako wartość graniczna
+                                -- lub metoda uwzględniania wartości rezydualnej w pods. am. bilansowej
+                                -- liczymy po staremu
+
+                                set @BruttoPodstT2 = @BruttoPodstT2 + isnull(@ZwiekszenieT2,0)
+                                set @BruttoPodstT2Sys = @BruttoPodstT2Sys + isnull(@ZwiekszenieT2Sys,0)
+                                --oblicz netto
+
+                                set @NettoPodstT2 = @BruttoPodstT2 - @SumaOdpisyT2 - @SumaOdpisyT2_Likw
+                                set @NettoPodstT2Sys = @BruttoPodstT2Sys - @SumaOdpisyT2Sys - @SumaOdpisyT2_LikwSys
+                        end
+                        else
+                        begin -- w przypadku likiwdacji licz dalej TeoretOdpis, bo po korekcie LT nalezy uwzglednic zalegle odpisy
+                                --czyli nie uwzgledniaj zwiekszen i odpisow likwidacji
+--                              set @BruttoPodstT2 = @BruttoPodstT2 + isnull(@ZwiekszenieT2,0) - isnull(@ZwiekszenieLtT2,0)      KS duplikacja lini
+                                set @BruttoPodstT2 = @BruttoPodstT2 + isnull(@ZwiekszenieT2,0) - isnull(@ZwiekszenieLtT2,0)
+                                set @BruttoPodstT2Sys = @BruttoPodstT2Sys + isnull(@ZwiekszenieT2Sys,0) - isnull(@ZwiekszenieLtT2Sys,0)
+
+                                --oblicz netto
+                                set @NettoPodstT2 = @BruttoPodstT2 - @SumaOdpisyT2 + @SumaOdpisyLtT2 - @SumaOdpisyT2_Likw
+                                set @NettoPodstT2Sys = @BruttoPodstT2Sys - @SumaOdpisyT2Sys + @SumaOdpisyLtT2Sys - @SumaOdpisyT2_LikwSys
+                        end
+
+
+
+
+                        set @BruttoT1 = @BruttoT1 +  @ZwiekszenieMiesT1
+                        set @NettoT1 = @BruttoT1 - @OdpisyT1 - @SumaOdpisyT1
+                        set @BruttoT2 = @BruttoT2 +  @ZwiekszenieMiesT2
+                        set @NettoT2 = @BruttoT2 - @OdpisyT2 - @SumaOdpisyT2 - @OdpisyT2_Likw - @SumaOdpisyT2_Likw
+                        
+                        set @BruttoT1Sys = @BruttoT1Sys +  @ZwiekszenieMiesT1Sys
+                        set @NettoT1Sys = @BruttoT1Sys - @OdpisyT1Sys - @SumaOdpisyT1Sys
+                        set @BruttoT2Sys = @BruttoT2Sys +  @ZwiekszenieMiesT2Sys
+                        set @NettoT2Sys = @BruttoT2Sys - @OdpisyT2Sys - @SumaOdpisyT2Sys - @OdpisyT2_LikwSys - @SumaOdpisyT2_LikwSys
+
+
+                        --ustaw wartosci na poczatku miesiaca
+                        UPDATE #tmpOdpisy
+                        SET
+                                BruttoPodstT1 = @BruttoPodstT1,
+                                BruttoPodstT2 = @BruttoPodstT2,
+                                SumaOdpisyT1 = @SumaOdpisyT1,
+                                SumaOdpisyT2 = @SumaOdpisyT2,
+                                SumaOdpisyLtT1 = @SumaOdpisyLtT1,
+                                SumaOdpisyLtT2 = @SumaOdpisyLtT2,
+                                SumaOdpisyT2_Likw = @SumaOdpisyT2_Likw,
+                                NettoPodstT1 = @NettoPodstT1,
+                                NettoPodstT2 = @NettoPodstT2,
+                                BruttoT1 = @BruttoT1,
+                                BruttoT2 = @BruttoT2,
+                                NettoT1 = @NettoT1,
+                                NettoT2 = @NettoT2,
+                                --suma odpisow planowanych od pocz istnienia srodka
+                                SumaOdpisyTeoretT1 = @SumaOdpisyTeoretT1,
+                                SumaOdpisyTeoretT2 = @SumaOdpisyTeoretT2,
+                                
+                                --sys
+                                BruttoPodstT1Sys = @BruttoPodstT1Sys,
+                                BruttoPodstT2Sys = @BruttoPodstT2Sys,
+                                SumaOdpisyT1Sys = @SumaOdpisyT1Sys,
+                                SumaOdpisyT2Sys = @SumaOdpisyT2Sys,
+                                SumaOdpisyLtT1Sys = @SumaOdpisyLtT1Sys,
+                                SumaOdpisyLtT2Sys = @SumaOdpisyLtT2Sys,
+                                SumaOdpisyT2_LikwSys = @SumaOdpisyT2_LikwSys,
+                                NettoPodstT1Sys = @NettoPodstT1Sys,
+                                NettoPodstT2Sys = @NettoPodstT2Sys,
+                                BruttoT1Sys = @BruttoT1Sys,
+                                BruttoT2Sys = @BruttoT2Sys,
+                                NettoT1Sys = @NettoT1Sys,
+                                NettoT2Sys = @NettoT2Sys,
+                                --suma odpisow planowanych od pocz istnienia srodka
+                                SumaOdpisyTeoretT1Sys = @SumaOdpisyTeoretT1Sys,
+                                SumaOdpisyTeoretT2Sys = @SumaOdpisyTeoretT2Sys
+                        WHERE DataClarion1 = @tmpInt3
+
+
+                        --przypisz liczbe mies aktywnych z nie przysp
+                        set @LiczbaMiesAktT1 = @LiczbaMiesAkt
+                        set @LiczbaMiesAktT2 = @LiczbaMiesAkt
+                        set @LiczbaMiesAktT1Sys = @LiczbaMiesAktT1
+                        set @LiczbaMiesAktT2Sys = @LiczbaMiesAktT2
+
+
+                        if @MiesDoKonca = @IloscMiesRP -- z nowym rokiem RP zaokraglaj w gore
+                        begin
+                                set @ZaokT1 = 0
+                                set @ZaokT2 = 0
+                        end
+						set @ZaokT1Sys = @ZaokT1
+                        set @ZaokT2Sys = @ZaokT2
+
+                        -- Ustalenie metod uwzględniania wartośći rezydualnej
+
+                        if @CurWartRezyd = 1
+                        begin
+                          if @CurPodstBilans = 1
+                            begin
+                               set @WartRezydT1 = 1
+                            end
+                            else
+                            begin
+                               set @WartRezydT1 = 0
+                            end
+
+                            if @CurPodstPodat = 1
+                            begin
+                               set @WartRezydT2 = 1
+                            end
+                            else
+                            begin
+                               set @WartRezydT2 = 0
+                            end
+                        end
+                        else
+                        begin
+                          set @WartRezydT1 = 0
+                          set @WartRezydT2 = 0
+                        end
+
+
+
+
+
+
+
+
+
+		/*select '1' '   ', @TeoretOdpisT1 TeoretOdpisT1
+		,@NaDzienC, @Naliczaj, @NaliczajAMP, @MiesOdPrzyjecia, @MiesDoKonca, @RokAmort, @RokSezonowy, @WN_RN,
+                                                @LiczbaMiesAktAMP, @LiczbaMiesAkt, @LiczbaMiesAktOd, @LiczbaMiesAktT1, @OldLiczbaMiesAktT1, @IloscMiesRP, @IloscMiesRP_AMP,
+                                                @poz_decOdpis, @poz_decOdpisTeoret, @DzielLiczbaMies, @OstatniNaliczaj, @OstatniNaliczajAMP, @Srt_DataRozp, @Srt_DataEksp, @Srt_MsNaliczania, @Srt_PodlegaAMP, @MetodaAmObowT1, @Sezonowosc,
+                                                @tmpInt3, @tmpInt4, @AMPUmorzenie, @AMPUwzglDegresywna, @RodzajStawkaAktywnySezon, @MiesAmortyzacjiAMP, @ZwiekszenieT1, @ZwiekszeniePlusT1, @ZwiekszenieMiesT1, @ZwiekszenieMsObow2T1,
+                                                @ZwiekszenieLtT1, @StawkaRokT1, @OldStawkaRokT1, @WspT1, @OldWspT1, @WspDegrT1, @OdpisyPKT1, 0, @SumaOdpisyAMPT1, @TeoretOdpisT1,
+                                                @TeoretOdpisRPT1, @TeoretOdpisNaliczajT1, @TeoretOdpisNaliczajRPT1, @OldTeoretOdpisNaliczajT1, @OldTeoretOdpisNaliczajRPT1,
+                                                @TeoretOdpisRocznyT1, @TeoretOdpisRocznyRPT1, @TeoretOdpisLiniowyT1, @SumaOdpisyRoczneTeoretT1, @SumaOdpisyRoczneTeoretRPT1, @SumaOdpisyAMPTeoretT1,
+                                                @BruttoT1, @BruttoPodstT1, @NettoPodstT1, @NettoTeoretT1, @NettoTeoretRPT1, @KwotaZlomowaT1, @OldKwotaZlomowaT1,
+                                                @ZaokT1, 0, @WartRezydT1, @Kon_DegresywnaPierwszyRok, @tmpT1
+select 'ooo', @Srt_MsNaliczania Srt_MsNaliczania, @ZwiekszenieMiesT1 ZwiekszenieMiesT1, @OldStawkaRokT1 OldStawkaRokT1, @OldWspT1 OldWspT1
+		,@TeoretOdpisT1 TeoretOdpisT1,@TeoretOdpisRPT1 TeoretOdpisRPT1, @TeoretOdpisNaliczajT1 TeoretOdpisNaliczajT1, @TeoretOdpisNaliczajRPT1 TeoretOdpisNaliczajRPT1
+		,@NettoTeoretT1 NettoTeoretT1, @NettoTeoretRPT1 NettoTeoretRPT1, @tmpT1 tmpT1
+		,@MetodaAmObowT1 MetodaAmObowT1
+		--*/	
+
+
+                        exec cdn.SrtPlanAmort_TX @NaDzienC, @Naliczaj, @NaliczajAMP, @MiesOdPrzyjecia, @MiesDoKonca, @RokAmort, @RokSezonowy, @WN_RN,
+                                                @LiczbaMiesAktAMP, @LiczbaMiesAkt, @LiczbaMiesAktOd, @LiczbaMiesAktT1 output, @OldLiczbaMiesAktT1, @IloscMiesRP, @IloscMiesRP_AMP output,
+                                                @poz_decOdpis, @poz_decOdpisTeoret, @DzielLiczbaMies, @OstatniNaliczaj, @OstatniNaliczajAMP, @Srt_DataRozp, @Srt_DataEksp, @Srt_MsNaliczania, @Srt_PodlegaAMP, @MetodaAmObowT1, @Sezonowosc,
+                                                @tmpInt3, @tmpInt4, @AMPUmorzenie, @AMPUwzglDegresywna, @RodzajStawkaAktywnySezon, @MiesAmortyzacjiAMP, @ZwiekszenieT1, @ZwiekszeniePlusT1, @ZwiekszenieMiesT1, @ZwiekszenieMsObow2T1,
+                                                @ZwiekszenieLtT1, @StawkaRokT1, @OldStawkaRokT1, @WspT1, @OldWspT1, @WspDegrT1, @OdpisyPKT1, 0, @SumaOdpisyAMPT1, @TeoretOdpisT1 output,
+                                                @TeoretOdpisRPT1 output, @TeoretOdpisNaliczajT1 output, @TeoretOdpisNaliczajRPT1 output, @OldTeoretOdpisNaliczajT1, @OldTeoretOdpisNaliczajRPT1,
+                                                @TeoretOdpisRocznyT1 output, @TeoretOdpisRocznyRPT1 output, @TeoretOdpisLiniowyT1, @SumaOdpisyRoczneTeoretT1, @SumaOdpisyRoczneTeoretRPT1, @SumaOdpisyAMPTeoretT1,
+                                                @BruttoT1, @BruttoPodstT1, @NettoPodstT1, @NettoTeoretT1 output, @NettoTeoretRPT1 output, @KwotaZlomowaT1, @OldKwotaZlomowaT1,
+                                                @ZaokT1 output, 0, @WartRezydT1, @Kon_DegresywnaPierwszyRok, @tmpT1 output
+                                                , @PrzylaczenieT1, @OdlaczenieT1, @Kon_ZestElemAmOdPrzylaczenia, @Zestaw
+
+
+		/*select '2' '   ', @TeoretOdpisT1 TeoretOdpisT1
+		,@NaDzienC, @Naliczaj, @NaliczajAMP, @MiesOdPrzyjecia, @MiesDoKonca, @RokAmort, @RokSezonowy, @WN_RN,
+                                                @LiczbaMiesAktAMP, @LiczbaMiesAkt, @LiczbaMiesAktOd, @LiczbaMiesAktT1, @OldLiczbaMiesAktT1, @IloscMiesRP, @IloscMiesRP_AMP,
+                                                @poz_decOdpis, @poz_decOdpisTeoret, @DzielLiczbaMies, @OstatniNaliczaj, @OstatniNaliczajAMP, @Srt_DataRozp, @Srt_DataEksp, @Srt_MsNaliczania, @Srt_PodlegaAMP, @MetodaAmObowT1, @Sezonowosc,
+                                                @tmpInt3, @tmpInt4, @AMPUmorzenie, @AMPUwzglDegresywna, @RodzajStawkaAktywnySezon, @MiesAmortyzacjiAMP, @ZwiekszenieT1, @ZwiekszeniePlusT1, @ZwiekszenieMiesT1, @ZwiekszenieMsObow2T1,
+                                                @ZwiekszenieLtT1, @StawkaRokT1, @OldStawkaRokT1, @WspT1, @OldWspT1, @WspDegrT1, @OdpisyPKT1, 0, @SumaOdpisyAMPT1, @TeoretOdpisT1,
+                                                @TeoretOdpisRPT1, @TeoretOdpisNaliczajT1, @TeoretOdpisNaliczajRPT1, @OldTeoretOdpisNaliczajT1, @OldTeoretOdpisNaliczajRPT1,
+                                                @TeoretOdpisRocznyT1, @TeoretOdpisRocznyRPT1, @TeoretOdpisLiniowyT1, @SumaOdpisyRoczneTeoretT1, @SumaOdpisyRoczneTeoretRPT1, @SumaOdpisyAMPTeoretT1,
+                                                @BruttoT1, @BruttoPodstT1, @NettoPodstT1, @NettoTeoretT1, @NettoTeoretRPT1, @KwotaZlomowaT1, @OldKwotaZlomowaT1,
+                                                @ZaokT1, 0, @WartRezydT1, @Kon_DegresywnaPierwszyRok, @tmpT1*/
+
+                        exec cdn.SrtPlanAmort_TX @NaDzienC, @Naliczaj, @NaliczajAMP, @MiesOdPrzyjecia, @MiesDoKonca, @RokAmort, @RokSezonowy, @WN_RN,
+                                                @LiczbaMiesAktAMP, @LiczbaMiesAkt, @LiczbaMiesAktOd, @LiczbaMiesAktT2 output, @OldLiczbaMiesAktT2, @IloscMiesRP, @IloscMiesRP_AMP output,
+                                                @poz_decOdpis, @poz_decOdpisTeoret, @DzielLiczbaMies, @OstatniNaliczaj, @OstatniNaliczajAMP, @Srt_DataRozpAm, @Srt_DataEksp, @Srt_MsNaliczaniaAm, @Srt_PodlegaAMP, @MetodaAmObowT2, @Sezonowosc,
+                                                @tmpInt3, @tmpInt4, @AMPUmorzenie, @AMPUwzglDegresywna, @RodzajStawkaAktywnySezon, @MiesAmortyzacjiAMP, @ZwiekszenieT2, @ZwiekszeniePlusT2, @ZwiekszenieMiesT2, @ZwiekszenieMsObow2T2,
+                                                @ZwiekszenieLtT2, @StawkaRokT2, @OldStawkaRokT2, @WspT2, @OldWspT2, @WspDegrT2, @OdpisyPKT2, @OdpisyT2_Likw, @SumaOdpisyAMPT2, @TeoretOdpisT2 output,
+                                                @TeoretOdpisRPT2 output, @TeoretOdpisNaliczajT2 output, @TeoretOdpisNaliczajRPT2 output, @OldTeoretOdpisNaliczajT2, @OldTeoretOdpisNaliczajRPT2,
+                                                @TeoretOdpisRocznyT2 output, @TeoretOdpisRocznyRPT2 output, @TeoretOdpisLiniowyT2, @SumaOdpisyRoczneTeoretT2, @SumaOdpisyRoczneTeoretRPT2, @SumaOdpisyAMPTeoretT2,
+                                                @BruttoT2, @BruttoPodstT2, @NettoPodstT2, @NettoTeoretT2 output, @NettoTeoretRPT2 output,
+                                                @KwotaZlomowaT2, @OldKwotaZlomowaT2, @ZaokT2 output, 1, @WartRezydT2, @Kon_DegresywnaPierwszyRok, @tmpT2 output
+                                                , @PrzylaczenieT1, @OdlaczenieT1, @Kon_ZestElemAmOdPrzylaczenia, @Zestaw
+                       
+              --select	2, @poz_decOdpis poz_decOdpis, @NettoT2 NettoT2, @NettoTeoretRPT2 NettoTeoretRPT2, @WartOdpisuRPT2 WartOdpisuRPT2
+              
+                        --- sys
+                        exec cdn.SrtPlanAmort_TX @NaDzienC, @Naliczaj, @NaliczajAMP, @MiesOdPrzyjecia, @MiesDoKonca, @RokAmort, @RokSezonowy, @WN_RN,
+                                                @LiczbaMiesAktAMP, @LiczbaMiesAkt, @LiczbaMiesAktOd, @LiczbaMiesAktT1Sys output, @OldLiczbaMiesAktT1, @IloscMiesRP, @IloscMiesRP_AMPSys output,
+                                                @poz_decOdpis, @poz_decOdpisTeoret, @DzielLiczbaMies, @OstatniNaliczaj, @OstatniNaliczajAMP, @Srt_DataRozp, @Srt_DataEksp, @Srt_MsNaliczania, @Srt_PodlegaAMP, @MetodaAmObowT1, @Sezonowosc,
+                                                @tmpInt3, @tmpInt4, @AMPUmorzenie, @AMPUwzglDegresywna, @RodzajStawkaAktywnySezon, @MiesAmortyzacjiAMP, 
+                                                
+                                                @ZwiekszenieT1Sys, @ZwiekszeniePlusT1Sys, @ZwiekszenieMiesT1Sys, @ZwiekszenieMsObow2T1Sys,
+                                                @ZwiekszenieLtT1Sys, @StawkaRokT1, @OldStawkaRokT1, @WspT1, @OldWspT1, @WspDegrT1, @OdpisyPKT1Sys, 0, @SumaOdpisyAMPT1Sys, @TeoretOdpisT1Sys output,
+                                                @TeoretOdpisRPT1Sys output, @TeoretOdpisNaliczajT1Sys output, @TeoretOdpisNaliczajRPT1Sys output, @OldTeoretOdpisNaliczajT1Sys, @OldTeoretOdpisNaliczajRPT1Sys,
+                                                @TeoretOdpisRocznyT1Sys output, @TeoretOdpisRocznyRPT1Sys output, @TeoretOdpisLiniowyT1Sys, @SumaOdpisyRoczneTeoretT1Sys, @SumaOdpisyRoczneTeoretRPT1Sys, @SumaOdpisyAMPTeoretT1Sys,
+                                                @BruttoT1Sys, @BruttoPodstT1Sys, @NettoPodstT1Sys, @NettoTeoretT1Sys output, @NettoTeoretRPT1Sys output, @KwotaZlomowaT1Sys, @OldKwotaZlomowaT1Sys,
+                                                @ZaokT1Sys output, 0, @WartRezydT1, @Kon_DegresywnaPierwszyRok, @tmpT1Sys output
+                                                , @PrzylaczenieT1, @OdlaczenieT1, @Kon_ZestElemAmOdPrzylaczenia, @Zestaw
+
+
+
+
+                        exec cdn.SrtPlanAmort_TX @NaDzienC, @Naliczaj, @NaliczajAMP, @MiesOdPrzyjecia, @MiesDoKonca, @RokAmort, @RokSezonowy, @WN_RN,
+                                                @LiczbaMiesAktAMP, @LiczbaMiesAkt, @LiczbaMiesAktOd, @LiczbaMiesAktT2Sys output, @OldLiczbaMiesAktT2, @IloscMiesRP, @IloscMiesRP_AMPSys output,
+                                                @poz_decOdpis, @poz_decOdpisTeoret, @DzielLiczbaMies, @OstatniNaliczaj, @OstatniNaliczajAMP, @Srt_DataRozpAm, @Srt_DataEksp, @Srt_MsNaliczaniaAm, @Srt_PodlegaAMP, @MetodaAmObowT2, @Sezonowosc,
+                                                @tmpInt3, @tmpInt4, @AMPUmorzenie, @AMPUwzglDegresywna, @RodzajStawkaAktywnySezon, @MiesAmortyzacjiAMP, 
+                                                
+                                                @ZwiekszenieT2Sys, @ZwiekszeniePlusT2Sys, @ZwiekszenieMiesT2Sys, @ZwiekszenieMsObow2T2Sys,
+                                                @ZwiekszenieLtT2Sys, @StawkaRokT2, @OldStawkaRokT2, @WspT2, @OldWspT2, @WspDegrT2, @OdpisyPKT2Sys, @OdpisyT2_LikwSys, @SumaOdpisyAMPT2Sys, @TeoretOdpisT2Sys output,
+                                                @TeoretOdpisRPT2Sys output, @TeoretOdpisNaliczajT2Sys output, @TeoretOdpisNaliczajRPT2Sys output, @OldTeoretOdpisNaliczajT2Sys, @OldTeoretOdpisNaliczajRPT2Sys,
+                                                @TeoretOdpisRocznyT2Sys output, @TeoretOdpisRocznyRPT2Sys output, @TeoretOdpisLiniowyT2Sys, @SumaOdpisyRoczneTeoretT2Sys, @SumaOdpisyRoczneTeoretRPT2Sys, @SumaOdpisyAMPTeoretT2Sys,
+                                                @BruttoT2Sys, @BruttoPodstT2Sys, @NettoPodstT2Sys, @NettoTeoretT2Sys output, @NettoTeoretRPT2Sys output,
+                                                @KwotaZlomowaT2Sys, @OldKwotaZlomowaT2Sys, @ZaokT2Sys output, 1, @WartRezydT2, @Kon_DegresywnaPierwszyRok, @tmpT2Sys output
+                                                , @PrzylaczenieT1, @OdlaczenieT1, @Kon_ZestElemAmOdPrzylaczenia, @Zestaw	
+
+
+
+
+                        set @tmpDec1 = @NettoTeoretT1
+                        set @tmpDec2 = @NettoTeoretT2
+                        set @tmpDec1Sys = @NettoTeoretT1Sys
+                        set @tmpDec2Sys = @NettoTeoretT2Sys
+
+						
+                        if @Przyjety = -1 and @DebugPlan = 0
+                        begin --w przypadku likwidacji na potrzeby planu zeruje
+                                set @tmpDec1 = 0
+                                set @tmpDec2 = 0
+                                set @tmpDec1Sys = 0
+                                set @tmpDec2Sys = 0
+                        end
+
+                        --po wyliczeniu teoretycznych odpisow
+                        --ustal kwoty na koniec miesiaca
+                        UPDATE #tmpOdpisy
+                        SET
+                                NettoTeoretT1 = @tmpDec1,
+                                NettoTeoretT2 = @tmpDec2,
+                                NettoTeoretRPT1 = @NettoTeoretRPT1,
+                                NettoTeoretRPT2 = @NettoTeoretRPT2,
+                                
+                                NettoTeoretT1Sys = @tmpDec1Sys,
+                                NettoTeoretT2Sys = @tmpDec2Sys,
+                                NettoTeoretRPT1Sys = @NettoTeoretRPT1Sys,
+                                NettoTeoretRPT2Sys = @NettoTeoretRPT2Sys
+
+                        WHERE DataClarion1 = @tmpInt3
+
+
+
+						
+						
+						
+                        if (@Naliczaj &lt;&gt; 0 AND not (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0))
+                         or (@NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0))
+                         or @DebugPlan = 1
+                        begin
+                                --pokazuj tylko w przypadku miesiaca naliczania
+                                set @tmpDec1 = @TeoretOdpisNaliczajT1
+                                set @tmpDec1Sys = @TeoretOdpisNaliczajT1Sys
+                        end
+                        else
+                        begin
+                                set @tmpDec1 = 0
+                                set @tmpDec1Sys = 0
+                        end
+
+
+                        if (@Naliczaj &lt;&gt; 0 AND not (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1))
+                         or (@NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1))
+                         or @DebugPlan = 1
+                        begin
+                                --pokazuj tylko w przypadku miesiaca naliczania
+                                set @tmpDec2 = @TeoretOdpisNaliczajT2
+                                set @tmpDec2Sys = @TeoretOdpisNaliczajT2Sys
+                        end
+                        else
+                        begin
+                                set @tmpDec2 = 0
+                                set @tmpDec2Sys = 0
+                        end
+
+
+                        --RP
+                        if (@Naliczaj &lt;&gt; 0 AND not (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0))
+                         or (@NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0))
+                         or @DebugPlan = 1
+                        begin
+                                --pokazuj tylko w przypadku miesiaca naliczania
+                                set @tmpDec3 = @TeoretOdpisNaliczajRPT1
+                                set @tmpDec3Sys = @TeoretOdpisNaliczajRPT1Sys
+                        end
+                        else
+                        begin
+                                set @tmpDec3 = 0
+                                set @tmpDec3Sys = 0
+                        end
+
+                        --RP
+                        if (@Naliczaj &lt;&gt; 0 AND not (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1))
+                         or (@NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1))
+                         or @DebugPlan = 1
+                        begin
+                                --pokazuj tylko w przypadku miesiaca naliczania
+                                set @tmpDec4 = @TeoretOdpisNaliczajRPT2
+                                set @tmpDec4Sys = @TeoretOdpisNaliczajRPT2Sys
+                        end
+                        else
+                        begin
+                                set @tmpDec4 = 0
+                                set @tmpDec4Sys = 0
+                        end
+
+
+						
+
+                        set @WartOdpisuPoczT1 = round(@NettoT1 - @NettoTeoretT1, @poz_decOdpis)
+                        set @WartOdpisuPoczT2 = round(@NettoT2 - @NettoTeoretT2, @poz_decOdpis)
+
+                        --wielkosc odpisu uwzgl zaleglosci od poczatku roku
+                        set @WartOdpisuRPT1 = round(@NettoT1 - @NettoTeoretRPT1, @poz_decOdpis)
+                        set @WartOdpisuRPT2 = round(@NettoT2 - @NettoTeoretRPT2, @poz_decOdpis)
+                        
+                        --sys
+                        set @WartOdpisuPoczT1Sys = round(@NettoT1Sys - @NettoTeoretT1Sys, @poz_decOdpis)
+                        set @WartOdpisuPoczT2Sys = round(@NettoT2Sys - @NettoTeoretT2Sys, @poz_decOdpis)
+
+                        --wielkosc odpisu uwzgl zaleglosci od poczatku roku
+                        set @WartOdpisuRPT1Sys = round(@NettoT1Sys - @NettoTeoretRPT1Sys, @poz_decOdpis)
+                        set @WartOdpisuRPT2Sys = round(@NettoT2Sys - @NettoTeoretRPT2Sys, @poz_decOdpis)
+
+                        UPDATE #tmpOdpisy
+                        SET
+                                TeoretOdpisT1 = @TeoretOdpisT1,
+                                TeoretOdpisRPT1 = @TeoretOdpisRPT1,
+                                WartOdpisuPoczT1 = @WartOdpisuPoczT1,
+                                WartOdpisuRPT1 = @WartOdpisuRPT1,
+                                TeoretOdpisT2 = @TeoretOdpisT2,
+                                TeoretOdpisRPT2 = @TeoretOdpisRPT2,
+                                TeoretOdpisNaliczajT1 = @tmpDec1,
+                                TeoretOdpisNaliczajT2 = @tmpDec2,
+                                TeoretOdpisNaliczajRPT1 = @tmpDec3,
+                                TeoretOdpisNaliczajRPT2 = @tmpDec4,
+                                WartOdpisuPoczT2 = @WartOdpisuPoczT2,
+                                WartOdpisuRPT2 = @WartOdpisuRPT2,
+
+                                --sumaodp = @SumaOdpisyRoczneTeoretT1,
+                                sumaodp = @tmpT1,
+                                teorettmp = @TeoretOdpisRocznyT1,
+                                
+                                -- sys
+                                TeoretOdpisT1Sys = @TeoretOdpisT1Sys,
+                                TeoretOdpisRPT1Sys = @TeoretOdpisRPT1Sys,
+                                WartOdpisuPoczT1Sys = @WartOdpisuPoczT1Sys,
+                                WartOdpisuRPT1Sys = @WartOdpisuRPT1Sys,
+                                TeoretOdpisT2Sys = @TeoretOdpisT2Sys,
+                                TeoretOdpisRPT2Sys = @TeoretOdpisRPT2Sys,
+                                TeoretOdpisNaliczajT1Sys = @tmpDec1Sys,
+                                TeoretOdpisNaliczajT2Sys = @tmpDec2Sys,
+                                TeoretOdpisNaliczajRPT1Sys = @tmpDec3Sys,
+                                TeoretOdpisNaliczajRPT2Sys = @tmpDec4Sys,
+                                WartOdpisuPoczT2Sys = @WartOdpisuPoczT2Sys,
+                                WartOdpisuRPT2Sys = @WartOdpisuRPT2Sys,
+
+                                --sumaodp = @SumaOdpisyRoczneTeoretT1,
+                                sumaodpSys = @tmpT1Sys,
+                                teorettmpSys = @TeoretOdpisRocznyT1Sys
+                        WHERE DataClarion1 = @tmpInt3
+
+                END
+                set @OldZwiekszenieT1 = @ZwiekszenieT1
+                set @OldOdpisyT1 = @OdpisyT1
+                set @OldZwiekszenieT2 = @ZwiekszenieT2
+                set @OldOdpisyT2 = @OdpisyT2
+                set @OldOdpisyAMPT1 = @OdpisyAMPT1
+                set @OldOdpisyAMPT2 = @OdpisyAMPT2
+                set @OldLiczbaMiesAktT1 = @LiczbaMiesAktT1
+                set @OldLiczbaMiesAktT2 = @LiczbaMiesAktT2
+                set @OldPrzyjety = @Przyjety
+                set @OldStawkaRokT1 = @StawkaRokT1
+                set @OldStawkaRokT2 = @StawkaRokT2
+                set @OldWspT1 = @WspT1
+                set @OldWspT2 = @WspT2
+                set @OldOdpisyLtT1 = @OdpisyLtT1
+                set @OldOdpisyLtT2 = @OdpisyLtT2
+                set @OldKwotaZlomowaT1 = @KwotaZlomowaT1
+                set @OldKwotaZlomowaT2 = @KwotaZlomowaT2
+                set @OldOdpisyT2_Likw = @OdpisyT2_Likw
+                
+                --sys
+                set @OldZwiekszenieT1Sys = @ZwiekszenieT1Sys
+                set @OldOdpisyT1Sys = @OdpisyT1Sys
+                set @OldZwiekszenieT2Sys = @ZwiekszenieT2Sys
+                set @OldOdpisyT2Sys = @OdpisyT2Sys
+                set @OldOdpisyAMPT1Sys = @OdpisyAMPT1Sys
+                set @OldOdpisyAMPT2Sys = @OdpisyAMPT2Sys
+                set @OldOdpisyLtT1Sys = @OdpisyLtT1Sys
+                set @OldOdpisyLtT2Sys = @OdpisyLtT2Sys
+                set @OldKwotaZlomowaT1Sys = @KwotaZlomowaT1Sys
+                set @OldKwotaZlomowaT2Sys = @KwotaZlomowaT2Sys
+                set @OldOdpisyT2_LikwSys = @OdpisyT2_LikwSys
+
+
+
+                if (@Naliczaj &lt;&gt; 0 AND not (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0))
+                 or (@NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0))
+                begin
+                        --zacznij sumowac od nowa
+                        set @OldTeoretOdpisNaliczajT1 = 0
+                        set @OldTeoretOdpisNaliczajT1Sys = 0
+                        --zliczaj odpisy teoret w biez roku
+                        set @SumaOdpisyRoczneTeoretT1 = @SumaOdpisyRoczneTeoretT1 + isnull(@TeoretOdpisNaliczajT1,0)
+                        set @SumaOdpisyRoczneTeoretT1Sys = @SumaOdpisyRoczneTeoretT1Sys + isnull(@TeoretOdpisNaliczajT1Sys,0)
+                        --zliczaj odpisy teoret od poczatku istnienia srodka
+                        set @SumaOdpisyTeoretT1 = @SumaOdpisyTeoretT1 + isnull(@TeoretOdpisNaliczajT1,0)
+                        set @SumaOdpisyTeoretT1Sys = @SumaOdpisyTeoretT1Sys + isnull(@TeoretOdpisNaliczajT1Sys,0)
+                end
+                else
+                begin
+                        set @OldTeoretOdpisNaliczajT1 = @TeoretOdpisNaliczajT1
+                        set @OldTeoretOdpisNaliczajT1Sys = @TeoretOdpisNaliczajT1Sys
+                end
+
+
+
+
+                if (@Naliczaj &lt;&gt; 0 AND not (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1))
+                 or (@NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1))
+                begin
+                        --zacznij sumowac od nowa
+                        set @OldTeoretOdpisNaliczajT2 = 0
+                        set @OldTeoretOdpisNaliczajT2Sys = 0
+                        --zliczaj odpisy teoret w biez roku
+                        set @SumaOdpisyRoczneTeoretT2 = @SumaOdpisyRoczneTeoretT2 + isnull(@TeoretOdpisNaliczajT2,0)
+                        set @SumaOdpisyRoczneTeoretT2Sys = @SumaOdpisyRoczneTeoretT2Sys + isnull(@TeoretOdpisNaliczajT2Sys,0)
+                        --zliczaj odpisy teoret od poczatku istnienia srodka
+                        set @SumaOdpisyTeoretT2 = @SumaOdpisyTeoretT2 + isnull(@TeoretOdpisNaliczajT2,0)
+                        set @SumaOdpisyTeoretT2Sys = @SumaOdpisyTeoretT2Sys + isnull(@TeoretOdpisNaliczajT2Sys,0)
+                end
+                else
+                begin
+                        set @OldTeoretOdpisNaliczajT2 = @TeoretOdpisNaliczajT2
+                        set @OldTeoretOdpisNaliczajT2Sys = @TeoretOdpisNaliczajT2Sys
+                end
+
+
+
+                --RP
+                if (@Naliczaj &lt;&gt; 0 AND not (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0))
+                 or (@NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0))
+                 or @MiesDoKonca = 1
+                begin
+                        --zacznij sumowac od nowa (miesiac naliczania lub koniec roku)
+                        set @OldTeoretOdpisNaliczajRPT1 = 0
+                        set @OldTeoretOdpisNaliczajRPT1Sys = 0
+                end
+                else
+                begin
+                        set @OldTeoretOdpisNaliczajRPT1 = @TeoretOdpisNaliczajRPT1
+                        set @OldTeoretOdpisNaliczajRPT1Sys = @TeoretOdpisNaliczajRPT1Sys
+                end
+
+
+
+                --RP
+                if (@Naliczaj &lt;&gt; 0 AND not (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1))
+                 or (@NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1))
+                 or @MiesDoKonca = 1
+                begin
+                        --zacznij sumowac od nowa (miesiac naliczania lub koniec roku)
+                        set @OldTeoretOdpisNaliczajRPT2 = 0
+                        set @OldTeoretOdpisNaliczajRPT2Sys = 0
+                end
+                else
+                begin
+                        set @OldTeoretOdpisNaliczajRPT2 = @TeoretOdpisNaliczajRPT2
+                        set @OldTeoretOdpisNaliczajRPT2Sys = @TeoretOdpisNaliczajRPT2Sys
+                end
+
+
+
+                --RP
+                if (@Naliczaj &lt;&gt; 0 AND not (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0))
+                 or (@NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0))
+                begin
+                        --zliczaj odpisy teoret w biez roku
+                        set @SumaOdpisyRoczneTeoretRPT1 = @SumaOdpisyRoczneTeoretRPT1 + isnull(@TeoretOdpisNaliczajRPT1,0)
+                        set @SumaOdpisyRoczneTeoretRPT1Sys = @SumaOdpisyRoczneTeoretRPT1Sys + isnull(@TeoretOdpisNaliczajRPT1Sys,0)
+                end
+
+
+                --RP
+                if (@Naliczaj &lt;&gt; 0 AND not (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1))
+                 or (@NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1))
+                begin
+                        --zliczaj odpisy teoret w biez roku
+                        set @SumaOdpisyRoczneTeoretRPT2 = @SumaOdpisyRoczneTeoretRPT2 + isnull(@TeoretOdpisNaliczajRPT2,0)
+						set @SumaOdpisyRoczneTeoretRPT2Sys = @SumaOdpisyRoczneTeoretRPT2Sys + isnull(@TeoretOdpisNaliczajRPT2Sys,0)
+                end
+
+
+
+
+                --oblicz sume odpisow AMP teoret
+                if @NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1 and @AMPUmorzenie &lt;&gt; 0)
+                begin
+                        set @SumaOdpisyAMPTeoretT1 = @SumaOdpisyAMPTeoretT1 + isnull(@TeoretOdpisNaliczajT1,0)
+                        set @SumaOdpisyAMPTeoretT1Sys = @SumaOdpisyAMPTeoretT1Sys + isnull(@TeoretOdpisNaliczajT1Sys,0)
+                end
+
+
+                if @NaliczajAMP &lt;&gt; 0 and (@Srt_PodlegaAMP &lt;&gt; 0 and @RokAmort = 1)
+                begin
+                        set @SumaOdpisyAMPTeoretT2 = @SumaOdpisyAMPTeoretT2 + isnull(@TeoretOdpisNaliczajT2,0)
+                        set @SumaOdpisyAMPTeoretT2Sys = @SumaOdpisyAMPTeoretT2Sys + isnull(@TeoretOdpisNaliczajT2Sys,0)
+                end
+
+
+
+
+                --RP  - na koniec roku
+                if @MiesDoKonca = 1
+                begin
+                        set @NettoTeoretRPT1 = @NettoT1
+                        set @NettoTeoretRPT2 = @NettoT2
+
+                        --wyzeruj wielkosc odpisu rocznego
+                        set @TeoretOdpisRocznyT1 = 0
+                        set @TeoretOdpisRocznyT2 = 0
+                        set @TeoretOdpisRocznyRPT1 = 0
+                        set @TeoretOdpisRocznyRPT2 = 0
+                        --wyzeruj sume odpisow teroet w roku
+                        set @SumaOdpisyRoczneTeoretT1 = 0
+                        set @SumaOdpisyRoczneTeoretT2 = 0
+                        set @SumaOdpisyRoczneTeoretRPT1 = 0
+                        set @SumaOdpisyRoczneTeoretRPT2 = 0
+                        
+                        --sys
+                        set @NettoTeoretRPT1Sys = @NettoT1Sys
+                        set @NettoTeoretRPT2Sys = @NettoT2Sys
+
+                        --wyzeruj wielkosc odpisu rocznego
+                        set @TeoretOdpisRocznyT1Sys = 0
+                        set @TeoretOdpisRocznyT2Sys = 0
+                        set @TeoretOdpisRocznyRPT1Sys = 0
+                        set @TeoretOdpisRocznyRPT2Sys = 0
+                        --wyzeruj sume odpisow teroet w roku
+                        set @SumaOdpisyRoczneTeoretT1Sys = 0
+                        set @SumaOdpisyRoczneTeoretT2Sys = 0
+                        set @SumaOdpisyRoczneTeoretRPT1Sys = 0
+                        set @SumaOdpisyRoczneTeoretRPT2Sys = 0
+
+                end
+
+
+                FETCH NEXT FROM OdpisCursor INTO @Przyjety, @MiesOdPrzyjecia, @Naliczaj, @NaliczajAMP, @tmpInt3, @tmpInt4, @ZwiekszenieT1, @OdpisyT1, @OdpisyAMPT1, @OdpisyLtT1, @ZwiekszenieT2, @OdpisyT2, @OdpisyAMPT2, @OdpisyLtT2, @StawkaRokT1, @StawkaRokT2, @WspT1, @WspT2, @LiczbaMiesAkt, @LiczbaMiesAktAMP, @LiczbaMiesAktOd, @MiesDoKonca, @RokAmort, @KwotaZlomowaT1, @KwotaZlomowaT2, @RokSezonowy, @ZwiekszenieMiesT1, @ZwiekszenieMiesT2, @ZwiekszenieLtT1, @ZwiekszenieLtT2, @WN_RN, @OdpisyPKT1, @OdpisyPKT2, @ZwiekszenieMsObow2T1, @ZwiekszenieMsObow2T2, @OstatniNaliczaj, @OstatniNaliczajAMP, @OdpisyT2_Likw, @ZwiekszeniePlusT1, @ZwiekszeniePlusT2, @MetodaAmObowT1, @MetodaAmObowT2, @WspDegrT1, @WspDegrT2, @Dwutorowosc, @CurWartRezyd, @CurPodstBilans, @CurPodstPodat,
+					@ZwiekszenieT1Sys, @OdpisyT1Sys, @OdpisyAMPT1Sys, @OdpisyLtT1Sys, @ZwiekszenieT2Sys, @OdpisyT2Sys, @OdpisyAMPT2Sys, @OdpisyLtT2Sys, @KwotaZlomowaT1Sys, @KwotaZlomowaT2Sys, @ZwiekszenieMiesT1Sys, @ZwiekszenieMiesT2Sys, @ZwiekszenieLtT1Sys, @ZwiekszenieLtT2Sys, @OdpisyPKT1Sys, @OdpisyPKT2Sys, @ZwiekszenieMsObow2T1Sys, @ZwiekszenieMsObow2T2Sys, @OdpisyT2_LikwSys, @ZwiekszeniePlusT1Sys, @ZwiekszeniePlusT2Sys
+					, @PrzylaczenieT1, @PrzylaczenieT2, @OdlaczenieT1, @OdlaczenieT2, @PrzylaczenieT1Sys, @PrzylaczenieT2Sys, @OdlaczenieT1Sys, @OdlaczenieT2Sys
+        END
+
+        CLOSE OdpisCursor
+        DEALLOCATE OdpisCursor
+
+
+	if @_Debug = 0		
+        if not @NaDzien is null        
+        begin			
+                update #tmpOdpisy
+                set
+                        DataPierwszeOT = @DataPierwszeOT,
+                        DataZapPierwszeOT = @DataZapPierwszeOT,
+                        SrtLpPierwszeOT = @SrtLpPierwszeOT,
+                        DataOstatniLT = @DataOstatniLT,
+                        DataZapOstatniLT = @DataZapOstatniLT,
+                        SrtLpOstatniLT = @SrtLpOstatniLT,
+                        
+                        SZELpPierwszeOT = @SZELpPierwszeOT,
+                        SZELpOstatniLT = @SZELpOstatniLT
+
+
+                select * from #tmpOdpisy where DataClarion2 &gt;= @NaDzienC and DataClarion1 &lt;= @NaDzienC
+        end
+		else
+		begin  -- dodałem BEGIN, bo TID:106370			
+                if @RokOd is null
+                        select * from #tmpOdpisy
+                else
+                        select * from #tmpOdpisy where @RokOdC &lt;= DataClarion1
+		end	
+
+--select 'koniec' 'koniec'
+lExit:
+--kasuj tabele
+        if object_id('tempdb..#tmpOdpisy') is not null 
+                Drop table #tmpOdpisy
+        
+        if object_id('tempdb..#tmpElementy') is not null 
+                Drop table #tmpElementy
+        
+        if object_id('tempdb..#tmpZwiekszenia') is not null 
+                Drop table #tmpZwiekszenia
+        
+        if object_id('tempdb..#tmpOT_LT') is not null 
+                Drop table #tmpOT_LT
+        
+        if object_id('tempdb..#tmpOTK') is not null 
+                Drop table #tmpOTK
+
+
+
+
+set nocount off
+end
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury SrtPlanAmort" hidden="False">
+GRANT EXECUTE ON CDN.SrtPlanAmort TO CDNRaport
+</scriptdef>
+</ROOT>

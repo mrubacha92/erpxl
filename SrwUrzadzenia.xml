@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:26:18 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="SrwUrzadzenia" ident="e4fc984e-5a26-4a25-8012-7e635a5bc29f" prefix="SrU" filename="'Serwis.cdn\!SrwUrzadzenia'" options=""
+  description="Lista serwisowanych urządzeń" longdescription="" owner="Connect_DSN3" glbx="3" nosql="No"
+  aliases="">
+  <columns>
+    <column ident="90a86e68-8ecd-45f6-a02e-6c18d71d9a75" clarionname="SrU:Id" sqlname="SrU_Id" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator rekordu" longdescription="" options="SQL_IDENTITY"
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Id" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="ad220ba3-55c9-48ea-912d-acc56374ffc2" clarionname="SrU:SURId" sqlname="SrU_SURId" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Rodzaj urządzenia" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="SURId" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <group ident="681f906b-a491-4eda-bf92-9facd411f5f5" clarionname="SrU:ObiGID" type="GROUP" clariontype="GROUP" description="GID obiektu przypisanego do urządzenia (towar, środek trwały, zasób produkcyjny, samochód)" longdescription="">
+    <column ident="7e7cb355-62da-4b78-a499-69cfb07fa369" clarionname="SrU:ObiTyp" sqlname="SrU_ObiTyp" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="Typ obiektu przypisanego do urządzenia (towar, środek trwały, zasób produkcyjny, samochód)" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Obi Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="69017de3-55d7-4c65-bf08-2a731147a6ef" clarionname="SrU:ObiNumer" sqlname="SrU_ObiNumer" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Numer obiektu przypisanego do urządzenia (towar, środek trwały, zasób produkcyjny, samochód)" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Obi Numer" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="bc9d46ee-942f-4f04-8914-e04cb8f34c8a" clarionname="SrU:Kod" sqlname="SrU_Kod" type="CSTRING" clariontype="CSTRING(41)" sqltype="VARCHAR(40)"
+      size="41" places="0" description="Kod urządzenia" longdescription="" options=""
+      picture="@s40" initial="" justification.type="L" justification.indent="0"
+      header="Kod" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="368e0bd0-b427-41f3-ab77-d7f0643aa892" clarionname="SrU:Nazwa" sqlname="SrU_Nazwa" type="CSTRING" clariontype="CSTRING(256)" sqltype="VARCHAR(255)"
+      size="256" places="0" description="Nazwa urządzenia" longdescription="" options=""
+      picture="@s255" initial="" justification.type="L" justification.indent="0"
+      header="Nazwa" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <group ident="c5df75a7-b305-4061-bb34-b918017dcc92" clarionname="SrU:DokGID" type="GROUP" clariontype="GROUP" description="GID elementu dokumentu rozchodu/przychodu" longdescription="">
+    <column ident="373b4106-d608-447f-ae24-3997ef710c73" clarionname="SrU:DokTyp" sqlname="SrU_DokTyp" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="Typ elementu dokumentu rozchodu/przychodu" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Dok Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="322038a8-74de-4d40-8b18-64d11fffce08" clarionname="SrU:DokNumer" sqlname="SrU_DokNumer" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Numer elementu dokumentu rozchodu/przychodu" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Dok Numer" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="7b337bfb-d501-47cc-b10e-a88ae3addf72" clarionname="SrU:DokLp" sqlname="SrU_DokLp" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="Lp elementu dokumentu rozchodu/przychodu" longdescription="" options=""
+      picture="@n-7" initial="" justification.type="R" justification.indent="1"
+      header="Dok Lp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="cc0cda3b-5e2b-41a3-b311-dcedbb5e24be" clarionname="SrU:Opis" sqlname="SrU_Opis" type="CSTRING" clariontype="CSTRING(512)" sqltype="VARCHAR(511)"
+      size="512" places="0" description="Opis" longdescription="" options=""
+      picture="@s255" initial="" justification.type="L" justification.indent="0"
+      header="Opis" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="7ce69ca9-5793-443f-aead-5de8a21dded7" clarionname="SrU:Archiwalne" sqlname="SrU_Archiwalne" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Czy urządzenie jest archiwalne" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Archiwalne" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="641497de-aca8-42b2-92ea-967617324beb" clarionname="SrU:JednostkaPrzebiegu" sqlname="SrU_JednostkaPrzebiegu" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="Identyfikator jednostki przebiegu urządzenia" longdescription="" options=""
+      picture="@n-14" initial="" justification.type="R" justification.indent="1"
+      header="Jednostka Przebiegu" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="2683fb0e-418e-401f-9d67-a555103e5fc1" clarionname="SrU:DostepnyWMobile" sqlname="SrU_DostepnyWMobile" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Czy udostępniać w MoS" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Dostępny w Mobile" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="501e1aec-f55f-4e17-b6de-9886e3476f4e" clarionname="SrU:Primary" sqlname="SrUPrimary" description="Primary" longdescription="" options="" primary="Yes" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="Yes" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="90a86e68-8ecd-45f6-a02e-6c18d71d9a75" clarionname="SrU:Id" sqlname="SrU_Id" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="7ee43a9c-ad66-4e00-a304-b616badfec3f" clarionname="SrU:KeyUrzRodzaj" sqlname="SrUUrzRodzaj" description="do relacji z rodzajem urzadzenia" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="ad220ba3-55c9-48ea-912d-acc56374ffc2" clarionname="SrU:SURId" sqlname="SrU_SURId" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="6f187808-2abf-4d81-bc3b-833f0714a120" clarionname="SrU:KeyObiekt" sqlname="SrUObiekt" description="do relacji z obiektami" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="69017de3-55d7-4c65-bf08-2a731147a6ef" clarionname="SrU:ObiNumer" sqlname="SrU_ObiNumer" nosql="No"/>
+         <indexcolumn ident="7e7cb355-62da-4b78-a499-69cfb07fa369" clarionname="SrU:ObiTyp" sqlname="SrU_ObiTyp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="5c1bde33-558b-44ac-8296-778e5a180cce" clarionname="SrU:KeyDokument" sqlname="SrUDokument" description="do relacji z dokumentami" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="322038a8-74de-4d40-8b18-64d11fffce08" clarionname="SrU:DokNumer" sqlname="SrU_DokNumer" nosql="No"/>
+         <indexcolumn ident="373b4106-d608-447f-ae24-3997ef710c73" clarionname="SrU:DokTyp" sqlname="SrU_DokTyp" nosql="No"/>
+      </indexcolumns>
+    </index>
+    <index ident="cba05de0-3553-4c5a-86f1-1800c1a2d4cf" clarionname="SrU:KeyJednostka" sqlname="SrUJednostka" description="wg jednostki przebiegu" longdescription="" options="NO_SQL" primary="No" unique="No" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="Yes">
+      <indexcolumns>
+         <indexcolumn ident="641497de-aca8-42b2-92ea-967617324beb" clarionname="SrU:JednostkaPrzebiegu" sqlname="SrU_JednostkaPrzebiegu" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+    <relation type="MANY:1" onupdate="" ondelete="RESTRICT"
+        options="SQL_CONDITIONAL(#P#SrU_DokTyp=4700),WARNING_DELETE(Nie można usunąć dokumentu bądź pozycji, ponieważ występuje powiązanie z urządzeniem serwisowym.;;)"
+        comments="" nosql="No" setnull="No"
+        conditional="SrU_DokTyp=4700"
+        parent="SrwZlcNag" primaryname="SZN:Primary" primarysqlname="SZNPrimary" parenthandler="SrwZlcNag_DeleteHandler" parentlink="SrwZlcNag"
+        child="SrwUrzadzenia" foreignname="SrU:KeyDokument" foreignsqlname="SrUDokument" childhandler="SrwUrzadzenia_InsertUpdateHandler" childlink="SrwUrzadzenia">
+      <relationcolumn
+        parentident="bdff621f-f" parentname="SZN:Id" parentsqlname="SZN_Id"
+        childident="322038a8-74de-4d40-8b18-64d11fffce08" childname="SrU:DokNumer" childsqlname="SrU_DokNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="1:MANY" onupdate="" ondelete="CASCADE"
+        options=""
+        comments="" nosql="No" setnull="No"
+        conditional=""
+        parent="SrwUrzadzenia" primaryname="SrU:Primary" primarysqlname="SrUPrimary" parenthandler="" parentlink="SrwUrzadzenia"
+        child="SrwUrzTypyP" foreignname="SUT:KeySrUSTP" foreignsqlname="SUTSrUSTP" childhandler="FK_SUTSrUSTP" childlink="SrwUrzTypyP">
+      <relationcolumn
+        parentident="90a86e68-8ecd-45f6-a02e-6c18d71d9a75" parentname="SrU:Id" parentsqlname="SrU_Id"
+        childident="b820c906-6" childname="SUT:SrUId" childsqlname="SUT_SrUId" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="afa2b5db-0" childname="SUT:STPId" childsqlname="SUT_STPId" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="1:MANY" onupdate="" ondelete="RESTRICT"
+        options="SQL_SETNULL,WARNING_DELETE(Nie można usunąć urządzenia, ponieważ występuje ono na planie przeglądu technicznego.;;)"
+        comments="" nosql="No" setnull="Yes"
+        conditional=""
+        parent="SrwUrzadzenia" primaryname="SrU:Primary" primarysqlname="SrUPrimary" parenthandler="SrwUrzadzenia_DeleteHandler" parentlink="SrwUrzadzenia"
+        child="SrwPlanElem" foreignname="SPE:KeySrU" foreignsqlname="SPESrU" childhandler="SrwPlanElem_InsertUpdateHandler" childlink="SrwPlanElem">
+      <relationcolumn
+        parentident="90a86e68-8ecd-45f6-a02e-6c18d71d9a75" parentname="SrU:Id" parentsqlname="SrU_Id"
+        childident="6ae37321-5" childname="SPE:SrUId" childsqlname="SPE_SrUId" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="RESTRICT"
+        options="SQL_SETNULL"
+        comments="" nosql="No" setnull="Yes"
+        conditional=""
+        parent="Slowniki" primaryname="SLW:Primary" primarysqlname="SLWPrimary" parenthandler="Slowniki_DeleteHandler" parentlink="Slowniki"
+        child="SrwUrzadzenia" foreignname="SrU:KeyJednostka" foreignsqlname="SrUJednostka" childhandler="SrwUrzadzenia_InsertUpdateHandler" childlink="SrwUrzadzenia">
+      <relationcolumn
+        parentident="2c65b176-a" parentname="SLW:ID" parentsqlname="SLW_ID"
+        childident="641497de-aca8-42b2-92ea-967617324beb" childname="SrU:JednostkaPrzebiegu" childsqlname="SrU_JednostkaPrzebiegu" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="1:MANY" onupdate="" ondelete="CASCADE"
+        options="SQL_CONDITIONAL(#P#DAO_ObiTyp = 4701)"
+        comments="" nosql="No" setnull="No"
+        conditional="DAO_ObiTyp = 4701"
+        parent="SrwUrzadzenia" primaryname="SrU:Primary" primarysqlname="SrUPrimary" parenthandler="SrwUrzadzenia_DeleteHandler" parentlink="SrwUrzadzenia"
+        child="DaneObiekty" foreignname="DAO:KeyObiNumer" foreignsqlname="DAOObiNumer" childhandler="DaneObiekty_InsertUpdateHandler" childlink="DaneObiekty">
+      <relationcolumn
+        parentident="90a86e68-8ecd-45f6-a02e-6c18d71d9a75" parentname="SrU:Id" parentsqlname="SrU_Id"
+        childident="479a708d-7" childname="DAO:ObiNumer" childsqlname="DAO_ObiNumer" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="e3cf9240-d" childname="DAO:ObiLp" childsqlname="DAO_ObiLp" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="1:MANY" onupdate="" ondelete="CASCADE"
+        options="SQL_CONDITIONAL(#P#Atr_OBITyp=4701 and #P#Atr_OBILp = 0 and #P#Atr_OBISubLp = 0)"
+        comments="" nosql="No" setnull="No"
+        conditional="Atr_OBITyp=4701 and Atr_OBILp = 0 and Atr_OBISubLp = 0"
+        parent="SrwUrzadzenia" primaryname="SrU:Primary" primarysqlname="SrUPrimary" parenthandler="SrwUrzadzenia_DeleteHandler" parentlink="SrwUrzadzenia"
+        child="Atrybuty" foreignname="Atr:KeyObiGIDNoType" foreignsqlname="AtrObiGID" childhandler="Atrybuty_InsertUpdateHandler" childlink="Atrybuty">
+      <relationcolumn
+        parentident="90a86e68-8ecd-45f6-a02e-6c18d71d9a75" parentname="SrU:Id" parentsqlname="SrU_Id"
+        childident="d0a4b05d-e" childname="Atr:ObiNumer" childsqlname="Atr_ObiNumer" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="d727d877-7" childname="Atr:ObiLp" childsqlname="Atr_ObiLp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="f11da3ce-1" childname="Atr:ObiSubLp" childsqlname="Atr_ObiSubLp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="9254af8b-9" childname="Atr:AtkId" childsqlname="Atr_AtkId" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="1:MANY" onupdate="" ondelete="CASCADE"
+        options="SQL_CONDITIONAL(#P#SUP_ObiTyp=4701)"
+        comments="" nosql="No" setnull="No"
+        conditional="SUP_ObiTyp=4701"
+        parent="SrwUrzadzenia" primaryname="SrU:Primary" primarysqlname="SrUPrimary" parenthandler="SrwUrzadzenia_DeleteHandler" parentlink="SrwUrzadzenia"
+        child="SrwUrzParam" foreignname="SUP:KeyUrzadzenie" foreignsqlname="SUPUrzadzenie" childhandler="SrwUrzParam_InsertUpdateHandler" childlink="SrwUrzParam">
+      <relationcolumn
+        parentident="90a86e68-8ecd-45f6-a02e-6c18d71d9a75" parentname="SrU:Id" parentsqlname="SrU_Id"
+        childident="aaf88cb7-2" childname="SUP:ObiNumer" childsqlname="SUP_ObiNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="RESTRICT"
+        options="SQL_CONDITIONAL(#P#SrU_ObiTyp=342)"
+        comments="" nosql="No" setnull="No"
+        conditional="SrU_ObiTyp=342"
+        parent="Samochody" primaryname="SaM:Primary" primarysqlname="SaMPrimary" parenthandler="Samochody_DeleteHandler" parentlink="Samochody"
+        child="SrwUrzadzenia" foreignname="SrU:KeyObiekt" foreignsqlname="SrUObiekt" childhandler="SrwUrzadzenia_InsertUpdateHandler" childlink="SrwUrzadzenia">
+      <relationcolumn
+        parentident="24c62059-c" parentname="SaM:Id" parentsqlname="SaM_Id"
+        childident="69017de3-55d7-4c65-bf08-2a731147a6ef" childname="SrU:ObiNumer" childsqlname="SrU_ObiNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="RESTRICT"
+        options="WARNING_DELETE(Obiekt został przypisany do urządzenia serwisowanego. Nie może być usunięty.;;),SQL_CONDITIONAL(#P#SrU_ObiTyp=14337)"
+        comments="" nosql="No" setnull="No"
+        conditional="SrU_ObiTyp=14337"
+        parent="ProdObiekty" primaryname="POB:Primary" primarysqlname="POBPrimary" parenthandler="ProdObiekty_DeleteHandler" parentlink="ProdObiekty"
+        child="SrwUrzadzenia" foreignname="SrU:KeyObiekt" foreignsqlname="SrUObiekt" childhandler="SrwUrzadzenia_InsertUpdateHandler" childlink="SrwUrzadzenia">
+      <relationcolumn
+        parentident="e98c7f6a-5" parentname="POB:Id" parentsqlname="POB_Id"
+        childident="69017de3-55d7-4c65-bf08-2a731147a6ef" childname="SrU:ObiNumer" childsqlname="SrU_ObiNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="RESTRICT"
+        options="SQL_CONDITIONAL(#P#SrU_ObiTyp=368)"
+        comments="" nosql="No" setnull="No"
+        conditional="SrU_ObiTyp=368"
+        parent="SrtKarty" primaryname="Srt:Primary" primarysqlname="SrtPrimary" parenthandler="SrtKarty_DeleteHandler" parentlink="SrtKarty"
+        child="SrwUrzadzenia" foreignname="SrU:KeyObiekt" foreignsqlname="SrUObiekt" childhandler="SrwUrzadzenia_InsertUpdateHandler" childlink="SrwUrzadzenia">
+      <relationcolumn
+        parentident="57e3d12e-3" parentname="Srt:GIDNumer" parentsqlname="Srt_GIDNumer"
+        childident="69017de3-55d7-4c65-bf08-2a731147a6ef" childname="SrU:ObiNumer" childsqlname="SrU_ObiNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="1:MANY" onupdate="" ondelete="CASCADE"
+        options=""
+        comments="" nosql="No" setnull="No"
+        conditional=""
+        parent="SrwUrzadzenia" primaryname="SrU:Primary" primarysqlname="SrUPrimary" parenthandler="" parentlink="SrwUrzadzenia"
+        child="SrwUrzWlasc" foreignname="SUW:Primary" foreignsqlname="SUWPriamry" childhandler="FK_SUWPriamry" childlink="SrwUrzWlasc">
+      <relationcolumn
+        parentident="90a86e68-8ecd-45f6-a02e-6c18d71d9a75" parentname="SrU:Id" parentsqlname="SrU_Id"
+        childident="46b798fd-9" childname="SUW:SrUId" childsqlname="SUW_SrUId" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="1302866c-e" childname="SUW:DataDo" childsqlname="SUW_DataDo" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="CASCADE"
+        options="SQL_SETNULL"
+        comments="" nosql="No" setnull="Yes"
+        conditional=""
+        parent="SrwUrzRodzaje" primaryname="SUR:Primary" primarysqlname="SURPrimary" parenthandler="SrwUrzRodzaje_DeleteHandler" parentlink="SrwUrzRodzaje"
+        child="SrwUrzadzenia" foreignname="SrU:KeyUrzRodzaj" foreignsqlname="SrUUrzRodzaj" childhandler="SrwUrzadzenia_InsertUpdateHandler" childlink="SrwUrzadzenia">
+      <relationcolumn
+        parentident="7fdd67b3-f" parentname="SUR:Id" parentsqlname="SUR_Id"
+        childident="ad220ba3-55c9-48ea-912d-acc56374ffc2" childname="SrU:SURId" childsqlname="SrU_SURId" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="RESTRICT"
+        options="SQL_CONDITIONAL(#P#SrU_DokTyp in (1312,1320,1489,1490,1497,1498,1520,1521,1528,1529,1603,1604,1616,1617,1624,1625,1824,1828,1832,1836,1968,2000,2001,2002,2003,2005,2008,2009,2010,2013,2033,2034,2035,2036,2037,2039,2041,2042,2043,2044,2045,2047)),WARNING_DELETE(Nie można usunąć dokumentu bądź pozycji, ponieważ występuje powiązanie z urządzeniem serwisowym.;;)"
+        comments="" nosql="No" setnull="No"
+        conditional="SrU_DokTyp in (1312,1320,1489,1490,1497,1498,1520,1521,1528,1529,1603,1604,1616,1617,1624,1625,1824,1828,1832,1836,1968,2000,2001,2002,2003,2005,2008,2009,2010,2013,2033,2034,2035,2036,2037,2039,2041,2042,2043,2044,2045,2047)"
+        parent="TraNag" primaryname="TrN:PrimaryNoType" primarysqlname="TrNPrimaryNoType" parenthandler="TraNag_DeleteHandler" parentlink="TraNag"
+        child="SrwUrzadzenia" foreignname="SrU:KeyDokument" foreignsqlname="SrUDokument" childhandler="SrwUrzadzenia_InsertUpdateHandler" childlink="SrwUrzadzenia">
+      <relationcolumn
+        parentident="883cd542-c" parentname="TrN:GIDNumer" parentsqlname="TrN_GIDNumer"
+        childident="322038a8-74de-4d40-8b18-64d11fffce08" childname="SrU:DokNumer" childsqlname="SrU_DokNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="MANY:1" onupdate="" ondelete="RESTRICT"
+        options="SQL_CONDITIONAL(#P#SrU_ObiTyp=16)"
+        comments="" nosql="No" setnull="No"
+        conditional="SrU_ObiTyp=16"
+        parent="TwrKarty" primaryname="Twr:Primary" primarysqlname="TwrPrimary" parenthandler="TwrKarty_DeleteHandler" parentlink="TwrKarty"
+        child="SrwUrzadzenia" foreignname="SrU:KeyObiekt" foreignsqlname="SrUObiekt" childhandler="SrwUrzadzenia_InsertUpdateHandler" childlink="SrwUrzadzenia">
+      <relationcolumn
+        parentident="a2f6f0fe-d" parentname="Twr:GIDNumer" parentsqlname="Twr_GIDNumer"
+        childident="69017de3-55d7-4c65-bf08-2a731147a6ef" childname="SrU:ObiNumer" childsqlname="SrU_ObiNumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="1:MANY" onupdate="" ondelete="CASCADE"
+        options="SQL_SETNULL"
+        comments="" nosql="No" setnull="Yes"
+        conditional=""
+        parent="SrwUrzadzenia" primaryname="SrU:Primary" primarysqlname="SrUPrimary" parenthandler="SrwUrzadzenia_DeleteHandler" parentlink="SrwUrzadzenia"
+        child="SrwZlcUrz" foreignname="SZU:KeyUrzadzenie" foreignsqlname="SZUUrzadzenie" childhandler="SrwZlcUrz_InsertUpdateHandler" childlink="SrwZlcUrz">
+      <relationcolumn
+        parentident="90a86e68-8ecd-45f6-a02e-6c18d71d9a75" parentname="SrU:Id" parentsqlname="SrU_Id"
+        childident="5c1a4942-b" childname="SZU:SrUId" childsqlname="SZU_SrUId" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="1:MANY" onupdate="" ondelete="CASCADE"
+        options="SQL_CONDITIONAL(#P#SRE_ObiTyp=4701)"
+        comments="" nosql="No" setnull="No"
+        conditional="SRE_ObiTyp=4701"
+        parent="SrwUrzadzenia" primaryname="SrU:Primary" primarysqlname="SrUPrimary" parenthandler="SrwUrzadzenia_DeleteHandler" parentlink="SrwUrzadzenia"
+        child="SrwReceptury" foreignname="SRE:KeyObiekty" foreignsqlname="SREObiekty" childhandler="SrwReceptury_InsertUpdateHandler" childlink="SrwReceptury">
+      <relationcolumn
+        parentident="90a86e68-8ecd-45f6-a02e-6c18d71d9a75" parentname="SrU:Id" parentsqlname="SrU_Id"
+        childident="0edeadd5-1" childname="SRE:ObiNumer" childsqlname="SRE_ObiNumer" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="cad88bf9-0" childname="SRE:ObiTyp" childsqlname="SRE_ObiTyp" isinsqlprimary="Yes" />
+    </relation>
+  
+  </relations>
+</table>
+</ROOT>

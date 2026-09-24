@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<?xml-stylesheet type="text/xsl" href="Style\Table.xsl"?>
+<!-- Plik wygenerowany automatycznie ze słownika D:\C10\dct\cdn.DCT 18.10.2019 19:26:16 -->
+<!-- Copyright (C)CDN 2019 -->
+<ROOT>
+<table name="SrtWzorce" ident="01e6bd55-4674-42d3-9efe-7bc7b14a081c" prefix="SrW" filename="'KsI.Cdn\!SrtWzorce'" options=""
+  description="Ustawienia domyślne środków trwałych" longdescription="" owner="Connect_DSN2" glbx="2" nosql="No"
+  aliases="">
+  <columns>
+    <group ident="35696554-31a3-4db1-b6ac-0f621bf0b1c5" clarionname="SrW:GrpGID" type="GROUP" clariontype="GROUP" description="Identyfikator grupy" longdescription="">
+    <column ident="c8987a8e-23f1-467a-bca3-f5af10e66e44" clarionname="SrW:GrpTyp" sqlname="SrW_GrpTyp" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Grp Typ" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="ef8c461c-0055-4fa9-9c04-bfe6619f17b5" clarionname="SrW:GrpFirma" sqlname="SrW_GrpFirma" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="Grp Firma" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="73789e95-1838-4b01-b43d-e441caebc2f7" clarionname="SrW:GrpNumer" sqlname="SrW_GrpNumer" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="" longdescription="Numer powiązania z grupą" options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="Grp Numer" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="Yes" nosql="No" comments="" isinsqlprimary="Yes"
+     />
+    <column ident="04ddcf57-a4ce-4723-ba15-b1fe5c34fc45" clarionname="SrW:GrpLp" sqlname="SrW_GrpLp" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="Grp Lp" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <group ident="24a76460-63c6-4850-ad15-e031dc488735" clarionname="SrW:PrcGID" type="GROUP" clariontype="GROUP" description="Identyfikator osoby odpowiedzialnej" longdescription="">
+    <column ident="03b40aa8-4f86-4e9a-8f5d-93417e8972bb" clarionname="SrW:PrcTyp" sqlname="SrW_PrcTyp" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="1359d9fe-f2be-4bfe-8afb-62ec02d48796" clarionname="SrW:PrcFirma" sqlname="SrW_PrcFirma" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-13" initial="FirmaId" justification.type="L" justification.indent="0"
+      header="" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="f01afb90-6759-4e15-b00d-9d8abe3ff578" clarionname="SrW:PrcNumer" sqlname="SrW_PrcNumer" type="LONG" clariontype="LONG" sqltype="INTEGER"
+      size="4" places="0" description="" longdescription="" options=""
+      picture="@n-13" initial="" justification.type="L" justification.indent="0"
+      header="" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="001f93e2-3da2-4df7-95d8-11b6056c8e33" clarionname="SrW:PrcLp" sqlname="SrW_PrcLp" type="SHORT" clariontype="SHORT" sqltype="SMALLINT"
+      size="2" places="0" description="" longdescription="" options=""
+      picture="@n-6" initial="" justification.type="L" justification.indent="0"
+      header="" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    </group>
+    <column ident="8a8bcdfc-286c-464a-b5c7-605e1cf3830c" clarionname="SrW:Ksiega" sqlname="SrW_Ksiega" type="CSTRING" clariontype="CSTRING(6)" sqltype="VARCHAR(5)"
+      size="6" places="0" description="Symbol księgi inwentarzowej" longdescription="" options=""
+      picture="@s5" initial="" justification.type="L" justification.indent="0"
+      header="Ksiega" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="6c81bed8-afbf-49c8-bbc8-e9e4e278eec3" clarionname="SrW:Akronim" sqlname="SrW_Akronim" type="CSTRING" clariontype="CSTRING(41)" sqltype="VARCHAR(40)"
+      size="41" places="0" description="Akronim" longdescription="dziedziczone z góry" options=""
+      picture="@s40" initial="" justification.type="L" justification.indent="0"
+      header="Akronim" validation="NONZERO" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="4a45b1f7-3a82-4a02-9bfa-c8a014383954" clarionname="SrW:Rodzaj" sqlname="SrW_Rodzaj" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Rodzaj środka (środek trwały/wartość niematerialna i prawna)" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Rodzaj" validation="INLIST" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="6546df82-e958-4aea-8a23-a1a5c6d591e1" clarionname="SrW:KRST" sqlname="SrW_KRST" type="CSTRING" clariontype="CSTRING(21)" sqltype="VARCHAR(20)"
+      size="21" places="0" description="Numer wg klasyfikacji rodzajowej" longdescription="dziedziczone z góry" options=""
+      picture="@s20" initial="" justification.type="L" justification.indent="0"
+      header="KRST" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="6478bbcc-a5f7-45ad-9e3d-4ecf589338fa" clarionname="SrW:MetodaUm" sqlname="SrW_MetodaUm" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Metoda am. bilansowej" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Metoda Um" validation="INLIST" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="cf16053d-a720-4227-8a4c-262dd1d5e40e" clarionname="SrW:MetodaAm" sqlname="SrW_MetodaAm" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Metoda am. podatkowej" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Met. Am." validation="INLIST" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="c08ebf73-0431-4d52-b939-8d88981e4340" clarionname="SrW:Dwutorowosc" sqlname="SrW_Dwutorowosc" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Czy amortyzacja bilansowa może być różna od podatkowej" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Dwutorowość" validation="BOOLEAN" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="07401987-226a-4b0e-9ed5-c78ced00b1b6" clarionname="SrW:Stawka" sqlname="SrW_Stawka" type="DECIMAL" clariontype="DECIMAL(7,2)" sqltype="DECIMAL(7,2)"
+      size="7" places="2" description="Stawka am. bilansowej" longdescription="dziedziczone z góry" options=""
+      picture="@s1" initial="" justification.type="D" justification.indent="12"
+      header="St. am." validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="991afcb8-1b61-4ebe-b422-810a2946a946" clarionname="SrW:WspUmAm" sqlname="SrW_WspUmAm" type="DECIMAL" clariontype="DECIMAL(7,2)" sqltype="DECIMAL(7,2)"
+      size="7" places="2" description="Współczynnik korekty am. bilansowej" longdescription="dziedziczone z góry" options=""
+      picture="@n6.2" initial="" justification.type="L" justification.indent="0"
+      header="Współczynnik" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="404f94da-2c0d-480d-9f1f-a7afa96a04c2" clarionname="SrW:WspDegr" sqlname="SrW_WspDegr" type="DECIMAL" clariontype="DECIMAL(7,2)" sqltype="DECIMAL(7,2)"
+      size="7" places="2" description="Współczynnik dla metody degresywnej" longdescription="dziedziczone z góry" options=""
+      picture="@n6.2" initial="" justification.type="L" justification.indent="0"
+      header="Współczynnik degr." validation="INRANGE" choices="" rangelow="1" rangehigh="0"
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="32ec18f0-7c29-4ef3-b8c8-d05ede3edfb1" clarionname="SrW:StawkaAm" sqlname="SrW_StawkaAm" type="DECIMAL" clariontype="DECIMAL(7,2)" sqltype="DECIMAL(7,2)"
+      size="7" places="2" description="Stawka amortyzacji bilansowej dla dwutorowości" longdescription="dziedziczone z góry" options=""
+      picture="@s1" initial="" justification.type="D" justification.indent="12"
+      header="Stawka Am" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="b64ec885-fc39-41aa-9392-dd1be070d9e0" clarionname="SrW:WspAm" sqlname="SrW_WspAm" type="DECIMAL" clariontype="DECIMAL(7,2)" sqltype="DECIMAL(7,2)"
+      size="7" places="2" description="Współczynnik korekty amortyzacji bilansowej dla dwutorowości" longdescription="dziedziczone z góry" options=""
+      picture="@N6.2" initial="" justification.type="D" justification.indent="12"
+      header="Wsp Am" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="cc9deff6-22bf-405e-834b-6187a742587b" clarionname="SrW:WspDegrAm" sqlname="SrW_WspDegrAm" type="DECIMAL" clariontype="DECIMAL(7,2)" sqltype="DECIMAL(7,2)"
+      size="7" places="2" description="Współczynnik dla metody degresywnej (bilansowa, dwutorowość)" longdescription="dziedziczone z góry" options=""
+      picture="@N6.2" initial="" justification.type="D" justification.indent="12"
+      header="Wsp Degr Am" validation="INRANGE" choices="" rangelow="1" rangehigh="0"
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="1c5a78e4-3870-4009-b0ad-a8ab094442b9" clarionname="SrW:Waluta" sqlname="SrW_Waluta" type="CSTRING" clariontype="CSTRING(4)" sqltype="VARCHAR(3)"
+      size="4" places="0" description="Symbol waluty" longdescription="" options=""
+      picture="@s3" initial="" justification.type="L" justification.indent="0"
+      header="Waluta" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="b45b02f2-07cb-4f5d-bcd9-c31f86a08874" clarionname="SrW:Etykieta" sqlname="SrW_Etykieta" type="CSTRING" clariontype="CSTRING(21)" sqltype="VARCHAR(20)"
+      size="21" places="0" description="Etykieta" longdescription="dziedziczone z góry" options=""
+      picture="@s20" initial="" justification.type="L" justification.indent="0"
+      header="Nr Inw." validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="88d3cf0e-e61c-4331-8e89-728af2f01fc7" clarionname="SrW:SposobZak" sqlname="SrW_SposobZak" type="CSTRING" clariontype="CSTRING(21)" sqltype="VARCHAR(20)"
+      size="21" places="0" description="Sposób zakupu" longdescription="" options=""
+      picture="@s20" initial="" justification.type="L" justification.indent="0"
+      header="Sposób zakupu" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="34c9c6bf-2c6f-4092-878a-3efea9f43fd9" clarionname="SrW:SposobLikw" sqlname="SrW_SposobLikw" type="CSTRING" clariontype="CSTRING(21)" sqltype="VARCHAR(20)"
+      size="21" places="0" description="Sposób likwidacji" longdescription="" options=""
+      picture="@s20" initial="" justification.type="L" justification.indent="0"
+      header="Sposób likwidacji" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="11c117d5-6c0f-4602-8350-554154353c36" clarionname="SrW:MiejsceUzyw" sqlname="SrW_MiejsceUzyw" type="CSTRING" clariontype="CSTRING(31)" sqltype="VARCHAR(30)"
+      size="31" places="0" description="Miejsce używania" longdescription="" options=""
+      picture="@s30" initial="" justification.type="L" justification.indent="0"
+      header="Miejsce używania" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="a08d4ccb-b248-44cd-83d8-c5eef09d5d3f" clarionname="SrW:KontoGl" sqlname="SrW_KontoGl" type="CSTRING" clariontype="CSTRING(31)" sqltype="VARCHAR(30)"
+      size="31" places="0" description="Konto główne" longdescription="dziedziczone z góry" options=""
+      picture="@s30" initial="" justification.type="L" justification.indent="0"
+      header="Konto Gł." validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="823ea3e0-414f-449b-b72c-19e2a6d69810" clarionname="SrW:KontoUm" sqlname="SrW_KontoUm" type="CSTRING" clariontype="CSTRING(31)" sqltype="VARCHAR(30)"
+      size="31" places="0" description="Konto am. bilansowej" longdescription="dziedziczone z góry" options=""
+      picture="@s30" initial="" justification.type="L" justification.indent="0"
+      header="Konto Um" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="47e1f470-397b-48e9-81f8-4dfa57527f5d" clarionname="SrW:KontoAmP" sqlname="SrW_KontoAmP" type="CSTRING" clariontype="CSTRING(31)" sqltype="VARCHAR(30)"
+      size="31" places="0" description="Konto amortyzacji podatkowej" longdescription="dziedziczone z góry" options=""
+      picture="@s30" initial="" justification.type="L" justification.indent="0"
+      header="Konto Am. P." validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="5b911818-cf36-4aeb-9ade-250c7e0305e7" clarionname="SrW:KontoAmB" sqlname="SrW_KontoAmB" type="CSTRING" clariontype="CSTRING(31)" sqltype="VARCHAR(30)"
+      size="31" places="0" description="Konto amortyzacji niepodatkowej" longdescription="dziedziczone z góry" options=""
+      picture="@s30" initial="" justification.type="L" justification.indent="0"
+      header="Konto am. n." validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="ea868628-33aa-4e06-b88a-828923b907f1" clarionname="SrW:KontoSTK" sqlname="SrW_KontoSTK" type="CSTRING" clariontype="CSTRING(31)" sqltype="VARCHAR(30)"
+      size="31" places="0" description="Konto amortyzacji stanowiska kosztów" longdescription="dziedziczone z góry" options=""
+      picture="@s30" initial="" justification.type="L" justification.indent="0"
+      header="Konto Am. STK" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="7a0fcb18-56c6-4b0a-babb-4901959b0c2e" clarionname="SrW:Sezonowy" sqlname="SrW_Sezonowy" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Czy środek amortyzowany sezonowo" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Sezonowy" validation="BOOLEAN" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="e24be770-e1db-4434-8263-e4a6ea3ec5e1" clarionname="SrW:MsNaliczania" sqlname="SrW_MsNaliczania" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Miesiąc rozp. am. bilansowej : 1 - miesiąc przyjęcia, 2 - miesiąc następny" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Ms Naliczania" validation="INLIST" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="8452bcc0-b9bd-4584-a064-a4cac990d476" clarionname="SrW:MsNaliczaniaAm" sqlname="SrW_MsNaliczaniaAm" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="Miesiąc rozp. am. podatkowej: 1 - miesiąc przyjęcia, 2 - miesiąc następny" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Ms Naliczania Am" validation="INLIST" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+    <column ident="2799b61f-f35b-4244-a359-76cec45e9d6c" clarionname="SrW:MajatekObcy" sqlname="SrW_MajatekObcy" type="BYTE" clariontype="BYTE" sqltype="TINYINT"
+      size="1" places="0" description="majątek obcy" longdescription="" options=""
+      picture="@n3" initial="" justification.type="L" justification.indent="0"
+      header="Majatek Obcy" validation="" choices="" rangelow="" rangehigh=""
+      isinprimary="No" nosql="No" comments="" isinsqlprimary="No"
+     />
+  </columns>
+  <indexes>
+    <index ident="9e4a8d11-ef6d-47c3-b78d-53ca9c86d9d8" clarionname="SrW:KeySrG" sqlname="SrWSrG" description="Wg grupy" longdescription="Pozostaje w relacji 1:MENY do" options="" primary="Yes" unique="Yes" casesensitive="Yes"
+      excludenulls="No" autonum="No" nosql="No">
+      <indexcolumns>
+         <indexcolumn ident="c8987a8e-23f1-467a-bca3-f5af10e66e44" clarionname="SrW:GrpTyp" sqlname="SrW_GrpTyp" nosql="No"/>
+         <indexcolumn ident="73789e95-1838-4b01-b43d-e441caebc2f7" clarionname="SrW:GrpNumer" sqlname="SrW_GrpNumer" nosql="No"/>
+      </indexcolumns>
+    </index>
+  </indexes>
+  <relations>
+    <relation type="1:MANY" onupdate="" ondelete="CASCADE"
+        options="SQL_CONDITIONAL(#P#Atr_OBITyp=-368 and  #P#Atr_OBILp = 0)"
+        comments="" nosql="No" setnull="No"
+        conditional="Atr_OBITyp=-368 and  Atr_OBILp = 0"
+        parent="SrtWzorce" primaryname="SrW:KeySrG" primarysqlname="SrWSrG" parenthandler="SrtWzorce_DeleteHandler" parentlink="SrtWzorce"
+        child="Atrybuty" foreignname="Atr:KeyObiGID" foreignsqlname="AtrObiGID" childhandler="Atrybuty_InsertUpdateHandler" childlink="Atrybuty">
+      <relationcolumn
+        parentident="73789e95-1838-4b01-b43d-e441caebc2f7" parentname="SrW:GrpNumer" parentsqlname="SrW_GrpNumer"
+        childident="d0a4b05d-e" childname="Atr:ObiNumer" childsqlname="Atr_ObiNumer" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="c8987a8e-23f1-467a-bca3-f5af10e66e44" parentname="SrW:GrpTyp" parentsqlname="SrW_GrpTyp"
+        childident="1509562e-5" childname="Atr:ObiTyp" childsqlname="Atr_ObiTyp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="d727d877-7" childname="Atr:ObiLp" childsqlname="Atr_ObiLp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="f11da3ce-1" childname="Atr:ObiSubLp" childsqlname="Atr_ObiSubLp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="9254af8b-9" childname="Atr:AtkId" childsqlname="Atr_AtkId" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="1:MANY" onupdate="" ondelete="CASCADE"
+        options="NO_SQL"
+        comments="" nosql="Yes" setnull="No"
+        conditional=""
+        parent="SrtWzorce" primaryname="SrW:KeySrG" primarysqlname="SrWSrG" parenthandler="" parentlink="SrtWzorce"
+        child="SrtGrupy" foreignname="SrG:Primary" foreignsqlname="SrGPrimary" childhandler="" childlink="SrtGrupy">
+      <relationcolumn
+        parentident="c8987a8e-23f1-467a-bca3-f5af10e66e44" parentname="SrW:GrpTyp" parentsqlname="SrW_GrpTyp"
+        childident="4c0a6491-f" childname="SrG:GIDTyp" childsqlname="SrG_GIDTyp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="73789e95-1838-4b01-b43d-e441caebc2f7" parentname="SrW:GrpNumer" parentsqlname="SrW_GrpNumer"
+        childident="38d4ed0c-a" childname="SrG:GIDNumer" childsqlname="SrG_GIDNumer" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="0f2eb4dd-f" childname="SrG:GrOTyp" childsqlname="SrG_GrOTyp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="d9b1e8f6-f" childname="SrG:GrONumer" childsqlname="SrG_GrONumer" isinsqlprimary="Yes" />
+    </relation>
+  
+    <relation type="1:MANY" onupdate="" ondelete="CASCADE"
+        options="SQL_CONDITIONAL(#P#Ath_OBITyp=-368 and  #P#Ath_OBILp = 0)"
+        comments="" nosql="No" setnull="No"
+        conditional="Ath_OBITyp=-368 and  Ath_OBILp = 0"
+        parent="SrtWzorce" primaryname="SrW:KeySrG" primarysqlname="SrWSrG" parenthandler="SrtWzorce_DeleteHandler" parentlink="SrtWzorce"
+        child="AtrybutyHist" foreignname="AtH:KeyObiGID" foreignsqlname="AtHObiGID" childhandler="AtrybutyHist_InsertUpdateHandler" childlink="AtrybutyHist">
+      <relationcolumn
+        parentident="c8987a8e-23f1-467a-bca3-f5af10e66e44" parentname="SrW:GrpTyp" parentsqlname="SrW_GrpTyp"
+        childident="fd905096-d" childname="AtH:ObiTyp" childsqlname="AtH_ObiTyp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="73789e95-1838-4b01-b43d-e441caebc2f7" parentname="SrW:GrpNumer" parentsqlname="SrW_GrpNumer"
+        childident="cd01abef-7" childname="AtH:ObiNumer" childsqlname="AtH_ObiNumer" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="ca9203ae-d" childname="AtH:ObiLp" childsqlname="AtH_ObiLp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="5ed5bf4d-2" childname="AtH:ObiSubLp" childsqlname="AtH_ObiSubLp" isinsqlprimary="Yes" />
+      <relationcolumn
+        parentident="" parentname="" parentsqlname=""
+        childident="35b2bdae-7" childname="AtH:AtkId" childsqlname="AtH_AtkId" isinsqlprimary="Yes" />
+    </relation>
+  
+  </relations>
+</table>
+</ROOT>

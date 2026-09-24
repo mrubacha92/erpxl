@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="SrtPrzyjecie">
+CREATE function CDN.SrtPrzyjecie(@DataNaDzienC int = null, @DataDok int = null, @ZestTryb smallint = 0) 
+returns @tmpPrzyjecie TABLE
+(
+	She_GIDTyp int,
+	She_GIDNumer int,
+	She_SrtNumer int,
+	She_KwotaInw decimal(21,2),
+	She_PodstawaAm decimal(21,2),
+	She_Data int,
+	She_DataZap int
+)
+
+
+AS 
+BEGIN 
+  
+  declare @OT int
+  declare @ZPA int
+  set @ZPA = 2050
+  set @OT = 2048
+  
+  declare @ZestTrybSrodek  tinyint = 0  
+  declare @ZestTrybZestaw  tinyint = 1
+  declare @ZestTrybElement tinyint = 2
+    
+  declare @ZestOdlaczenie	tinyint = 1
+  declare @ZestPrzylaczenie	tinyint = 2
+  
+  if (@ZestTryb &lt;&gt; @ZestTrybElement) set @ZestTryb = @ZestTrybSrodek
+  
+	insert @tmpPrzyjecie 
+	select 
+		E4.SHE_GIDTyp,
+		E4.SHE_GIDNumer,
+		E4.She_SrtNumer,
+		E4.SHE_KwotaInw,
+		E4.SHE_PodstawaAm,
+		E4.SHE_Data,
+		E4.SHE_DataZap
+	from cdn.SrtHistElem as E4
+	where (E4.SHE_GIDTyp = @OT or (@ZestTryb = @ZestTrybElement and E4.SHE_GIDTyp = @ZPA))
+		and ( @DataNaDzienC is null or ( not @DataNaDzienC is null and E4.SHE_Data &lt;= @DataNaDzienC ) )
+		and E4.SHE_Data = 
+			(
+				select min(E1.SHE_Data) from cdn.SrtHistElem as E1
+				where ( (E1.SHE_GIDTyp = @OT and E1.SHE_SrtNumer = E4.SHE_SrtNumer and @ZestTryb = @ZestTrybSrodek) or 
+						(@ZestTryb = @ZestTrybElement and E1.SHE_PrzesStrona = @ZestPrzylaczenie and E1.SHE_GIDTyp = @ZPA and E1.SHE_SZEId = E4.SHE_SZEId) )
+			)
+		and 
+		(
+			@ZestTryb = @ZestTrybElement
+			and	E4.SHE_SZELp = 
+			(
+				select min(E2.SHE_SZELp) from cdn.SrtHistElem as E2
+				where ( (E2.SHE_GIDTyp = @OT or (E2.SHE_GIDTyp = @ZPA and E2.SHE_PrzesStrona = @ZestPrzylaczenie)) and E2.SHE_SZEId = E4.SHE_SZEId )						
+					and E2.SHE_Data = 
+					(
+						select min(E3.SHE_Data) from cdn.SrtHistElem as E3
+						where (	(E3.SHE_GIDTyp = @OT and E3.SHE_SrtNumer = E4.SHE_SrtNumer and @ZestTryb = @ZestTrybSrodek) or 
+								(@ZestTryb = @ZestTrybElement and E3.SHE_PrzesStrona = @ZestPrzylaczenie and E3.SHE_GIDTyp = @ZPA and E3.SHE_SZEId = E4.SHE_SZEId))
+					)
+			)
+			OR
+			@ZestTryb = @ZestTrybSrodek
+			and	E4.SHE_SrtLp = 
+			(
+				select min(E2.SHE_SrtLp) from cdn.SrtHistElem as E2
+				where (E2.SHE_GIDTyp = @OT and E2.SHE_SrtNumer=E4.SHE_SrtNumer)
+					and E2.SHE_Data = 
+					(
+						select min(E3.SHE_Data) from cdn.SrtHistElem as E3
+						where (E3.SHE_GIDTyp = @OT and E3.SHE_SrtNumer = E4.SHE_SrtNumer)
+					)
+			)
+		)
+		
+
+
+	return
+
+END
+</functiondef>
+</ROOT>
