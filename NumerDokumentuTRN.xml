@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="NumerDokumentuTRN">
+CREATE   FUNCTION CDN.NumerDokumentuTRN (
+@p_GidTyp    INT,
+@p_SpiTyp    INT,
+@p_TrnTyp    INT,
+@p_Numer     INT,
+@p_Rok       INT,
+@p_Seria	 VARCHAR(6)
+)
+RETURNS VARCHAR(30) AS
+BEGIN
+return CDN.NumerDokumentu(@p_GidTyp,@p_SpiTyp,@p_TrnTyp,@p_Numer,@p_Rok,@p_Seria,0)
+
+END
+</functiondef>
+</ROOT>

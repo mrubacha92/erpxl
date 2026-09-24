@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="NumerDekretu">
+CREATE  FUNCTION CDN.NumerDekretu(
+@p_Bufor       VARCHAR(6),
+@p_Dziennik    VARCHAR(6),
+@p_Rok         INT,
+@p_Miesiac     INT,
+@p_Numer       INT,
+@p_Pozycja     SMALLINT,
+@p_DekrProsty  SMALLINT
+)
+RETURNS VARCHAR(50)  AS
+BEGIN
+DECLARE @DekrNumer VARCHAR(50)
+
+SET @DekrNumer = CASE WHEN @p_Bufor&lt;&gt;'' THEN '('+LTRIM(RTRIM(@p_Bufor))+')' ELSE '' END
+SET @DekrNumer = @DekrNumer + LTRIM(RTRIM(@p_Dziennik))+'/'
+SET @DekrNumer = @DekrNumer + RIGHT(CAST(@p_Rok AS varchar),2)+'/'
+SET @DekrNumer = @DekrNumer + RIGHT('0'+CAST(@p_Miesiac as varchar),2)+'/'
+SET @DekrNumer = @DekrNumer + CAST(@p_Numer AS varchar) 
+
+IF @p_DekrProsty=0 AND @p_Pozycja &gt; 0 --!http://www.cdn.com.pl/zgloszenie.asp?ID=143236
+  SET @DekrNumer = @DekrNumer+'/'+CAST(@p_Pozycja AS varchar)
+
+RETURN (@DekrNumer)
+END
+
+</functiondef>
+</ROOT>

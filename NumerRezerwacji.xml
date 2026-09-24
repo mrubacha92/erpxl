@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji NumerRezerwacji" hidden="True">
+if exists (select * from dbo.sysobjects where id = object_id(N'CDN.NumerRezerwacji') and xtype in (N'FN', N'IF', N'TF'))
+drop function CDN.NumerRezerwacji
+
+--drop function CDN.NumerRezerwacji;
+</scriptdef>
+<scriptdef name="Usuwanie procedury NumerRezerwacji" hidden="True">
+IF EXISTS (SELECT name  FROM sysobjects WHERE name = 'NumerRezerwacji' AND type = 'P')
+  drop procedure CDN.NumerRezerwacji;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji NumerRezerwacji" hidden="False">
+CREATE function CDN.NumerRezerwacji(
+	@r_ZrdNumer INT,
+	@r_ZrdLp INT,
+	@m_TrMNumer INT,
+	@lp INT,
+	@GidNmumer int
+)
+RETURNS int
+ AS
+BEGIN
+	return (select isnull((select rez_gidnumer from (	
+		select rank() OVER(ORDER BY rez_gidnumer) as l ,rez_gidnumer 
+		from cdn.rezerwacje	
+		where Rez_ZrdNumer=@r_ZrdNumer and Rez_ZrdLp=@r_ZrdLp AND Rez_MagNumer in(@m_TrMNumer,0) 
+		AND (Rez_Ilosc-Rez_Zrealizowano-Rez_IloscMag&gt;0 OR EXISTS(select * from cdn.magselem where MaS_ZrdTyp = Rez_GIDTyp AND MaS_ZrdNumer = Rez_GIDNumer AND Mas_Zrdlp = Rez_gidlp AND MaS_GIDNumer= @GidNmumer))
+	)n where l=@lp),0))
+
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji NumerRezerwacji" hidden="False">
+GRANT EXECUTE ON CDN.NumerRezerwacji TO CDNRaport
+</scriptdef>
+</ROOT>

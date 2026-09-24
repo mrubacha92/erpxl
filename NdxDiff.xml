@@ -1,0 +1,2269 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Tworzenie tabeli tymczasowej dla indeksów" hidden="True">
+CREATE TABLE #XLIndexesFileGroups (indName VARCHAR(100),fgName VARCHAR(100))
+</scriptdef>
+<scriptdef name="Kasowanie indeksu BREBIPointRaportDef" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.BIPointRaportElem') and name=N'BREBIPointRaportDef' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'BREBIPointRaportDef'
+  DROP INDEX BREBIPointRaportDef on CDN.BIPointRaportElem;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu BREBIPointRaportDef" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX BREBIPointRaportDef ON CDN.BIPointRaportElem
+             (
+             BRE_BRDId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'BREBIPointRaportDef'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu BREBIPointRaportId" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.BIPointRaportElem') and name=N'BREBIPointRaportId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'BREBIPointRaportId'
+  DROP INDEX BREBIPointRaportId on CDN.BIPointRaportElem;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu BREBIPointRaportId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX BREBIPointRaportId ON CDN.BIPointRaportElem
+             (
+             BRE_RaportId                   ,
+             BRE_KontekstId                 ,
+             BRE_BRDId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'BREBIPointRaportId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu BROBIPointRaportDef" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.BIPointRaportOpeCentra') and name=N'BROBIPointRaportDef' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'BROBIPointRaportDef'
+  DROP INDEX BROBIPointRaportDef on CDN.BIPointRaportOpeCentra;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu BROBIPointRaportDef" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX BROBIPointRaportDef ON CDN.BIPointRaportOpeCentra
+             (
+             BRO_BRDId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'BROBIPointRaportDef'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu BnkBnd" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.Banki') and name=N'BnkBnd' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'BnkBnd'
+  DROP INDEX BnkBnd on CDN.Banki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu BnkBnd" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX BnkBnd ON CDN.Banki
+             (
+             Bnk_BnDId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'BnkBnd'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu BnDKod" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.BankiDefinicje') and name=N'BnDKod' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'BnDKod'
+  DROP INDEX BnDKod on CDN.BankiDefinicje;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu BnDKod" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX BnDKod ON CDN.BankiDefinicje
+             (
+             BnD_Kod
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'BnDKod'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu BDOBankDefId" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.BankiDefinicjeOperacje') and name=N'BDOBankDefId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'BDOBankDefId'
+  DROP INDEX BDOBankDefId on CDN.BankiDefinicjeOperacje;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu BDOBankDefId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX BDOBankDefId ON CDN.BankiDefinicjeOperacje
+             (
+             BDO_BankDefId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'BDOBankDefId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu BDOKAONumer" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.BankiDefinicjeOperacje') and name=N'BDOKAONumer' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'BDOKAONumer'
+  DROP INDEX BDOKAONumer on CDN.BankiDefinicjeOperacje;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu BDOKAONumer" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX BDOKAONumer ON CDN.BankiDefinicjeOperacje
+             (
+             BDO_KAONumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'BDOKAONumer'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu FBKBankDef" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.BankiFormKryt') and name=N'FBKBankDef' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'FBKBankDef'
+  DROP INDEX FBKBankDef on CDN.BankiFormKryt;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu FBKBankDef" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX FBKBankDef ON CDN.BankiFormKryt
+             (
+             BFK_BankDefID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'FBKBankDef'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu BPNWBPNId" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.BudzetPrjNagWaluty') and name=N'BPNWBPNId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'BPNWBPNId'
+  DROP INDEX BPNWBPNId on CDN.BudzetPrjNagWaluty;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu BPNWBPNId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX BPNWBPNId ON CDN.BudzetPrjNagWaluty
+             (
+             BPNW_BPNId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'BPNWBPNId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu BPNWaluta" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.BudzetPrjNagWaluty') and name=N'BPNWaluta' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'BPNWaluta'
+  DROP INDEX BPNWaluta on CDN.BudzetPrjNagWaluty;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu BPNWaluta" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX BPNWaluta ON CDN.BudzetPrjNagWaluty
+             (
+             BPNW_BPNId                     ,
+             BPNW_Waluta
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'BPNWaluta'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu KeyBnk" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.CDCLoginy') and name=N'KeyBnk' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'KeyBnk'
+  DROP INDEX KeyBnk on CDN.CDCLoginy;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu KeyBnk" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX KeyBnk ON CDN.CDCLoginy
+             (
+             CDCL_BnkNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'KeyBnk'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu KeyOpe" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.CDCLoginy') and name=N'KeyOpe' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'KeyOpe'
+  DROP INDEX KeyOpe on CDN.CDCLoginy;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu KeyOpe" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX KeyOpe ON CDN.CDCLoginy
+             (
+             CDCL_OpeNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'KeyOpe'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu DABKod" hidden="True">
+--* gSkrypt.AkcjaPoBledzie = 1
+
+<scriptdef name="Tworzenie indeksu DABKod" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX DABKod ON CDN.DaneBinarne
+             (
+             DAB_CzasArchiwizacji           ,
+             DAB_Kod                        ,
+             DAB_ID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'DABKod'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu DABProcID" hidden="True">
+--* gSkrypt.AkcjaPoBledzie = 1
+
+<scriptdef name="Tworzenie indeksu DABProcID" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX DABProcID ON CDN.DaneBinarne
+             (
+             DAB_CzasArchiwizacji           ,
+             DAB_ProcID                     ,
+             DAB_Kod
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'DABProcID'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu DABDataKod" hidden="True">
+--* gSkrypt.AkcjaPoBledzie = 1
+
+<scriptdef name="Tworzenie indeksu DABDataKod" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX DABDataKod ON CDN.DaneBinarne
+             (
+             DAB_CzasArchiwizacji           ,
+             DAB_CzasDodania                ,
+             DAB_Kod                        ,
+             DAB_ID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'DABDataKod'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu DZKNumerDokumentu" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.Dziennik') and name=N'DZKNumerDokumentu' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'DZKNumerDokumentu'
+  DROP INDEX DZKNumerDokumentu on CDN.Dziennik;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu DZKNumerDokumentu" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX DZKNumerDokumentu ON CDN.Dziennik
+             (
+             DZK_Bufor                      ,
+             DZK_Rok                        ,
+             DZK_Miesiac                    ,
+             DZK_NumerDokumentu
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'DZKNumerDokumentu'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu DZKIdentyfikator" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.Dziennik') and name=N'DZKIdentyfikator' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'DZKIdentyfikator'
+  DROP INDEX DZKIdentyfikator on CDN.Dziennik;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu DZKIdentyfikator" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX DZKIdentyfikator ON CDN.Dziennik
+             (
+             DZK_Identyfikator
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'DZKIdentyfikator'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu HtUNazwa" hidden="True">
+--* gSkrypt.AkcjaPoBledzie = 1
+
+<scriptdef name="Tworzenie indeksu HtUNazwa" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX HtUNazwa ON CDN.HistoriaUruchomien
+             (
+             HtU_Nazwa
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'HtUNazwa'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu KRjObi" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.KntRejestr') and name=N'KRjObi' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'KRjObi'
+  DROP INDEX KRjObi on CDN.KntRejestr;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu KRjObi" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX KRjObi ON CDN.KntRejestr
+             (
+             KRj_ObiNumer                   ,
+             KRj_ObiTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'KRjObi'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu KRjKar" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.KntRejestr') and name=N'KRjKar' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'KRjKar'
+  DROP INDEX KRjKar on CDN.KntRejestr;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu KRjKar" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX KRjKar ON CDN.KntRejestr
+             (
+             KRj_KarNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'KRjKar'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu KDDID" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.KosztyDodDok') and name=N'KDDID' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'KDDID'
+  DROP INDEX KDDID on CDN.KosztyDodDok;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu KDDID" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX KDDID ON CDN.KosztyDodDok
+             (
+             KDD_Id
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'KDDID'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu KPCId" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.KrajeCelne') and name=N'KPCId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'KPCId'
+  DROP INDEX KPCId on CDN.KrajeCelne;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu KPCId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX KPCId ON CDN.KrajeCelne
+             (
+             KPC_Id
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'KPCId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PcKRejestrNoType" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PicoKonfig') and name=N'PcKRejestrNoType' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PcKRejestrNoType'
+  DROP INDEX PcKRejestrNoType on CDN.PicoKonfig;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PcKRejestrNoType" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PcKRejestrNoType ON CDN.PicoKonfig
+             (
+             PcK_KARNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PcKRejestrNoType'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PSaOddzial" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PicoStanowiska') and name=N'PSaOddzial' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PSaOddzial'
+  DROP INDEX PSaOddzial on CDN.PicoStanowiska;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PSaOddzial" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PSaOddzial ON CDN.PicoStanowiska
+             (
+             PSa_PcKID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PSaOddzial'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PFPStanowisko" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PicoStanowiskaFormyPl') and name=N'PFPStanowisko' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PFPStanowisko'
+  DROP INDEX PFPStanowisko on CDN.PicoStanowiskaFormyPl;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PFPStanowisko" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PFPStanowisko ON CDN.PicoStanowiskaFormyPl
+             (
+             PFP_PSaID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PFPStanowisko'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PFPRejestrNoType" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PicoStanowiskaFormyPl') and name=N'PFPRejestrNoType' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PFPRejestrNoType'
+  DROP INDEX PFPRejestrNoType on CDN.PicoStanowiskaFormyPl;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PFPRejestrNoType" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PFPRejestrNoType ON CDN.PicoStanowiskaFormyPl
+             (
+             PFP_KARNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PFPRejestrNoType'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKnStanowisko" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PicoStanowiskaOperatorzy') and name=N'PKnStanowisko' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKnStanowisko'
+  DROP INDEX PKnStanowisko on CDN.PicoStanowiskaOperatorzy;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKnStanowisko" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKnStanowisko ON CDN.PicoStanowiskaOperatorzy
+             (
+             PKn_PSaID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKnStanowisko'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKnOperatorNoType" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PicoStanowiskaOperatorzy') and name=N'PKnOperatorNoType' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKnOperatorNoType'
+  DROP INDEX PKnOperatorNoType on CDN.PicoStanowiskaOperatorzy;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKnOperatorNoType" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKnOperatorNoType ON CDN.PicoStanowiskaOperatorzy
+             (
+             PKn_OpeNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKnOperatorNoType'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PWrStanowisko" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PicoStanowiskaWydruki') and name=N'PWrStanowisko' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PWrStanowisko'
+  DROP INDEX PWrStanowisko on CDN.PicoStanowiskaWydruki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PWrStanowisko" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PWrStanowisko ON CDN.PicoStanowiskaWydruki
+             (
+             PWr_PSaID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PWrStanowisko'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PWrDefinicja" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PicoStanowiskaWydruki') and name=N'PWrDefinicja' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PWrDefinicja'
+  DROP INDEX PWrDefinicja on CDN.PicoStanowiskaWydruki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PWrDefinicja" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PWrDefinicja ON CDN.PicoStanowiskaWydruki
+             (
+             PWr_IdDefinicji
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PWrDefinicja'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PONOkresID" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PodNag') and name=N'PONOkresID' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PONOkresID'
+  DROP INDEX PONOkresID on CDN.PodNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PONOkresID" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PONOkresID ON CDN.PodNag
+             (
+             PON_OkresID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PONOkresID'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PGLTresc" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PoleceniaGlowne') and name=N'PGLTresc' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PGLTresc'
+  DROP INDEX PGLTresc on CDN.PoleceniaGlowne;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PGLTresc" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX PGLTresc ON CDN.PoleceniaGlowne
+             (
+             PGL_Tresc
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PGLTresc'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PGLSkrot" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PoleceniaGlowne') and name=N'PGLSkrot' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PGLSkrot'
+  DROP INDEX PGLSkrot on CDN.PoleceniaGlowne;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PGLSkrot" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX PGLSkrot ON CDN.PoleceniaGlowne
+             (
+             PGL_Skrot
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PGLSkrot'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu POTPoleceniaGlowne" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PoleceniaTozsame') and name=N'POTPoleceniaGlowne' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'POTPoleceniaGlowne'
+  DROP INDEX POTPoleceniaGlowne on CDN.PoleceniaTozsame;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu POTPoleceniaGlowne" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX POTPoleceniaGlowne ON CDN.PoleceniaTozsame
+             (
+             POT_PGLId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'POTPoleceniaGlowne'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu POTTresc" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PoleceniaTozsame') and name=N'POTTresc' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'POTTresc'
+  DROP INDEX POTTresc on CDN.PoleceniaTozsame;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu POTTresc" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX POTTresc ON CDN.PoleceniaTozsame
+             (
+             POT_Tresc
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'POTTresc'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PCZZCzujnik" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdCzujnikiZdarzenia') and name=N'PCZZCzujnik' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PCZZCzujnik'
+  DROP INDEX PCZZCzujnik on CDN.ProdCzujnikiZdarzenia;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PCZZCzujnik" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PCZZCzujnik ON CDN.ProdCzujnikiZdarzenia
+             (
+             PCZZ_PCZUId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PCZZCzujnik'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PCZZD" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdCzujnikiZdarzeniaDefinicje') and name=N'PCZZD' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PCZZD'
+  DROP INDEX PCZZD on CDN.ProdCzujnikiZdarzeniaDefinicje;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PCZZD" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX PCZZD ON CDN.ProdCzujnikiZdarzeniaDefinicje
+             (
+             PCZZD_Kod
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PCZZD'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKEOObi" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdKosztyElemO') and name=N'PKEOObi' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKEOObi'
+  DROP INDEX PKEOObi on CDN.ProdKosztyElemO;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKEOObi" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKEOObi ON CDN.ProdKosztyElemO
+             (
+             PKEO_ObiNumer                  ,
+             PKEO_ObiTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKEOObi'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNZStatus" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzlecenia') and name=N'PNZStatus' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNZStatus'
+  DROP INDEX PNZStatus on CDN.ProdNadzlecenia;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNZStatus" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PNZStatus ON CDN.ProdNadzlecenia
+             (
+             PNZ_Status
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNZStatus'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNZOpeW" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzlecenia') and name=N'PNZOpeW' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNZOpeW'
+  DROP INDEX PNZOpeW on CDN.ProdNadzlecenia;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNZOpeW" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PNZOpeW ON CDN.ProdNadzlecenia
+             (
+             PNZ_OpWNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNZOpeW'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNZProjekt" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzlecenia') and name=N'PNZProjekt' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNZProjekt'
+  DROP INDEX PNZProjekt on CDN.ProdNadzlecenia;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNZProjekt" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PNZProjekt ON CDN.ProdNadzlecenia
+             (
+             PNZ_Projekt
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNZProjekt'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNZOddzial" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzlecenia') and name=N'PNZOddzial' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNZOddzial'
+  DROP INDEX PNZOddzial on CDN.ProdNadzlecenia;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNZOddzial" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PNZOddzial ON CDN.ProdNadzlecenia
+             (
+             PNZ_Oddzial
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNZOddzial'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNZKnt" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzlecenia') and name=N'PNZKnt' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNZKnt'
+  DROP INDEX PNZKnt on CDN.ProdNadzlecenia;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNZKnt" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PNZKnt ON CDN.ProdNadzlecenia
+             (
+             PNZ_KntNumer                   ,
+             PNZ_KntTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNZKnt'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNZKnD" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzlecenia') and name=N'PNZKnD' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNZKnD'
+  DROP INDEX PNZKnD on CDN.ProdNadzlecenia;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNZKnD" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PNZKnD ON CDN.ProdNadzlecenia
+             (
+             PNZ_KnDNumer                   ,
+             PNZ_KnDTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNZKnD'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNZNumer" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzlecenia') and name=N'PNZNumer' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNZNumer'
+  DROP INDEX PNZNumer on CDN.ProdNadzlecenia;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNZNumer" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX PNZNumer ON CDN.ProdNadzlecenia
+             (
+             PNZ_Rok                        ,
+             PNZ_Miesiac                    ,
+             PNZ_Seria                      ,
+             PNZ_Numer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNZNumer'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNZDataW" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzlecenia') and name=N'PNZDataW' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNZDataW'
+  DROP INDEX PNZDataW on CDN.ProdNadzlecenia;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNZDataW" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX PNZDataW ON CDN.ProdNadzlecenia
+             (
+             PNZ_DataWystawienia            ,
+             PNZ_Id
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNZDataW'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNLPNZPZL" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzleceniaLinki') and name=N'PNLPNZPZL' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNLPNZPZL'
+  DROP INDEX PNLPNZPZL on CDN.ProdNadzleceniaLinki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNLPNZPZL" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX PNLPNZPZL ON CDN.ProdNadzleceniaLinki
+             (
+             PNL_PZLId                      ,
+             PNL_PNZId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNLPNZPZL'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNLPZL" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzleceniaLinki') and name=N'PNLPZL' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNLPZL'
+  DROP INDEX PNLPZL on CDN.ProdNadzleceniaLinki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNLPZL" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PNLPZL ON CDN.ProdNadzleceniaLinki
+             (
+             PNL_PZLId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNLPZL'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PNLPNZ" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdNadzleceniaLinki') and name=N'PNLPNZ' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PNLPNZ'
+  DROP INDEX PNLPNZ on CDN.ProdNadzleceniaLinki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PNLPNZ" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PNLPNZ ON CDN.ProdNadzleceniaLinki
+             (
+             PNL_PNZId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PNLPNZ'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu POCObiekt" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdObiektyCzujniki') and name=N'POCObiekt' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'POCObiekt'
+  DROP INDEX POCObiekt on CDN.ProdObiektyCzujniki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu POCObiekt" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX POCObiekt ON CDN.ProdObiektyCzujniki
+             (
+             POC_POBId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'POCObiekt'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu POCCzuijnik" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdObiektyCzujniki') and name=N'POCCzuijnik' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'POCCzuijnik'
+  DROP INDEX POCCzuijnik on CDN.ProdObiektyCzujniki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu POCCzuijnik" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX POCCzuijnik ON CDN.ProdObiektyCzujniki
+             (
+             POC_PCUId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'POCCzuijnik'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJHPKJ" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJHistoriaZmian') and name=N'PKJHPKJ' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJHPKJ'
+  DROP INDEX PKJHPKJ on CDN.ProdPKJHistoriaZmian;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJHPKJ" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJHPKJ ON CDN.ProdPKJHistoriaZmian
+             (
+             PKJH_PKJId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJHPKJ'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNWynikKJ" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNWynikKJ' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNWynikKJ'
+  DROP INDEX PKJNWynikKJ on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNWynikKJ" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNWynikKJ ON CDN.ProdPKJNag
+             (
+             PKJN_WynikKJ
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNWynikKJ'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNStatus" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNStatus' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNStatus'
+  DROP INDEX PKJNStatus on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNStatus" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNStatus ON CDN.ProdPKJNag
+             (
+             PKJN_Status
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNStatus'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNNumer" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNNumer' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNNumer'
+  DROP INDEX PKJNNumer on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNNumer" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX PKJNNumer ON CDN.ProdPKJNag
+             (
+             PKJN_Rok                       ,
+             PKJN_Miesiac                   ,
+             PKJN_Seria                     ,
+             PKJN_Numer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNNumer'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNPTZ" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNPTZ' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNPTZ'
+  DROP INDEX PKJNPTZ on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNPTZ" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNPTZ ON CDN.ProdPKJNag
+             (
+             PKJN_PTZId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNPTZ'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNTowar" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNTowar' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNTowar'
+  DROP INDEX PKJNTowar on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNTowar" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNTowar ON CDN.ProdPKJNag
+             (
+             PKJN_TwrNumer                  ,
+             PKJN_TwrTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNTowar'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNMagazyn" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNMagazyn' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNMagazyn'
+  DROP INDEX PKJNMagazyn on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNMagazyn" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNMagazyn ON CDN.ProdPKJNag
+             (
+             PKJN_MagNumer                  ,
+             PKJN_MagTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNMagazyn'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNOpW" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNOpW' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNOpW'
+  DROP INDEX PKJNOpW on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNOpW" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNOpW ON CDN.ProdPKJNag
+             (
+             PKJN_OpWNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNOpW'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNOpM" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNOpM' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNOpM'
+  DROP INDEX PKJNOpM on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNOpM" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNOpM ON CDN.ProdPKJNag
+             (
+             PKJN_OpMNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNOpM'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNOpZ" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNOpZ' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNOpZ'
+  DROP INDEX PKJNOpZ on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNOpZ" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNOpZ ON CDN.ProdPKJNag
+             (
+             PKJN_OpZNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNOpZ'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNPZL" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNPZL' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNPZL'
+  DROP INDEX PKJNPZL on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNPZL" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNPZL ON CDN.ProdPKJNag
+             (
+             PKJN_PZLId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNPZL'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNPCZ" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNPCZ' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNPCZ'
+  DROP INDEX PKJNPCZ on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNPCZ" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNPCZ ON CDN.ProdPKJNag
+             (
+             PKJN_PCZId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNPCZ'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJNPrzyczynaO" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJNag') and name=N'PKJNPrzyczynaO' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJNPrzyczynaO'
+  DROP INDEX PKJNPrzyczynaO on CDN.ProdPKJNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJNPrzyczynaO" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJNPrzyczynaO ON CDN.ProdPKJNag
+             (
+             PKJN_PrzyczynaOdrzucenia
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJNPrzyczynaO'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJZPKJN" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJZas') and name=N'PKJZPKJN' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJZPKJN'
+  DROP INDEX PKJZPKJN on CDN.ProdPKJZas;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJZPKJN" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJZPKJN ON CDN.ProdPKJZas
+             (
+             PKJZ_PKJNId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJZPKJN'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PKJZPZA" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdPKJZas') and name=N'PKJZPZA' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PKJZPZA'
+  DROP INDEX PKJZPZA on CDN.ProdPKJZas;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PKJZPZA" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PKJZPZA ON CDN.ProdPKJZas
+             (
+             PKJZ_PZAId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PKJZPZA'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PPKOPKJO" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdParamKJNormyObiektow') and name=N'PPKOPKJO' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PPKOPKJO'
+  DROP INDEX PPKOPKJO on CDN.ProdParamKJNormyObiektow;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PPKOPKJO" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PPKOPKJO ON CDN.ProdParamKJNormyObiektow
+             (
+             PPKO_PKJId                     ,
+             PPKO_OGidTyp                   ,
+             PPKO_OGidNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PPKOPKJO'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PPKOOGid" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdParamKJNormyObiektow') and name=N'PPKOOGid' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PPKOOGid'
+  DROP INDEX PPKOOGid on CDN.ProdParamKJNormyObiektow;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PPKOOGid" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PPKOOGid ON CDN.ProdParamKJNormyObiektow
+             (
+             PPKO_OGidNumer                 ,
+             PPKO_OGidTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PPKOOGid'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PPKOPKJId" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdParamKJNormyObiektow') and name=N'PPKOPKJId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PPKOPKJId'
+  DROP INDEX PPKOPKJId on CDN.ProdParamKJNormyObiektow;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PPKOPKJId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PPKOPKJId ON CDN.ProdParamKJNormyObiektow
+             (
+             PPKO_PKJId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PPKOPKJId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PPKOKJNLp" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdParamKJNormyObiektow') and name=N'PPKOKJNLp' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PPKOKJNLp'
+  DROP INDEX PPKOKJNLp on CDN.ProdParamKJNormyObiektow;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PPKOKJNLp" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PPKOKJNLp ON CDN.ProdParamKJNormyObiektow
+             (
+             PPKO_Lp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PPKOKJNLp'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu KJNPPKOId" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdParametryKJNormy') and name=N'KJNPPKOId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'KJNPPKOId'
+  DROP INDEX KJNPPKOId on CDN.ProdParametryKJNormy;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu KJNPPKOId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX KJNPPKOId ON CDN.ProdParametryKJNormy
+             (
+             KJN_PPKOId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'KJNPPKOId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PTZZasobNiezgodny" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdTechnologiaZasoby') and name=N'PTZZasobNiezgodny' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PTZZasobNiezgodny'
+  DROP INDEX PTZZasobNiezgodny on CDN.ProdTechnologiaZasoby;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PTZZasobNiezgodny" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PTZZasobNiezgodny ON CDN.ProdTechnologiaZasoby
+             (
+             PTZ_IdProduktNiezgodny
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PTZZasobNiezgodny'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PTZMagNiezgodny" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdTechnologiaZasoby') and name=N'PTZMagNiezgodny' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PTZMagNiezgodny'
+  DROP INDEX PTZMagNiezgodny on CDN.ProdTechnologiaZasoby;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PTZMagNiezgodny" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PTZMagNiezgodny ON CDN.ProdTechnologiaZasoby
+             (
+             PTZ_IdMagazynNiezgodny
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PTZMagNiezgodny'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PTGZasobTechnologii" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdTechnologieZasobyGniazd') and name=N'PTGZasobTechnologii' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PTGZasobTechnologii'
+  DROP INDEX PTGZasobTechnologii on CDN.ProdTechnologieZasobyGniazd;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PTGZasobTechnologii" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX PTGZasobTechnologii ON CDN.ProdTechnologieZasobyGniazd
+             (
+             PTG_TechnologiaOperacje        ,
+             PTG_ZasobGniazda
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PTGZasobTechnologii'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu WKJKod" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdWzorceKJ') and name=N'WKJKod' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'WKJKod'
+  DROP INDEX WKJKod on CDN.ProdWzorceKJ;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu WKJKod" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX WKJKod ON CDN.ProdWzorceKJ
+             (
+             WKJ_Kod
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'WKJKod'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PWTTowar" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdWzorceKJTowary') and name=N'PWTTowar' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PWTTowar'
+  DROP INDEX PWTTowar on CDN.ProdWzorceKJTowary;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PWTTowar" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PWTTowar ON CDN.ProdWzorceKJTowary
+             (
+             PWT_TwrGIDNumer                ,
+             PWT_TwrGIDTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PWTTowar'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PWTWzorzec" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdWzorceKJTowary') and name=N'PWTWzorzec' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PWTWzorzec'
+  DROP INDEX PWTWzorzec on CDN.ProdWzorceKJTowary;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PWTWzorzec" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PWTWzorzec ON CDN.ProdWzorceKJTowary
+             (
+             PWT_WKJId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PWTWzorzec'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PWTTowarWzorzec" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdWzorceKJTowary') and name=N'PWTTowarWzorzec' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PWTTowarWzorzec'
+  DROP INDEX PWTTowarWzorzec on CDN.ProdWzorceKJTowary;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PWTTowarWzorzec" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX PWTTowarWzorzec ON CDN.ProdWzorceKJTowary
+             (
+             PWT_TwrGIDNumer                ,
+             PWT_WKJId                      ,
+             PWT_TwrGIDTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PWTTowarWzorzec'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PZAPZLId" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdZasoby') and name=N'PZAPZLId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PZAPZLId'
+  DROP INDEX PZAPZLId on CDN.ProdZasoby;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PZAPZLId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PZAPZLId ON CDN.ProdZasoby
+             (
+             PZA_PZLId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PZAPZLId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PZAPKJNId" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdZasoby') and name=N'PZAPKJNId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PZAPKJNId'
+  DROP INDEX PZAPKJNId on CDN.ProdZasoby;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PZAPKJNId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PZAPKJNId ON CDN.ProdZasoby
+             (
+             PZA_PKJNId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PZAPKJNId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PZWZrd" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdZwiazane') and name=N'PZWZrd' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PZWZrd'
+  DROP INDEX PZWZrd on CDN.ProdZwiazane;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PZWZrd" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PZWZrd ON CDN.ProdZwiazane
+             (
+             PZW_ZrdNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PZWZrd'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PZWDok" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ProdZwiazane') and name=N'PZWDok' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PZWDok'
+  DROP INDEX PZWDok on CDN.ProdZwiazane;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PZWDok" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PZWDok ON CDN.ProdZwiazane
+             (
+             PZW_DokNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PZWDok'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PPAPPNID" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PrzelewyAutoryzacje') and name=N'PPAPPNID' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PPAPPNID'
+  DROP INDEX PPAPPNID on CDN.PrzelewyAutoryzacje;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PPAPPNID" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PPAPPNID ON CDN.PrzelewyAutoryzacje
+             (
+             PPA_PPNID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PPAPPNID'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PPAOpeNumer" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PrzelewyAutoryzacje') and name=N'PPAOpeNumer' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PPAOpeNumer'
+  DROP INDEX PPAOpeNumer on CDN.PrzelewyAutoryzacje;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PPAOpeNumer" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PPAOpeNumer ON CDN.PrzelewyAutoryzacje
+             (
+             PPA_OpeNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PPAOpeNumer'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu RkBObi" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.RachunkiBankowe') and name=N'RkBObi' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'RkBObi'
+  DROP INDEX RkBObi on CDN.RachunkiBankowe;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu RkBObi" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX RkBObi ON CDN.RachunkiBankowe
+             (
+             RkB_ObiNumer                   ,
+             RkB_ObiTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'RkBObi'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu RkBBnk" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.RachunkiBankowe') and name=N'RkBBnk' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'RkBBnk'
+  DROP INDEX RkBBnk on CDN.RachunkiBankowe;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu RkBBnk" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX RkBBnk ON CDN.RachunkiBankowe
+             (
+             RkB_BnkNumer                   ,
+             RkB_BnkTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'RkBBnk'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu RkBKntAdres" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.RachunkiBankowe') and name=N'RkBKntAdres' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'RkBKntAdres'
+  DROP INDEX RkBKntAdres on CDN.RachunkiBankowe;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu RkBKntAdres" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX RkBKntAdres ON CDN.RachunkiBankowe
+             (
+             RkB_KntAdres
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'RkBKntAdres'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu RBVRkb" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.RachunkiBankoweVat') and name=N'RBVRkb' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'RBVRkb'
+  DROP INDEX RBVRkb on CDN.RachunkiBankoweVat;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu RBVRkb" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX RBVRkb ON CDN.RachunkiBankoweVat
+             (
+             RBV_RkbId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'RBVRkb'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SFPSFNId" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SFPodpisy') and name=N'SFPSFNId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SFPSFNId'
+  DROP INDEX SFPSFNId on CDN.SFPodpisy;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SFPSFNId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SFPSFNId ON CDN.SFPodpisy
+             (
+             SFP_SFNId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SFPSFNId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SFSESFNID" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SFSlownikiElem') and name=N'SFSESFNID' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SFSESFNID'
+  DROP INDEX SFSESFNID on CDN.SFSlownikiElem;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SFSESFNID" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SFSESFNID ON CDN.SFSlownikiElem
+             (
+             SFSE_SFSNID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SFSESFNID'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SFSEGUIDID" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SFSlownikiElem') and name=N'SFSEGUIDID' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SFSEGUIDID'
+  DROP INDEX SFSEGUIDID on CDN.SFSlownikiElem;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SFSEGUIDID" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SFSEGUIDID ON CDN.SFSlownikiElem
+             (
+             SFSE_GuidID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SFSEGUIDID'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SFZWSFNId" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SFZalWlasne') and name=N'SFZWSFNId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SFZWSFNId'
+  DROP INDEX SFZWSFNId on CDN.SFZalWlasne;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SFZWSFNId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SFZWSFNId ON CDN.SFZalWlasne
+             (
+             SFZW_SFNId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SFZWSFNId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SFZSFNId" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SFZalaczniki') and name=N'SFZSFNId' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SFZSFNId'
+  DROP INDEX SFZSFNId on CDN.SFZalaczniki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SFZSFNId" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SFZSFNId ON CDN.SFZalaczniki
+             (
+             SFZ_SFNId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SFZSFNId'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SISKKonto" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SISDefinicjeKonta') and name=N'SISKKonto' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SISKKonto'
+  DROP INDEX SISKKonto on CDN.SISDefinicjeKonta;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SISKKonto" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SISKKonto ON CDN.SISDefinicjeKonta
+             (
+             SISK_Konto
+             )
+  WHERE (SISK_KONTO&lt;&gt;'''')
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SISKKonto'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SISKKlasaKonta" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SISDefinicjeKonta') and name=N'SISKKlasaKonta' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SISKKlasaKonta'
+  DROP INDEX SISKKlasaKonta on CDN.SISDefinicjeKonta;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SISKKlasaKonta" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SISKKlasaKonta ON CDN.SISDefinicjeKonta
+             (
+             SISK_KlasaKonta
+             )
+  WHERE (SISK_KLASAKONTA&lt;&gt;'''')
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SISKKlasaKonta'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SnESentNag" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SentElem') and name=N'SnESentNag' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SnESentNag'
+  DROP INDEX SnESentNag on CDN.SentElem;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SnESentNag" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX SnESentNag ON CDN.SentElem
+             (
+             SnE_SnTId                      ,
+             SnE_Pozycja
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SnESentNag'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SDPKSlownik" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SlwDefPowiazaniaKont') and name=N'SDPKSlownik' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SDPKSlownik'
+  DROP INDEX SDPKSlownik on CDN.SlwDefPowiazaniaKont;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SDPKSlownik" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SDPKSlownik ON CDN.SlwDefPowiazaniaKont
+             (
+             SDPK_SlwId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SDPKSlownik'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SFKPowiazania" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SlwFunkcjeKonta') and name=N'SFKPowiazania' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SFKPowiazania'
+  DROP INDEX SFKPowiazania on CDN.SlwFunkcjeKonta;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SFKPowiazania" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SFKPowiazania ON CDN.SlwFunkcjeKonta
+             (
+             SFK_SDPKId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SFKPowiazania'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SORObiekty" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwObiektyReceptury') and name=N'SORObiekty' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SORObiekty'
+  DROP INDEX SORObiekty on CDN.SrwObiektyReceptury;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SORObiekty" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SORObiekty ON CDN.SrwObiektyReceptury
+             (
+             SOR_ObiNumer                   ,
+             SOR_ObiTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SORObiekty'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SORRecepturyCzynnosci" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwObiektyReceptury') and name=N'SORRecepturyCzynnosci' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SORRecepturyCzynnosci'
+  DROP INDEX SORRecepturyCzynnosci on CDN.SrwObiektyReceptury;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SORRecepturyCzynnosci" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SORRecepturyCzynnosci ON CDN.SrwObiektyReceptury
+             (
+             SOR_SrcId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SORRecepturyCzynnosci'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SORReceptury" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwObiektyReceptury') and name=N'SORReceptury' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SORReceptury'
+  DROP INDEX SORReceptury on CDN.SrwObiektyReceptury;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SORReceptury" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SORReceptury ON CDN.SrwObiektyReceptury
+             (
+             SOR_SreId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SORReceptury'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SORKeyObiektUni" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwObiektyReceptury') and name=N'SORKeyObiektUni' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SORKeyObiektUni'
+  DROP INDEX SORKeyObiektUni on CDN.SrwObiektyReceptury;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SORKeyObiektUni" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX SORKeyObiektUni ON CDN.SrwObiektyReceptury
+             (
+             SOR_ObiTyp                     ,
+             SOR_ObiNumer                   ,
+             SOR_SrcId                      ,
+             SOR_SreId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SORKeyObiektUni'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SREKodObiekt" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwReceptury') and name=N'SREKodObiekt' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SREKodObiekt'
+  DROP INDEX SREKodObiekt on CDN.SrwReceptury;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SREKodObiekt" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE UNIQUE NONCLUSTERED INDEX SREKodObiekt ON CDN.SrwReceptury
+             (
+             SRE_ObiTyp                     ,
+             SRE_ObiNumer                   ,
+             SRE_Kod
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SREKodObiekt'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SREObiekty" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwReceptury') and name=N'SREObiekty' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SREObiekty'
+  DROP INDEX SREObiekty on CDN.SrwReceptury;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SREObiekty" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SREObiekty ON CDN.SrwReceptury
+             (
+             SRE_ObiNumer                   ,
+             SRE_ObiTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SREObiekty'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SRCReceptury" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwRecepturyCzynnosci') and name=N'SRCReceptury' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SRCReceptury'
+  DROP INDEX SRCReceptury on CDN.SrwRecepturyCzynnosci;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SRCReceptury" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SRCReceptury ON CDN.SrwRecepturyCzynnosci
+             (
+             SRC_SREId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SRCReceptury'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SRCTowary" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwRecepturyCzynnosci') and name=N'SRCTowary' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SRCTowary'
+  DROP INDEX SRCTowary on CDN.SrwRecepturyCzynnosci;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SRCTowary" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SRCTowary ON CDN.SrwRecepturyCzynnosci
+             (
+             SRC_TwrNumer                   ,
+             SRC_TwrNazwa                   ,
+             SRC_TwrTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SRCTowary'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SRSRecepturyCzynnosci" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwRecepturySkladniki') and name=N'SRSRecepturyCzynnosci' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SRSRecepturyCzynnosci'
+  DROP INDEX SRSRecepturyCzynnosci on CDN.SrwRecepturySkladniki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SRSRecepturyCzynnosci" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SRSRecepturyCzynnosci ON CDN.SrwRecepturySkladniki
+             (
+             SRS_SrcId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SRSRecepturyCzynnosci'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SRSReceptury" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwRecepturySkladniki') and name=N'SRSReceptury' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SRSReceptury'
+  DROP INDEX SRSReceptury on CDN.SrwRecepturySkladniki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SRSReceptury" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SRSReceptury ON CDN.SrwRecepturySkladniki
+             (
+             SRS_SreId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SRSReceptury'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SRSTowary" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwRecepturySkladniki') and name=N'SRSTowary' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SRSTowary'
+  DROP INDEX SRSTowary on CDN.SrwRecepturySkladniki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SRSTowary" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SRSTowary ON CDN.SrwRecepturySkladniki
+             (
+             SRS_TwrNumer                   ,
+             SRS_TwrNazwa                   ,
+             SRS_TwrTyp
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SRSTowary'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SZCReceptury" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwZlcCzynnosci') and name=N'SZCReceptury' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SZCReceptury'
+  DROP INDEX SZCReceptury on CDN.SrwZlcCzynnosci;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SZCReceptury" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SZCReceptury ON CDN.SrwZlcCzynnosci
+             (
+             SZC_SREId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SZCReceptury'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SZOReceptury" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwZlcObiekty') and name=N'SZOReceptury' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SZOReceptury'
+  DROP INDEX SZOReceptury on CDN.SrwZlcObiekty;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SZOReceptury" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SZOReceptury ON CDN.SrwZlcObiekty
+             (
+             SZO_SREId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SZOReceptury'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SZSReceptury" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwZlcSkladniki') and name=N'SZSReceptury' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SZSReceptury'
+  DROP INDEX SZSReceptury on CDN.SrwZlcSkladniki;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SZSReceptury" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SZSReceptury ON CDN.SrwZlcSkladniki
+             (
+             SZS_SREId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SZSReceptury'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SZUSrwReceptury" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SrwZlcUrz') and name=N'SZUSrwReceptury' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SZUSrwReceptury'
+  DROP INDEX SZUSrwReceptury on CDN.SrwZlcUrz;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SZUSrwReceptury" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SZUSrwReceptury ON CDN.SrwZlcUrz
+             (
+             SZU_SREId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SZUSrwReceptury'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu TrNKKG" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.TraNag') and name=N'TrNKKG' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'TrNKKG'
+  DROP INDEX TrNKKG on CDN.TraNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu TrNKKG" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX TrNKKG ON CDN.TraNag
+             (
+             TrN_KKGNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'TrNKKG'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu TrNKKD" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.TraNag') and name=N'TrNKKD' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'TrNKKD'
+  DROP INDEX TrNKKD on CDN.TraNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu TrNKKD" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX TrNKKD ON CDN.TraNag
+             (
+             TrN_KKDNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'TrNKKD'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu TrNKKP" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.TraNag') and name=N'TrNKKP' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'TrNKKP'
+  DROP INDEX TrNKKP on CDN.TraNag;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu TrNKKP" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX TrNKKP ON CDN.TraNag
+             (
+             TrN_KKPNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'TrNKKP'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu TSVOptymalizacja1" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.TraSVat') and name=N'TSVOptymalizacja1' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'TSVOptymalizacja1'
+  DROP INDEX TSVOptymalizacja1 on CDN.TraSVat;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu TSVOptymalizacja1" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX TSVOptymalizacja1 ON CDN.TraSVat
+             (
+             TSV_GIDTyp                     ,
+             TSV_GIDNumer                   ,
+             TSV_RodzajZakupu
+             )
+ INCLUDE(TSV_NettoR, TSV_NettoP, TSV_VatR, TSV_VatP,TSV_KatDatyOP)
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'TSVOptymalizacja1'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu TSVOkres" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.TraSVat') and name=N'TSVOkres' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'TSVOkres'
+  DROP INDEX TSVOkres on CDN.TraSVat;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu TSVOkres" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX TSVOkres ON CDN.TraSVat
+             (
+             TSV_DeklRok                    ,
+             TSV_DeklMiesiac
+             )
+ INCLUDE(TSV_GIDTyp,TSV_GIDNumer,TSV_Rozliczac,TSV_RodzajZakupu)
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'TSVOkres'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu TSVDataOP" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.TraSVat') and name=N'TSVDataOP' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'TSVDataOP'
+  DROP INDEX TSVDataOP on CDN.TraSVat;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu TSVDataOP" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX TSVDataOP ON CDN.TraSVat
+             (
+             TSV_DataOP
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'TSVDataOP'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu TSVDataPO" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.TraSVat') and name=N'TSVDataPO' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'TSVDataPO'
+  DROP INDEX TSVDataPO on CDN.TraSVat;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu TSVDataPO" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX TSVDataPO ON CDN.TraSVat
+             (
+             TSV_DataPO
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'TSVDataPO'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu TSVR2ID" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.TraSVat') and name=N'TSVR2ID' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'TSVR2ID'
+  DROP INDEX TSVR2ID on CDN.TraSVat;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu TSVR2ID" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX TSVR2ID ON CDN.TraSVat
+             (
+             TSV_R2ID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'TSVR2ID'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu ZKDKKonto" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ZestKSDefKonta') and name=N'ZKDKKonto' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'ZKDKKonto'
+  DROP INDEX ZKDKKonto on CDN.ZestKSDefKonta;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu ZKDKKonto" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX ZKDKKonto ON CDN.ZestKSDefKonta
+             (
+             ZKDK_Konto
+             )
+  WHERE (ZKDK_KONTO &lt;&gt; '''')
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'ZKDKKonto'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu ZKDKKlasaKonta" hidden="True">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ZestKSDefKonta') and name=N'ZKDKKlasaKonta' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'ZKDKKlasaKonta'
+  DROP INDEX ZKDKKlasaKonta on CDN.ZestKSDefKonta;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu ZKDKKlasaKonta" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX ZKDKKlasaKonta ON CDN.ZestKSDefKonta
+             (
+             ZKDK_KlasaKonta
+             )
+  WHERE (ZKDK_KLASAKONTA&lt;&gt;'''')
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'ZKDKKlasaKonta'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu FBKBank" hidden="False">
+--* gSkrypt.AkcjaPoBledzie = 1
+<scriptdef name="Kasowanie tabeli tymczasowej dla indeksów" hidden="True">
+DROP TABLE #XLIndexesFileGroups
+</scriptdef>
+</ROOT>

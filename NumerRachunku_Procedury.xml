@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury DodajNrRachunku" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'DodajNrRachunku' AND xtype = 'P')
+  drop procedure CDN.DodajNrRachunku;
+</scriptdef>
+<scriptdef name="Tworzenie procedury DodajNrRachunku" hidden="False">
+create procedure CDN.DodajNrRachunku
+  @ObGid integer,
+  @ObGidTyp smallint,
+  @Nr_Rachunku varchar(50)
+as
+	Insert into CDN.NumeryRachunkow (Nrb_ObNumer, Nrb_ObTyp, Nrb_NrRachunkuZnorm)
+	Values(@ObGid, @ObGidTyp, REPLACE(REPLACE(@Nr_Rachunku,'-',''),' ',''));
+	
+	if @@Error &lt;&gt; 0
+	begin
+		rollback tran
+		raiserror('Błąd dodawania numeru rachunku bankowego',16,1)
+		return
+	end
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury DodajNrRachunku" hidden="False">
+GRANT EXECUTE ON CDN.DodajNrRachunku TO CDNRaport
+</scriptdef>
+<scriptdef name="Kasowanie procedury AktualizujNrRachunku" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'AktualizujNrRachunku' AND xtype = 'P')
+  drop procedure CDN.AktualizujNrRachunku;
+</scriptdef>
+<scriptdef name="Tworzenie procedury AktualizujNrRachunku" hidden="False">
+create procedure CDN.AktualizujNrRachunku
+@ObNr integer,
+@ObTyp smallint,
+@Nr_Rachunku varchar(50),
+@Nr_RachunkuStary varchar(50)
+as
+begin
+	declare @NumId int;
+	print @Nr_RachunkuStary
+	select @NumId = (select isnull((select min(NrB_Id) from CDN.NumeryRachunkow
+					where NrB_ObNumer = @ObNr
+					AND NrB_ObTyp = @ObTyp
+					AND NrB_NrRachunkuZnorm Like REPLACE(REPLACE(@Nr_RachunkuStary,'-',''),' ','')),0));
+	if @@Error &lt;&gt; 0
+	begin
+		raiserror('Błąd aktualizowania numeru rachunku bankowego',16,1)
+		return;
+	end
+	if @NumId = 0
+		exec CDN.DodajNrRachunku @ObNr, @ObTyp, @Nr_Rachunku
+	else
+		update CDN.NumeryRachunkow set NrB_NrRachunkuZnorm = REPLACE(REPLACE(@Nr_Rachunku,'-',''),' ','')
+		where NrB_Id = @NumId;
+		
+	if @@Error &lt;&gt; 0
+	begin
+		raiserror('Błąd aktualizowania numeru rachunku bankowego',16,1)
+		return;
+	end
+end
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury AktualizujNrRachunku" hidden="False">
+GRANT EXECUTE ON CDN.AktualizujNrRachunku TO CDNRaport
+</scriptdef>
+<scriptdef name="Kasowanie procedury NumerRachunku_Poszukaj" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'NumerRachunku_Poszukaj' AND xtype = 'P')
+  drop procedure CDN.NumerRachunku_Poszukaj;
+</scriptdef>
+<scriptdef name="Tworzenie procedury NumerRachunku_Poszukaj" hidden="False">
+Create procedure CDN.NumerRachunku_Poszukaj
+   @NumerBanku varchar(50)
+AS
+begin
+	declare @Rezultat int;
+	declare @TypWyniku int;
+	declare @norma2 varchar(50);
+	declare @liczbaNiearchiwalnychPodmiotow int;
+	declare @liczbaArchiwalnychPodmiotow int;	
+	
+	declare	@Kolor tinyint = 0 
+	--0 jeden niearchiwalny brak
+	--1 wiele niearchiwalnych zółty 
+	--2	zero niearchiwalnych i (jeden lub wiele archiwalnych)
+	
+	--poprawka dla PKO (zwracane numery rachunków zaczynają się od 'PL')
+	if SUBSTRING(@NumerBanku,1,2) = 'PL'
+	   set @NumerBanku = RIGHT(@NumerBanku,26)
+	
+	set @norma2 = REPLACE(REPLACE(@NumerBanku,'-',''),' ','');
+
+    if  LEN(@norma2) = 0 --TFSID:195187
+    begin
+        select -1 as Typ, 0 as Id,  @Kolor as Kolor;
+        return;
+    end
+
+	set @liczbaNiearchiwalnychPodmiotow = (select count(*) from cdn.RachunkiBankowe where RkB_CzasArchiwizacji = 0 AND RkB_NrRachunku LIKE @norma2)
+
+	if @liczbaNiearchiwalnychPodmiotow &gt; 0
+	begin
+		
+
+		set @Kolor = (select CASE WHEN @liczbaNiearchiwalnychPodmiotow &gt;1 THEN 1 ELSE 0 END)
+		
+		select top 1 RkB_ObiTyp as Typ, RkB_ObiNumer as Id, @Kolor as Kolor, COALESCE(Knt_Akronim,Prc_Akronim,Urz_Akronim) as Akronim  from cdn.RachunkiBankowe LEFT join cdn.KntKarty on RkB_ObiNumer = Knt_GIDNumer AND RkB_ObiTyp = Knt_GIDTyp LEFT join cdn.PrcKarty on RkB_ObiNumer = PrC_GIDNumer AND RkB_ObiTyp = Prc_GIDTyp LEFT join cdn.Urzedy on RkB_ObiNumer = URZ_GIDNumer AND RkB_ObiTyp = URZ_GIDTyp where RkB_CzasArchiwizacji = 0 AND RkB_NrRachunku LIKE @norma2 ORDER BY Typ, Akronim
+		return
+	end
+
+	set @liczbaArchiwalnychPodmiotow = (select count(*) from cdn.RachunkiBankowe where RkB_CzasArchiwizacji &lt;&gt; 0 AND RkB_NrRachunku LIKE @norma2)
+
+	if @liczbaArchiwalnychPodmiotow &gt; 0 
+	begin
+		set @Kolor = 2
+		select top 1 RkB_ObiTyp as Typ, RkB_ObiNumer as Id, @Kolor as Kolor  from cdn.RachunkiBankowe where RkB_CzasArchiwizacji &lt;&gt; 0 AND RkB_NrRachunku LIKE @norma2 ORDER BY Typ, Id
+		return
+	end
+ 
+	select -1 as Typ, 0 as Id, @Kolor as Kolor
+end
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury NumerRachunku_Poszukaj" hidden="False">
+GRANT EXECUTE ON CDN.NumerRachunku_Poszukaj TO CDNRaport
+</scriptdef>
+<scriptdef name="Kasowanie procedury NumerRachunkuWirtualny_Poszukaj" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'NumerRachunkuWirtualny_Poszukaj' AND xtype = 'P')
+  drop procedure CDN.NumerRachunkuWirtualny_Poszukaj;
+</scriptdef>
+<scriptdef name="Tworzenie procedury NumerRachunkuWirtualny_Poszukaj" hidden="False">
+Create procedure CDN.NumerRachunkuWirtualny_Poszukaj
+   @NumerBanku varchar(50),
+   @NumerRejestru int
+AS
+begin
+	declare @Rezultat int;
+	declare @TypWyniku int;
+	declare @norma2 varchar(50);
+
+		--poprawka dla PKO (zwracane numery rachunków zaczynają się od 'PL')
+	if SUBSTRING(@NumerBanku,1,2) = 'PL'
+	   set @NumerBanku = RIGHT(@NumerBanku,26)
+
+	set @norma2 = REPLACE(REPLACE(@NumerBanku,'-',''),' ','');
+
+	if LEN(@norma2) = 0 --TFSID:195187
+    begin
+        select -1 as Typ, 0 as Id;
+        return;
+    end
+
+    SELECT @Rezultat =
+    (
+	   SELECT isnull(
+				 (
+					SELECT MIN(KRj_ObiNumer) a
+					FROM CDN.KntRejestr
+					WHERE KRj_TypRejestru = 1
+						 AND KRj_KarNumer = @NumerRejestru
+						 AND KRj_ObiTyp = 32
+						 AND KRj_NrRachunku LIKE @norma2
+				 ), 0)
+    );
+    IF @Rezultat != 0
+	   BEGIN
+		  SET @TypWyniku = 32;
+		  SELECT @TypWyniku AS Typ,
+			    @Rezultat AS Id,
+			    0 AS Kolor;
+		  RETURN;
+	   END
+    SELECT @Rezultat =
+    (
+	   SELECT isnull(
+				 (
+					SELECT MIN(KRj_ObiNumer) a
+					FROM CDN.KntRejestr
+					WHERE KRj_TypRejestru = 1
+						 AND KRj_KarNumer = @NumerRejestru
+						 AND KRj_ObiTyp = 944
+						 AND KRj_NrRachunku LIKE @norma2
+				 ), 0)
+    );
+    IF @Rezultat != 0
+	   BEGIN
+		  SET @TypWyniku = 944;
+		  SELECT @TypWyniku AS Typ,
+			    @Rezultat AS Id,
+			    0 AS Kolor;
+		  RETURN;
+	   END
+    SELECT @Rezultat =
+    (
+	   SELECT isnull(
+				 (
+					SELECT MIN(KRj_ObiNumer) a
+					FROM CDN.KntRejestr
+					WHERE KRj_TypRejestru = 1
+						 AND KRj_KarNumer = @NumerRejestru
+						 AND KRj_ObiTyp = 4304
+						 AND KRj_NrRachunku LIKE @norma2
+				 ), 0)
+    );
+    IF @Rezultat != 0
+	   BEGIN
+		  SET @TypWyniku = 4304;
+		  SELECT @TypWyniku AS Typ,
+			    @Rezultat AS Id,
+			    0 AS Kolor;
+		  RETURN;
+	   END
+    
+    SELECT -1 AS Typ,  0 AS Id,  0 AS Kolor;
+    
+    RETURN;
+
+
+end
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury NumerRachunkuWirtualny_Poszukaj" hidden="False">
+GRANT EXECUTE ON CDN.NumerRachunkuWirtualny_Poszukaj TO CDNRaport
+</scriptdef>
+</ROOT>
