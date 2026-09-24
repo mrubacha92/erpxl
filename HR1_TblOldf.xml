@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja tabeli CDN.PicoStanowiskaWydruki" hidden="False">
+IF OBJECT_ID('CDN.DF_PWr_Definicja','D') IS NOT NULL ALTER TABLE CDN.PicoStanowiskaWydruki DROP CONSTRAINT DF_PWr_Definicja;
+ALTER TABLE CDN.PicoStanowiskaWydruki DROP COLUMN PWr_Definicja;
+IF OBJECT_ID('CDN.DF_PWr_Styles','D') IS NOT NULL ALTER TABLE CDN.PicoStanowiskaWydruki DROP CONSTRAINT DF_PWr_Styles;
+ALTER TABLE CDN.PicoStanowiskaWydruki DROP COLUMN PWr_Styles;
+IF OBJECT_ID('CDN.DF_PWr_Layout','D') IS NOT NULL ALTER TABLE CDN.PicoStanowiskaWydruki DROP CONSTRAINT DF_PWr_Layout;
+ALTER TABLE CDN.PicoStanowiskaWydruki DROP COLUMN PWr_Layout;
+IF OBJECT_ID('CDN.DF_PWr_Logo','D') IS NOT NULL ALTER TABLE CDN.PicoStanowiskaWydruki DROP CONSTRAINT DF_PWr_Logo;
+ALTER TABLE CDN.PicoStanowiskaWydruki DROP COLUMN PWr_Logo;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdParamKJNormyObiektow" hidden="False">
+IF OBJECT_ID('CDN.DF_PPKO_KJNId','D') IS NOT NULL ALTER TABLE CDN.ProdParamKJNormyObiektow DROP CONSTRAINT DF_PPKO_KJNId;
+ALTER TABLE CDN.ProdParamKJNormyObiektow DROP COLUMN PPKO_KJNId;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdWzorceKJ" hidden="False">
+IF OBJECT_ID('CDN.DF_WKJ_Rodzaj','D') IS NOT NULL ALTER TABLE CDN.ProdWzorceKJ DROP CONSTRAINT DF_WKJ_Rodzaj;
+ALTER TABLE CDN.ProdWzorceKJ DROP COLUMN WKJ_Rodzaj;
+</scriptdef>
+<scriptdef name="Kasowanie tabeli CDN.PicoStnowiskaFormyPl" hidden="False">
+DROP TABLE CDN.PicoStnowiskaFormyPl;
+</scriptdef>
+<scriptdef name="Kasowanie tabeli CDN.PicoStnowiskaOperatorzy" hidden="False">
+DROP TABLE CDN.PicoStnowiskaOperatorzy;
+</scriptdef>
+<scriptdef name="Kasowanie tabeli CDN.ProdParametryKJOpisy" hidden="False">
+DROP TABLE CDN.ProdParametryKJOpisy;
+</scriptdef>
+</ROOT>

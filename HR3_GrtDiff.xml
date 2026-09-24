@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Nadawanie praw do tabeli RachunkiBankoweVat" hidden="False">
+
+GRANT SELECT ON CDN.RachunkiBankoweVat TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli TraJPK" hidden="False">
+
+GRANT SELECT ON CDN.TraJPK TO CDNRaport;
+
+</scriptdef>
+</ROOT>

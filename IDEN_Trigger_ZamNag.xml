@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="ZamNag_InitFields">
+Create Trigger CDN.ZamNag_InitFields on CDN.ZamNag for insert
+as 
+Begin 
+
+	update T 
+	set t.ZaN_ZrdTyp   = t.ZAN_GIDTyp,
+	t.ZaN_ZrdFirma 	 = t.ZaN_GIDFirma ,
+	t.ZaN_ZrdNumer 	 = t.ZaN_GIDNumer ,
+	t.ZaN_ZrdLp 	 = t.ZaN_GIDLp
+	From CDN.ZamNag T join inserted on 
+		t.ZaN_GIDTyp = inserted.ZaN_GIDTyp 
+		and t.ZaN_GIDNumer = inserted.ZaN_GIDNumer
+		and t.ZaN_GIDLp = inserted.ZaN_GIDLp
+	Where isnull(inserted.ZaN_ZrdTyp,0) = 0
+End 
+</triggerdef>
+</ROOT>

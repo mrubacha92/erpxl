@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Nadawanie praw do tabeli BIPointRaportDef" hidden="False">
+
+GRANT SELECT ON CDN.BIPointRaportDef TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli BIPointRaportElem" hidden="False">
+
+GRANT SELECT ON CDN.BIPointRaportElem TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli BIPointRaportOpeCentra" hidden="False">
+
+GRANT SELECT ON CDN.BIPointRaportOpeCentra TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli BankiDefinicje" hidden="False">
+
+GRANT SELECT ON CDN.BankiDefinicje TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli BankiDefinicjeOperacje" hidden="False">
+
+GRANT SELECT ON CDN.BankiDefinicjeOperacje TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli BudzetPrjNagWaluty" hidden="False">
+
+GRANT SELECT ON CDN.BudzetPrjNagWaluty TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli CDCLoginy" hidden="False">
+
+GRANT SELECT ON CDN.CDCLoginy TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli HeatMapLog" hidden="False">
+
+GRANT SELECT ON CDN.HeatMapLog TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ImportWyciagowBankowych" hidden="False">
+
+GRANT SELECT ON CDN.ImportWyciagowBankowych TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli KntRejestr" hidden="False">
+
+GRANT SELECT ON CDN.KntRejestr TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli PicoStanowiska" hidden="False">
+
+GRANT SELECT ON CDN.PicoStanowiska TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli PicoStanowiskaFormyPl" hidden="False">
+
+GRANT SELECT ON CDN.PicoStanowiskaFormyPl TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli PicoStanowiskaOperatorzy" hidden="False">
+
+GRANT SELECT ON CDN.PicoStanowiskaOperatorzy TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli PicoStanowiskaWydruki" hidden="False">
+
+GRANT SELECT ON CDN.PicoStanowiskaWydruki TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli PoleceniaGlowne" hidden="False">
+
+GRANT SELECT ON CDN.PoleceniaGlowne TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli PoleceniaOdpowiedzi" hidden="False">
+
+GRANT SELECT ON CDN.PoleceniaOdpowiedzi TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli PoleceniaTozsame" hidden="False">
+
+GRANT SELECT ON CDN.PoleceniaTozsame TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdCzujniki" hidden="False">
+
+GRANT SELECT ON CDN.ProdCzujniki TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdCzujnikiZdarzenia" hidden="False">
+
+GRANT SELECT ON CDN.ProdCzujnikiZdarzenia TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdCzujnikiZdarzeniaDefinicje" hidden="False">
+
+GRANT SELECT ON CDN.ProdCzujnikiZdarzeniaDefinicje TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdKosztyElemO" hidden="False">
+
+GRANT SELECT ON CDN.ProdKosztyElemO TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdNadzlecenia" hidden="False">
+
+GRANT SELECT ON CDN.ProdNadzlecenia TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdNadzleceniaLinki" hidden="False">
+
+GRANT SELECT ON CDN.ProdNadzleceniaLinki TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdObiektyCzujniki" hidden="False">
+
+GRANT SELECT ON CDN.ProdObiektyCzujniki TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdPKJHistoriaZmian" hidden="False">
+
+GRANT SELECT ON CDN.ProdPKJHistoriaZmian TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdPKJNag" hidden="False">
+
+GRANT SELECT ON CDN.ProdPKJNag TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdPKJZas" hidden="False">
+
+GRANT SELECT ON CDN.ProdPKJZas TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdParamKJNormyObiektow" hidden="False">
+
+GRANT SELECT ON CDN.ProdParamKJNormyObiektow TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdParametryKJ" hidden="False">
+
+GRANT SELECT ON CDN.ProdParametryKJ TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdParametryKJNormy" hidden="False">
+
+GRANT SELECT ON CDN.ProdParametryKJNormy TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdWzorceKJ" hidden="False">
+
+GRANT SELECT ON CDN.ProdWzorceKJ TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdWzorceKJTowary" hidden="False">
+
+GRANT SELECT ON CDN.ProdWzorceKJTowary TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ProdZwiazane" hidden="False">
+
+GRANT SELECT ON CDN.ProdZwiazane TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli PrzelewyAutoryzacje" hidden="False">
+
+GRANT SELECT ON CDN.PrzelewyAutoryzacje TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli RachunkiBankowe" hidden="False">
+
+GRANT SELECT ON CDN.RachunkiBankowe TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli RachunkiBankoweVat" hidden="False">
+
+GRANT SELECT ON CDN.RachunkiBankoweVat TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SFNag" hidden="False">
+
+GRANT SELECT ON CDN.SFNag TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SFPodpisy" hidden="False">
+
+GRANT SELECT ON CDN.SFPodpisy TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SFSlownikiElem" hidden="False">
+
+GRANT SELECT ON CDN.SFSlownikiElem TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SFSlownikiNag" hidden="False">
+
+GRANT SELECT ON CDN.SFSlownikiNag TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SFZalWlasne" hidden="False">
+
+GRANT SELECT ON CDN.SFZalWlasne TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SFZalaczniki" hidden="False">
+
+GRANT SELECT ON CDN.SFZalaczniki TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SISDefinicjeKonta" hidden="False">
+
+GRANT SELECT ON CDN.SISDefinicjeKonta TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SentElem" hidden="False">
+
+GRANT SELECT ON CDN.SentElem TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SlwDefPowiazaniaKont" hidden="False">
+
+GRANT SELECT ON CDN.SlwDefPowiazaniaKont TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SlwFunkcjeKonta" hidden="False">
+
+GRANT SELECT ON CDN.SlwFunkcjeKonta TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SrwObiektyReceptury" hidden="False">
+
+GRANT SELECT ON CDN.SrwObiektyReceptury TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SrwReceptury" hidden="False">
+
+GRANT SELECT ON CDN.SrwReceptury TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SrwRecepturyCzynnosci" hidden="False">
+
+GRANT SELECT ON CDN.SrwRecepturyCzynnosci TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SrwRecepturySkladniki" hidden="False">
+
+GRANT SELECT ON CDN.SrwRecepturySkladniki TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli TraJPK" hidden="False">
+
+GRANT SELECT ON CDN.TraJPK TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli TraSVat" hidden="False">
+
+GRANT SELECT ON CDN.TraSVat TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ZestKSDefKonta" hidden="False">
+
+GRANT SELECT ON CDN.ZestKSDefKonta TO CDNRaport;
+
+</scriptdef>
+</ROOT>

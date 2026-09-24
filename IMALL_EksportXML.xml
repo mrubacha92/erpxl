@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury IMALL_EksportXML" hidden="True">
+if exists (select * from dbo.sysobjects where id = object_id(N'CDN.IMALL_EksportXML') and OBJECTPROPERTY(id, N'IsProcedure') = 1)
+  drop procedure CDN.IMALL_EksportXML
+</scriptdef>
+<scriptdef name="Tworzenie procedury IMALL_EksportXML" hidden="False">
+CREATE PROCEDURE [CDN].[IMALL_EksportXML]
+  @ID INT             -- ID e-sklepu
+ ,@Opcje INT          -- Maska opcji eksportu
+ AS
+SET NOCOUNT ON
+
+select @ID = PcK_PicoID FROM CDN.PicoKonfig where PcK_iMallID = CAST(@ID AS VARCHAR(20))
+
+DECLARE  @ExpCennik                             INT -- Eksport cennika (0 - nie, 1 - tak)
+                ,@ExpCennikTyp                  INT -- Typ eksportu cennika (0 - różnicowy, 1 - pełny)
+                ,@ExpGrup                               INT -- Eksport grup (0 - nie, 1 - tak)
+                ,@ExpGrupTyp                    INT -- Typ eksportu grup (0 - różnicowy, 1 - pełny)
+                ,@ExpDaneBinarne                INT -- Eksport danych binarnych (0 - nie, 1 - tak)
+                ,@ExpDaneBinarneTyp             INT     -- Typ eksportu danych binarnych (0 - różnicowy, 1 - pełny)
+                ,@ExpDaneBinarnePaczki  INT -- Eksport danych binarnych w paczkach (0 - pierwsza paczka, 1 - kolejne paczki z sami danymi binarnymi)
+                ,@ExpZasoby                             INT -- Eksport zasobów towarowych (0 - nie, 1 - tak)
+				,@ExpPominTwr	INT
+
+DECLARE @TwrID INT                      -- ID towarów, które były wysłane jako ostatnie w poprzedniej paczce
+DECLARE @DABID INT                      -- ID danych binarnych, które były wysłane jako ostatnie w poprzedniej paczce
+DECLARE @PcK_Stan     INT   -- Stan e-sklepu : (0 - nowy; 1 - wykonano pierwszy eksport; 2 - wykonano pełną synchronizację (import,eksport) )
+
+SELECT  @PcK_Stan =   (SELECT PcK_Stan FROM CDN.PicoKonfig WHERE PcK_PicoID = @ID)
+
+SELECT   @ExpCennik                             =  @Opcje &amp; 1
+                ,@ExpCennikTyp                  = (@Opcje &amp; 2) / 2
+                ,@ExpGrup                               = (@Opcje &amp; 4) / 4
+            ,@ExpGrupTyp                        = (@Opcje &amp; 8) / 8
+                ,@ExpDaneBinarne                = (@Opcje &amp; 16) / 16
+                ,@ExpDaneBinarneTyp             = (@Opcje &amp; 32) / 32
+                ,@ExpDaneBinarnePaczki  = (@Opcje &amp; 64) / 64
+                ,@ExpZasoby                             = (@Opcje &amp; 128) / 128
+				,@ExpPominTwr                           = (@Opcje &amp; 256) / 256
+
+-- IF (SELECT PcK_TSSynchrTwrPtw FROM CDN.PicoKonfig WHERE PcK_PicoID = @ID) = 0
+--         SET @ExpCennikTyp = 1
+-- IF (SELECT PcK_TSSynchrGrupPtw FROM CDN.PicoKonfig WHERE PcK_PicoID = @ID) = 0
+--         SET @ExpGrupTyp = 1
+
+ SET @Opcje = @ExpCennik + 2*@ExpCennikTyp + 4*@ExpGrup + 8*@ExpGrupTyp + 16*@ExpDaneBinarne + 32*@ExpDaneBinarneTyp + 64*@ExpDaneBinarnePaczki + 128*@ExpZasoby
+
+ UPDATE CDN.PicoKonfig SET PcK_EtapSynchronizacji = 2  WHERE PcK_PicoID = @ID -- etap synchronizacji: eksport
+
+ SELECT '&lt;ROOT&gt;'
+ EXEC CDN.IMALL_EksportInfoBlok @ID, @Opcje
+
+ IF @Opcje &lt;&gt; 0
+ BEGIN
+	 IF @ExpDaneBinarnePaczki = 0
+			BEGIN
+					SELECT '&lt;PTWI&gt;'         -- Eksport potwierdzeń
+					EXEC CDN.IMALL_EksportPtw @ID, @ExpCennik, @ExpCennikTyp
+					SELECT '&lt;/PTWI&gt;'
+
+					IF (@ExpZasoby = 1)
+							BEGIN
+									SELECT '&lt;ZSBI&gt;'         -- Eksport stanów magazynowych
+									EXEC CDN.IMALL_EksportTwrZasoby @ID, 1
+									SELECT '&lt;/ZSBI&gt;'
+							END
+
+					UPDATE CDN.PicoKonfig SET PcK_Blokady = 0 WHERE PcK_PicoID = @ID
+
+					--IF (@ExpCennik = 1)
+					--        BEGIN
+					--                SELECT '&lt;DABI&gt;' -- Eksport danych binarnych (pierwsza paczka)
+					--                EXEC CDN.IMALL_EksportDaneBinarne @ID, @ExpCennikTyp, 0
+					--                SELECT '&lt;/DABI&gt;'
+					--        END
+
+					--IF (@ExpGrup = 1)
+					--        BEGIN
+					--                SELECT '&lt;TWGI&gt;' -- Eksport grup towarowych
+					--                EXEC CDN.ESKLEP_EksportGrup @ID, @ExpGrupTyp
+					--                SELECT '&lt;/TWGI&gt;'
+					--        END
+
+					IF (@ExpCennik = 1)
+							BEGIN
+								IF (@ExpPominTwr = 0)
+								BEGIN
+									SELECT '&lt;TWRI&gt;' -- Eksport towarów
+									SELECT @TwrID = PcK_Blokady FROM CDN.PicoKonfig WHERE PcK_PicoID = @ID
+									EXEC CDN.IMALL_EksportTwr @ID, @ExpCennikTyp, @TwrID
+									SELECT '&lt;/TWRI&gt;'
+								END
+
+								SELECT '&lt;PDRI&gt;' -- Eksport producentów
+								EXEC CDN.IMALL_EksportTwrProducent @ID, @ExpCennikTyp
+								SELECT '&lt;/PDRI&gt;'
+
+								SELECT '&lt;MRKI&gt;' -- Eksport marek
+								EXEC CDN.IMALL_EksportTwrMarka @ID, @ExpCennikTyp
+								SELECT '&lt;/MRKI&gt;'                                
+							END
+			END
+	ELSE
+			BEGIN
+					SELECT @DABID = PcK_Blokady FROM CDN.PicoKonfig WHERE PcK_PicoID = @ID
+					SELECT '&lt;DABI&gt;' -- Eksport danych binarnych (kolejne paczki)
+					EXEC CDN.IMALL_EksportDaneBinarne @ID, @ExpCennikTyp, @DABID
+					SELECT '&lt;/DABI&gt;'
+			END
+END			
+SELECT '&lt;/ROOT&gt;'
+ UPDATE CDN.PicoKonfig SET PcK_EtapSynchronizacji = 0  WHERE PcK_PicoID = @ID -- Etap synchronizacji: bezczynny
+
+ IF @PcK_Stan = 0 -- nowo utworzony oddział
+        UPDATE CDN.PicoKonfig SET PcK_Stan = 1  WHERE PcK_PicoID = @ID -- Wykonano pierwszą synchronizację: eksport
+
+SET NOCOUNT OFF
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury IMALL_EksportXML" hidden="False">
+GRANT EXECUTE ON CDN.IMALL_EksportXML TO CDNRaport
+</scriptdef>
+</ROOT>

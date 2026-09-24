@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Włączenie numeracji dokumentów z wykorzystaniem tabeli CDN.Wolne" hidden="False">
+update cdn.Konfig set Kon_Wartosc=1 WHERE Kon_Numer=-136
+</scriptdef>
+<scriptdef name="Inicjalizacja nowych pól w tabeli cdn.OpeKarty" hidden="False">
+update cdn.OpeKarty set Ope_PrzerywanieSesji = Ope_Administrator, Ope_KorektaDanych = 1, Ope_MESWidokZalacznikow = 1
+</scriptdef>
+<scriptdef name="Inicjalizacja nowych pól w tabeli cdn.StaKarty" hidden="False">
+update cdn.StaKarty set Sta_PrzerywanieSesji = Sta_Administrator, Sta_KorektaDanych = 1
+</scriptdef>
+<scriptdef name="Inicjalizacja nowych pól w tabeli cdn.PrcKarty" hidden="False">
+ UPDATE CDN.PrcKarty SET Prc_DomyslneCentrumKosztId = coalesce((SELECT FRS_GRONumer	FROM CDN.FrmStruktura 
+																WHERE  frs_id = (SELECT MAX(FRS_ID)	FROM CDN.FrmStruktura a	
+																				 WHERE a.FRS_StrTyp = - 1 AND a.FRS_Warstwa = 2	AND a.FRS_GIDTyp = 944	AND a.FRS_GIDNumer = Prc_GIDNumer GROUP BY FRS_GIDNumer	)),0)
+</scriptdef>
+<scriptdef name="Inicjalizacja pól MetodaKasowa w tabeli cdn.KntKarty, cdn.KntAdresy, cdn.KntWzorce" hidden="False">
+update cdn.KntKarty set Knt_MetodaKasowa = case when Knt_RolnikRyczaltowy = 1 then 1 else 0 end
+update cdn.KntWzorce set KnW_MetodaKasowa = case when KnW_RolnikRyczaltowy = 1 then 1 else 0 end
+update cdn.KntAdresy set KnA_MetodaKasowa = case when KnA_RolnikRyczaltowy = 1 then 1 else 0 end
+</scriptdef>
+<scriptdef name="Inicjalizacja pól ProlZrdGid w tabeli cdn.Traplat" hidden="False">
+update t1 set t1.trp_prolzrdtyp=t1.trp_gidtyp,t1.trp_prolzrdnumer=t1.TrP_GIDNumer,t1.TrP_ProlZrdFirma=t1.TrP_GIDFirma,t1.TrP_ProlZrdLp=t1.TrP_GIDLp  from CDN.TraPlat t1 where t1.TrP_ProlZrdNumer = 0 AND NOT EXISTS(select * from CDN.TraPlat t2 where t2.TrP_ProlZrdNumer=t1.trp_gidnumer and t2.TrP_ProlZrdTyp=t1.trp_gidtyp and t2.TrP_ProlZrdLp=t1.TrP_GIDLp)
+</scriptdef>
+<scriptdef name="Inicjalizacja pól prln_kwotaodsetki w tabeli cdn.ProlongNag" hidden="False">
+update CDN.ProlongNag set prln_kwotaodsetki = (select SUM(isnull(prle_kwotaOdsetki,0)) from CDN.ProlongElem where PRLE_PrlnId = prln_id)
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.kntAdresy" hidden="False">
+	update cdn.kntAdresy set kna_GUID=newid(),kna_GUIDdane=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.kntKarty" hidden="False">
+	update cdn.kntKarty set knt_GUID=newid(),knt_GUIDdane=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.KNTOSOBY" hidden="False">
+	update cdn.KNTOSOBY set kns_GUID=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.FIRMA" hidden="False">
+	update cdn.FIRMA set frm_GUID=newid(),frm_GUIDdane=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.Zgody" hidden="False">
+	update cdn.Zgody set zgo_GUID=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.KntLinki" hidden="False">
+	update cdn.KntLinki set knl_GUID=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.Atrybuty" hidden="False">
+	update cdn.Atrybuty set Atr_GUID=newid(),atr_lastMod= DATEDIFF(s,CONVERT(DATETIME,'1990-01-01',120),GETDATE())
+</scriptdef>
+<scriptdef name="Inicjalizacja Knt_DataPromocji w tabeli CDN.KntKarty" hidden="False">
+	update cdn.KntKarty set Knt_DataPromocji = 1
+</scriptdef>
+<scriptdef name="Inicjalizacja KnW_DataPromocji w tabeli CDN.KntWzorce" hidden="False">
+	update cdn.KntWzorce set KnW_DataPromocji = 1
+</scriptdef>
+<scriptdef name="Inicjalizacja POF_Widocznosc w tabeli CDN.ProdObiektyFunkcje" hidden="False">
+	update cdn.ProdObiektyFunkcje set POF_Widocznosc = 3
+</scriptdef>
+<scriptdef name="Inicjalizacja RpF2_domyslnyMES w tabeli CDN.RptFormaty2" hidden="False">
+	update cdn.RptFormaty2 set RpF2_domyslnyMES = 1
+	from cdn.RptFormaty2 
+	join cdn.RptDomyslne2 on RpF2_RpWId = RpY2_RpWId
+	where RpY2_TypDomyslnosci in (1, 2) and RpY2_KontekstID = 1
+	and RpY2_ProcID in (2930, 2931)
+</scriptdef>
+<scriptdef name="Inicjalizacja RpFU_domyslnyMES w tabeli CDN.RptFormatyU" hidden="False">
+	update cdn.RptFormatyU set RpFU_domyslnyMES = 1
+	from cdn.RptFormatyU 
+	join cdn.RptDomyslneU on RpFU_RpWId = RpYU_RpWId
+	join cdn.RptMapa2 on RpM2_ProcID = RpYU_ProcID and RpM2_KontekstId = RpYU_KontekstId
+	join cdn.RptFormaty2 on RpF2_RpWId = RpM2_RpWId
+	where RpYU_TypDomyslnosci in (1, 2) and RpYU_KontekstID = 1
+	and RpYU_ProcID in (2930, 2931) and RpF2_domyslnyMES = 0
+</scriptdef>
+</ROOT>

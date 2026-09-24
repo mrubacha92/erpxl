@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie klucza obcego FK_RBVRkb" hidden="True">
+IF EXISTS(SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'CDN.FK_RBVRkb') AND parent_object_id = OBJECT_ID(N'CDN.RachunkiBankoweVat'))
+  ALTER TABLE CDN.RachunkiBankoweVat DROP CONSTRAINT FK_RBVRkb;
+</scriptdef>
+<scriptdef name="Tworzenie klucza obcego RBVRkb" hidden="False">
+ALTER TABLE CDN.RachunkiBankoweVat ADD CONSTRAINT FK_RBVRkb
+ FOREIGN KEY
+   (
+                          RBV_RkbId
+                         )
+             REFERENCES CDN.RachunkiBankowe
+                         (
+                          RkB_Id
+   )
+ ON DELETE CASCADE
+ ;
+</scriptdef>
+<scriptdef name="Kasowanie klucza obcego FK_TrJPrimary" hidden="True">
+IF EXISTS(SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'CDN.FK_TrJPrimary') AND parent_object_id = OBJECT_ID(N'CDN.TraJPK'))
+  ALTER TABLE CDN.TraJPK DROP CONSTRAINT FK_TrJPrimary;
+</scriptdef>
+<scriptdef name="Tworzenie klucza obcego TrJPrimary" hidden="False">
+ALTER TABLE CDN.TraJPK ADD CONSTRAINT FK_TrJPrimary
+ FOREIGN KEY
+   (
+                          TrJ_TrNNumer
+                         )
+             REFERENCES CDN.TraNag
+                         (
+                          TrN_GIDNumer
+   )
+ ON DELETE CASCADE
+ ;
+</scriptdef>
+</ROOT>

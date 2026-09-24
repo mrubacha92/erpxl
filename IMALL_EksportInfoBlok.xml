@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury IMALL_EksportInfoBlok" hidden="True">
+IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'CDN.IMALL_EksportInfoBlok') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+  DROP PROCEDURE CDN.IMALL_EksportInfoBlok
+</scriptdef>
+<scriptdef name="Tworzenie procedury IMALL_EksportInfoBlok" hidden="False">
+CREATE PROCEDURE CDN.IMALL_EksportInfoBlok
+  @ID			INT    -- ID e-sklepu
+ ,@ExpOpcje     INT    -- Maska opcji eksportu
+AS
+SET NOCOUNT ON
+
+DECLARE  @TimeStamp INT
+
+SET @TimeStamp = DATEDIFF(s,CONVERT(DATETIME,'19900101',121),GETDATE())
+
+IF NOT EXISTS(SELECT * FROM CDN.PicoKonfig WHERE PcK_PicoID = @ID)
+BEGIN
+	SELECT @ID = PcK_PicoID FROM CDN.PicoKonfig WHERE PcK_iMallID = CAST(@ID AS VARCHAR(20))
+END  
+
+/******** Update timestampów w PicoKonfig *********/
+UPDATE CDN.PicoKonfig SET PcK_TSSynchr = @TimeStamp WHERE PcK_PicoId = @ID
+
+IF (@ExpOpcje &amp; 1 = 1)		 -- eksport cennika
+   UPDATE CDN.PicoKonfig SET PcK_TSSynchrTwr = @TimeStamp WHERE PcK_PicoId = @ID
+ 
+IF((@ExpOpcje &amp; 4) / 4 = 1)  -- eksport grup
+   UPDATE CDN.PicoKonfig SET PcK_TSSynchrGrup = @TimeStamp WHERE PcK_PicoId = @ID
+ 
+ 
+SET NOCOUNT OFF
+
+SELECT	 PcK_iMallID		AS CustomerID 
+		,PcK_TSSynchr		AS TSSynchr 
+		,PcK_TSSynchrTwr	AS TSSynchrTwr
+		,PcK_TSSynchrGrup	AS TSSynchrGrup
+		,PcK_TSSynchrKnt	AS TSSynchrKntPtw		
+		,CASE WHEN @ExpOpcje = 0 THEN 1 ELSE @ExpOpcje END AS EksportTyp
+		,2					AS ZrodloID
+		,CASE WHEN @ExpOpcje = 0 THEN 1 ELSE 0 END AS Koniec		
+		
+FROM CDN.PicoKonfig AS INFOBLOK
+WHERE PcK_PicoID = @ID
+FOR XML AUTO
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury IMALL_EksportInfoBlok" hidden="False">
+GRANT EXECUTE ON CDN.IMALL_EksportInfoBlok TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Inicjalizacja Knt_DataPromocji w tabeli CDN.KntKarty" hidden="False">
+	update cdn.KntKarty set Knt_DataPromocji = 1
+</scriptdef>
+<scriptdef name="Inicjalizacja KnW_DataPromocji w tabeli CDN.KntWzorce" hidden="False">
+	update cdn.KntWzorce set KnW_DataPromocji = 1
+</scriptdef>
+<scriptdef name="Inicjalizacja POF_Widocznosc w tabeli CDN.ProdObiektyFunkcje" hidden="False">
+	update cdn.ProdObiektyFunkcje set POF_Widocznosc = 3
+</scriptdef>
+<scriptdef name="Inicjalizacja RpF2_domyslnyMES w tabeli CDN.RptFormaty2" hidden="False">
+	update cdn.RptFormaty2 set RpF2_domyslnyMES = 1
+	from cdn.RptFormaty2 
+	join cdn.RptDomyslne2 on RpF2_RpWId = RpY2_RpWId
+	where RpY2_TypDomyslnosci in (1, 2) and RpY2_KontekstID = 1
+	and RpY2_ProcID in (2930, 2931)
+</scriptdef>
+<scriptdef name="Inicjalizacja RpFU_domyslnyMES w tabeli CDN.RptFormatyU" hidden="False">
+	update cdn.RptFormatyU set RpFU_domyslnyMES = 1
+	from cdn.RptFormatyU 
+	join cdn.RptDomyslneU on RpFU_RpWId = RpYU_RpWId
+	join cdn.RptMapa2 on RpM2_ProcID = RpYU_ProcID and RpM2_KontekstId = RpYU_KontekstId
+	join cdn.RptFormaty2 on RpF2_RpWId = RpM2_RpWId
+	where RpYU_TypDomyslnosci in (1, 2) and RpYU_KontekstID = 1
+	and RpYU_ProcID in (2930, 2931) and RpF2_domyslnyMES = 0
+</scriptdef>
+</ROOT>

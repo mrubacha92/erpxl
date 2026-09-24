@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="GanttUpdPCTTerminy">
+CREATE PROCEDURE CDN.GanttUpdPCTTerminy 
+	@pctTerminOd    INT, 
+	@pctTerminDo    INT, 
+	@pctId          INT 
+ 
+AS 
+ 
+update CDN.ProdCzynnosciTerminy 
+set PCT_CzasRozliczeniowy = (1.0*(@pctTerminDo-@pctTerminOd)/case when (PCT_TerminDo - PCT_TerminOd)= 0 then 1 else (PCT_TerminDo - PCT_TerminOd) end  ) * PCT_CzasRozliczeniowy,
+PCT_TerminOd = @pctTerminOd, PCT_TerminDo = @pctTerminDo
+where PCT_ID = 	@pctId
+</proceduredef>
+</ROOT>

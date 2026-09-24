@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Tworzenie tabeli tymczasowej dla indeksów" hidden="True">
+CREATE TABLE #XLIndexesFileGroups (indName VARCHAR(100),fgName VARCHAR(100))
+</scriptdef>
+<scriptdef name="Kasowanie indeksu RBVRkb" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.RachunkiBankoweVat') and name=N'RBVRkb' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'RBVRkb'
+  DROP INDEX RBVRkb on CDN.RachunkiBankoweVat;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu RBVRkb" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX RBVRkb ON CDN.RachunkiBankoweVat
+             (
+             RBV_RkbId
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'RBVRkb'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie tabeli tymczasowej dla indeksów" hidden="True">
+DROP TABLE #XLIndexesFileGroups
+</scriptdef>
+</ROOT>

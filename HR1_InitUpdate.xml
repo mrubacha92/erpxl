@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.kntAdresy" hidden="False">
+	update cdn.kntAdresy set kna_GUID=newid(),kna_GUIDdane=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.kntKarty" hidden="False">
+	update cdn.kntKarty set knt_GUID=newid(),knt_GUIDdane=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.KNTOSOBY" hidden="False">
+	update cdn.KNTOSOBY set kns_GUID=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.FIRMA" hidden="False">
+	update cdn.FIRMA set frm_GUID=newid(),frm_GUIDdane=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.Zgody" hidden="False">
+	update cdn.Zgody set zgo_GUID=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.KntLinki" hidden="False">
+	update cdn.KntLinki set knl_GUID=newid()
+</scriptdef>
+<scriptdef name="Inicjalizacja GUID w tabeli CDN.Atrybuty" hidden="False">
+	update cdn.Atrybuty set Atr_GUID=newid(),atr_lastMod= DATEDIFF(s,CONVERT(DATETIME,'1990-01-01',120),GETDATE())
+</scriptdef>
+</ROOT>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Nadawanie praw do tabeli CDCLoginy" hidden="False">
+
+GRANT SELECT ON CDN.CDCLoginy TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli PrzelewyAutoryzacje" hidden="False">
+
+GRANT SELECT ON CDN.PrzelewyAutoryzacje TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SISDefinicjeKonta" hidden="False">
+
+GRANT SELECT ON CDN.SISDefinicjeKonta TO CDNRaport;
+
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli ZestKSDefKonta" hidden="False">
+
+GRANT SELECT ON CDN.ZestKSDefKonta TO CDNRaport;
+
+</scriptdef>
+</ROOT>

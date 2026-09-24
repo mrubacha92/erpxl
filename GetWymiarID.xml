@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="GetWymiarID">
+CREATE FUNCTION CDN.GetWymiarID (@WMRID INT)  
+RETURNS INT AS  
+BEGIN 
+Declare @ElementID INT; 
+DECLARE @ParentID INT;
+
+SELECT @ElementID=WMR_ID, @ParentID = WMR_ParID
+FROM CDN.wymiary WHERE WMR_ID=@WmrID
+
+WHILE (@ParentID&gt;0)
+	BEGIN 
+		SET @ElementID=@ParentID 
+		SELECT @ElementID=WMR_ID, @ParentID = WMR_ParID
+		FROM CDN.wymiary WHERE WMR_ID=@ElementID
+	END 
+RETURN(@ElementID)
+END
+</functiondef>
+</ROOT>

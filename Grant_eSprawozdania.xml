@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Nadawanie praw do tabeli SFNag" hidden="False">
+GRANT INSERT, UPDATE, DELETE ON CDN.SFNag TO CDNRaport;
+</scriptdef>
+<scriptdef name="Nadawanie praw do tabeli SFZalaczniki" hidden="False">
+GRANT INSERT, UPDATE, DELETE ON CDN.SFZalaczniki TO CDNRaport;
+</scriptdef>
+</ROOT>

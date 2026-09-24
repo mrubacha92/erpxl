@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Konwersja tabeli CDN.KntAdresy" hidden="False">
+ALTER TABLE CDN.KntAdresy ADD KnA_VatDataRejestracji          INTEGER        CONSTRAINT DF_KnA_VatDataRejestracji DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_VatDataOdmowy               INTEGER        CONSTRAINT DF_KnA_VatDataOdmowy DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_VatDataPrzywrocenia         INTEGER        CONSTRAINT DF_KnA_VatDataPrzywrocenia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_VatDataUsuniecia            INTEGER        CONSTRAINT DF_KnA_VatDataUsuniecia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_VatDataSprawdzenia          INTEGER        CONSTRAINT DF_KnA_VatDataSprawdzenia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntAdresy ADD KnA_KrajSiedziby                VARCHAR (    2)   CONSTRAINT DF_KnA_KrajSiedziby DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntKarty" hidden="False">
+ALTER TABLE CDN.KntKarty ADD Knt_VatDataRejestracji          INTEGER        CONSTRAINT DF_Knt_VatDataRejestracji DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_VatDataOdmowy               INTEGER        CONSTRAINT DF_Knt_VatDataOdmowy DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_VatDataPrzywrocenia         INTEGER        CONSTRAINT DF_Knt_VatDataPrzywrocenia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_VatDataUsuniecia            INTEGER        CONSTRAINT DF_Knt_VatDataUsuniecia DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_KrajSiedziby                VARCHAR (    2)   CONSTRAINT DF_Knt_KrajSiedziby DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.KntKarty ADD Knt_ProcTrnJpk                  VARCHAR (   50)   CONSTRAINT DF_Knt_ProcTrnJpk DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntWzorce" hidden="False">
+ALTER TABLE CDN.KntWzorce ADD KnW_KrajSiedziby                VARCHAR (    2)   CONSTRAINT DF_KnW_KrajSiedziby DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.KntWzorce ADD KnW_ProcTrnJpk                  VARCHAR (   50)   CONSTRAINT DF_KnW_ProcTrnJpk DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KodyCN" hidden="False">
+ALTER TABLE CDN.KodyCN ADD KCN_StawkaVAT                   DECIMAL ( 7,2) CONSTRAINT DF_KCN_StawkaVAT DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.KodyCN ADD KCN_FlagaVAT                    TINYINT        CONSTRAINT DF_KCN_FlagaVAT DEFAULT(0) WITH VALUES;
+IF OBJECT_ID('CDN.DF_KCN_Opis','D') IS NOT NULL ALTER TABLE CDN.KodyCN DROP CONSTRAINT DF_KCN_Opis;
+ALTER TABLE CDN.KodyCN ALTER COLUMN KCN_Opis VARCHAR ( 1024)   ;
+ALTER TABLE CDN.KodyCN ADD CONSTRAINT DF_KCN_Opis  DEFAULT('') FOR KCN_Opis WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.OpeKarty" hidden="False">
+ALTER TABLE CDN.OpeKarty ADD Ope_EdycjaPCN                   TINYINT        CONSTRAINT DF_Ope_EdycjaPCN DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.PlanSprzedazy" hidden="False">
+ALTER TABLE CDN.PlanSprzedazy ADD PSp_DataZrodlPozaOkres          TINYINT        CONSTRAINT DF_PSp_DataZrodlPozaOkres DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdPlanyMaterialy" hidden="False">
+ALTER TABLE CDN.ProdPlanyMaterialy ADD PPT_DoWykorzystania             DECIMAL (15,4) CONSTRAINT DF_PPT_DoWykorzystania DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdTechnologia" hidden="False">
+ALTER TABLE CDN.ProdTechnologia ADD PTE_Aktywny                     INTEGER        CONSTRAINT DF_PTE_Aktywny DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.RachunkiBankowe" hidden="False">
+ALTER TABLE CDN.RachunkiBankowe ADD RkB_ZgloszonyDoUS               TINYINT        CONSTRAINT DF_RkB_ZgloszonyDoUS DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli RachunkiBankoweVat" hidden="False">
+CREATE TABLE CDN.RachunkiBankoweVat
+  (
+      RBV_Id                          INTEGER        IDENTITY , --- LONG,NAME('RBV_Id')
+      RBV_RkbId                       INTEGER        CONSTRAINT DF_RBV_RkbId DEFAULT(0)         , --- LONG,NAME('RBV_RkbId')
+      RBV_Nip                         VARCHAR (   20)   CONSTRAINT DF_RBV_Nip DEFAULT('')         , --- CSTRING(21),NAME('RBV_Nip')
+      RBV_VatWynik                    SMALLINT       CONSTRAINT DF_RBV_VatWynik DEFAULT(0)         , --- SHORT,NAME('RBV_VatWynik')
+      RBV_RequestId                   VARCHAR (   50)   CONSTRAINT DF_RBV_RequestId DEFAULT('')         , --- CSTRING(51),NAME('RBV_RequestId')
+      RBV_DataWeryfikacji             INTEGER        CONSTRAINT DF_RBV_DataWeryfikacji DEFAULT(0)         , --- LONG,NAME('RBV_DataWeryfikacji')
+      CONSTRAINT RBV_Primary PRIMARY KEY
+        (
+                          RBV_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.StaKarty" hidden="False">
+ALTER TABLE CDN.StaKarty ADD Sta_EdycjaPCN                   TINYINT        CONSTRAINT DF_Sta_EdycjaPCN DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli TraJPK" hidden="False">
+CREATE TABLE CDN.TraJPK
+  (
+      TrJ_TrNTyp                      SMALLINT       CONSTRAINT DF_TrJ_TrNTyp DEFAULT(0)         , --- SHORT
+      TrJ_TrNFirma                    INTEGER        CONSTRAINT DF_TrJ_TrNFirma DEFAULT(0)         , --- LONG
+      TrJ_TrNNumer                    INTEGER        CONSTRAINT DF_TrJ_TrNNumer DEFAULT(0)         , --- LONG
+      TrJ_TrNLp                       SMALLINT       CONSTRAINT DF_TrJ_TrNLp DEFAULT(0)         , --- SHORT
+      TrJ_Wartosc                     VARCHAR (   50)   CONSTRAINT DF_TrJ_Wartosc DEFAULT('')         , --- CSTRING(51)
+      CONSTRAINT TrJ_Primary PRIMARY KEY
+        (
+                          TrJ_TrNNumer                  ,
+                          TrJ_TrNLp
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TraNag" hidden="False">
+ALTER TABLE CDN.TraNag ADD TrN_MPP                         TINYINT        CONSTRAINT DF_TrN_MPP DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_JestLimitCelowy             TINYINT        CONSTRAINT DF_TrN_JestLimitCelowy DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraNag ADD TrN_DokTypJPK                   VARCHAR (   50)   CONSTRAINT DF_TrN_DokTypJPK DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TwrKarty" hidden="False">
+ALTER TABLE CDN.TwrKarty ADD Twr_MPP                         TINYINT        CONSTRAINT DF_Twr_MPP DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TwrKarty ADD Twr_GrupaJpk                    VARCHAR (   50)   CONSTRAINT DF_Twr_GrupaJpk DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TwrWzorce" hidden="False">
+ALTER TABLE CDN.TwrWzorce ADD TwW_MPP                         TINYINT        CONSTRAINT DF_TwW_MPP DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TwrWzorce ADD TwW_DodEleZez                   TINYINT        CONSTRAINT DF_TwW_DodEleZez DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TwrWzorce ADD TwW_GrupaJpk                    VARCHAR (   50)   CONSTRAINT DF_TwW_GrupaJpk DEFAULT('') WITH VALUES;
+</scriptdef>
+</ROOT>

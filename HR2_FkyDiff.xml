@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie wyzwalacza PodNag_DeleteHandler" hidden="True">
+IF EXISTS (SELECT * FROM sys.triggers WHERE object_id = OBJECT_ID(N'[CDN].[PodNag_DeleteHandler]'))
+  DROP TRIGGER CDN.PodNag_DeleteHandler;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza PodNag_DeleteHandler" hidden="False">
+CREATE TRIGGER CDN.PodNag_DeleteHandler
+  ON CDN.PodNag
+  FOR DELETE
+AS
+SET NOCOUNT ON
+
+
+    -- obsługa kaskadowego kasowania wierszy z tabeli CDN.PodElemDok
+    IF EXISTS(SELECT * FROM CDN.PodElemDok, deleted
+            WHERE
+          deleted.PON_GIDNumer = CDN.PodElemDok.PED_PONNumer
+      AND (deleted.PON_GIDTyp in (7714))
+            )
+        DELETE CDN.PodElemDok
+        FROM CDN.PodElemDok, deleted
+        WHERE
+          deleted.PON_GIDNumer = CDN.PodElemDok.PED_PONNumer
+      AND (deleted.PON_GIDTyp in (7714))
+
+    -- obsługa kaskadowego kasowania wierszy z tabeli CDN.DaneObiekty
+    IF EXISTS(SELECT * FROM CDN.DaneObiekty, deleted
+            WHERE
+          deleted.PON_GIDTyp = CDN.DaneObiekty.DAO_ObiTyp
+      AND deleted.PON_GIDNumer = CDN.DaneObiekty.DAO_ObiNumer
+      AND (CDN.DaneObiekty.DAO_ObiTyp in  (2768, 7712, 7696, 7686, 7692, 7689, 7693, 7691))
+            )
+        DELETE CDN.DaneObiekty
+        FROM CDN.DaneObiekty, deleted
+        WHERE
+          deleted.PON_GIDTyp = CDN.DaneObiekty.DAO_ObiTyp
+      AND deleted.PON_GIDNumer = CDN.DaneObiekty.DAO_ObiNumer
+      AND (CDN.DaneObiekty.DAO_ObiTyp in  (2768, 7712, 7696, 7686, 7692, 7689, 7693, 7691))
+
+    -- obsługa kaskadowego kasowania wierszy z tabeli CDN.Predekrety
+    IF EXISTS(SELECT * FROM CDN.Predekrety, deleted
+            WHERE
+          deleted.PON_GIDTyp = CDN.Predekrety.PDT_GIDTyp
+      AND deleted.PON_GIDNumer = CDN.Predekrety.PDT_GIDNumer
+      AND (CDN.Predekrety.PDT_GIDTyp IN(6272,6400,7691))
+            )
+        DELETE CDN.Predekrety
+        FROM CDN.Predekrety, deleted
+        WHERE
+          deleted.PON_GIDTyp = CDN.Predekrety.PDT_GIDTyp
+      AND deleted.PON_GIDNumer = CDN.Predekrety.PDT_GIDNumer
+      AND (CDN.Predekrety.PDT_GIDTyp IN(6272,6400,7691))
+
+    -- obsługa kaskadowego kasowania wierszy z tabeli CDN.TraPlat
+    IF EXISTS(SELECT * FROM CDN.TraPlat, deleted
+            WHERE
+          deleted.PON_GIDTyp = CDN.TraPlat.TrP_GIDTyp
+      AND deleted.PON_GIDNumer = CDN.TraPlat.TrP_GIDNumer
+      AND (CDN.TraPlat.TrP_GIDTyp IN(6272,6400,2768,7691,7696,7712,6402))
+            )
+        DELETE CDN.TraPlat
+        FROM CDN.TraPlat, deleted
+        WHERE
+          deleted.PON_GIDTyp = CDN.TraPlat.TrP_GIDTyp
+      AND deleted.PON_GIDNumer = CDN.TraPlat.TrP_GIDNumer
+      AND (CDN.TraPlat.TrP_GIDTyp IN(6272,6400,2768,7691,7696,7712,6402))
+
+
+SET NOCOUNT OFF
+
+</scriptdef>
+<scriptdef name="Kasowanie wyzwalacza TraPlat_InsertUpdateHandler" hidden="True">
+IF EXISTS (SELECT * FROM sys.triggers WHERE object_id = OBJECT_ID(N'[CDN].[TraPlat_InsertUpdateHandler]'))
+  DROP TRIGGER CDN.TraPlat_InsertUpdateHandler;
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza TraPlat_InsertUpdateHandler" hidden="False">
+CREATE TRIGGER CDN.TraPlat_InsertUpdateHandler
+  ON CDN.TraPlat
+  FOR INSERT,UPDATE
+AS
+SET NOCOUNT ON
+
+
+  IF  UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TrP_GIDTyp in (2978,2979,2980))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.Wyplaty ON
+                    inserted.TrP_GIDNumer = CDN.Wyplaty.WPL_Id
+              WHERE CDN.Wyplaty.WPL_Id IS NULL AND (inserted.TrP_GIDTyp in (2978,2979,2980))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  Wyplaty) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_GIDTyp in (800))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.Raporty ON
+                    inserted.TrP_GIDNumer = CDN.Raporty.KRP_GIDNumer
+              WHERE CDN.Raporty.KRP_GIDNumer IS NULL AND (inserted.TRP_GIDTyp in (800))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  Raporty) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_KntNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_KntTyp=48)
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.Banki ON
+                    inserted.TrP_KntNumer = CDN.Banki.Bnk_GIDNumer
+              WHERE CDN.Banki.Bnk_GIDNumer IS NULL AND (inserted.TRP_KntTyp=48)
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  Banki) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDNumer )  OR UPDATE( TrP_GIDLp )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_GIDTyp=434 AND inserted.TRP_Typ=2)
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.KompElemPlatnosci ON
+                    inserted.TrP_GIDNumer = CDN.KompElemPlatnosci.KMP_KMEID
+                AND inserted.TrP_GIDLp = CDN.KompElemPlatnosci.KMP_NalTRPLp
+              WHERE CDN.KompElemPlatnosci.KMP_NalTRPLp IS NULL AND (inserted.TRP_GIDTyp=434 AND inserted.TRP_Typ=2)
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  KompElemPlatnosci) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_GIDTyp IN(7684,7690))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.Preliminarz ON
+                    inserted.TrP_GIDNumer = CDN.Preliminarz.PRL_GIDNumer
+              WHERE CDN.Preliminarz.PRL_GIDNumer IS NULL AND (inserted.TRP_GIDTyp IN(7684,7690))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  Preliminarz) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDTyp )  OR UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TrP_GIDTyp IN(6272,6400,2768,7691,7696,7712,6402))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.PodNag ON
+                    inserted.TrP_GIDTyp = CDN.PodNag.PON_GIDTyp
+                AND inserted.TrP_GIDNumer = CDN.PodNag.PON_GIDNumer
+              WHERE CDN.PodNag.PON_GIDNumer IS NULL AND (inserted.TrP_GIDTyp IN(6272,6400,2768,7691,7696,7712,6402))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  PodNag) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDTyp )  OR UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_GIDTyp IN(7680,7681,7682,7683))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.BilansOtwarciaNag ON
+                    inserted.TrP_GIDTyp = CDN.BilansOtwarciaNag.BON_GIDTyp
+                AND inserted.TrP_GIDNumer = CDN.BilansOtwarciaNag.BON_GIDNumer
+              WHERE CDN.BilansOtwarciaNag.BON_GIDNumer IS NULL AND (inserted.TRP_GIDTyp IN(7680,7681,7682,7683))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  BilansOtwarciaNag) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_KntNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_KntTyp=4304)
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.Urzedy ON
+                    inserted.TrP_KntNumer = CDN.Urzedy.URZ_GIDNumer
+              WHERE CDN.Urzedy.URZ_GIDNumer IS NULL AND (inserted.TRP_KntTyp=4304)
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  Urzedy) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_GIDTyp IN (2976,2977))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.PIKNag ON
+                    inserted.TrP_GIDNumer = CDN.PIKNag.PIN_GIDNumer
+              WHERE CDN.PIKNag.PIN_GIDNumer IS NULL AND (inserted.TRP_GIDTyp IN (2976,2977))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  PIKNag) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDTyp )  OR UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_GIDTyp in (3376,3378,3379,3386,3387))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.SadNag ON
+                    inserted.TrP_GIDTyp = CDN.SadNag.SaN_GIDTyp
+                AND inserted.TrP_GIDNumer = CDN.SadNag.SaN_GIDNumer
+              WHERE CDN.SadNag.SaN_GIDNumer IS NULL AND (inserted.TRP_GIDTyp in (3376,3378,3379,3386,3387))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  SadNag) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_KntNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_KntTyp=944)
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.PrcKarty ON
+                    inserted.TrP_KntNumer = CDN.PrcKarty.Prc_GIDNumer
+              WHERE CDN.PrcKarty.Prc_GIDNumer IS NULL AND (inserted.TRP_KntTyp=944)
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  PrcKarty) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDTyp )  OR UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_GIDTyp in (2832,2833))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.UpoNag ON
+                    inserted.TrP_GIDTyp = CDN.UpoNag.UPN_GIDTyp
+                AND inserted.TrP_GIDNumer = CDN.UpoNag.UPN_GIDNumer
+              WHERE CDN.UpoNag.UPN_GIDNumer IS NULL AND (inserted.TRP_GIDTyp in (2832,2833))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  UpoNag) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_KARNumer )
+  BEGIN
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.Rejestry ON
+                    inserted.TrP_KARNumer = CDN.Rejestry.KAR_GIDNumer
+              WHERE CDN.Rejestry.KAR_GIDNumer IS NULL
+                AND (
+                          IsNull(inserted.TrP_KARNumer,0) &lt;&gt; 0            -- Jeżeli pola mają wartości NULL lub 0 to nie sprawdzamy relacji
+                    )
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  Rejestry) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TrP_GIDTyp in (4144,4145,4146))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.MemNag ON
+                    inserted.TrP_GIDNumer = CDN.MemNag.MEN_GIDNumer
+              WHERE CDN.MemNag.MEN_GIDNumer IS NULL AND (inserted.TrP_GIDTyp in (4144,4145,4146))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  MemNag) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TrP_GIDTyp in (3344,3352))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.ImpNag ON
+                    inserted.TrP_GIDNumer = CDN.ImpNag.ImN_GIDNumer
+              WHERE CDN.ImpNag.ImN_GIDNumer IS NULL AND (inserted.TrP_GIDTyp in (3344,3352))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  ImpNag) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_KntNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_KntTyp=32)
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.KntKarty ON
+                    inserted.TrP_KntNumer = CDN.KntKarty.Knt_GIDNumer
+              WHERE CDN.KntKarty.Knt_GIDNumer IS NULL AND (inserted.TRP_KntTyp=32)
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  KntKarty) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDTyp )  OR UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TrP_GIDTyp in (2033,2041,2037,2045,2001,2009,2005,2013,2034,2042,2035,2043,2039,2047,1520,1528,1521,1529,1489,1497,1600,1603,1604,2036,2044,1617,1616,2003,2004,1490,1498,1312,1824,1320,1832,1624,1625,2000,2002,2008,2010,1828,1836,1968))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.TraNag ON
+                    inserted.TrP_GIDTyp = CDN.TraNag.TrN_GIDTyp
+                AND inserted.TrP_GIDNumer = CDN.TraNag.TrN_GIDNumer
+              WHERE CDN.TraNag.TrN_GIDNumer IS NULL AND (inserted.TrP_GIDTyp in (2033,2041,2037,2045,2001,2009,2005,2013,2034,2042,2035,2043,2039,2047,1520,1528,1521,1529,1489,1497,1600,1603,1604,2036,2044,1617,1616,2003,2004,1490,1498,1312,1824,1320,1832,1624,1625,2000,2002,2008,2010,1828,1836,1968))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  TraNag) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_GIDTyp=2984)
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.Delegacje ON
+                    inserted.TrP_GIDNumer = CDN.Delegacje.DLG_GIDNumer
+              WHERE CDN.Delegacje.DLG_GIDNumer IS NULL AND (inserted.TRP_GIDTyp=2984)
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  Delegacje) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDNumer )  OR UPDATE( TrP_GIDLp )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TRP_GIDTyp=434 AND inserted.TRP_Typ=1)
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.KompElemPlatnosci ON
+                    inserted.TrP_GIDNumer = CDN.KompElemPlatnosci.KMP_KMEID
+                AND inserted.TrP_GIDLp = CDN.KompElemPlatnosci.KMP_ZobTRPLp
+              WHERE CDN.KompElemPlatnosci.KMP_ZobTRPLp IS NULL AND (inserted.TRP_GIDTyp=434 AND inserted.TRP_Typ=1)
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  KompElemPlatnosci) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TrP_GIDTyp=4608)
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.KBNNag ON
+                    inserted.TrP_GIDNumer = CDN.KBNNag.KBNN_Id
+              WHERE CDN.KBNNag.KBNN_Id IS NULL AND (inserted.TrP_GIDTyp=4608)
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  KBNNag) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_GIDNumer )
+  BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE inserted.TrP_GIDTyp in (7942,7943))
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.ProlongNag ON
+                    inserted.TrP_GIDNumer = CDN.ProlongNag.PRLN_ID
+              WHERE CDN.ProlongNag.PRLN_ID IS NULL AND (inserted.TrP_GIDTyp in (7942,7943))
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  ProlongNag) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+  IF  UPDATE( TrP_RachBank )
+  BEGIN
+        -- Sprawdzenie obecności wierszy w tabeli nadrzędnej
+        IF EXISTS
+           ( SELECT * FROM inserted LEFT OUTER JOIN CDN.RachunkiBankowe ON
+                    inserted.TrP_RachBank = CDN.RachunkiBankowe.RkB_Id
+              WHERE CDN.RachunkiBankowe.RkB_Id IS NULL
+                AND (
+                          IsNull(inserted.TrP_RachBank,0) &lt;&gt; 0            -- Jeżeli pola mają wartości NULL lub 0 to nie sprawdzamy relacji
+                    )
+           )
+        BEGIN
+          RAISERROR('Nie istnieje zapis w tabeli nadrzędnej (powiązanie z tabelą  RachunkiBankowe) [TraPlat_InsertUpdateHandler]. ', 16, 1)
+          ROLLBACK TRAN
+          SET NOCOUNT OFF
+          RETURN
+        END
+  END
+
+
+SET NOCOUNT OFF
+
+</scriptdef>
+<scriptdef name="Kasowanie klucza obcego FK_KeyBnk" hidden="True">
+IF EXISTS(SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'CDN.FK_KeyBnk') AND parent_object_id = OBJECT_ID(N'CDN.CDCLoginy'))
+  ALTER TABLE CDN.CDCLoginy DROP CONSTRAINT FK_KeyBnk;
+</scriptdef>
+<scriptdef name="Tworzenie klucza obcego KeyBnk" hidden="False">
+ALTER TABLE CDN.CDCLoginy ADD CONSTRAINT FK_KeyBnk
+ FOREIGN KEY
+   (
+                          CDCL_BnkNumer
+                         )
+             REFERENCES CDN.Banki
+                         (
+                          Bnk_GIDNumer
+   )
+ ON DELETE CASCADE
+ ;
+</scriptdef>
+<scriptdef name="Kasowanie klucza obcego FK_KeyOpe" hidden="True">
+IF EXISTS(SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'CDN.FK_KeyOpe') AND parent_object_id = OBJECT_ID(N'CDN.CDCLoginy'))
+  ALTER TABLE CDN.CDCLoginy DROP CONSTRAINT FK_KeyOpe;
+</scriptdef>
+<scriptdef name="Tworzenie klucza obcego KeyOpe" hidden="False">
+ALTER TABLE CDN.CDCLoginy ADD CONSTRAINT FK_KeyOpe
+ FOREIGN KEY
+   (
+                          CDCL_OpeNumer
+                         )
+             REFERENCES CDN.OpeKarty
+                         (
+                          Ope_GIDNumer
+   )
+ ON DELETE CASCADE
+ ;
+</scriptdef>
+<scriptdef name="Kasowanie klucza obcego FK_PPAOpeNumer" hidden="True">
+IF EXISTS(SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'CDN.FK_PPAOpeNumer') AND parent_object_id = OBJECT_ID(N'CDN.PrzelewyAutoryzacje'))
+  ALTER TABLE CDN.PrzelewyAutoryzacje DROP CONSTRAINT FK_PPAOpeNumer;
+</scriptdef>
+<scriptdef name="Tworzenie klucza obcego PPAOpeNumer" hidden="False">
+ALTER TABLE CDN.PrzelewyAutoryzacje ADD CONSTRAINT FK_PPAOpeNumer
+ FOREIGN KEY
+   (
+                          PPA_OpeNumer
+                         )
+             REFERENCES CDN.OpeKarty
+                         (
+                          Ope_GIDNumer
+   )
+ ;
+</scriptdef>
+<scriptdef name="Kasowanie klucza obcego FK_PPAPPNID" hidden="True">
+IF EXISTS(SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'CDN.FK_PPAPPNID') AND parent_object_id = OBJECT_ID(N'CDN.PrzelewyAutoryzacje'))
+  ALTER TABLE CDN.PrzelewyAutoryzacje DROP CONSTRAINT FK_PPAPPNID;
+</scriptdef>
+<scriptdef name="Tworzenie klucza obcego PPAPPNID" hidden="False">
+ALTER TABLE CDN.PrzelewyAutoryzacje ADD CONSTRAINT FK_PPAPPNID
+ FOREIGN KEY
+   (
+                          PPA_PPNID
+                         )
+             REFERENCES CDN.PrzelewyNag
+                         (
+                          PPN_ID
+   )
+ ON DELETE CASCADE
+ ;
+</scriptdef>
+<scriptdef name="Kasowanie klucza obcego FK_SISKPrimary" hidden="True">
+IF EXISTS(SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'CDN.FK_SISKPrimary') AND parent_object_id = OBJECT_ID(N'CDN.SISDefinicjeKonta'))
+  ALTER TABLE CDN.SISDefinicjeKonta DROP CONSTRAINT FK_SISKPrimary;
+</scriptdef>
+<scriptdef name="Tworzenie klucza obcego SISKPrimary" hidden="False">
+ALTER TABLE CDN.SISDefinicjeKonta ADD CONSTRAINT FK_SISKPrimary
+ FOREIGN KEY
+   (
+                          SISK_SISNumer
+                         )
+             REFERENCES CDN.SISDefinicje
+                         (
+                          SID_GIDNumer
+   )
+ ON DELETE CASCADE
+ ;
+</scriptdef>
+<scriptdef name="Kasowanie klucza obcego FK_ZKDKPrimary" hidden="True">
+IF EXISTS(SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'CDN.FK_ZKDKPrimary') AND parent_object_id = OBJECT_ID(N'CDN.ZestKSDefKonta'))
+  ALTER TABLE CDN.ZestKSDefKonta DROP CONSTRAINT FK_ZKDKPrimary;
+</scriptdef>
+<scriptdef name="Tworzenie klucza obcego ZKDKPrimary" hidden="False">
+ALTER TABLE CDN.ZestKSDefKonta ADD CONSTRAINT FK_ZKDKPrimary
+ FOREIGN KEY
+   (
+                          ZKDK_GIDNumer                      ,
+                          ZKDK_GIDLp                         ,
+                          ZKDK_SubGIDLp
+                         )
+             REFERENCES CDN.ZestKSDef
+                         (
+                          ZKD_GIDNumer                      ,
+                          ZKD_GIDLp                         ,
+                          ZKD_SubGIDLp
+   )
+ ON DELETE CASCADE
+ ;
+</scriptdef>
+</ROOT>

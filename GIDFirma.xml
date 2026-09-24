@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="GIDFirma">
+CREATE FUNCTION CDN.GIDFirma()
+RETURNS INT
+AS
+BEGIN
+DECLARE @Sys VARCHAR(20)
+DECLARE	@F1	varchar(10)
+DECLARE	@F2	varchar(10)
+DECLARE	@F3	varchar(10)
+
+SELECT @Sys=SYS_Wartosc FROM CDN.systemcdn WHERE SYS_ID=2
+
+set @F1  = SUBSTRING(@Sys,0,PATINDEX('%.%',@Sys))
+set @Sys = SUBSTRING(@Sys,PATINDEX('%.%',@Sys)+1,LEN(@Sys))
+set @F2  = SUBSTRING(@Sys,0,PATINDEX('%.%',@Sys))
+set @Sys = SUBSTRING(@Sys,PATINDEX('%.%',@Sys)+1,LEN(@Sys))
+set @F3  = SUBSTRING(@Sys,0,PATINDEX('%.%',@Sys))
+set @Sys = SUBSTRING(@Sys,PATINDEX('%.%',@Sys)+1,LEN(@Sys))
+RETURN  CAST(@Sys as int)+CAST(@F3 as int)*POWER(2,8)+CAST(@F2 as int)*POWER(2,16)
+END
+</functiondef>
+</ROOT>

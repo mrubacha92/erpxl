@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Tworzenie tabeli CDCLoginy" hidden="False">
+CREATE TABLE CDN.CDCLoginy
+  (
+      CDCL_Id                         INTEGER        IDENTITY , --- LONG,NAME('CDCL_Id')
+      CDCL_BnkNumer                   INTEGER        CONSTRAINT DF_CDCL_BnkNumer DEFAULT(0)         , --- LONG,NAME('CDCL_BnkNumer')
+      CDCL_OpeNumer                   INTEGER        CONSTRAINT DF_CDCL_OpeNumer DEFAULT(0)         , --- LONG,NAME('CDCL_OpeNumer')
+      CDCL_Login                      VARCHAR (  101)   CONSTRAINT DF_CDCL_Login DEFAULT('')         , --- STRING(101),NAME('CDCL_Login')
+      CDCL_LoginTyp                   VARCHAR (   20)   CONSTRAINT DF_CDCL_LoginTyp DEFAULT('')         , --- STRING(20),NAME('CDCL_LoginTyp')
+      CONSTRAINT CDCL_Primary PRIMARY KEY
+        (
+                          CDCL_Id
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.DtsWyplatyOpis" hidden="False">
+ALTER TABLE CDN.DtsWyplatyOpis ADD DWO_PPKP                        DECIMAL (15,2) CONSTRAINT DF_DWO_PPKP DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.DtsWyplatyOpis ADD DWO_PPKF                        DECIMAL (15,2) CONSTRAINT DF_DWO_PPKF DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ImpElem" hidden="False">
+ALTER TABLE CDN.ImpElem ADD ImE_SentElemId                  INTEGER        CONSTRAINT DF_ImE_SentElemId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntKarty" hidden="False">
+ALTER TABLE CDN.KntKarty ADD Knt_DataPromocji                TINYINT        CONSTRAINT DF_Knt_DataPromocji DEFAULT(1) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntOsoby" hidden="False">
+IF OBJECT_ID('CDN.DF_KnS_GUID','D') IS NOT NULL ALTER TABLE CDN.KntOsoby DROP CONSTRAINT DF_KnS_GUID;
+ALTER TABLE CDN.KntOsoby ALTER COLUMN KnS_GUID VARCHAR (   40)   ;
+ALTER TABLE CDN.KntOsoby ADD CONSTRAINT DF_KnS_GUID  DEFAULT(CONVERT(varchar(36), NEWID())) FOR KnS_GUID WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.KntWzorce" hidden="False">
+ALTER TABLE CDN.KntWzorce ADD KnW_DataPromocji                TINYINT        CONSTRAINT DF_KnW_DataPromocji DEFAULT(1) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.Nazwy" hidden="False">
+IF OBJECT_ID('CDN.DF_Naz_Nazwa1','D') IS NOT NULL ALTER TABLE CDN.Nazwy DROP CONSTRAINT DF_Naz_Nazwa1;
+ALTER TABLE CDN.Nazwy ALTER COLUMN Naz_Nazwa1 VARCHAR (   30)   ;
+ALTER TABLE CDN.Nazwy ADD CONSTRAINT DF_Naz_Nazwa1  DEFAULT('') FOR Naz_Nazwa1 WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.OpeKarty" hidden="False">
+ALTER TABLE CDN.OpeKarty ADD Ope_MESZadaniaWGniazdachRoboczych  TINYINT        CONSTRAINT DF_Ope_MESZadaniaWGniazdachRoboczych DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.PicoKonfig" hidden="False">
+ALTER TABLE CDN.PicoKonfig ADD PcK_SprWRoznychWalutach         TINYINT        CONSTRAINT DF_PcK_SprWRoznychWalutach DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdObiektyFunkcje" hidden="False">
+ALTER TABLE CDN.ProdObiektyFunkcje ADD POF_Widocznosc                  TINYINT        CONSTRAINT DF_POF_Widocznosc DEFAULT(3) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ProdTechnologiaZasoby" hidden="False">
+ALTER TABLE CDN.ProdTechnologiaZasoby ADD PTZ_PrzeliczajIloscPomWgPodst   TINYINT        CONSTRAINT DF_PTZ_PrzeliczajIloscPomWgPodst DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli PrzelewyAutoryzacje" hidden="False">
+CREATE TABLE CDN.PrzelewyAutoryzacje
+  (
+      PPA_ID                          INTEGER        IDENTITY , --- LONG,NAME('PPA_ID')
+      PPA_PPNID                       INTEGER        CONSTRAINT DF_PPA_PPNID DEFAULT(0)         , --- LONG,NAME('PPA_PPNID')
+      PPA_OpeNumer                    INTEGER        CONSTRAINT DF_PPA_OpeNumer DEFAULT(0)         , --- LONG,NAME('PPA_OpeNumer')
+      PPA_Data                        INTEGER        CONSTRAINT DF_PPA_Data DEFAULT(0)         , --- LONG,NAME('PPA_Data')
+      PPA_Podpis                      VARCHAR ( 5000)   CONSTRAINT DF_PPA_Podpis DEFAULT('')         , --- CSTRING(5001),NAME('PPA_Podpis')
+      CONSTRAINT PPA_Primary PRIMARY KEY
+        (
+                          PPA_ID
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.PrzelewyNag" hidden="False">
+ALTER TABLE CDN.PrzelewyNag ADD PPN_PlikZlecenia                VARCHAR(MAX)     CONSTRAINT DF_PPN_PlikZlecenia DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.PrzelewyNag ADD PPN_PlikSkrot                   VARCHAR (   50)   CONSTRAINT DF_PPN_PlikSkrot DEFAULT('') WITH VALUES;
+ALTER TABLE CDN.PrzelewyNag ADD PPN_MsgId                       VARCHAR (   50)   CONSTRAINT DF_PPN_MsgId DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.RptFormaty2" hidden="False">
+ALTER TABLE CDN.RptFormaty2 ADD RpF2_DomyslnyMES                TINYINT        CONSTRAINT DF_RpF2_DomyslnyMES DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.RptFormatyU" hidden="False">
+ALTER TABLE CDN.RptFormatyU ADD RpFU_domyslnyMES                TINYINT        CONSTRAINT DF_RpFU_domyslnyMES DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli SISDefinicjeKonta" hidden="False">
+CREATE TABLE CDN.SISDefinicjeKonta
+  (
+      SISK_SISNumer                   INTEGER        CONSTRAINT DF_SISK_SISNumer DEFAULT(0)         , --- LONG
+      SISK_Lp                         SMALLINT       CONSTRAINT DF_SISK_Lp DEFAULT(0)         , --- SHORT
+      SISK_Konto                      VARCHAR (   30)   CONSTRAINT DF_SISK_Konto DEFAULT('')         , --- CSTRING(31)
+      SISK_KlasaKonta                 VARCHAR (   30)   CONSTRAINT DF_SISK_KlasaKonta DEFAULT('')         , --- CSTRING(31)
+      CONSTRAINT SISK_Primary PRIMARY KEY
+        (
+                          SISK_SISNumer                 ,
+                          SISK_Lp
+        )
+  );
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.SentElem" hidden="False">
+ALTER TABLE CDN.SentElem ADD SnE_KodOdpadu                   VARCHAR (    6)   CONSTRAINT DF_SnE_KodOdpadu DEFAULT('') WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TraElem" hidden="False">
+ALTER TABLE CDN.TraElem ADD TrE_OperatorPOS                 INTEGER        CONSTRAINT DF_TrE_OperatorPOS DEFAULT(0) WITH VALUES;
+ALTER TABLE CDN.TraElem ADD TrE_SentElemId                  INTEGER        CONSTRAINT DF_TrE_SentElemId DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.TraNag" hidden="False">
+ALTER TABLE CDN.TraNag ADD TrN_OperatorPOS                 INTEGER        CONSTRAINT DF_TrN_OperatorPOS DEFAULT(0) WITH VALUES;
+</scriptdef>
+<scriptdef name="Konwersja tabeli CDN.ZestKSDef" hidden="False">
+IF OBJECT_ID('CDN.DF_ZKD_Wartosc','D') IS NOT NULL ALTER TABLE CDN.ZestKSDef DROP CONSTRAINT DF_ZKD_Wartosc;
+ALTER TABLE CDN.ZestKSDef ALTER COLUMN ZKD_Wartosc VARCHAR(MAX)     ;
+ALTER TABLE CDN.ZestKSDef ADD CONSTRAINT DF_ZKD_Wartosc  DEFAULT('') FOR ZKD_Wartosc WITH VALUES;
+</scriptdef>
+<scriptdef name="Tworzenie tabeli ZestKSDefKonta" hidden="False">
+CREATE TABLE CDN.ZestKSDefKonta
+  (
+      ZKDK_GIDNumer                   INTEGER        CONSTRAINT DF_ZKDK_GIDNumer DEFAULT(0)         , --- LONG
+      ZKDK_GIDLp                      SMALLINT       CONSTRAINT DF_ZKDK_GIDLp DEFAULT(0)         , --- SHORT
+      ZKDK_SubGIDLp                   SMALLINT       CONSTRAINT DF_ZKDK_SubGIDLp DEFAULT(0)         , --- SHORT
+      ZKDK_ZKDKLp                     SMALLINT       CONSTRAINT DF_ZKDK_ZKDKLp DEFAULT(0)         , --- SHORT
+      ZKDK_Konto                      VARCHAR (   30)   CONSTRAINT DF_ZKDK_Konto DEFAULT('')         , --- CSTRING(31)
+      ZKDK_KlasaKonta                 VARCHAR (   30)   CONSTRAINT DF_ZKDK_KlasaKonta DEFAULT('')         , --- CSTRING(31)
+      CONSTRAINT ZKDK_Primary PRIMARY KEY
+        (
+                          ZKDK_GIDNumer                 ,
+                          ZKDK_GIDLp                    ,
+                          ZKDK_SubGIDLp                 ,
+                          ZKDK_ZKDKLp
+        )
+  );
+</scriptdef>
+</ROOT>

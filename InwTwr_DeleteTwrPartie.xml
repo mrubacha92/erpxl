@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza InwTwr_DeleteTwrPartie" hidden="True">
+IF EXISTS (SELECT name FROM sysobjects WHERE name = 'InwTwr_DeleteTwrPartie' AND type = 'TR')
+  DROP TRIGGER CDN.InwTwr_DeleteTwrPartie
+</scriptdef>
+<scriptdef name="Tworzenie wyzwalacza InwTwr_DeleteTwrPartie" hidden="False">
+CREATE TRIGGER CDN.InwTwr_DeleteTwrPartie
+  ON CDN.InwTwr
+  FOR DELETE
+  AS
+SET NOCOUNT ON
+
+		IF exists (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('[WMS].[Features_CheckIfLotIsUsedInWmsIF]') AND Type = 'IF') 
+			    DELETE CDN.TwrPartie
+                FROM deleted join CDN.TwrPartie ON deleted.Int_TpaID = CDN.TwrPartie.Tpa_ID
+                WHERE TPa_WMS = 0
+                        and not exists (select dst_gidnumer from cdn.dostawy where Dst_TPaId = cdn.TwrPartie.TpA_Id)
+                        and not exists (select * from cdn.InwTwr where InT_TpaID = cdn.TwrPartie.Tpa_Id)
+                        and not exists (select mae_tpaid from cdn.magelem where mae_TPaId = cdn.twrpartie.TpA_Id)
+                        and (select [Value] FROM [WMS].[Features_CheckIfLotIsUsedInWmsIF](CDN.twrpartie.TpA_Id))=0
+
+        ELSE IF exists (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('[WMS].[Features_CheckIfLotIsUsedInWms]') AND Type = 'FN')
+                DELETE CDN.TwrPartie
+                FROM deleted join CDN.TwrPartie ON deleted.Int_TpaID = CDN.TwrPartie.Tpa_ID
+                WHERE TPa_WMS = 0
+                        and not exists (select dst_gidnumer from cdn.dostawy where Dst_TPaId = cdn.TwrPartie.TpA_Id)
+                        and not exists (select * from cdn.InwTwr where InT_TpaID = cdn.TwrPartie.Tpa_Id)
+                        and not exists (select mae_tpaid from cdn.magelem where mae_TPaId = cdn.twrpartie.TpA_Id)
+                        and (select [WMS].[Features_CheckIfLotIsUsedInWms](CDN.twrpartie.TpA_Id))=0
+		ELSE
+                DELETE CDN.TwrPartie
+                FROM deleted join CDN.TwrPartie ON deleted.Int_TpaID = CDN.TwrPartie.Tpa_ID
+                WHERE TPa_WMS = 0
+                        and not exists (select dst_gidnumer from cdn.dostawy where Dst_TPaId = cdn.TwrPartie.TpA_Id)
+                        and not exists (select * from cdn.InwTwr where InT_TpaID = cdn.TwrPartie.Tpa_Id)
+                        and not exists (select mae_tpaid from cdn.magelem where mae_TPaId = cdn.twrpartie.TpA_Id)
+
+SET NOCOUNT OFF
+</scriptdef>
+</ROOT>

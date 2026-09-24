@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="TraNag_InitFields">
+Create Trigger CDN.TraNag_InitFields on CDN.TraNag for insert
+as 
+Begin 
+
+	update T 
+	set t.TrN_SpiTyp   = t.TrN_GIDTyp,
+	t.TrN_SpiFirma 	 = t.TrN_GIDFirma ,
+	t.TrN_SpiNumer 	 = t.TrN_GIDNumer ,
+	t.TrN_SpiLp 	 = t.TrN_GIDLp
+	From CDN.TraNag T join inserted on 
+		t.TrN_GIDTyp = inserted.TRN_GIDTyp 
+		and t.TrN_GIDNumer = inserted.TRN_GIDNumer
+		and t.TrN_GIDLp = inserted.TRN_GIDLp
+	Where SIGN(inserted.TrN_GIDTyp &amp; 0x100) &lt;&gt;0
+		AND inserted.TrN_SpiTyp = inserted.TrN_GIDTyp
+
+	update T
+	set t.TrN_ZwrTyp   = t.TrN_GIDTyp,
+	t.TrN_ZwrFirma = t.TrN_GIDFirma ,
+	t.TrN_ZwrNumer = t.TrN_GIDNumer ,
+	t.TrN_ZwrLp 	 = t.TrN_GIDLp
+	From CDN.TraNag T join inserted on 
+		t.TrN_GIDTyp = inserted.TRN_GIDTyp 
+		and t.TrN_GIDNumer = inserted.TRN_GIDNumer
+		and t.TrN_GIDLp = inserted.TRN_GIDLp
+	Where SIGN(inserted.TrN_GIDTyp &amp; 0x100)&lt;&gt;0
+		and inserted.TrN_ZwrTyp = inserted.TrN_GIDTyp
+		and inserted.TrN_ZwrFirma=0 
+		and inserted.TrN_ZwrNumer= 0
+
+End 
+</triggerdef>
+</ROOT>

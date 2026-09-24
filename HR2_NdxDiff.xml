@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Tworzenie tabeli tymczasowej dla indeksów" hidden="True">
+CREATE TABLE #XLIndexesFileGroups (indName VARCHAR(100),fgName VARCHAR(100))
+</scriptdef>
+<scriptdef name="Kasowanie indeksu KeyBnk" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.CDCLoginy') and name=N'KeyBnk' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'KeyBnk'
+  DROP INDEX KeyBnk on CDN.CDCLoginy;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu KeyBnk" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX KeyBnk ON CDN.CDCLoginy
+             (
+             CDCL_BnkNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'KeyBnk'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu KeyOpe" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.CDCLoginy') and name=N'KeyOpe' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'KeyOpe'
+  DROP INDEX KeyOpe on CDN.CDCLoginy;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu KeyOpe" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX KeyOpe ON CDN.CDCLoginy
+             (
+             CDCL_OpeNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'KeyOpe'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PPAPPNID" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PrzelewyAutoryzacje') and name=N'PPAPPNID' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PPAPPNID'
+  DROP INDEX PPAPPNID on CDN.PrzelewyAutoryzacje;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PPAPPNID" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PPAPPNID ON CDN.PrzelewyAutoryzacje
+             (
+             PPA_PPNID
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PPAPPNID'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu PPAOpeNumer" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.PrzelewyAutoryzacje') and name=N'PPAOpeNumer' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'PPAOpeNumer'
+  DROP INDEX PPAOpeNumer on CDN.PrzelewyAutoryzacje;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu PPAOpeNumer" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX PPAOpeNumer ON CDN.PrzelewyAutoryzacje
+             (
+             PPA_OpeNumer
+             )
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'PPAOpeNumer'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SISKKonto" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SISDefinicjeKonta') and name=N'SISKKonto' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SISKKonto'
+  DROP INDEX SISKKonto on CDN.SISDefinicjeKonta;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SISKKonto" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SISKKonto ON CDN.SISDefinicjeKonta
+             (
+             SISK_Konto
+             )
+  WHERE (SISK_KONTO&lt;&gt;'''')
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SISKKonto'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu SISKKlasaKonta" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.SISDefinicjeKonta') and name=N'SISKKlasaKonta' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'SISKKlasaKonta'
+  DROP INDEX SISKKlasaKonta on CDN.SISDefinicjeKonta;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu SISKKlasaKonta" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX SISKKlasaKonta ON CDN.SISDefinicjeKonta
+             (
+             SISK_KlasaKonta
+             )
+  WHERE (SISK_KLASAKONTA&lt;&gt;'''')
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'SISKKlasaKonta'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu ZKDKKonto" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ZestKSDefKonta') and name=N'ZKDKKonto' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'ZKDKKonto'
+  DROP INDEX ZKDKKonto on CDN.ZestKSDefKonta;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu ZKDKKonto" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX ZKDKKonto ON CDN.ZestKSDefKonta
+             (
+             ZKDK_Konto
+             )
+  WHERE (ZKDK_KONTO &lt;&gt; '''')
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'ZKDKKonto'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie indeksu ZKDKKlasaKonta" hidden="False">
+IF EXISTS( SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'CDN.ZestKSDefKonta') and name=N'ZKDKKlasaKonta' )
+BEGIN
+  INSERT INTO #XLIndexesFileGroups SELECT IND.name,FG.name FROM sys.indexes IND JOIN sys.filegroups FG ON FG.data_space_id = IND.data_space_id WHERE IND.name = 'ZKDKKlasaKonta'
+  DROP INDEX ZKDKKlasaKonta on CDN.ZestKSDefKonta;
+END
+</scriptdef>
+<scriptdef name="Tworzenie indeksu ZKDKKlasaKonta" hidden="False">
+  SET NOCOUNT ON;DECLARE @INDSQL VARCHAR(max)
+  SET @INDSQL = '
+CREATE NONCLUSTERED INDEX ZKDKKlasaKonta ON CDN.ZestKSDefKonta
+             (
+             ZKDK_KlasaKonta
+             )
+  WHERE (ZKDK_KLASAKONTA&lt;&gt;'''')
+ON '+ISNULL((SELECT QUOTENAME(fgName) FROM #XLIndexesFileGroups WHERE indName = 'ZKDKKlasaKonta'),QUOTENAME('PRIMARY'))
+  EXEC(@INDSQL);SET NOCOUNT OFF;
+;
+</scriptdef>
+<scriptdef name="Kasowanie tabeli tymczasowej dla indeksów" hidden="True">
+DROP TABLE #XLIndexesFileGroups
+</scriptdef>
+</ROOT>
