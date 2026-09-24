@@ -1,0 +1,1907 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury FakturySprzedazyWgDeklaracjiVatJPK" hidden="True">
+if exists (select name from sysobjects where name = 'FakturySprzedazyWgDeklaracjiVatJPK' and type = 'P')
+  drop procedure CDN.FakturySprzedazyWgDeklaracjiVatJPK;
+</scriptdef>
+<scriptdef name="Tworzenie procedury FakturySprzedazyWgDeklaracjiVatJPK" hidden="False">
+create procedure [CDN].[FakturySprzedazyWgDeklaracjiVatJPK] (@miesiacKwartal tinyint, @kwartal tinyint, @miesiac tinyint, @rok smallint, @wersjaDeklaracji smallint = 12, @uzgodnijVAT7 tinyint=0, @JPKPONNumer int=0) as
+begin
+
+	declare @konKwart tinyint = 0
+	declare @poczKwart tinyint = 0
+	declare @sSQL nvarchar(max)
+	declare @rv int	
+	
+	if @miesiacKwartal &gt; 0
+	begin
+		set @poczKwart = ((@kwartal - 1) * 3) + 1
+		set @konKwart = @poczKwart + 2
+	end
+	
+	declare @e_ksi_lPodatek_VAT7 tinyint = 1, @TYP_Deklaracja_VAT7 smallint = 2768	
+	declare @PONNumer int = 0	
+	
+	if @uzgodnijVAT7 &gt; 0 and @wersjaDeklaracji &lt; 17
+	begin
+		-- wczytaj dane z zaakceptowanej/zatwierdzonej deklaracji VAT-7(16)
+		select @PONNumer = PON_GIDNumer
+		from cdn.PodNag 
+		join cdn.PodElem on PON_GIDNumer = POE_GIDNumer
+		where PON_GIDTyp = @TYP_Deklaracja_VAT7 and PON_TypPodatku = @e_ksi_lPodatek_VAT7
+			and PON_Rok = @rok and PON_Miesiac = @miesiac and PON_Status in (1,2)			
+	end	
+
+	declare @GIDFirma int = 0
+	select top 1 @GIDFirma = Ope_GIDFirma from cdn.OpeKarty
+
+	declare 
+		@Typ_FW		int
+		, @Typ_FWK  int
+		, @Typ_FWS	int
+		, @Typ_FKS	int
+		
+		, @g_ksi_lUwzgledniajNieopodatkowane tinyint
+		, @g_ksi_lUwzgledniajZakup0zw tinyint
+		, @g_ksi_InterpretujTransDostOpodatkPozaTerytKrajWSt0JakoKrajowa tinyint
+		
+	set @Typ_FW		= 2036
+	set @Typ_FWK    = 2044	
+	set @Typ_FWS	= 3379
+	set @Typ_FKS	= 3387
+		
+	set @g_ksi_lUwzgledniajNieopodatkowane = 0
+	set @g_ksi_lUwzgledniajZakup0zw = 0
+
+	declare @e_SPR_nNieEksportowy                     tinyint       -- nie eksportowy
+	, @e_SPR_nEksportowyVat0                          tinyint       -- eksportowy VAT0%
+	, @e_SPR_nEksportowyVatDowolny                    tinyint       -- eksportowy VAT dowolny
+	, @e_SPR_nEksportowyVatDowolnyKorekta             tinyint       -- korekta vat dowolny  -&gt; vat eksportowy
+	, @e_SPR_nEksportowyVat0Korekta                   tinyint       -- korekta vat eksportowy -&gt; vat dowolny
+	, @e_SPR_nWewnatrzwspolnotowyVat0D                tinyint       -- Wewnątrzwspólnotowy dostawa Vat 0
+	, @e_SPR_nWewnatrzwspolnotowyVatDowolnyD          tinyint       -- Wewnątrzwspólnotowy dostawa Vat dowolny
+	, @e_SPR_nWewnatrzwspolnotowyVat0DT               tinyint       -- Wewnątrzwspólnotowa dostawa, trójstronna Vat 0,
+	, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDT         tinyint       -- Wewnątrzwspólnotowa dostawa, trójstronna Vat dowolny,
+	, @e_SPR_nWewnatrzwspolnotowyVat0N                tinyint      -- Wewnątrzwspólnotowe nabycie Vat 0
+	, @e_SPR_nWewnatrzwspolnotowyVatDowolnyN          tinyint      -- Wewnątrzwspólnotowe nabycie Vat dowolny
+	, @e_SPR_nWewnatrzwspolnotowyVat0NT               tinyint      -- Wewnątrzwspólnotowe nabycie, trójstronne Vat 0
+	, @e_SPR_nWewnatrzwspolnotowyVatDowolnyNT         tinyint      -- Wewnątrzwspólnotowe nabycie, trójstronne Vat dowolny
+	, @e_SPR_nImportowyVat0FW                         tinyint      -- eksportowy VAT0% dla FWS
+	, @e_SPR_nImportowyVatDowolnyFW                   tinyint      -- eksportowy VAT dowolny dla FWS
+	, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDKorekta   tinyint      -- korekta wewnątrzwspólnotowy dostawa Vat dowolny
+	, @e_SPR_nWewnatrzwspolnotowyVat0DKorekta         tinyint      -- korekta wewnątrzwspólnotowy dostawa Vat 0
+	, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDTKorekta  tinyint      -- korekta wewnątrzwspólnotowa dostawa trójstronna Vat dowolny
+	, @e_SPR_nWewnatrzwspolnotowyVat0DTKorekta        tinyint      -- korekta wewnątrzwspólnotowa dostawa trójstronna Vat 0
+	, @e_SPR_nEksportowyNabywca                       tinyint      -- podatnikiem jest nabywca
+	, @e_SPR_nDostawaOpodatkowanaWWsp                 tinyint      -- dostawa opodatkowana poza terytorium kraju
+	, @e_SPR_nTaxFree                                 tinyint      -- tax free
+	, @e_SPR_nDostawaOpodatkowanaInne                 tinyint      -- dostawa opodatkowana poza terytorium kraju
+	, @e_SPR_nEksportowyNabywcaWsp					  tinyint      --podatnikiem jest Nabywca (transakcja Wewnątrzwspólnotowa)
+	, @e_SPR_nEksportowyNabywcaInne					  tinyint	   --podatnikime jest Nabywca (transakcja Inna zagranicznia)
+
+	declare @e_ksi_lRodzajZakupu_Towary			tinyint
+	declare @e_ksi_lRodzajZakupu_Koszty			tinyint
+	declare @e_ksi_lRodzajZakupu_SrTrwale		tinyint
+	declare @e_ksi_lRodzajZakupu_Inwestycje		tinyint
+	declare @e_ksi_lRodzajZakupu_Nieruchomosci	tinyint
+	declare @e_ksi_lRodzajZakupu_ImportUslug	tinyint
+	declare @e_ksi_lRodzajZakupu_SrTransportu	tinyint
+	declare @e_ksi_lRodzajZakupu_Paliwo			tinyint
+	declare @e_ksi_lRodzajZakupu_UslugiRO		tinyint
+
+	set @e_SPR_nNieEksportowy                     = 1       -- nie eksportowy
+	set @e_SPR_nEksportowyVat0                    = 2       -- eksportowy VAT0%
+	set @e_SPR_nEksportowyVatDowolny              = 3       -- eksportowy VAT dowolny
+	set @e_SPR_nEksportowyVatDowolnyKorekta       = 4       -- korekta vat dowolny  -&gt; vat eksportowy
+	set @e_SPR_nEksportowyVat0Korekta             = 5       -- korekta vat eksportowy -&gt; vat dowolny
+	set @e_SPR_nWewnatrzwspolnotowyVat0D          = 6       -- Wewnątrzwspólnotowy dostawa Vat 0
+	set @e_SPR_nWewnatrzwspolnotowyVatDowolnyD    = 7       -- Wewnątrzwspólnotowy dostawa Vat dowolny
+	set @e_SPR_nWewnatrzwspolnotowyVat0DT         = 8       -- Wewnątrzwspólnotowa dostawa, trójstronna Vat 0,
+	set @e_SPR_nWewnatrzwspolnotowyVatDowolnyDT   = 9       -- Wewnątrzwspólnotowa dostawa, trójstronna Vat dowolny,
+	set @e_SPR_nWewnatrzwspolnotowyVat0N          = 10      -- Wewnątrzwspólnotowe nabycie Vat 0
+	set @e_SPR_nWewnatrzwspolnotowyVatDowolnyN    = 11      -- Wewnątrzwspólnotowe nabycie Vat dowolny
+	set @e_SPR_nWewnatrzwspolnotowyVat0NT         = 12      -- Wewnątrzwspólnotowe nabycie, trójstronne Vat 0
+	set @e_SPR_nWewnatrzwspolnotowyVatDowolnyNT   = 13      -- Wewnątrzwspólnotowe nabycie, trójstronne Vat dowolny
+	set @e_SPR_nImportowyVat0FW                   = 14      -- eksportowy VAT0% dla FWS
+	set @e_SPR_nImportowyVatDowolnyFW             = 15      -- eksportowy VAT dowolny dla FWS
+	set @e_SPR_nWewnatrzwspolnotowyVatDowolnyDKorekta   = 16      -- korekta wewnątrzwspólnotowy dostawa Vat dowolny
+	set @e_SPR_nWewnatrzwspolnotowyVat0DKorekta         = 17      -- korekta wewnątrzwspólnotowy dostawa Vat 0
+	set @e_SPR_nWewnatrzwspolnotowyVatDowolnyDTKorekta  = 18      -- korekta wewnątrzwspólnotowa dostawa trójstronna Vat dowolny
+	set @e_SPR_nWewnatrzwspolnotowyVat0DTKorekta        = 19      -- korekta wewnątrzwspólnotowa dostawa trójstronna Vat 0
+	set @e_SPR_nEksportowyNabywca                       = 20      -- podatnikiem jest nabywca
+	set @e_SPR_nDostawaOpodatkowanaWWsp                 = 21      -- dostawa opodatkowana poza terytorium kraju
+	set @e_SPR_nTaxFree                                 = 22      -- tax free
+	set @e_SPR_nDostawaOpodatkowanaInne                 = 23      -- dostawa opodatkowana poza terytorium kraju
+	set @e_SPR_nEksportowyNabywcaWsp	= 24      --podatnikiem jest Nabywca (transakcja Wewnątrzwspólnotowa)
+	set @e_SPR_nEksportowyNabywcaInne	= 25      --podatnikime jest Nabywca (transakcja Inna zagranicznia)
+	
+	set @e_ksi_lRodzajZakupu_Towary			= 1
+	set @e_ksi_lRodzajZakupu_Koszty			= 2
+	set @e_ksi_lRodzajZakupu_SrTrwale		= 3
+	set @e_ksi_lRodzajZakupu_Inwestycje		= @e_ksi_lRodzajZakupu_SrTrwale
+	set @e_ksi_lRodzajZakupu_Nieruchomosci	= 4
+	set @e_ksi_lRodzajZakupu_ImportUslug	= 5
+	set @e_ksi_lRodzajZakupu_SrTransportu	= 6
+	set @e_ksi_lRodzajZakupu_Paliwo			= 7  
+	set @e_ksi_lRodzajZakupu_UslugiRO		= 8	
+
+	/*
+	@e_ksi_lRodzajZakupu_Towary
+	@e_ksi_lRodzajZakupu_Koszty
+	@e_ksi_lRodzajZakupu_SrTrwale
+	@e_ksi_lRodzajZakupu_Inwestycje
+	@e_ksi_lRodzajZakupu_Nieruchomosci
+	@e_ksi_lRodzajZakupu_ImportUslug
+	@e_ksi_lRodzajZakupu_SrTransportu
+	@e_ksi_lRodzajZakupu_Paliwo
+	@e_ksi_lRodzajZakupu_UslugiRO
+	*/
+
+	declare @e_ksi_lOdliczeniaVAT_Tak	tinyint,
+		@e_ksi_lOdliczeniaVAT_Nie		tinyint,
+		@e_ksi_lOdliczeniaVAT_Warunkowo	tinyint
+		
+	set @e_ksi_lOdliczeniaVAT_Tak	 = 1
+	set @e_ksi_lOdliczeniaVAT_Nie		= 2
+	set @e_ksi_lOdliczeniaVAT_Warunkowo	= 3
+
+	select @g_ksi_lUwzgledniajNieopodatkowane = CAST(KON_Wartosc as int) from cdn.Konfig where Kon_Numer = 2056
+	select @g_ksi_lUwzgledniajZakup0zw = CAST(KON_Wartosc as int) from cdn.Konfig where Kon_Numer = 2071
+	select @g_ksi_InterpretujTransDostOpodatkPozaTerytKrajWSt0JakoKrajowa = cast(KON_Wartosc as int) from cdn.Konfig where Kon_Numer = 20143
+
+	create table #tmpWyn
+	(	
+		GIDTyp smallint, 
+		GIDNumer int, 
+		GIDLp smallint, 		
+		NrWRej int,
+		Rejestr varchar(5),
+		PoleNaDekl smallint,
+		Odliczenie tinyint,		-- pełne, warunkowe (tak, nie, warunkowe)
+		DataWystaw int,
+		DataSprzed int,
+		NrDok varchar(60),
+		Akronim varchar(50),
+		Nazwa varchar(400),		-- NazwaNabywcy
+		Netto decimal(15,2),
+		Vat decimal(15,2),
+				
+		AdresNabywcy varchar(512),
+		NIP varchar(25),
+		VatNalOd tinyint,
+		KorektaDanych tinyint,
+		TrV_KorektaDanych tinyint
+	)	
+
+	create table #tmpDokumenty		-- tfs 318633
+	(
+		TRV_GIDTyp smallint, 
+		TRV_GIDNumer int, 
+		TRV_GIDLp smallint, 
+		TRN_VatRejestr varchar(5), 
+		TrN_VatNumer int, 
+		DataWyst int, 
+		DataZak int,
+		Netto decimal(15,2),
+		Vat decimal(15,2),
+		TRV_StawkaPod decimal(7,2), 
+		TRV_FlagaVat tinyint, 
+		TRV_RodzajZakupu tinyint, 
+		TRV_Struktura tinyint, 
+		TRN_VatKorekta tinyint, 
+		TRV_ExpoNorm tinyint, 
+		TRV_Zrodlowa tinyint,
+		TRN_VatRok smallint, 
+		TRN_VatMiesiac tinyint, 
+		TRN_RolnikRyczalt tinyint, 
+		TRN_KorektaOdlicz tinyint, 
+		CzySad tinyint,			
+		NumerDok varchar(60),
+		KnA_Akronim varchar(50), 
+		KNTNazwa varchar(400), 
+		KnAAdres varchar(500), 
+		NIP varchar(25), 
+		TrV_VATNalOd tinyint, 
+		TrN_ZwrNumer int,
+		KorektaDanych tinyint,
+		TRV_KorektaDanych tinyint
+	)
+		
+
+	-------------------------------------------------------------------------------------------------------------------------------------
+	--select * INTO #tmpDokumenty from 
+	if @GIDFirma in (736001, 570625)		-- tfs 318633
+		insert into #tmpDokumenty
+		select * from
+		(     
+			SELECT TRV_GIDTyp, TRV_GIDNumer, TRV_GIDLp, TRN_VatRejestr, TrN_VatNumer
+				, case when TrN_KorektaDanych &gt; 0 and TrN_DataWystOrg &gt; 0 then TrN_DataWystOrg else TrN_Data2 end DataWyst
+				--, case when TRN_GIDTyp in (@Typ_FW, @TYP_FWK) then 0 else TrN_Data3 end DataZak,	
+				, case when TrN_KorektaDanych &gt; 0 and TrN_DataSprOrg &gt; 0 then TrN_DataSprOrg else TrN_Data3 end DataZak,
+				CASE WHEN (TSV_NettoP+TSV_VatP) &lt;&gt; 0 THEN TSV_NettoP ELSE TSV_NettoR END as Netto,
+				CASE WHEN (TSV_NettoP+TSV_VatP) &lt;&gt; 0 THEN TSV_VatP ELSE TSV_VatR END as Vat,
+				TRV_StawkaPod, TRV_FlagaVat, TSV_RodzajZakupu, TRV_Struktura, 
+				TRN_VatKorekta, TRV_ExpoNorm, TRV_Zrodlowa,
+			    
+				TRN_VatRok, TRN_VatMiesiac, TRN_RolnikRyczalt, TRN_KorektaOdlicz, 0 as CzySad,
+				case when TrN_KorektaDanych &gt; 0 and TrN_NrKorekty &lt;&gt; '' and TrV_KorektaDanych=1 then TrN_NrKorekty else case when TrN_DokumentObcy &lt;&gt; '' then TrN_DokumentObcy else 'brak' end end as NumerDok		--CDN.NumerDokumentu(TrN_GIDTyp, TrN_SpiTyp,TrN_TrnTyp,TrN_TrnNumer,TrN_TrNRok,Trn_TrnSeria,TrN_TrnMiesiac) end as NumerDok
+				, isnull(trvk.KnA_Akronim, trnk.KnA_Akronim) KnA_Akronim
+				, case when TrV_KnANumer &lt;&gt; 0 then trvk.KnA_Nazwa1 + ' ' + trvk.KnA_Nazwa2 else case when isnull(trnk.KnA_Nazwa1,'')='' and isnull(trnk.KnA_Nazwa2,'')='' and @wersjaDeklaracji = 2 then 'BRAK' else trnk.KnA_Nazwa1 + ' ' + trnk.KnA_Nazwa2 end end as KNTNazwa
+				, case when TrV_KnANumer &lt;&gt; 0 then trvk.KnA_Ulica + ' ' + trvk.KnA_Adres + ' ' + trvk.KnA_KodP + ' ' + trvk.KnA_Miasto else LTRIM(RTRIM(case when isnull(trnk.KnA_Ulica,'')='' and isnull(trnk.KnA_Adres,'')='' and isnull(trnk.KnA_KodP,'')='' and isnull(trnk.KnA_Miasto,'')='' and @wersjaDeklaracji = 2 then 'BRAK' else trnk.KnA_Ulica + ' ' + trnk.KnA_Adres + ' ' + trnk.KnA_KodP + ' ' + trnk.KnA_Miasto end)) end as KnAAdres
+				--, case when isnull(KnA_Nip,'')='' then case when isnull(KnA_Pesel,'')='' then 'BRAK' else KnA_Pesel end else 
+				, case when isnull(trnk.KnA_Nip,'')='' and isnull(trvk.KnA_Nip,'')='' then 'BRAK' else 
+					case when TRV_ExpoNorm in (@e_SPR_nWewnatrzwspolnotowyVat0D, @e_SPR_nWewnatrzwspolnotowyVatDowolnyD, @e_SPR_nWewnatrzwspolnotowyVat0DT, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDT
+					, @e_SPR_nWewnatrzwspolnotowyVat0N, @e_SPR_nWewnatrzwspolnotowyVatDowolnyN, @e_SPR_nWewnatrzwspolnotowyVat0NT, @e_SPR_nWewnatrzwspolnotowyVatDowolnyNT
+					, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DKorekta, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDTKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DTKorekta
+					, @e_SPR_nDostawaOpodatkowanaWWsp) then case when TrV_KnANumer = 0 then trnk.KnA_NipPrefiks else trvk.KnA_NipPrefiks end else '' end + case when TrV_KnANumer = 0 then trnk.KnA_Nip else case when isnull(trvk.KnA_Nip,'')='' then 'BRAK' else trvk.KnA_Nip end end end NIP
+				, TrV_VATNalOd
+				, TrN_ZwrNumer
+				, TrN_KorektaDanych
+				, TrV_KorektaDanych
+			FROM CDN.TraVat 
+				JOIN CDN.TraNag ON TRV_GIDTyp = TRN_GIDTyp AND TRV_GIDNumer = TRN_GIDNumer 
+				JOIN CDN.TraSVat ON TRV_GIDTyp = TSV_GIDTyp AND TRV_GIDNumer = TSV_GIDNumer AND TrV_GIDLp = TSV_GIDLp
+				--LEFT JOIN CDN.KntKarty ON TrN_KntTyp = Knt_GIDTyp AND TrN_KntNumer = Knt_GIDNumer
+				LEFT JOIN CDN.KntAdresy trnk ON TrN_AdPNumer = trnk.KnA_GIDNumer
+				LEFT JOIN cdn.KntAdresy trvk ON TrV_KnANumer = trvk.KnA_GIDNumer
+			WHERE TRN_VatTyp=2 AND TSV_Rozliczac=1 AND TSV_DeklRok = @rok
+				AND ( (@miesiacKwartal = 0 AND TSV_DeklMiesiac = @miesiac) OR (@miesiacKwartal = 1 AND TSV_DeklMiesiac BETWEEN @poczKwart AND @konKwart) )
+				AND TRN_VatRejestr &lt;&gt; ''
+
+			UNION ALL
+				
+			SELECT TRV_GIDTyp, TRV_GIDNumer, TRV_GIDLp, SaN_VatRejestr, SaN_VatNumer, SaN_DataWplywu DataWyst				
+				, SaN_DataZgloszenia DataZak,
+				CASE WHEN (TSV_NettoP + TSV_VatP) &lt;&gt; 0 THEN TSV_NettoP ELSE TSV_NettoR END as Netto, 
+				CASE WHEN (TSV_NettoP + TSV_VatP) &lt;&gt; 0 THEN TSV_VatP ELSE TSV_VatR END as Vat, 
+				TRV_StawkaPod, TRV_FlagaVat, TSV_RodzajZakupu, TRV_Struktura, 0, TRV_ExpoNorm, TRV_Zrodlowa ,
+			    
+				SAN_VatRok, SAN_VatMiesiac, 0, 0, 1,
+				case when SaN_NumerSAD &lt;&gt; '' then SaN_NumerSAD else 'brak' end	--CDN.NumerDokumentu(SaN_GIDTyp,0,SaN_SaNTyp,SaN_SaNNumer,SaN_SaNRok,SaN_SaNSeria,SaN_SaNMiesiac) end
+				, isnull(trvk.KnA_Akronim, trnk.KnA_Akronim) KnA_Akronim
+				, case when TrV_KnANumer &lt;&gt; 0 then trvk.KnA_Nazwa1 + ' ' + trvk.KnA_Nazwa2 else case when isnull(trnk.KnA_Nazwa1,'')='' and isnull(trnk.KnA_Nazwa2,'')='' and @wersjaDeklaracji = 2 then 'BRAK' else trnk.KnA_Nazwa1 + ' ' + trnk.KnA_Nazwa2 end end
+				, case when TrV_KnANumer &lt;&gt; 0 then trvk.KnA_Ulica + ' ' + trvk.KnA_Adres + ' ' + trvk.KnA_KodP + ' ' + trvk.KnA_Miasto else LTRIM(RTRIM(case when isnull(trnk.KnA_Ulica,'')='' and isnull(trnk.KnA_Adres,'')='' and isnull(trnk.KnA_KodP,'')='' and isnull(trnk.KnA_Miasto,'')='' and @wersjaDeklaracji = 2 then 'BRAK' else trnk.KnA_Ulica + ' ' + trnk.KnA_Adres + ' ' + trnk.KnA_KodP + ' ' + trnk.KnA_Miasto end)) end
+				--, case when isnull(KnA_Nip,'')='' then case when isnull(KnA_Pesel,'')='' then 'BRAK' else KnA_Pesel end else 
+				, case when isnull(trnk.KnA_Nip,'')='' and isnull(trvk.KnA_Nip,'')='' then 'BRAK' else
+					case when TRV_ExpoNorm in (@e_SPR_nWewnatrzwspolnotowyVat0D, @e_SPR_nWewnatrzwspolnotowyVatDowolnyD, @e_SPR_nWewnatrzwspolnotowyVat0DT, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDT
+					, @e_SPR_nWewnatrzwspolnotowyVat0N, @e_SPR_nWewnatrzwspolnotowyVatDowolnyN, @e_SPR_nWewnatrzwspolnotowyVat0NT, @e_SPR_nWewnatrzwspolnotowyVatDowolnyNT
+					, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DKorekta, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDTKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DTKorekta
+					, @e_SPR_nDostawaOpodatkowanaWWsp) then case when TrV_KnANumer = 0 then trnk.KnA_NipPrefiks else trvk.KnA_NipPrefiks end else '' end + case when TrV_KnANumer = 0 then trnk.KnA_Nip else case when isnull(trvk.KnA_Nip,'')='' then 'BRAK' else trvk.KnA_Nip end end end NIP
+				, TrV_VATNalOd
+				, SaN_ZwrNumer
+				, 0
+				, 0
+			FROM CDN.TraVAT 
+				JOIN CDN.SadNag ON TRV_GIDTyp = SAN_GIDTyp AND TRV_GIDNumer = SAN_GIDNumer
+				JOIN CDN.TraSVat ON TRV_GIDTyp = TSV_GIDTyp AND TRV_GIDNumer = TSV_GIDNumer AND TrV_GIDLp = TSV_GIDLp
+				--LEFT JOIN CDN.KntKarty ON SaN_KntTyp = Knt_GIDTyp AND San_KntNumer = Knt_GIDNumer
+				LEFT JOIN CDN.KntAdresy trnk ON (SaN_AdPNumer = KnA_GIDNumer AND SaN_GIDTyp not in (@Typ_FWS, @Typ_FKS) ) OR (SaN_KNANumer = KnA_GIDNumer AND SaN_GIDTyp in (@Typ_FWS, @Typ_FKS))	-- docelowo obsłużyć w sposób bardziej wydajny
+				LEFT JOIN cdn.KntAdresy trvk ON TrV_KnANumer = trvk.KnA_GIDNumer
+			WHERE SAN_VatTyp = 2 AND TSV_Rozliczac = 1 AND TSV_DeklRok = @rok 
+				AND ( (@miesiacKwartal = 0 AND TSV_DeklMiesiac = @miesiac) OR (@miesiacKwartal = 1 AND TSV_DeklMiesiac BETWEEN @poczKwart AND @konKwart) )
+				AND SAN_VatRejestr &lt;&gt; '' AND SAN_GIDTyp in (@Typ_FWS, @Typ_FKS ) 
+		)    as aa 
+	else
+		insert into #tmpDokumenty
+		select * from
+		(
+			SELECT TRV_GIDTyp, TRV_GIDNumer, TRV_GIDLp, TRN_VatRejestr, TrN_VatNumer
+				, case when TrN_KorektaDanych &gt; 0 and TrN_DataWystOrg &gt; 0 then TrN_DataWystOrg else TrN_Data2 end DataWyst
+				--, case when TRN_GIDTyp in (@Typ_FW, @TYP_FWK) then 0 else TrN_Data3 end DataZak,	
+				, case when TrN_KorektaDanych &gt; 0 and TrN_DataSprOrg &gt; 0 then TrN_DataSprOrg else TrN_Data3 end DataZak,
+				CASE WHEN (TSV_NettoP+TSV_VatP) &lt;&gt; 0 THEN TSV_NettoP ELSE TSV_NettoR END as Netto,
+				CASE WHEN (TSV_NettoP+TSV_VatP) &lt;&gt; 0 THEN TSV_VatP ELSE TSV_VatR END as Vat,
+				TRV_StawkaPod, TRV_FlagaVat, TSV_RodzajZakupu, TRV_Struktura, 
+				TRN_VatKorekta, TRV_ExpoNorm, TRV_Zrodlowa,
+			    
+				TRN_VatRok, TRN_VatMiesiac, TRN_RolnikRyczalt, TRN_KorektaOdlicz, 0 as CzySad,
+
+				case when TrN_KorektaDanych &gt; 0 and TrN_NrKorekty &lt;&gt; '' and TrV_KorektaDanych=1 then TrN_NrKorekty else case when TrN_DokumentObcy &lt;&gt; '' then TrN_DokumentObcy else 'brak' end end as NumerDok		--CDN.NumerDokumentu(TrN_GIDTyp, TrN_SpiTyp,TrN_TrnTyp,TrN_TrnNumer,TrN_TrNRok,Trn_TrnSeria,TrN_TrnMiesiac) end as NumerDok
+
+				, isnull(trvk.KnA_Akronim, trnk.KnA_Akronim) KnA_Akronim
+				, case when TrV_KnANumer &lt;&gt; 0 then trvk.KnA_Nazwa1 + ' ' + trvk.KnA_Nazwa2 else case when isnull(trnk.KnA_Nazwa1,'')='' and isnull(trnk.KnA_Nazwa2,'')='' and @wersjaDeklaracji = 2 then 'BRAK' else trnk.KnA_Nazwa1 + ' ' + trnk.KnA_Nazwa2 end end as KNTNazwa
+				, case when TrV_KnANumer &lt;&gt; 0 then trvk.KnA_Ulica + ' ' + trvk.KnA_Adres + ' ' + trvk.KnA_KodP + ' ' + trvk.KnA_Miasto else LTRIM(RTRIM(case when isnull(trnk.KnA_Ulica,'')='' and isnull(trnk.KnA_Adres,'')='' and isnull(trnk.KnA_KodP,'')='' and isnull(trnk.KnA_Miasto,'')='' and @wersjaDeklaracji = 2 then 'BRAK' else trnk.KnA_Ulica + ' ' + trnk.KnA_Adres + ' ' + trnk.KnA_KodP + ' ' + trnk.KnA_Miasto end)) end as KnAAdres
+				--, case when isnull(KnA_Nip,'')='' then case when isnull(KnA_Pesel,'')='' then 'BRAK' else KnA_Pesel end else 
+				, case when isnull(trnk.KnA_Nip,'')='' and isnull(trvk.KnA_Nip,'')='' then 'BRAK' else 
+					case when TRV_ExpoNorm in (@e_SPR_nWewnatrzwspolnotowyVat0D, @e_SPR_nWewnatrzwspolnotowyVatDowolnyD, @e_SPR_nWewnatrzwspolnotowyVat0DT, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDT
+					, @e_SPR_nWewnatrzwspolnotowyVat0N, @e_SPR_nWewnatrzwspolnotowyVatDowolnyN, @e_SPR_nWewnatrzwspolnotowyVat0NT, @e_SPR_nWewnatrzwspolnotowyVatDowolnyNT
+					, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DKorekta, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDTKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DTKorekta
+					, @e_SPR_nDostawaOpodatkowanaWWsp) then case when TrV_KnANumer = 0 then trnk.KnA_NipPrefiks else trvk.KnA_NipPrefiks end else '' end +  case when TrV_KnANumer = 0 then trnk.KnA_Nip else case when isnull(trvk.KnA_Nip,'')='' then 'BRAK' else trvk.KnA_Nip end end end NIP
+				, TrV_VATNalOd
+				, TrN_ZwrNumer
+				, TrN_KorektaDanych
+				, TrV_KorektaDanych
+			FROM CDN.TraVat 
+				JOIN CDN.TraNag ON TRV_GIDTyp = TRN_GIDTyp AND TRV_GIDNumer = TRN_GIDNumer 
+				JOIN CDN.TraSVat ON TRV_GIDTyp = TSV_GIDTyp AND TRV_GIDNumer = TSV_GIDNumer AND TrV_GIDLp = TSV_GIDLp
+				--LEFT JOIN CDN.KntKarty ON TrN_KntTyp = Knt_GIDTyp AND TrN_KntNumer = Knt_GIDNumer
+				LEFT JOIN CDN.KntAdresy trnk ON TRN_KNANumer = KnA_GIDNumer
+				LEFT JOIN cdn.KntAdresy trvk ON TrV_KnANumer = trvk.KnA_GIDNumer
+			WHERE TRN_VatTyp=2 AND TSV_Rozliczac=1 AND TSV_DeklRok = @rok
+				AND ( (@miesiacKwartal = 0 AND TSV_DeklMiesiac = @miesiac) OR (@miesiacKwartal = 1 AND TSV_DeklMiesiac BETWEEN @poczKwart AND @konKwart) )
+				AND TRN_VatRejestr &lt;&gt; ''
+
+			UNION ALL
+				
+			SELECT TRV_GIDTyp, TRV_GIDNumer, TRV_GIDLp, SaN_VatRejestr, SaN_VatNumer, SaN_DataWplywu DataWyst				
+				, SaN_DataZgloszenia DataZak,
+				CASE WHEN (TSV_NettoP + TSV_VatP) &lt;&gt; 0 THEN TSV_NettoP ELSE TSV_NettoR END as Netto, 
+				CASE WHEN (TSV_NettoP + TSV_VatP) &lt;&gt; 0 THEN TSV_VatP ELSE TSV_VatR END as Vat, 
+				TRV_StawkaPod, TRV_FlagaVat, TSV_RodzajZakupu, TRV_Struktura, 0, TRV_ExpoNorm, TRV_Zrodlowa ,
+			    
+				SAN_VatRok, SAN_VatMiesiac, 0, 0, 1,
+				case when SaN_NumerSAD &lt;&gt; '' then SaN_NumerSAD else 'brak' end	--CDN.NumerDokumentu(SaN_GIDTyp,0,SaN_SaNTyp,SaN_SaNNumer,SaN_SaNRok,SaN_SaNSeria,SaN_SaNMiesiac) end
+				, isnull(trvk.KnA_Akronim, trnk.KnA_Akronim) KnA_Akronim
+				, case when TrV_KnANumer &lt;&gt; 0 then trvk.KnA_Nazwa1 + ' ' + trvk.KnA_Nazwa2 else case when isnull(trnk.KnA_Nazwa1,'')='' and isnull(trnk.KnA_Nazwa2,'')='' and @wersjaDeklaracji = 2 then 'BRAK' else trnk.KnA_Nazwa1 + ' ' + trnk.KnA_Nazwa2 end end
+				, case when TrV_KnANumer &lt;&gt; 0 then trvk.KnA_Ulica + ' ' + trvk.KnA_Adres + ' ' + trvk.KnA_KodP + ' ' + trvk.KnA_Miasto else LTRIM(RTRIM(case when isnull(trnk.KnA_Ulica,'')='' and isnull(trnk.KnA_Adres,'')='' and isnull(trnk.KnA_KodP,'')='' and isnull(trnk.KnA_Miasto,'')='' and @wersjaDeklaracji = 2 then 'BRAK' else trnk.KnA_Ulica + ' ' + trnk.KnA_Adres + ' ' + trnk.KnA_KodP + ' ' + trnk.KnA_Miasto end)) end
+				--, case when isnull(KnA_Nip,'')='' then case when isnull(KnA_Pesel,'')='' then 'BRAK' else KnA_Pesel end else 
+				, case when isnull(trnk.KnA_Nip,'')='' and isnull(trvk.KnA_Nip,'')='' then 'BRAK' else	
+					case when TRV_ExpoNorm in (@e_SPR_nWewnatrzwspolnotowyVat0D, @e_SPR_nWewnatrzwspolnotowyVatDowolnyD, @e_SPR_nWewnatrzwspolnotowyVat0DT, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDT
+					, @e_SPR_nWewnatrzwspolnotowyVat0N, @e_SPR_nWewnatrzwspolnotowyVatDowolnyN, @e_SPR_nWewnatrzwspolnotowyVat0NT, @e_SPR_nWewnatrzwspolnotowyVatDowolnyNT
+					, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DKorekta, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDTKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DTKorekta
+					, @e_SPR_nDostawaOpodatkowanaWWsp) then case when TrV_KnANumer = 0 then trnk.KnA_NipPrefiks else trvk.KnA_NipPrefiks end else '' end +  case when TrV_KnANumer = 0 then trnk.KnA_Nip else case when isnull(trvk.KnA_Nip,'')='' then 'BRAK' else trvk.KnA_Nip end end end NIP
+				, TrV_VATNalOd
+				, SaN_ZwrNumer, 0, 0
+			FROM CDN.TraVAT 
+				JOIN CDN.SadNag ON TRV_GIDTyp = SAN_GIDTyp AND TRV_GIDNumer = SAN_GIDNumer
+				JOIN CDN.TraSVat ON TRV_GIDTyp = TSV_GIDTyp AND TRV_GIDNumer = TSV_GIDNumer AND TrV_GIDLp = TSV_GIDLp
+				--LEFT JOIN CDN.KntKarty ON SaN_KntTyp = Knt_GIDTyp AND San_KntNumer = Knt_GIDNumer
+				LEFT JOIN CDN.KntAdresy trnk ON SaN_KNANumer = KnA_GIDNumer
+				LEFT JOIN cdn.KntAdresy trvk ON TrV_KnANumer = trvk.KnA_GIDNumer
+			WHERE SAN_VatTyp = 2 AND TSV_Rozliczac = 1 AND TSV_DeklRok = @rok 
+				AND ( (@miesiacKwartal = 0 AND TSV_DeklMiesiac = @miesiac) OR (@miesiacKwartal = 1 AND TSV_DeklMiesiac BETWEEN @poczKwart AND @konKwart) )
+				AND SAN_VatRejestr &lt;&gt; '' AND SAN_GIDTyp in (@Typ_FWS, @Typ_FKS ) 
+		)    as aa 
+	-------------------------------------------------------------------------------------------------------------------------------------     
+--select * from #tmpDokumenty
+	declare @TRV_GIDTyp smallint,
+		@TRV_GIDNumer int, 
+		@TRV_GIDLp int,
+		@TRN_VatRejestr varchar(5), 
+		@TrN_VatNumer int,
+		@CzySad tinyint,
+		@TypSad smallint,
+		@DataWyst int,
+		@DataZak int,
+		@NumerDok varchar(40),
+		@Akronim varchar(20),
+		@Nazwa varchar(200),
+		@Netto decimal(15,2),
+		@Vat decimal(15,2),
+		@AdresNabywcy varchar(512),
+		@NIP varchar(25),
+		
+		@TRV_StawkaPod tinyint,
+		@TRV_FlagaVAT tinyint, 
+		@TRV_DeklRok smallint, 
+		@TRV_DeklMiesiac tinyint,
+		@TRV_RodzajZakupu tinyint, 
+		@TRV_OdliczeniaVat tinyint,
+		@TRN_VatRok smallint, 
+		@TRN_VatMiesiac tinyint, 
+		@TRN_VatKorekta tinyint, 
+		@TRV_ExpoNorm tinyint, 
+		@Zero tinyint, 
+		@TRN_RolnikRyczalt tinyint, 
+		@TRN_KorektaOdlicz tinyint,
+		@TRV_Struktura tinyint, 
+		@TRV_Zrodlowa tinyint,
+		@TRV_VatNalOd tinyint,
+		
+		@KorektaDanych tinyint,
+		@TRV_KorektaDanych tinyint,
+
+		@ZwrNumer int
+	    
+	declare @poleNaDekl			smallint
+	declare @pole_DTSUZW		smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_DTSUPK		smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_DTSUPKa		smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_DTSU0			smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_DTSU0a		smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_DTSU3i5		smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_DTSU7i8		smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_DTSU22i23		smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_WWDT			smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_ET			smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_WWNT			smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_ITPR			smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_IU			smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_IUa			smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_IURO			smallint		-- numeracja na podstawie VAT-7(12)
+	declare @pole_WWNST			smallint		-- numeracja na podstawie VAT-7(12)
+	
+	set @poleNaDekl			= 0
+	set @pole_DTSUZW		= 20		-- numeracja na podstawie VAT-7(12)
+	set @pole_DTSUPK		= 21		-- numeracja na podstawie VAT-7(12)
+	set @pole_DTSUPKa		= 22		-- numeracja na podstawie VAT-7(12)
+	set @pole_DTSU0			= 23		-- numeracja na podstawie VAT-7(12)
+	set @pole_DTSU0a		= 24		-- numeracja na podstawie VAT-7(12)
+	set @pole_DTSU3i5		= 25		-- numeracja na podstawie VAT-7(12)
+	set @pole_DTSU7i8		= 27		-- numeracja na podstawie VAT-7(12)
+	set @pole_DTSU22i23		= 29		-- numeracja na podstawie VAT-7(12)
+	set @pole_WWDT			= 31		-- numeracja na podstawie VAT-7(12)
+	set @pole_ET			= 32		-- numeracja na podstawie VAT-7(12)
+	set @pole_WWNT			= 33		-- numeracja na podstawie VAT-7(12)
+	set @pole_ITPR			= 35		-- numeracja na podstawie VAT-7(12)
+	set @pole_IU			= 37		-- numeracja na podstawie VAT-7(12)
+	set @pole_IUa			= 39		-- numeracja na podstawie VAT-7(12)
+	set @pole_IURO			= 41		-- numeracja na podstawie VAT-7(12)
+	set @pole_WWNST			= 44		-- numeracja na podstawie VAT-7(12)
+	
+	declare @TrnGIDNumerLancuch int = 0, @ZwrNumerLancuch int = 0, @VatKorekta tinyint = 0, @recLevel smallint = 0
+
+	declare curDok cursor for select * from #tmpDokumenty for read only
+	open curDok
+
+	fetch curDok into @TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatRejestr, @TrN_VatNumer, @DataWyst, @DataZak,
+		@Netto, @Vat, @TRV_StawkaPod, @TRV_FlagaVAT, @TRV_RodzajZakupu, @TRV_Struktura, @TRN_VatKorekta,
+		@TRV_ExpoNorm, @TRV_Zrodlowa, @TRN_VatRok, @TRN_VatMiesiac, @TRN_RolnikRyczalt, @TRN_KorektaOdlicz, @CzySad,
+		@NumerDok, @Akronim, @Nazwa, @AdresNabywcy, @NIP, @TRV_VatNalOd
+		,@ZwrNumer, @KorektaDanych, @TRV_KorektaDanych
+
+	while @@FETCH_STATUS = 0
+	begin
+	
+		---------------------------------------------------------------------
+		--	trzeba przejść po łańcuszku, żeby wyszukać źródłowy dokument dla korekt, z niego trzeba pobrać datę sprzedaży
+		
+		/*IF @ZwrNumer &gt; 0 and @TRV_GIDTyp not in (@Typ_FW, @Typ_FWK)
+		begin
+			IF @CzySad = 0
+			begin		
+				/*;with Dok(GIDNumer, Data3, GIDKor, VatKorekta) as
+				(
+					select TrN_GIDNumer, TrN_Data3, case when TrN_ZwrNumer = TrN_GIDNumer then 0 else TrN_ZwrNumer end, TrN_VatKorekta
+					from cdn.TraNag where trn_gidnumer = @TRV_GIDNumer
+					union all
+					select TrN_GIDNumer, TrN_Data3, case when TrN_ZwrNumer = TrN_GIDNumer then 0 else TrN_ZwrNumer end, TrN_VatKorekta
+					from cdn.TraNag as zr
+					join Dok as kor on zr.TrN_GIDNumer = kor.GIDKor
+					where zr.TrN_GIDNumer &lt; kor.GIDNumer
+				)
+				select @DataZak = Data3 from Dok where vatkorekta = 0	*/
+				
+				select @TrnGIDNumerLancuch = @TRV_GIDNumer, @ZwrNumerLancuch = @ZwrNumer, @VatKorekta = @TRN_VatKorekta, @recLevel = 0
+					
+				while @VatKorekta &gt; 0 and @TrnGIDNumerLancuch &gt; @ZwrNumerLancuch	and @recLevel &lt; 1000
+				begin	
+					set @recLevel += 1
+					
+					select @ZwrNumerLancuch = zro.TrN_ZwrNumer, @DataZak = zro.trn_data3, @VatKorekta = zro.TrN_VatKorekta, @TrnGIDNumerLancuch = zro.TRN_GIDNumer 
+					from cdn.TraNag kor join cdn.TraNag zro on kor.TrN_ZwrNumer = zro.TrN_GIDNumer 
+					where kor.TrN_GIDNumer = @TrnGIDNumerLancuch
+					
+					if @recLevel &gt;= 1000 set @DataZak = -1
+				end
+			end
+		end
+		
+		IF @TRN_VatKorekta &gt; 0 
+			set @DataZak = @DataWyst	*/
+		--	łańcuszek - koniec
+		---------------------------------------------------------------------
+		
+		/*select @TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatRejestr, @TrN_VatNumer, @DataWyst, @DataZak,
+			@Netto, @Vat, @TRV_StawkaPod, @TRV_FlagaVAT, @TRV_RodzajZakupu, @TRV_Struktura, @TRN_VatKorekta,
+			@TRV_ExpoNorm, @TRV_Zrodlowa, @TRN_VatRok, @TRN_VatMiesiac, @TRN_RolnikRyczalt, @TRN_KorektaOdlicz, @CzySad,
+			@NumerDok, @Akronim, @Nazwa	--*/
+		IF @wersjaDeklaracji &gt; 16 AND @TRV_VatNalOd &gt; 0 and @TRV_GIDTyp IN (@Typ_FW, @Typ_FWK)
+		BEGIN
+			IF @TRV_VatNalOd = 1			
+				set @poleNaDekl = 36
+			ELSE IF @TRV_VatNalOd = 2
+				set @poleNaDekl = 37
+			ELSE IF @TRV_VatNalOd = 3
+				set @poleNaDekl = 38
+			ELSE 
+				set @poleNaDekl = 39
+				
+			insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok, Akronim, Nazwa, Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+			values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, @NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+		END
+		ELSE
+		IF NOT (@TRV_StawkaPod = 3 and @wersjaDeklaracji &gt; 15)		
+		BEGIN
+			IF ( ( ( @TRV_ExpoNorm IN (@e_SPR_nImportowyVat0FW, @e_SPR_nImportowyVatDowolnyFW) AND @TRV_GIDTyp IN (@Typ_FW, @Typ_FWK) ) 
+			   or ( @TRV_GIDTyp IN (@Typ_FWS, @Typ_FKS) and @TRV_ExpoNorm = @e_SPR_nEksportowyVat0) ) 
+				   AND @TRV_RodzajZakupu &lt;&gt; @e_ksi_lRodzajZakupu_ImportUslug )
+			begin
+				--IF NOT (@TRV_ExpoNorm = @e_SPR_nImportowyVatDowolnyFW AND @TRV_FlagaVAT = 2)		
+				IF NOT ((@TRV_ExpoNorm IN (@e_SPR_nImportowyVatDowolnyFW,@e_SPR_nImportowyVat0FW) AND @TRV_GIDTyp IN (@Typ_FW, @Typ_FWK) OR ( @TRV_GIDTyp IN (@Typ_FWS, @Typ_FKS) and @TRV_ExpoNorm = @e_SPR_nEksportowyVat0)) AND @TRV_FlagaVAT = 2)
+					IF (@g_ksi_lUwzgledniajNieopodatkowane = 0 AND @TRV_FlagaVAT &lt;&gt; 2) OR @g_ksi_lUwzgledniajNieopodatkowane = 1
+					BEGIN
+						set @poleNaDekl = 35
+						
+						if @wersjaDeklaracji &gt;= 14
+							set @poleNaDekl = @poleNaDekl - 10
+					
+						insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych )
+							--K10, K11, K12, K13, K14, K15, K16, K17, K18, K19, 
+							--K20, K21, K22, K23, K24, K25, K26, K27, K28, K29, 
+							--K30, K31, K32, K33, K34, K35)
+						values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+							@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+					END
+					
+			end
+			else
+			begin
+
+				IF @TRV_ExpoNorm = @e_SPR_nEksportowyNabywca 
+				begin
+				
+					set @poleNaDekl = -1
+				
+					IF @wersjaDeklaracji &lt; 14
+					begin			
+						--wart_DTPN_Netto = wart_DTPN_Netto + @Netto;       -- pole 41
+						--wart_DTPN_Vat = wart_DTPN_Vat + @Vat;             -- pole 42
+						set @poleNaDekl = 41
+					end
+					else if  @wersjaDeklaracji &lt; 15
+					begin
+						if @TRV_GIDTyp in (@Typ_FWS, @Typ_FKS, @Typ_FW, @Typ_FWK )
+						begin
+							set @poleNaDekl = 31
+							set @TRV_StawkaPod = 0
+							set @TRV_FlagaVAT = 2
+						end
+						else
+						begin
+							if @TRV_FlagaVAT = 0
+								set @poleNaDekl = 10
+							else if @TRV_FlagaVAT = 2 and @TRV_StawkaPod = 0
+								set @poleNaDekl = 31
+							else if @TRV_FlagaVAT = 1
+								begin
+									if @TRV_StawkaPod = 0
+										set @poleNaDekl = 13
+									else if @TRV_StawkaPod in (3, 5)
+										set @poleNaDekl = 15
+									else if @TRV_StawkaPod in (7, 8)
+										set @poleNaDekl = 17								
+									else if @TRV_StawkaPod in (22, 23)
+										set @poleNaDekl = 19								
+								end	
+						  
+						end	
+					end
+					else
+					begin
+						if @TRV_GIDTyp in (@Typ_FWS, @Typ_FKS, @Typ_FW, @Typ_FWK )
+						begin						
+							if @TRV_FlagaVAT &lt;&gt; 2 
+								--if @TRV_RodzajZakupu IN (1, 5) 
+									set @poleNaDekl = 34
+						end
+						else
+						begin
+							if @TRV_RodzajZakupu IN (1, 5) 
+								if @TRV_FlagaVAT = 0
+									set @poleNaDekl = 10
+								else if @TRV_FlagaVAT = 2 and @TRV_StawkaPod = 0
+									set @poleNaDekl = 31		-- nowe 31
+								else if @TRV_FlagaVAT = 1
+								begin
+									if @TRV_StawkaPod = 0
+										set @poleNaDekl = 13
+									else if @TRV_StawkaPod in (3, 5)
+										set @poleNaDekl = 15
+									else if @TRV_StawkaPod in (7, 8)
+										set @poleNaDekl = 17
+									else if @TRV_StawkaPod in (22, 23)
+										set @poleNaDekl = 19
+								end	
+						  
+						end	
+					  
+					end	
+					
+					if @poleNaDekl &gt; -1				
+						insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+	        				Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+						values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+							@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+					
+				end
+				
+				ELSE IF @TRV_ExpoNorm in (@e_SPR_nEksportowyNabywcaWsp,	@e_SPR_nEksportowyNabywcaInne)
+				begin
+					if @wersjaDeklaracji &lt; 15
+					begin
+						set @poleNaDekl = -1
+						
+						if @TRV_GIDTyp in (@Typ_FWS, @Typ_FKS, @Typ_FW, @Typ_FWK )
+
+							if @TRV_FlagaVAT &lt;&gt; 2 
+								if @TRV_RodzajZakupu = 1
+									set @poleNaDekl = 41
+								else if @TRV_RodzajZakupu = 5
+									set @poleNaDekl = 37
+
+								else if @TRV_RodzajZakupu = 8 and @TRV_ExpoNorm = @e_SPR_nEksportowyNabywcaWsp
+								begin							
+									set @poleNaDekl = 39
+									
+									if @wersjaDeklaracji &gt;= 14								
+										set @poleNaDekl = @poleNaDekl - 10
+							
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+	        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+										
+									set @poleNaDekl = 37								
+								end
+									
+						if @wersjaDeklaracji &gt;= 14
+							set @poleNaDekl = @poleNaDekl - 10
+				
+				
+						if @poleNaDekl &gt; -1
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+	        					Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+					end
+					else	-- if @wersjaDeklaracji = 15
+					begin
+						set @poleNaDekl = -1
+						if @TRV_GIDTyp in (@Typ_FWS, @Typ_FKS, @Typ_FW, @Typ_FWK )						
+							if @TRV_FlagaVAT &lt;&gt; 2 
+								if @TRV_RodzajZakupu = 1
+									set @poleNaDekl = 32
+								else if @TRV_RodzajZakupu = 5
+									set @poleNaDekl = 27
+								else if @TRV_RodzajZakupu = 8 and @TRV_ExpoNorm in (@e_SPR_nEksportowyNabywcaWsp, @e_SPR_nEksportowyNabywcaInne)
+									set @poleNaDekl = 29
+				
+						if @poleNaDekl &gt; -1
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+	        					Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+					end
+				end
+				
+				ELSE IF @TRV_ExpoNorm = @e_SPR_nDostawaOpodatkowanaWWsp 
+				begin
+					if ( @TRV_StawkaPod = 0 and @TRV_FlagaVat = 2 and @TRV_RodzajZakupu IN (1, 5) ) 
+					begin
+						--wart_DTSU = wart_DTSU + @Netto;                  -- pole 21
+			        
+						set @poleNaDekl = 21
+						
+						if @wersjaDeklaracji &gt;= 14
+							set @poleNaDekl = @poleNaDekl - 10
+						
+						insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        					Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+						values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+							@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+			            				
+					end       
+					else if @TRV_RodzajZakupu = 8 
+					begin
+						--wart_DTSU = wart_DTSU + @Netto;                  -- pole 21
+						--wart_DTSU_a = wart_DTSU_a + @Netto;              -- pole 22
+			            
+						set @poleNaDekl = 21
+						
+						if @wersjaDeklaracji &gt;= 14
+							set @poleNaDekl = @poleNaDekl - 10
+						
+						insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        					Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+						values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+							@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+							
+						set @poleNaDekl = 22
+						
+						if @wersjaDeklaracji &gt;= 14
+							set @poleNaDekl = @poleNaDekl - 10
+						
+						insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        					Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+						values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+							@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+					end;
+
+					IF @TRV_RodzajZakupu IN (1, 5) 
+					begin
+						if @TRV_StawkaPod = 0 and @TRV_FlagaVat = 0 
+						begin
+							--wart_DTSU_Zw = wart_DTSU_Zw + @Netto;             -- pole 20            
+			                		                
+							set @poleNaDekl = 20
+						
+							if @wersjaDeklaracji = 14
+								set @poleNaDekl = @poleNaDekl - 10
+							else if @wersjaDeklaracji &gt;= 15
+								set @poleNaDekl = 11
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end
+						else if @TRV_StawkaPod = 0 and @TRV_FlagaVat = 1  
+						begin
+							--wart_DTSU_0 = wart_DTSU_0 + @Netto;              -- pole 23
+							set @poleNaDekl = 23
+						
+							if @wersjaDeklaracji = 14
+								set @poleNaDekl = @poleNaDekl - 10
+							else if @wersjaDeklaracji &gt;= 15
+								set @poleNaDekl = 11
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end
+						else if (@TRV_StawkaPod = 3 and @wersjaDeklaracji &lt; 16 or @TRV_StawkaPod = 5 ) and @TRV_FlagaVat = 1 
+						begin
+							--wart_DTSU_3_5_Netto = wart_DTSU_3_5_Netto + @Netto;       -- pole 25
+							--wart_DTSU_3_5_Vat = wart_DTSU_3_5_Vat + @Vat;             -- pole 26
+							set @poleNaDekl = 25
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end
+						else if (@TRV_StawkaPod = 7 or @TRV_StawkaPod = 8) and @TRV_FlagaVat = 1 
+						begin
+							--wart_DTSU_7_8_Netto = wart_DTSU_7_8_Netto + @Netto;      -- pole 27
+							--wart_DTSU_7_8_Vat = wart_DTSU_7_8_Vat + @Vat;            -- pole 28
+							set @poleNaDekl = 27
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end
+						else if (@TRV_StawkaPod = 22 or @TRV_StawkaPod = 23) and @TRV_FlagaVat = 1 
+						begin
+							--wart_DTSU_22_23_Netto = wart_DTSU_22_23_Netto + @Netto;    -- pole 29
+							--wart_DTSU_22_23_Vat = wart_DTSU_22_23_Vat + @Vat;          -- pole 30
+							set @poleNaDekl = 29
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end
+					end
+				end
+				ELSE IF @TRV_ExpoNorm = @e_SPR_nDostawaOpodatkowanaInne 
+				begin
+
+					if NOT (@TRV_FlagaVAT = 2 and @TRV_RodzajZakupu NOT IN (@e_ksi_lRodzajZakupu_UslugiRO, @e_ksi_lRodzajZakupu_ImportUslug, @e_ksi_lRodzajZakupu_Towary))
+					--or (@TRV_FlagaVAT = 2 and @TRV_RodzajZakupu = 1)
+					begin
+						if @TRV_FlagaVAT = 1 and @TRV_StawkaPod = 0	and @g_ksi_InterpretujTransDostOpodatkPozaTerytKrajWSt0JakoKrajowa &gt; 0
+							set @poleNaDekl = 23	-- pole 23
+						else
+							set @poleNaDekl = 21	--wart_DTSU = wart_DTSU + @Netto;                  -- pole 21
+							
+						if @wersjaDeklaracji &gt;= 14
+							set @poleNaDekl = @poleNaDekl - 10
+						
+						insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+    						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+						values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+							@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+					end
+
+				end
+				ELSE IF @TRV_ExpoNorm = @e_SPR_nTaxFree 
+				begin
+					IF @TRV_FlagaVat = 1  
+					begin    
+						  --_VATQ:FlagaVat = qSumy.FlagaVat
+						  --_VATQ:Stawka = qSumy.StawkaPod
+						IF @TRV_StawkaPod = 0 
+						begin
+							--wart_DTSU_0 = wart_DTSU_0 + @Netto;              -- pole 23
+							set @poleNaDekl = 23
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+								
+							--wart_DTTF = @Netto     -- pole 24
+							set @poleNaDekl = 24
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end
+						ELSE IF (@TRV_StawkaPod = 3 or @TRV_StawkaPod = 5 )
+						begin
+							--wart_DTSU_3_5_Netto = wart_DTSU_3_5_Netto + @Netto;       -- pole 25
+							--wart_DTSU_3_5_Vat = wart_DTSU_3_5_Vat + @Vat;             -- pole 26
+							set @poleNaDekl = 25
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+    							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end
+						ELSE IF (@TRV_StawkaPod = 7 or @TRV_StawkaPod = 8)
+						begin
+							--wart_DTSU_7_8_Netto = wart_DTSU_7_8_Netto + @Netto;      -- pole 27
+							--wart_DTSU_7_8_Vat = wart_DTSU_7_8_Vat + @Vat;            -- pole 28
+							set @poleNaDekl = 27
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+    							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end
+						ELSE IF (@TRV_StawkaPod = 22 or @TRV_StawkaPod = 23)
+						begin
+							--wart_DTSU_22_23_Netto = wart_DTSU_22_23_Netto + @Netto;    -- pole 29
+							--wart_DTSU_22_23_Vat = wart_DTSU_22_23_Vat + @Vat;          -- pole 30
+							set @poleNaDekl = 29
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+    							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end					
+					end
+				end
+				ELSE IF @TRV_ExpoNorm IN (@e_SPR_nWewnatrzwspolnotowyVat0N, @e_SPR_nWewnatrzwspolnotowyVatDowolnyN,
+						 @e_SPR_nWewnatrzwspolnotowyVat0NT, @e_SPR_nWewnatrzwspolnotowyVatDowolnyNT,
+						 @e_SPR_nImportowyVat0FW, @e_SPR_nImportowyVatDowolnyFW) 
+				begin    
+					IF @TRV_GIDTyp in(@Typ_FWS, @Typ_FKS, @Typ_FW, @Typ_FWK) 
+					BEGIN
+						IF @TRV_FlagaVAT &lt;&gt; 2
+						BEGIN
+							IF @TRV_RodzajZakupu = @e_ksi_lRodzajZakupu_ImportUslug
+							begin
+								if @TRV_GIDTyp in (@Typ_FWS, @Typ_FKS, @Typ_FW, @Typ_FWK) 
+								begin
+									--wart_IU_Netto = wart_IU_Netto + @Netto;            -- pole 37
+									--wart_IU_Vat = wart_IU_Vat + @Vat;              -- pole 38
+									set @poleNaDekl = 37
+							
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+								end
+								else
+								begin
+									--wart_DTSU_Zw = wart_DTSU_Zw + @Netto;             -- pole 20
+									set @poleNaDekl = 20
+							
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+								end
+							end
+							ELSE IF @TRV_RodzajZakupu = @e_ksi_lRodzajZakupu_UslugiRO  
+							begin
+								if @TRV_GIDTyp in (@Typ_FWS, @Typ_FKS, @Typ_FW, @Typ_FWK) 
+								begin
+									--wart_IU_Netto = wart_IU_Netto + @Netto;           -- pole 37
+									--wart_IU_Vat = wart_IU_Vat + @Vat;                 -- pole 38
+									if @wersjaDeklaracji &lt; 15
+									begin
+										set @poleNaDekl = 37
+								
+										if @wersjaDeklaracji &gt;= 14
+											set @poleNaDekl = @poleNaDekl - 10
+										
+										insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        									Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+										values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+											@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+									end
+										
+									--wart_IU_RO_Netto = wart_IU_RO_Netto + @Netto;     -- pole 39
+									--wart_IU_RO_Vat = wart_IU_RO_Vat + @Vat;           -- pole 40
+									set @poleNaDekl = 39
+							
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+								end
+								else
+								begin
+									--wart_DTSU_Zw = wart_DTSU_Zw + @Netto;             -- pole 20
+									set @poleNaDekl = 20
+							
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+								end
+							end
+							ELSE IF @TRV_RodzajZakupu = @e_ksi_lRodzajZakupu_SrTransportu
+							begin
+								--wart_WWNT_Netto = wart_WWNT_Netto + @Netto;       -- pole 33
+								--wart_WWNT_Vat = wart_WWNT_Vat + @Vat;             -- pole 34
+								set @poleNaDekl = 33
+							
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+									
+								set @poleNaDekl = 44
+							
+								if @wersjaDeklaracji &gt;= 14 and @wersjaDeklaracji &lt; 15
+									set @poleNaDekl = @poleNaDekl - 10
+								else if @wersjaDeklaracji &gt;= 17
+									set @poleNaDekl = 38
+								else if @wersjaDeklaracji &gt;= 15
+									set @poleNaDekl = 37					
+								
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+							end
+							ELSE
+							begin
+								--wart_WWNT_Netto = wart_WWNT_Netto + @Netto;       -- pole 33
+								--wart_WWNT_Vat = wart_WWNT_Vat + @Vat;             -- pole 34
+								set @poleNaDekl = 33
+							
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+								IF @wersjaDeklaracji &gt;= 17 AND @TRV_RodzajZakupu = @e_ksi_lRodzajZakupu_Paliwo
+								begin
+									set @poleNaDekl = 39			-- nowe na VAT-7 (17)
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+								end
+
+							end
+						END						
+						ELSE IF @wersjaDeklaracji &gt;= 17 AND @TRV_RodzajZakupu = 1 AND
+							 ( (@TRV_ExpoNorm = @e_SPR_nWewnatrzwspolnotowyVatDowolnyNT AND @TRV_GIDTyp in(@Typ_FW, @Typ_FWK) ) OR 
+							   (@TRV_ExpoNorm = @e_SPR_nWewnatrzwspolnotowyVat0NT AND @TRV_GIDTyp in(@Typ_FWS, @Typ_FKS) ) )
+						BEGIN
+							set @poleNaDekl = 23
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+    							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+						END
+					END
+				end
+				ELSE IF @TRV_ExpoNorm IN (@e_SPR_nWewnatrzwspolnotowyVat0D, @e_SPR_nWewnatrzwspolnotowyVat0DT,
+					  @e_SPR_nWewnatrzwspolnotowyVatDowolnyD, @e_SPR_nWewnatrzwspolnotowyVatDowolnyDT,
+					  @e_SPR_nWewnatrzwspolnotowyVatDowolnyDKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DKorekta) 
+				begin
+					IF @TRV_RodzajZakupu = 8   
+					begin
+						--wart_DTSU = wart_DTSU + @Netto;              -- pole 21
+						--wart_DTSU_a = wart_DTSU_a + @Netto;              -- pole 22
+						set @poleNaDekl = 21
+						
+						if @wersjaDeklaracji &gt;= 14
+							set @poleNaDekl = @poleNaDekl - 10
+						
+						insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        					Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+						values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+							@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+						
+						set @poleNaDekl = 22
+						
+						if @wersjaDeklaracji &gt;= 14
+							set @poleNaDekl = @poleNaDekl - 10
+						
+						insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        					Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+						values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+							@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+				
+					end;
+
+					IF @TRV_StawkaPod &lt;&gt; 0 AND @TRV_FlagaVat = 1  
+					begin
+						IF @TRV_RodzajZakupu IN (1, 5) 
+						begin
+							if (@TRV_StawkaPod = 3 or @TRV_StawkaPod = 5 ) and @TRV_FlagaVat = 1 
+							begin
+								--wart_DTSU_3_5_Netto = wart_DTSU_3_5_Netto + @Netto;      -- pole 25
+								--wart_DTSU_3_5_Vat = wart_DTSU_3_5_Vat + @Vat;        -- pole 26
+								set @poleNaDekl = 25
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+							
+							end
+							else if (@TRV_StawkaPod = 7 or @TRV_StawkaPod = 8 ) and @TRV_FlagaVat = 1 
+							begin
+								--wart_DTSU_7_8_Netto = wart_DTSU_7_8_Netto + @Netto;      -- pole 27
+								--wart_DTSU_7_8_Vat = wart_DTSU_7_8_Vat + @Vat;        -- pole 28
+								set @poleNaDekl = 27
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+			                    
+							end
+							else if (@TRV_StawkaPod = 22 or @TRV_StawkaPod = 23 ) and @TRV_FlagaVat = 1 
+							begin
+								--wart_DTSU_22_23_Netto = wart_DTSU_22_23_Netto + @Netto;    -- pole 29
+								--wart_DTSU_22_23_Vat = wart_DTSU_22_23_Vat + @Vat;      -- pole 30
+								set @poleNaDekl = 29
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+							
+							end            
+						end
+					end
+					ELSE IF @TRV_StawkaPod = 0 AND @TRV_FlagaVat = 2 
+					begin         
+						IF @TRV_RodzajZakupu IN (1, 5) 
+						begin
+							--wart_DTSU = wart_DTSU + @Netto;                -- pole 21
+							set @poleNaDekl = 21
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end           
+					end
+					ELSE
+					begin
+						IF @TRV_RodzajZakupu = 1 AND @TRV_StawkaPod = 0 AND @TRV_FlagaVat = 1 
+						begin
+							--wart_WWDT = wart_WWDT + @Netto;                -- pole 31
+							set @poleNaDekl = 31
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end;        
+			        
+						IF @TRV_RodzajZakupu in (1, 5) AND @TRV_FlagaVat = 0 
+						begin
+							--wart_DTSU_Zw = wart_DTSU_Zw + @Netto;             -- pole 20
+							set @poleNaDekl = 20
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end;
+
+						IF @TRV_RodzajZakupu = 5 AND @TRV_FlagaVat = 1 
+						begin
+							--wart_DTSU_0 = wart_DTSU_0 + @Netto;              -- pole 23
+							set @poleNaDekl = 23
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end            
+					end
+				end
+				ELSE
+				begin
+					IF (@TRV_ExpoNorm IN (@e_SPR_nImportowyVat0FW, @e_SPR_nImportowyVatDowolnyFW) AND
+						@TRV_GIDTyp IN (@Typ_FW, @Typ_FWK)) OR
+					   (@TRV_GIDTyp IN (@Typ_FWS, @Typ_FKS) and @TRV_ExpoNorm = @e_SPR_nEksportowyVat0)
+			        
+					begin
+
+						IF @TRV_StawkaPod = 0 AND @TRV_FlagaVat = 2 
+						begin
+							IF @g_ksi_lUwzgledniajNieopodatkowane = 1 
+								if @TRV_RodzajZakupu = 5     --@e_ksi_lRodzajZakupu_ImportUslug
+								begin                    
+									--wart_IU_Netto = wart_IU_Netto + @Netto;    -- pole 37
+									--wart_IU_Vat   = wart_IU_Vat + @Vat;        -- pole 38
+									if not ( @TRV_GIDTyp IN (@Typ_FWS, @Typ_FKS) and @TRV_ExpoNorm = @e_SPR_nEksportowyVat0  )	--and @wersjaDeklaracji = 15 )
+									begin
+										set @poleNaDekl = 37
+						
+										if @wersjaDeklaracji &gt;= 14
+											set @poleNaDekl = @poleNaDekl - 10
+									
+										insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        									Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+										values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+											@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+									end
+
+								end  
+								else if @TRV_RodzajZakupu = 8    --@e_ksi_lRodzajZakupu_UslugiRO
+								begin
+			                    
+									if not ( @TRV_GIDTyp IN (@Typ_FWS, @Typ_FKS) and @TRV_ExpoNorm = @e_SPR_nEksportowyVat0 )	--and @wersjaDeklaracji = 15 )
+									begin
+										--wart_IU_Netto       = wart_IU_Netto + @Netto;    -- pole 37
+										--wart_IU_Vat         = wart_IU_Vat + @Vat;        -- pole 38
+										set @poleNaDekl = 37
+						
+										if @wersjaDeklaracji &gt;= 14
+											set @poleNaDekl = @poleNaDekl - 10
+									
+										insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+	        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+										values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+											@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+							
+										--wart_IU_RO_Netto    = wart_IU_RO_Netto + @Netto;    -- pole 39
+										--wart_IU_RO_Vat      = wart_IU_RO_Vat + @Vat;        -- pole 40
+										set @poleNaDekl = 39
+						
+										if @wersjaDeklaracji &gt;= 14
+											set @poleNaDekl = @poleNaDekl - 10
+									
+										insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        									Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+										values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+											@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+									end
+
+								end
+						end   
+						ELSE
+						begin
+							if @TRV_RodzajZakupu = 5       --@e_ksi_lRodzajZakupu_ImportUslug
+							begin
+								--wart_IU_Netto       = wart_IU_Netto + @Netto;    -- pole 37
+								--wart_IU_Vat         = wart_IU_Vat + @Vat;        -- pole 38
+								set @poleNaDekl = 37
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+							end    
+							else if @TRV_RodzajZakupu = 8       --@e_ksi_lRodzajZakupu_UslugiRO
+							begin
+								--wart_IU_Netto       = wart_IU_Netto + @Netto;    -- pole 37
+								--wart_IU_Vat         = wart_IU_Vat + @Vat;        -- pole 38
+								set @poleNaDekl = 37
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+									
+								--wart_IU_RO_Netto    = wart_IU_RO_Netto + @Netto;    -- pole 39
+								--wart_IU_RO_Vat      = wart_IU_RO_Vat + @Vat;        -- pole 40
+								set @poleNaDekl = 39
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+							end
+						end
+					end
+					ELSE IF @TRN_VatKorekta = 1 
+					begin
+						IF @TRV_FlagaVat = 1     -- normalny podatek
+						begin
+							IF @TRV_StawkaPod = 0 AND (@TRV_ExpoNorm = 2 OR @TRV_ExpoNorm = 4) 
+							begin
+								--wart_ExT = wart_ExT + @Netto;     -- pole 32
+								set @poleNaDekl = 32
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+							end
+							ELSE IF (@TRV_RodzajZakupu &lt;&gt; 8 AND
+								NOT (@TRV_RodzajZakupu = 1 AND @TRV_StawkaPod = 0 AND
+								 @TRV_ExpoNorm IN (@e_SPR_nWewnatrzwspolnotowyVatDowolnyDTKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DTKorekta))) 
+							begin
+								IF @TRV_StawkaPod = 0
+								BEGIN
+									--wart_DTSU_0 = wart_DTSU_0 + @Netto;              -- pole 23
+									set @poleNaDekl = 23
+						
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+								END
+								ELSE IF @TRV_StawkaPod IN (3,5)
+								BEGIN								
+									set @poleNaDekl = 25
+						
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+								END
+								ELSE IF @TRV_StawkaPod IN (7,8)
+								BEGIN								
+									set @poleNaDekl = 27
+						
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+								END
+								ELSE IF @TRV_StawkaPod IN (22,23)
+								BEGIN								
+									set @poleNaDekl = 29
+						
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+								END
+							end;
+			          
+							IF @TRV_ExpoNorm IN (@e_SPR_nWewnatrzwspolnotowyVatDowolnyDTKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DTKorekta) 
+							begin
+								IF (@TRV_RodzajZakupu = 8) 
+								begin								
+									--wart_DTSU = wart_DTSU + @Netto;              -- pole 21
+									--wart_DTSU_a = wart_DTSU_a + @Netto;              -- pole 22
+									set @poleNaDekl = 21
+						
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+										
+									set @poleNaDekl = 22
+						
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+								end;
+
+								IF @TRV_RodzajZakupu = 1 AND @TRV_StawkaPod = 0 
+								begin
+									--wart_WWDT = wart_WWDT + @Netto;                -- pole 31
+									set @poleNaDekl = 31								
+						
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+								end
+							end
+			            
+						end            
+						ELSE IF @TRV_FlagaVat IN (0,2)  
+						begin
+							IF @TRV_FlagaVat = 2 AND @g_ksi_lUwzgledniajNieopodatkowane = 1
+							BEGIN
+								IF @TRV_Struktura = 0
+								begin
+									IF @TRV_RodzajZakupu IN ( 1, 5)         
+									BEGIN
+										set @poleNaDekl = 23
+						
+										if @wersjaDeklaracji &gt;= 14
+											set @poleNaDekl = @poleNaDekl - 10
+										
+										insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        									Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+										values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+											@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+									END
+								end
+								ELSE IF @TRV_Struktura = 2
+								begin															
+									IF @TRV_RodzajZakupu in (1,5)
+									BEGIN                        
+										set @poleNaDekl = 20
+						
+										if @wersjaDeklaracji &gt;= 14
+											set @poleNaDekl = @poleNaDekl - 10
+										
+										insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+	        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+										values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+											@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+									END
+								end
+							END						  
+							ELSE IF @TRV_FlagaVat &lt;&gt; 2 AND @TRV_RodzajZakupu in (1,5) 
+							begin
+								--wart_DTSU_Zw = wart_DTSU_Zw + @Netto;             -- pole 20
+								set @poleNaDekl = 20
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+								--_VATQ:id = VAT7:const:KSZM
+							end;              
+			          
+							IF @TRV_ExpoNorm IN (@e_SPR_nWewnatrzwspolnotowyVatDowolnyDTKorekta, @e_SPR_nWewnatrzwspolnotowyVat0DTKorekta) 
+							begin
+								IF (@TRV_RodzajZakupu IN (1, 5) AND @TRV_FlagaVat = 2) 
+								begin
+									--wart_DTSU = wart_DTSU + @Netto;                -- pole 21
+									set @poleNaDekl = 21
+						
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+								end
+								ELSE IF @TRV_RodzajZakupu = 8 
+								begin
+									--wart_DTSU = wart_DTSU + @Netto;              -- pole 21
+									--wart_DTSU_a = wart_DTSU_a + @Netto;              -- pole 22
+									set @poleNaDekl = 21
+						
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+									
+									set @poleNaDekl = 22
+						
+									if @wersjaDeklaracji &gt;= 14
+										set @poleNaDekl = @poleNaDekl - 10
+									
+									insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        								Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+									values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+										@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+								end                  
+							end                
+						end
+					end
+					ELSE    
+					begin      
+						IF @TRV_FlagaVat = 1 AND @TRV_StawkaPod = 0 AND (@TRV_ExpoNorm = 2 OR @TRV_ExpoNorm = 4) 
+						begin
+							--wart_ExT = wart_ExT + @Netto;                 -- pole 32
+							set @poleNaDekl = 32
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end
+						ELSE IF @TRV_FlagaVat = 0 AND @TRV_StawkaPod = 0 AND (@TRV_ExpoNorm = 2 OR @TRV_ExpoNorm = 4) 
+						begin
+							--wart_DTSU_Zw = wart_DTSU_Zw + @Netto;             -- pole 20
+							set @poleNaDekl = 20
+						
+							if @wersjaDeklaracji &gt;= 14
+								set @poleNaDekl = @poleNaDekl - 10
+							
+							insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        						Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+							values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+								@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+						end					
+						ELSE IF NOT (@TRV_FlagaVat = 1 AND @TRV_Zrodlowa &lt;&gt; 0)		-- ttt
+						begin
+							if @TRV_StawkaPod = 0 and @TRV_FlagaVAT = 2
+							begin
+								if @g_ksi_lUwzgledniajNieopodatkowane = 1
+									if @TRV_Struktura = 0 
+									begin
+										set @poleNaDekl = 23
+						
+										if @wersjaDeklaracji &gt;= 14
+											set @poleNaDekl = @poleNaDekl - 10
+										
+										insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        									Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+										values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+											@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+									end
+									else if @TRV_Struktura = 2
+									begin
+										set @poleNaDekl = 20
+						
+										if @wersjaDeklaracji &gt;= 14
+											set @poleNaDekl = @poleNaDekl - 10
+										
+										insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        									Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+										values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+											@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+									end
+							end
+							else --*/
+							if @TRV_StawkaPod = 0 and @TRV_FlagaVat = 0
+							begin
+								--wart_DTSU_Zw = wart_DTSU_Zw + @Netto;             -- pole 20            
+								set @poleNaDekl = 20
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+							end						
+							else if @TRV_StawkaPod = 0 and @TRV_FlagaVat = 1  
+							begin
+								--wart_DTSU_0 = wart_DTSU_0 + @Netto;              -- pole 23
+								set @poleNaDekl = 23
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, 0, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+							end
+							else if (@TRV_StawkaPod = 3 or @TRV_StawkaPod = 5 ) and @TRV_FlagaVat = 1 
+							begin
+								--wart_DTSU_3_5_Netto = wart_DTSU_3_5_Netto + @Netto;       -- pole 25
+								--wart_DTSU_3_5_Vat = wart_DTSU_3_5_Vat + @Vat;             -- pole 26
+								set @poleNaDekl = 25
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+							end
+							else if (@TRV_StawkaPod = 7 or @TRV_StawkaPod = 8) and @TRV_FlagaVat = 1 
+							begin
+								--wart_DTSU_7_8_Netto = wart_DTSU_7_8_Netto + @Netto;      -- pole 27
+								--wart_DTSU_7_8_Vat = wart_DTSU_7_8_Vat + @Vat;            -- pole 28
+								set @poleNaDekl = 27
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+							end
+							else if (@TRV_StawkaPod = 22 or @TRV_StawkaPod = 23) and @TRV_FlagaVat = 1 
+							begin
+								--wart_DTSU_22_23_Netto = wart_DTSU_22_23_Netto + @Netto;    -- pole 29
+								--wart_DTSU_22_23_Vat = wart_DTSU_22_23_Vat + @Vat;          -- pole 30
+								set @poleNaDekl = 29
+						
+								if @wersjaDeklaracji &gt;= 14
+									set @poleNaDekl = @poleNaDekl - 10
+								
+								insert #tmpWyn (GIDTyp, GIDNumer, GIDLp, NrWRej, Rejestr, PoleNaDekl, Odliczenie, DataWystaw, DataSprzed, NrDok,
+        							Akronim, Nazwa,	Netto, Vat, AdresNabywcy, NIP, VatNalOd, KorektaDanych, TRV_KorektaDanych)
+								values (@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatNumer, @TRN_VatRejestr, @poleNaDekl, 1, @DataWyst, @DataZak, 	
+									@NumerDok, @Akronim, @Nazwa, @Netto, @Vat, @AdresNabywcy, @NIP, @TRV_VatNalOd, @KorektaDanych, @TRV_KorektaDanych)
+
+							end	
+						end;
+					end
+				end    
+		  end
+		END
+ 		fetch next from curDok into
+			@TRV_GIDTyp, @TRV_GIDNumer, @TRV_GIDLp, @TRN_VatRejestr, @TrN_VatNumer, @DataWyst, @DataZak,
+			@Netto, @Vat, @TRV_StawkaPod, @TRV_FlagaVAT, @TRV_RodzajZakupu, @TRV_Struktura, @TRN_VatKorekta,
+			@TRV_ExpoNorm, @TRV_Zrodlowa, @TRN_VatRok, @TRN_VatMiesiac, @TRN_RolnikRyczalt, @TRN_KorektaOdlicz, @CzySad,
+			@NumerDok, @Akronim, @Nazwa, @AdresNabywcy, @NIP, @TRV_VatNalOd, @ZwrNumer, @KorektaDanych, @TRV_KorektaDanych
+		
+	end
+
+	close curDok
+	deallocate curDok
+
+	--select * from #tmpWyn
+	
+	IF @wersjaDeklaracji &gt;= 17
+	begin
+		set @sSQL = N'
+		select ROW_NUMBER() over (order by GIDTyp, GIDNumer) LpSprzedazy,
+			GIDTyp, GIDNumer, NIP NrKontrahenta, case when isnull(Nazwa,'''') = '''' then ''BRAK'' else Nazwa end NazwaKontrahenta, case when isnull(AdresNabywcy,'''') = '''' then ''BRAK'' else AdresNabywcy end AdresKontrahenta
+			,  NrDok DowodSprzedazy, DataWystaw DataWystawienia, case when DataSprzed = DataWystaw then 0 else DataSprzed end DataSprzedazy,
+		
+			sum(case when PoleNaDekl = 10 then Netto else 0.00 end) as K_10,
+			sum(case when PoleNaDekl = 11 then Netto else 0.00 end) as K_11,
+			sum(case when PoleNaDekl = 12 then Netto else 0.00 end) as K_12,
+			sum(case when PoleNaDekl = 13 then Netto else 0.00 end) as K_13,
+			sum(case when PoleNaDekl = 14 then Netto else 0.00 end) as K_14,
+			sum(case when PoleNaDekl = 15 then Netto else 0.00 end) as K_15, SUM(case when PoleNaDekl = 15 then Vat else 0.00 end) as K_16,		-- netto trafia do pola 15, vat trafia do pola 16
+			sum(case when PoleNaDekl = 17 then Netto else 0.00 end) as K_17, SUM(case when PoleNaDekl = 17 then Vat else 0.00 end) as K_18,		
+			sum(case when PoleNaDekl = 19 then Netto else 0.00 end) as K_19, SUM(case when PoleNaDekl = 19 then Vat else 0.00 end) as K_20,				
+			sum(case when PoleNaDekl = 21 then Netto else 0.00 end) as K_21,
+			sum(case when PoleNaDekl = 22 then Netto else 0.00 end) as K_22,
+			sum(case when PoleNaDekl = 23 then Netto else 0.00 end) as K_23, SUM(case when PoleNaDekl = 23 then Vat else 0.00 end) as K_24,		
+			sum(case when PoleNaDekl = 25 then Netto else 0.00 end) as K_25, SUM(case when PoleNaDekl = 25 then Vat else 0.00 end) as K_26,				
+			sum(case when PoleNaDekl = 27 then Netto else 0.00 end) as K_27, SUM(case when PoleNaDekl = 27 then Vat else 0.00 end) as K_28,		
+			sum(case when PoleNaDekl = 29 then Netto else 0.00 end) as K_29, SUM(case when PoleNaDekl = 29 then Vat else 0.00 end) as K_30,		
+			sum(case when PoleNaDekl = 31 then Netto else 0.00 end) as K_31,
+			sum(case when PoleNaDekl = 32 then Netto else 0.00 end) as K_32, SUM(case when PoleNaDekl = 32 then Vat else 0.00 end) as K_33,		
+			sum(case when PoleNaDekl = 34 then Netto else 0.00 end) as K_34, SUM(case when PoleNaDekl = 34 then Vat else 0.00 end) as K_35,
+			sum(case when PoleNaDekl = 36 then Vat else 0.00 end) as K_36,		
+			sum(case when PoleNaDekl = 37 then Vat else 0.00 end) as K_37,
+			sum(case when PoleNaDekl = 38 then Vat else 0.00 end) as K_38,
+			sum(case when PoleNaDekl = 39 then Vat else 0.00 end) as K_39
+						
+			, case when KorektaDanych = 1 and TRV_KorektaDanych=0 then 1 else 0 end GIDLp1
+		into ##tmpJPKVatS_' + convert(nvarchar,@JPKPONNumer) +		
+		N' from #tmpWyn
+		group by GIDTyp, GIDNumer, TRV_KorektaDanych, case when KorektaDanych = 1 and TRV_KorektaDanych=0 then 1 else 0 end, DataSprzed, DataWystaw,  NrDok, Nazwa, AdresNabywcy, NIP'
+	end
+	else
+	begin
+		set @sSQL = N'
+		select ROW_NUMBER() over (order by GIDTyp, GIDNumer) LpSprzedazy,
+			GIDTyp, GIDNumer, case when DataSprzed = DataWystaw then 0 else DataSprzed end DataSprzedazy, DataWystaw DataWystawienia, NrDok NrDokumentu, Nazwa NazwaNabywcy, AdresNabywcy AdresNabywcy,
+		
+			sum(case when PoleNaDekl = 10 then Netto else 0.00 end) as K_10,
+			sum(case when PoleNaDekl = 11 then Netto else 0.00 end) as K_11,
+			sum(case when PoleNaDekl = 12 then Netto else 0.00 end) as K_12,
+			sum(case when PoleNaDekl = 13 then Netto else 0.00 end) as K_13,
+			sum(case when PoleNaDekl = 14 then Netto else 0.00 end) as K_14,
+			sum(case when PoleNaDekl = 15 then Netto else 0.00 end) as K_15, SUM(case when PoleNaDekl = 15 then Vat else 0.00 end) as K_16,		-- netto trafia do pola 15, vat trafia do pola 16
+			sum(case when PoleNaDekl = 17 then Netto else 0.00 end) as K_17, SUM(case when PoleNaDekl = 17 then Vat else 0.00 end) as K_18,		
+			sum(case when PoleNaDekl = 19 then Netto else 0.00 end) as K_19, SUM(case when PoleNaDekl = 19 then Vat else 0.00 end) as K_20,				
+			sum(case when PoleNaDekl = 21 then Netto else 0.00 end) as K_21,
+			sum(case when PoleNaDekl = 22 then Netto else 0.00 end) as K_22,
+			sum(case when PoleNaDekl = 23 then Netto else 0.00 end) as K_23, SUM(case when PoleNaDekl = 23 then Vat else 0.00 end) as K_24,		
+			sum(case when PoleNaDekl = 25 then Netto else 0.00 end) as K_25, SUM(case when PoleNaDekl = 25 then Vat else 0.00 end) as K_26,				
+			sum(case when PoleNaDekl = 27 then Netto else 0.00 end) as K_27, SUM(case when PoleNaDekl = 27 then Vat else 0.00 end) as K_28,		
+			sum(case when PoleNaDekl = 29 then Netto else 0.00 end) as K_29, SUM(case when PoleNaDekl = 29 then Vat else 0.00 end) as K_30,		
+			sum(case when PoleNaDekl = 31 then Netto else 0.00 end) as K_31,
+			sum(case when PoleNaDekl = 32 then Netto else 0.00 end) as K_32, SUM(case when PoleNaDekl = 32 then Vat else 0.00 end) as K_33,		
+			sum(case when PoleNaDekl = 34 then Netto else 0.00 end) as K_34, SUM(case when PoleNaDekl = 34 then Vat else 0.00 end) as K_35,
+			sum(case when PoleNaDekl = 36 then Netto else 0.00 end) as K_36,		
+			convert(decimal(15,2), 0) as K_37,	-- 37 nie jest wyliczane
+			sum(case when PoleNaDekl = 37 then Vat else 0.00 end) as K_38
+			, case when KorektaDanych = 1 and TRV_KorektaDanych=0 then 1 else 0 end GIDLp1
+		into ##tmpJPKVatS_' + convert(nvarchar,@JPKPONNumer) +		
+		N' from #tmpWyn
+		group by GIDTyp, GIDNumer, TRV_KorektaDanych, case when KorektaDanych = 1 and TRV_KorektaDanych=0 then 1 else 0 end, DataSprzed, DataWystaw,  NrDok, Nazwa, AdresNabywcy'
+	
+	
+		if not (@uzgodnijVAT7 = 0 or @PONNumer = 0)		-- od wersji 17 deklaracji (wersja 2 jpk_vat), nie ma wiersza uzgadniającego
+		begin			
+			
+			-- wczytaj dane z zaakceptowanej/zatwierdzonej deklaracji VAT-7(16)	
+			declare @deklP10 decimal(15,2) = 0.00,@deklP11 decimal(15,2) = 0.00,@deklP12 decimal(15,2) = 0.00,@deklP13 decimal(15,2) = 0.00,@deklP14 decimal(15,2) = 0.00,
+			@deklP15 decimal(15,2) = 0.00,@deklP16 decimal(15,2) = 0.00,@deklP17 decimal(15,2) = 0.00,@deklP18 decimal(15,2) = 0.00,@deklP19 decimal(15,2) = 0.00,
+			@deklP20 decimal(15,2) = 0.00,@deklP21 decimal(15,2) = 0.00,@deklP22 decimal(15,2) = 0.00,@deklP23 decimal(15,2) = 0.00,@deklP24 decimal(15,2) = 0.00,
+			@deklP25 decimal(15,2) = 0.00,@deklP26 decimal(15,2) = 0.00,@deklP27 decimal(15,2) = 0.00,@deklP28 decimal(15,2) = 0.00,@deklP29 decimal(15,2) = 0.00,
+			@deklP30 decimal(15,2) = 0.00,@deklP31 decimal(15,2) = 0.00,@deklP32 decimal(15,2) = 0.00,@deklP33 decimal(15,2) = 0.00,@deklP34 decimal(15,2) = 0.00,
+			@deklP35 decimal(15,2) = 0.00,@deklP36 decimal(15,2) = 0.00,@deklP37 decimal(15,2) = 0.00,@deklP38 decimal(15,2) = 0.00,@deklP39 decimal(15,2) = 0.00
+			,@deklP73 int = 0	-- data przeliczenia deklaracji
+
+			select @deklP10 = sum(case when POE_Pozycja = 10 then POE_KwotaL else 0.00 end) --P10
+				, @deklP11 = sum(case when POE_Pozycja = 11 then POE_KwotaL else 0.00 end) 
+				, @deklP12 = sum(case when POE_Pozycja = 12 then POE_KwotaL else 0.00 end) 
+				, @deklP13 = sum(case when POE_Pozycja = 13 then POE_KwotaL else 0.00 end) 
+				, @deklP14 = sum(case when POE_Pozycja = 14 then POE_KwotaL else 0.00 end) 
+				, @deklP15 = sum(case when POE_Pozycja = 15 then POE_KwotaL else 0.00 end) 
+				, @deklP16 = sum(case when POE_Pozycja = 16 then POE_KwotaL else 0.00 end) 
+				, @deklP17 = sum(case when POE_Pozycja = 17 then POE_KwotaL else 0.00 end) 
+				, @deklP18 = sum(case when POE_Pozycja = 18 then POE_KwotaL else 0.00 end) 
+				, @deklP19 = sum(case when POE_Pozycja = 19 then POE_KwotaL else 0.00 end) 
+				, @deklP20 = sum(case when POE_Pozycja = 20 then POE_KwotaL else 0.00 end) 
+				, @deklP21 = sum(case when POE_Pozycja = 21 then POE_KwotaL else 0.00 end) 
+				, @deklP22 = sum(case when POE_Pozycja = 22 then POE_KwotaL else 0.00 end) 
+				, @deklP23 = sum(case when POE_Pozycja = 23 then POE_KwotaL else 0.00 end) 
+				, @deklP24 = sum(case when POE_Pozycja = 24 then POE_KwotaL else 0.00 end) 
+				, @deklP25 = sum(case when POE_Pozycja = 25 then POE_KwotaL else 0.00 end) 
+				, @deklP26 = sum(case when POE_Pozycja = 26 then POE_KwotaL else 0.00 end) 
+				, @deklP27 = sum(case when POE_Pozycja = 27 then POE_KwotaL else 0.00 end) 
+				, @deklP28 = sum(case when POE_Pozycja = 28 then POE_KwotaL else 0.00 end) 
+				, @deklP29 = sum(case when POE_Pozycja = 29 then POE_KwotaL else 0.00 end) 
+				, @deklP30 = sum(case when POE_Pozycja = 30 then POE_KwotaL else 0.00 end) 
+				, @deklP31 = sum(case when POE_Pozycja = 31 then POE_KwotaL else 0.00 end) 
+				, @deklP32 = sum(case when POE_Pozycja = 32 then POE_KwotaL else 0.00 end) 
+				, @deklP33 = sum(case when POE_Pozycja = 33 then POE_KwotaL else 0.00 end) 
+				, @deklP34 = sum(case when POE_Pozycja = 34 then POE_KwotaL else 0.00 end) 
+				, @deklP35 = sum(case when POE_Pozycja = 35 then POE_KwotaL else 0.00 end) 
+				, @deklP36 = sum(case when POE_Pozycja = 36 then POE_KwotaL else 0.00 end) 
+				, @deklP37 = sum(case when POE_Pozycja = 37 then POE_KwotaL else 0.00 end) 
+				, @deklP38 = sum(case when POE_Pozycja = 38 then POE_KwotaL else 0.00 end) 	
+				, @deklP73 = SUM(case when POE_Pozycja = 73 then POE_KwotaL else 0.00 end) 
+			from cdn.PodElem
+			where POE_GIDNumer = @PONNumer
+
+
+			--declare @maxId int = 0	
+			--select @maxId = max(Lp) from #tmpWyn2
+			
+			--select * from #tmpWyn2
+			--union all	
+			set @sSQL = @sSQL + N';
+			if (select count(*) from ##tmpJPKVatS_' + convert(nvarchar,@JPKPONNumer) + ') &gt; 0
+			insert into ##tmpJPKVatS_' + convert(nvarchar,@JPKPONNumer) +
+			N' select isnull(MAX(LpSprzedazy),0) + 1 LpSprzedazy,0 GIDTyp, 0 GIDNumer, 0 DataSprzedazy, @deklP73 DataWystawienia, ''Zaokrąglenia'' NrDokumentu, '''' NazwaNabywcy, '''' AdresNabywcy,		
+				isnull(@deklP10,0) - sum(K_10),
+				isnull(@deklP11,0) - sum(K_11),
+				isnull(@deklP12,0) - sum(K_12),
+				isnull(@deklP13,0) - sum(K_13),
+				isnull(@deklP14,0) - sum(K_14),
+				isnull(@deklP15,0) - sum(K_15), isnull(@deklP16,0) - SUM(K_16),		-- netto trafia do pola 15, vat trafia do pola 16
+				isnull(@deklP17,0) - sum(K_17), isnull(@deklP18,0) - SUM(K_18),
+				isnull(@deklP19,0) - sum(K_19), isnull(@deklP20,0) - SUM(K_20),
+				isnull(@deklP21,0) - sum(K_21),
+				isnull(@deklP22,0) - sum(K_22),
+				isnull(@deklP23,0) - sum(K_23), isnull(@deklP24,0) - SUM(K_24),
+				isnull(@deklP25,0) - sum(K_25), isnull(@deklP26,0) - SUM(K_26),
+				isnull(@deklP27,0) - sum(K_27), isnull(@deklP28,0) - SUM(K_28),
+				isnull(@deklP29,0) - sum(K_29), isnull(@deklP30,0) - SUM(K_30),
+				isnull(@deklP31,0) - sum(K_31),
+				isnull(@deklP32,0) - sum(K_32), isnull(@deklP33,0) - SUM(K_33),
+				isnull(@deklP34,0) - sum(K_34), isnull(@deklP35,0) - SUM(K_35),
+				isnull(@deklP36,0), isnull(@deklP37,0),
+				isnull(@deklP38,0) - sum(K_38)
+				,0 GIDLp1
+			from ##tmpJPKVatS_' + convert(nvarchar,@JPKPONNumer)
+
+			-----		
+			--drop table #tmpWyn2
+		end
+	end
+	
+	--set @sSQL = @sSQL + N';
+	--		select * from ##tmpJPKVatS_' + convert(nvarchar,@JPKPONNumer)
+
+
+
+	if @wersjaDeklaracji &lt; 17
+		EXECUTE @rv = sp_executesql @sSQL, 
+			N'@deklP10 decimal(15,2) ,@deklP11 decimal(15,2) ,@deklP12 decimal(15,2) ,@deklP13 decimal(15,2) ,@deklP14 decimal(15,2) ,
+			@deklP15 decimal(15,2) ,@deklP16 decimal(15,2) ,@deklP17 decimal(15,2) ,@deklP18 decimal(15,2) ,@deklP19 decimal(15,2) ,
+			@deklP20 decimal(15,2) ,@deklP21 decimal(15,2) ,@deklP22 decimal(15,2) ,@deklP23 decimal(15,2) ,@deklP24 decimal(15,2) ,
+			@deklP25 decimal(15,2) ,@deklP26 decimal(15,2) ,@deklP27 decimal(15,2) ,@deklP28 decimal(15,2) ,@deklP29 decimal(15,2) ,
+			@deklP30 decimal(15,2) ,@deklP31 decimal(15,2) ,@deklP32 decimal(15,2) ,@deklP33 decimal(15,2) ,@deklP34 decimal(15,2) ,
+			@deklP35 decimal(15,2) ,@deklP36 decimal(15,2) ,@deklP37 decimal(15,2) ,@deklP38 decimal(15,2) 
+			,@deklP73 int'
+			,@deklP10 =@deklP10 ,@deklP11 =@deklP11 ,@deklP12 =@deklP12 ,@deklP13 =@deklP13 ,@deklP14 =@deklP14 ,
+			@deklP15 =@deklP15 ,@deklP16 =@deklP16 ,@deklP17 =@deklP17 ,@deklP18 =@deklP18 ,@deklP19 =@deklP19 ,
+			@deklP20 =@deklP20 ,@deklP21 =@deklP21 ,@deklP22 =@deklP22 ,@deklP23 =@deklP23 ,@deklP24 =@deklP24 ,
+			@deklP25 =@deklP25 ,@deklP26 =@deklP26 ,@deklP27 =@deklP27 ,@deklP28 =@deklP28 ,@deklP29 =@deklP29 ,
+			@deklP30 =@deklP30 ,@deklP31 =@deklP31 ,@deklP32 =@deklP32 ,@deklP33 =@deklP33 ,@deklP34 =@deklP34 ,
+			@deklP35 =@deklP35 ,@deklP36 =@deklP36 ,@deklP37 =@deklP37 ,@deklP38 =@deklP38 
+			,@deklP73 =@deklP73
+	else
+		EXECUTE @rv = sp_executesql @sSQL, 
+			N'@deklP10 decimal(15,2) ,@deklP11 decimal(15,2) ,@deklP12 decimal(15,2) ,@deklP13 decimal(15,2) ,@deklP14 decimal(15,2) ,
+			@deklP15 decimal(15,2) ,@deklP16 decimal(15,2) ,@deklP17 decimal(15,2) ,@deklP18 decimal(15,2) ,@deklP19 decimal(15,2) ,
+			@deklP20 decimal(15,2) ,@deklP21 decimal(15,2) ,@deklP22 decimal(15,2) ,@deklP23 decimal(15,2) ,@deklP24 decimal(15,2) ,
+			@deklP25 decimal(15,2) ,@deklP26 decimal(15,2) ,@deklP27 decimal(15,2) ,@deklP28 decimal(15,2) ,@deklP29 decimal(15,2) ,
+			@deklP30 decimal(15,2) ,@deklP31 decimal(15,2) ,@deklP32 decimal(15,2) ,@deklP33 decimal(15,2) ,@deklP34 decimal(15,2) ,
+			@deklP35 decimal(15,2) ,@deklP36 decimal(15,2) ,@deklP37 decimal(15,2) ,@deklP38 decimal(15,2) ,@deklP39 decimal(15,2)
+			,@deklP73 int'
+			,@deklP10 =@deklP10 ,@deklP11 =@deklP11 ,@deklP12 =@deklP12 ,@deklP13 =@deklP13 ,@deklP14 =@deklP14 ,
+			@deklP15 =@deklP15 ,@deklP16 =@deklP16 ,@deklP17 =@deklP17 ,@deklP18 =@deklP18 ,@deklP19 =@deklP19 ,
+			@deklP20 =@deklP20 ,@deklP21 =@deklP21 ,@deklP22 =@deklP22 ,@deklP23 =@deklP23 ,@deklP24 =@deklP24 ,
+			@deklP25 =@deklP25 ,@deklP26 =@deklP26 ,@deklP27 =@deklP27 ,@deklP28 =@deklP28 ,@deklP29 =@deklP29 ,
+			@deklP30 =@deklP30 ,@deklP31 =@deklP31 ,@deklP32 =@deklP32 ,@deklP33 =@deklP33 ,@deklP34 =@deklP34 ,
+			@deklP35 =@deklP35 ,@deklP36 =@deklP36 ,@deklP37 =@deklP37 ,@deklP38 =@deklP38 ,@deklP39 =@deklP39
+			,@deklP73 =@deklP73
+
+
+	drop table #tmpDokumenty
+	drop table #tmpWyn
+
+
+	if @rv &lt;&gt; 0
+	begin 				
+		raiserror('Błąd odczytu  JPKVatSprzedaz ', 16, 1)	
+		return 1
+	end
+
+
+	
+
+
+	 /*
+	 --   obliczenia poszczególnych pól deklaracji VAT7(12)
+	-------------------------------------------------------
+
+	declare @wart_DTSU_Zw decimal(15,2);             -- pole 20
+	declare @wart_DTSU decimal(15,2);                -- pole 21
+	declare @wart_DTSU_a decimal(15,2);              -- pole 22
+	declare @wart_DTSU_0 decimal(15,2);              -- pole 23
+	declare @wart_DTSU_0a decimal(15,2);             -- pole 24
+	declare @wart_DTSU_3_5_Netto decimal(15,2);      -- pole 25
+	declare @wart_DTSU_3_5_Vat decimal(15,2);        -- pole 26
+	declare @wart_DTSU_7_8_Netto decimal(15,2);      -- pole 27
+	declare @wart_DTSU_7_8_Vat decimal(15,2);        -- pole 28
+	declare @wart_DTSU_22_23_Netto decimal(15,2);    -- pole 29
+	declare @wart_DTSU_22_23_Vat decimal(15,2);      -- pole 30
+	declare @wart_WWDT decimal(15,2);                -- pole 31
+	declare @wart_ExT decimal(15,2);                 -- pole 32
+	declare @wart_WWNT_Netto decimal(15,2);          -- pole 33
+	declare @wart_WWNT_Vat decimal(15,2);            -- pole 34
+	declare @wart_IT_Netto decimal(15,2);            -- pole 35
+	declare @wart_IT_Vat decimal(15,2);              -- pole 36
+	declare @wart_IU_Netto decimal(15,2);            -- pole 37
+	declare @wart_IU_Vat decimal(15,2);              -- pole 38
+	declare @wart_IU_RO_Netto decimal(15,2);         -- pole 39
+	declare @wart_IU_RO_Vat decimal(15,2);           -- pole 40
+	declare @wart_DTPN_Netto decimal(15,2);          -- pole 41
+	declare @wart_DTPN_Vat decimal(15,2);            -- pole 42
+	declare @wart_WWNST decimal(15,2);               -- pole 44
+	*/
+	
+set nocount off	
+END	
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury FakturySprzedazyWgDeklaracjiVatJPK" hidden="False">
+GRANT EXECUTE ON CDN.FakturySprzedazyWgDeklaracjiVatJPK TO CDNRaport
+</scriptdef>
+</ROOT>

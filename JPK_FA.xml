@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Definicja deklaracji JPK_FA wersja 1" hidden="False">
+SET NOCOUNT ON
+
+DECLARE @ID INT
+declare @tmpDecl table( Action varchar(10), ID int)
+
+Merge cdn.DefPodNag as trg using (values('JPK_FA',1,603,0,'',78531,0,4,0,0,0,0,2,2,2,2,0,'fd9e2d6f11b1932d4ffc99c06d6b1e15',0,'2019.1.0',2,0,'tns:JPK','xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:etd=&quot;http://crd.gov.pl/xml/schematy/dziedzinowe/mf/2016/01/25/eD/DefinicjeTypy/&quot; xmlns:kck=&quot;http://crd.gov.pl/xml/schematy/dziedzinowe/mf/2013/05/23/eD/KodyCECHKRAJOW/&quot; xsi:schemaLocation=&quot;http://jpk.mf.gov.pl/wzor/2016/03/09/03095/ https://www.gov.pl/documents/2034621/2182793/Schemat_JPK_FA(1)_v1-0.xsd/c048cae9-264e-512f-51fe-bcea7fdf9de0&quot; xmlns:tns=&quot;http://jpk.mf.gov.pl/wzor/2016/03/09/03095/&quot;')) as src
+(DPN_Symbol,DPN_Wersja,DPN_TypPodatku,DPN_Zalacznik,DPN_Nadrzedna,DPN_DataOd,DPN_DataDo,DPN_IloscStron,DPN_Platnosci,DPN_Ksiegowanie,DPN_NrPozIloscPodpoziomow,DPN_ZalacznikOkresDef,DPN_PoczatekOkresu,DPN_KoniecOkresu,DPN_PoczatekPodOkresu,DPN_KoniecPodOkresu,DPN_TypDeklaracji,DPN_SumaKontrolna,DPN_WersjaNadrzednej,DPN_WersjaWewn,DPN_TypUrzedu,DPN_Lp,DPN_XMLTagNazwa,DPN_XMLTagAtrybuty) on (trg.DPN_Symbol=src.DPN_Symbol and trg.DPN_Wersja=src.DPN_Wersja)
+when matched and (trg.DPN_Symbol&lt;&gt;src.DPN_Symbol or trg.DPN_Wersja&lt;&gt;src.DPN_Wersja or trg.DPN_TypPodatku&lt;&gt;src.DPN_TypPodatku or trg.DPN_Zalacznik&lt;&gt;src.DPN_Zalacznik or trg.DPN_Nadrzedna&lt;&gt;src.DPN_Nadrzedna or trg.DPN_DataOd&lt;&gt;src.DPN_DataOd or trg.DPN_DataDo&lt;&gt;src.DPN_DataDo or trg.DPN_IloscStron&lt;&gt;src.DPN_IloscStron or trg.DPN_Platnosci&lt;&gt;src.DPN_Platnosci or trg.DPN_Ksiegowanie&lt;&gt;src.DPN_Ksiegowanie or trg.DPN_NrPozIloscPodpoziomow&lt;&gt;src.DPN_NrPozIloscPodpoziomow or trg.DPN_ZalacznikOkresDef&lt;&gt;src.DPN_ZalacznikOkresDef or trg.DPN_PoczatekOkresu&lt;&gt;src.DPN_PoczatekOkresu or trg.DPN_KoniecOkresu&lt;&gt;src.DPN_KoniecOkresu or trg.DPN_PoczatekPodOkresu&lt;&gt;src.DPN_PoczatekPodOkresu
+ or trg.DPN_KoniecPodOkresu&lt;&gt;src.DPN_KoniecPodOkresu or trg.DPN_TypDeklaracji&lt;&gt;src.DPN_TypDeklaracji or trg.DPN_SumaKontrolna&lt;&gt;src.DPN_SumaKontrolna or trg.DPN_WersjaNadrzednej&lt;&gt;src.DPN_WersjaNadrzednej or trg.DPN_WersjaWewn&lt;&gt;src.DPN_WersjaWewn or trg.DPN_TypUrzedu&lt;&gt;src.DPN_TypUrzedu or trg.DPN_Lp&lt;&gt;src.DPN_Lp or trg.DPN_XMLTagNazwa&lt;&gt;src.DPN_XMLTagNazwa or trg.DPN_XMLTagAtrybuty&lt;&gt;src.DPN_XMLTagAtrybuty)
+then update set 
+trg.DPN_Symbol=src.DPN_Symbol,trg.DPN_Wersja=src.DPN_Wersja,trg.DPN_TypPodatku=src.DPN_TypPodatku,trg.DPN_Zalacznik=src.DPN_Zalacznik,trg.DPN_Nadrzedna=src.DPN_Nadrzedna,trg.DPN_DataOd=src.DPN_DataOd,trg.DPN_DataDo=src.DPN_DataDo,trg.DPN_IloscStron=src.DPN_IloscStron,trg.DPN_Platnosci=src.DPN_Platnosci,trg.DPN_Ksiegowanie=src.DPN_Ksiegowanie,trg.DPN_NrPozIloscPodpoziomow=src.DPN_NrPozIloscPodpoziomow,trg.DPN_ZalacznikOkresDef=src.DPN_ZalacznikOkresDef,trg.DPN_PoczatekOkresu=src.DPN_PoczatekOkresu,trg.DPN_KoniecOkresu=src.DPN_KoniecOkresu,trg.DPN_PoczatekPodOkresu=src.DPN_PoczatekPodOkresu,trg.DPN_KoniecPodOkresu=src.DPN_KoniecPodOkresu,trg.DPN_TypDeklaracji=src.DPN_TypDeklaracji,trg.DPN_SumaKontrolna=src.DPN_SumaKontrolna,trg.DPN_WersjaNadrzednej=src.DPN_WersjaNadrzednej,trg.DPN_WersjaWewn=src.DPN_WersjaWewn,trg.DPN_TypUrzedu=src.DPN_TypUrzedu,trg.DPN_Lp=src.DPN_Lp,trg.DPN_XMLTagNazwa=src.DPN_XMLTagNazwa,trg.DPN_XMLTagAtrybuty=src.DPN_XMLTagAtrybuty
+when not matched by target
+then insert (DPN_Symbol,DPN_Wersja,DPN_TypPodatku,DPN_Zalacznik,DPN_Nadrzedna,DPN_DataOd,DPN_DataDo,DPN_IloscStron,DPN_Platnosci,DPN_Ksiegowanie,DPN_NrPozIloscPodpoziomow,DPN_ZalacznikOkresDef,DPN_PoczatekOkresu,DPN_KoniecOkresu,DPN_PoczatekPodOkresu,DPN_KoniecPodOkresu,DPN_TypDeklaracji,DPN_SumaKontrolna,DPN_WersjaNadrzednej,DPN_WersjaWewn,DPN_TypUrzedu,DPN_Lp,DPN_XMLTagNazwa,DPN_XMLTagAtrybuty)
+values(src.DPN_Symbol,src.DPN_Wersja,src.DPN_TypPodatku,src.DPN_Zalacznik,src.DPN_Nadrzedna,src.DPN_DataOd,src.DPN_DataDo,src.DPN_IloscStron,src.DPN_Platnosci,src.DPN_Ksiegowanie,src.DPN_NrPozIloscPodpoziomow,src.DPN_ZalacznikOkresDef,src.DPN_PoczatekOkresu,src.DPN_KoniecOkresu,src.DPN_PoczatekPodOkresu,src.DPN_KoniecPodOkresu,src.DPN_TypDeklaracji,src.DPN_SumaKontrolna,src.DPN_WersjaNadrzednej,src.DPN_WersjaWewn,src.DPN_TypUrzedu,src.DPN_Lp,src.DPN_XMLTagNazwa,src.DPN_XMLTagAtrybuty)
+
+select top 1 @ID = ID from @tmpDecl;
+if isnull(@ID,0)=0 return;
+
+select * into #DefPodElem from cdn.DefPodElem where DPE_DPNID = @ID;
+delete from cdn.DefPodElemKolumny where DPK_DPNID = @ID;
+delete from cdn.DefPodElem where DPE_DPNID = @ID;
+
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,1,1,91,13,'Nagłówek',1,0,0,0,0,0,0,0,0,0,0,0,'',0,0,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:Naglowek','','','','',1,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,2,2,1,1,'Kod systemowy',1,100,0,10,60,0,30,0,10,0,0,0,'''JPK_FA''',0,1,'1',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:KodFormularza','kodSystemowy=&quot;JPK_FA (1)&quot; wersjaSchemy=&quot;1-0&quot;','tns:Naglowek','','',2,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,3,3,2,1,'Wersja schemy',1,0,0,12,60,0,0,0,12,0,0,0,'''1-0''',0,1,'1',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'','','','','',0,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,4,4,3,3,'Wariant formularza',1,180,0,-12,30,0,160,0,-12,0,0,0,'''1''',0,1,'1',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:WariantFormularza','','tns:Naglowek','','',3,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,5,5,4,3,'Cel złożenia',1,0,0,12,30,0,0,0,12,0,0,0,'''1''',0,1,'1',0,'1',0,'',0,0,0,'',0,0,0,'','1',2,'',0,0,0,2,0,0,'tns:CelZlozenia','','tns:Naglowek','','',4,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,6,6,5,1,'Data wytworzenia JPK',1,-160,0,20,140,0,-160,0,20,0,0,0,'SQL(''SELECT CONVERT(char(19), SYSDATETIME(), 126)'')',0,2,'1',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:DataWytworzeniaJPK','','tns:Naglowek','','',5,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,7,7,6,8,'Okres od',1,-40,0,20,50,0,0,0,20,0,0,0,'SQL(''Select ''''''&amp;PON:DataOd&amp;'''''''')',0,2,'1',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:DataOd','','tns:Naglowek','','',6,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,8,8,7,8,'Okres do',1,130,0,0,50,0,130,0,0,0,0,0,'SQL(''Select ''''''&amp;PON:DataDo&amp;'''''''')',0,2,'1',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:DataDo','','tns:Naglowek','','',7,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,9,9,8,1,'Kod urzędu',1,-120,0,20,40,0,-130,0,20,0,0,0,'SQL(''SELECT URZ_KodUC from CDN.Urzedy WHERE URZ_GIDNumer=''''''&amp;PON:USNumer&amp;'''''''')',0,2,'',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:KodUrzedu','','tns:Naglowek','','',9,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,10,10,9,1,'Kod waluty',1,20,0,12,20,0,0,0,12,0,0,0,'SQL(''Select ''''''&amp;PON:ParamS3&amp;'''''''')',0,2,'1',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:DomyslnyKodWaluty','','tns:Naglowek','','',8,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,11,11,92,13,'Podmiot',2,0,0,0,0,0,0,0,0,0,0,0,'',0,0,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:Podmiot1','','','','',10,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,0,12,0,0,'Identyfikator podmiotu',2,0,0,0,0,0,30,0,10,100,0,0,'',0,0,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:IdentyfikatorPodmiotu','','tns:Podmiot1','','',11,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,12,13,10,1,'NIP',2,70,0,15,70,0,0,0,15,0,0,0,'SQL(''Select Replace(''''''&amp;NIP&amp;'''''','''' '''','''''''') '')',0,1,'',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:NIP','','tns:IdentyfikatorPodmiotu','','',12,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,13,14,11,1,'Pełna nazwa',2,0,0,12,260,0,0,0,12,0,0,0,'Nazwa',0,1,'',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:PelnaNazwa','','tns:IdentyfikatorPodmiotu','','',13,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,14,15,12,1,'Regon',2,0,0,12,70,0,0,0,12,0,0,0,'REGON',0,1,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:REGON','','tns:IdentyfikatorPodmiotu','','',14,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,0,16,0,0,'Adres',2,0,0,0,0,0,0,0,30,100,0,0,'',0,0,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:AdresPodmiotu','','tns:Podmiot1','','',15,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,15,17,13,1,'Kod kraju',2,70,0,15,50,0,0,0,15,0,0,0,'''PL''',0,1,'1',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:KodKraju','','tns:AdresPodmiotu','','',16,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,16,18,14,1,'Województwo',2,180,0,0,100,0,180,0,0,0,0,0,'Województwo',0,1,'',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:Wojewodztwo','','tns:AdresPodmiotu','','',17,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,17,19,15,1,'Powiat',2,0,15,12,100,0,0,15,12,0,0,0,'Powiat',0,1,'',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:Powiat','','tns:AdresPodmiotu','','',18,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,18,20,16,1,'Miasto',2,0,16,0,100,0,0,16,0,0,0,0,'Miejscowość',0,1,'',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:Miejscowosc','','tns:AdresPodmiotu','','',23,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,19,21,17,1,'Gmina',2,0,17,12,100,0,0,17,12,0,0,0,'Gmina',0,1,'',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:Gmina','','tns:AdresPodmiotu','','',19,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,20,22,18,1,'Ulica',2,0,18,0,100,0,0,18,0,0,0,0,'Ulica',0,1,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:Ulica','','tns:AdresPodmiotu','','',20,1,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,21,23,19,1,'Nr domu',2,-150,19,12,60,0,0,19,12,0,0,0,'NrDomu',0,1,'',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:NrDomu','','tns:AdresPodmiotu','','',21,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,22,24,20,1,'Nr lokalu',2,0,20,0,50,0,0,20,0,0,0,0,'NrLokalu',0,1,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:NrLokalu','','tns:AdresPodmiotu','','',22,1,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,23,25,21,1,'Kod pocztowy',2,0,21,12,60,0,0,21,12,0,0,0,'KodPocztowy',0,1,'',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:KodPocztowy','','tns:AdresPodmiotu','','',24,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,24,26,22,1,'Poczta',2,0,22,0,100,0,0,22,0,0,0,0,'Poczta',0,1,'',0,'1',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'etd:Poczta','','tns:AdresPodmiotu','','',25,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,25,27,93,13,'Listy JPK',3,0,0,0,0,0,0,0,0,0,0,0,'',0,0,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'','','','','',0,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,26,28,23,11,'Podsumowanie faktur w JPK',3,30,0,22,265,170,30,0,10,0,0,0,'SELECT top 100 percent ROW_NUMBER() over (order by Data, Typ ) PENId, Data as AggDataFa, Typ as AggTypFa, SUM(N23+N8+N5+NNPoo+NNP+N0+Nzw) as AggWartFa, SUM(V23+V8+V5+VNPoo+VNP) as AggWartVAT
+FROM (
+SELECT PEL_PENId, ISNULL(MAX(Data),0) Data, MAX(Typ) Typ, ISNULL(MAX(N23),0) N23, ISNULL(MAX(V23),0) V23,
+ISNULL(MAX(N8),0) N8, ISNULL(MAX(V8),0) V8, ISNULL(MAX(N5),0) N5, ISNULL(MAX(V5),0) V5,
+ISNULL(MAX(NNPoo),0) NNPoo, ISNULL(MAX(VNPoo),0) VNPoo, ISNULL(MAX(NNP),0) NNP, ISNULL(MAX(VNP),0) VNP,
+ISNULL(MAX(N0),0) N0, ISNULL(MAX(Nzw),0) Nzw
+FROM (
+SELECT top 100 percent PEL_PENId,
+CASE WHEN d.DPK_Id = 1 THEN Convert(Int,l.PEL_WartoscString) ELSE NULL END ''Data'',
+CASE WHEN d.DPK_Id = 54 THEN  l.PEL_WartoscString ELSE ''''  END ''Typ'',
+CASE WHEN d.DPK_Id = 12 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''N23'',
+CASE WHEN d.DPK_Id = 13 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''V23'',
+CASE WHEN d.DPK_Id = 14 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''N8'',
+CASE WHEN d.DPK_Id = 15 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''V8'',
+CASE WHEN d.DPK_Id = 16 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''N5'',
+CASE WHEN d.DPK_Id = 17 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''V5'',
+CASE WHEN d.DPK_Id = 18 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''NNPoo'',
+CASE WHEN d.DPK_Id = 19 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''VNPoo'',
+CASE WHEN d.DPK_Id = 20 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''NNP'',
+CASE WHEN d.DPK_Id = 21 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''VNP'',
+CASE WHEN d.DPK_Id = 22 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''N0'',
+CASE WHEN d.DPK_Id = 23 THEN Case When l.PEL_WartoscString &lt;&gt;'''' Then Convert(Decimal(18,2),l.PEL_WartoscString) end ELSE NULL END ''Nzw''
+from CDN.PodElemListy l
+join cdn.PodNag n on l.PEL_PONNumer=n.PON_GIDNumer
+join cdn.DefPodElem e on l.PEL_POELp = e.DPE_Id
+join CDN.DefPodElemKolumny d on e.DPE_DPNID=d.DPK_DPNId and e.DPE_Lp = d.DPK_DPELp and l.PEL_DPKId = d.DPK_Id
+WHERE DPE_DPNId = @PONDPNId and l.PEL_PONNumer = @PONGIDNumer and l.PEL_POELp=27 and l.PEL_PONtyp= 7691
+and l.PEL_DPKId in (1,54,12,13,14,15,16,17,18,19,20,21,22,23)
+) a
+GROUP BY PEL_PENId  ) b
+GROUP BY Data, Typ
+order by Data, Typ
+',0,4,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,1,'','','','','',0,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,40,29,0,9,'Przygotowanie tabel tymczasowych SPR',1,0,0,0,0,0,0,0,0,0,0,0,'SQL(''exec CDN.JPKFA_Faktura ''&amp;PON_DataOd&amp;'',''&amp;PON_DataDo&amp;'',@arg_okres_rodzaj=0,@arg_okres_rodzaj_nazwa=''''''&amp;PON_ParamS1&amp;'''''',@arg_waluta=''''''&amp;PON_ParamS3&amp;'''''',@typFaktury=''''SPR'''',@ZwracajWiersze=1,@PONNumer=''&amp;PON_GIDNumer&amp;''; select 1'')',0,2,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'','','','','',0,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,41,30,0,9,'Przygotowanie tabel tymczasowych ZAK',1,0,0,0,0,0,0,0,0,0,0,0,'SQL(''exec CDN.JPKFA_Faktura ''&amp;PON_DataOd&amp;'',''&amp;PON_DataDo&amp;'',@arg_okres_rodzaj=0,@arg_okres_rodzaj_nazwa=''''''&amp;PON_ParamS2&amp;'''''',@arg_waluta=''''''&amp;PON_ParamS3&amp;'''''',@typFaktury=''''ZAK'''',@ZwracajWiersze=1,@PONNumer=''&amp;PON_GIDNumer&amp;''; select 1'')',0,2,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'','','','','',0,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,27,31,24,11,'Faktury:',3,0,0,190,265,250,0,0,190,0,0,0,'Select
+jpk_P_1,
+jpk_P_2A,
+jpk_P_3A, jpk_P_3B, jpk_P_3C, jpk_P_3D,
+jpk_P_4A, jpk_P_4B, jpk_P_5A, jpk_P_5B,
+jpk_P_6,
+jpk_P_13_1, jpk_P_14_1,
+jpk_P_13_2, jpk_P_14_2,
+jpk_P_13_3, jpk_P_14_3,
+jpk_P_13_4, jpk_P_14_4,
+jpk_P_13_5, jpk_P_14_5,
+jpk_P_13_6,
+jpk_P_13_7,
+jpk_P_15,
+jpk_P_16,
+jpk_P_17,
+jpk_P_18,
+jpk_P_19, jpk_P_19A, jpk_P_19B, jpk_P_19C,
+jpk_P_20, jpk_P_20A, jpk_P_20B,
+jpk_P_21, jpk_P_21A, jpk_P_21B, jpk_P_21C,
+jpk_P_22A, jpk_P_22B, jpk_P_22C,
+jpk_P_23,
+jpk_P_106E_2,
+jpk_P_106E_3, jpk_P_106E_3A,
+jpk_RodzajFaktury,
+jpk_PrzyczynaKorekty, jpk_NrFaKorygowanej, jpk_OkresFaKorygowanej,
+jpk_ZALZaplata,
+jpk_ZALPodatek,
+jpk_gidtyp,
+jpk_gidnumer,
+jpk_typFaktury
+from ##tmpJPKFA_SPR_@PRE_PONGIDNumer
+group by jpk_P_1,
+jpk_P_2A,
+jpk_P_3A, jpk_P_3B, jpk_P_3C, jpk_P_3D,
+jpk_P_4A, jpk_P_4B, jpk_P_5A, jpk_P_5B,
+jpk_P_6,
+jpk_P_13_1, jpk_P_14_1,
+jpk_P_13_2, jpk_P_14_2,
+jpk_P_13_3, jpk_P_14_3,
+jpk_P_13_4, jpk_P_14_4,
+jpk_P_13_5, jpk_P_14_5,
+jpk_P_13_6,
+jpk_P_13_7,
+jpk_P_15,
+jpk_P_16,
+jpk_P_17,
+jpk_P_18,
+jpk_P_19, jpk_P_19A, jpk_P_19B, jpk_P_19C,
+jpk_P_20, jpk_P_20A, jpk_P_20B,
+jpk_P_21, jpk_P_21A, jpk_P_21B, jpk_P_21C,
+jpk_P_22A, jpk_P_22B, jpk_P_22C,
+jpk_P_23,
+jpk_P_106E_2,
+jpk_P_106E_3, jpk_P_106E_3A,
+jpk_RodzajFaktury,
+jpk_PrzyczynaKorekty, jpk_NrFaKorygowanej, jpk_OkresFaKorygowanej,
+jpk_ZALZaplata,
+jpk_ZALPodatek,
+jpk_gidtyp,
+jpk_gidnumer,
+jpk_typFaktury
+union all
+Select
+jpk_P_1,
+jpk_P_2A,
+jpk_P_3A, jpk_P_3B, jpk_P_3C, jpk_P_3D,
+jpk_P_4A, jpk_P_4B, jpk_P_5A, jpk_P_5B,
+jpk_P_6,
+jpk_P_13_1, jpk_P_14_1,
+jpk_P_13_2, jpk_P_14_2,
+jpk_P_13_3, jpk_P_14_3,
+jpk_P_13_4, jpk_P_14_4,
+jpk_P_13_5, jpk_P_14_5,
+jpk_P_13_6,
+jpk_P_13_7,
+jpk_P_15,
+jpk_P_16,
+jpk_P_17,
+jpk_P_18,
+jpk_P_19, jpk_P_19A, jpk_P_19B, jpk_P_19C,
+jpk_P_20, jpk_P_20A, jpk_P_20B,
+jpk_P_21, jpk_P_21A, jpk_P_21B, jpk_P_21C,
+jpk_P_22A, jpk_P_22B, jpk_P_22C,
+jpk_P_23,
+jpk_P_106E_2,
+jpk_P_106E_3, jpk_P_106E_3A,
+jpk_RodzajFaktury,
+jpk_PrzyczynaKorekty, jpk_NrFaKorygowanej, jpk_OkresFaKorygowanej,
+jpk_ZALZaplata,
+jpk_ZALPodatek,
+jpk_gidtyp,
+jpk_gidnumer,
+jpk_typFaktury
+from ##tmpJPKFA_ZAK_@PRE_PONGIDNumer
+group by jpk_P_1,
+jpk_P_2A,
+jpk_P_3A, jpk_P_3B, jpk_P_3C, jpk_P_3D,
+jpk_P_4A, jpk_P_4B, jpk_P_5A, jpk_P_5B,
+jpk_P_6,
+jpk_P_13_1, jpk_P_14_1,
+jpk_P_13_2, jpk_P_14_2,
+jpk_P_13_3, jpk_P_14_3,
+jpk_P_13_4, jpk_P_14_4,
+jpk_P_13_5, jpk_P_14_5,
+jpk_P_13_6,
+jpk_P_13_7,
+jpk_P_15,
+jpk_P_16,
+jpk_P_17,
+jpk_P_18,
+jpk_P_19, jpk_P_19A, jpk_P_19B, jpk_P_19C,
+jpk_P_20, jpk_P_20A, jpk_P_20B,
+jpk_P_21, jpk_P_21A, jpk_P_21B, jpk_P_21C,
+jpk_P_22A, jpk_P_22B, jpk_P_22C,
+jpk_P_23,
+jpk_P_106E_2,
+jpk_P_106E_3, jpk_P_106E_3A,
+jpk_RodzajFaktury,
+jpk_PrzyczynaKorekty, jpk_NrFaKorygowanej, jpk_OkresFaKorygowanej,
+jpk_ZALZaplata,
+jpk_ZALPodatek,
+jpk_gidtyp,
+jpk_gidnumer,
+jpk_typFaktury
+
+',0,2,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'','','','tns:Faktura','typ=&quot;G&quot;',26,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,28,32,25,11,'Wiersze faktury',3,0,0,270,265,200,0,0,270,0,0,0,'Select distinct
+jpk_P_2B,
+jpk_P_7,
+jpk_P_8A, jpk_P_8B,
+jpk_P_9A, jpk_P_9B,
+0 jpk_P_10,
+jpk_P_11, jpk_P_11A,
+jpk_P_12,
+jpk_Wiersz_gidtyp,
+jpk_Wiersz_gidnumer,
+jpk_Wiersz_gidlp,
+Wiersz_spityp,
+Wiersz_spinumer
+FROM ##tmpJPKFA_SPR_@PRE_PONGIDNumer
+union all
+Select distinct
+jpk_P_2B,
+jpk_P_7,
+jpk_P_8A, jpk_P_8B,
+jpk_P_9A, jpk_P_9B,
+0 jpk_P_10,
+jpk_P_11, jpk_P_11A,
+jpk_P_12,
+jpk_Wiersz_gidtyp,
+jpk_Wiersz_gidnumer,
+jpk_Wiersz_gidlp,
+Wiersz_spityp,
+Wiersz_spinumer
+FROM ##tmpJPKFA_ZAK_@PRE_PONGIDNumer',0,2,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'','','','tns:FakturaWiersz','typ=&quot;G&quot;',36,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,42,33,0,9,'Kasowanie tabel tymczasowych SPR',1,0,0,0,0,0,0,0,0,0,0,0,'SQL(''if OBJECT_ID(''''tempdb..##tmpJPKFA_SPR_''&amp;PON_GIDNumer&amp;'''''') is not null drop table ##tmpJPKFA_SPR_''&amp;PON_GIDNumer&amp;'';select 1'')',0,2,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'','','','','',0,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,43,34,0,9,'Kasowanie tabel tymczasowych ZAK',1,0,0,0,0,0,0,0,0,0,0,0,'SQL(''if OBJECT_ID(''''tempdb..##tmpJPKFA_ZAK_''&amp;PON_GIDNumer&amp;'''''') is not null drop table ##tmpJPKFA_ZAK_''&amp;PON_GIDNumer&amp;'';select 1'')',0,2,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'','','','','',0,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,30,35,94,13,'Sumy ctrl',4,0,0,0,0,0,0,0,0,0,0,0,'',0,0,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'','','','','',0,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,0,36,0,0,'FakturaCtrl',4,0,0,0,0,0,30,0,10,200,0,0,'',0,0,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:FakturaCtrl','','','','',27,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,31,37,26,3,'Liczba faktur',4,120,0,15,80,0,0,0,15,0,0,0,'SQL(''select COUNT(1) from cdn.PodElemNagListy where PEN_PONNumer= ''''''&amp;PON:GIDNumer&amp;'''''' and PEN_POELp=27 and PEN_PONtyp= 7691'')',0,4,'1',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:LiczbaFaktur','','tns:FakturaCtrl','','',28,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,32,38,27,2,'Wartość faktur',4,0,0,12,80,0,0,0,12,0,0,0,'SQL(''SELECT sum(Convert(Decimal(18,2),l.PEL_WartoscString)) ''''Kwota'''' from CDN.PodElemListy l join cdn.DefPodElem e on l.PEL_POELp=e.DPE_Id join CDN.DefPodElemKolumny d on e.DPE_DPNID=d.DPK_DPNId and e.DPE_Lp=d.DPK_DPELp and l.PEL_DPKId=d.DPK_Id WHERE DPE_DPNId= ''''''&amp;PON:DPNId&amp;'''''' and l.PEL_PONNumer= ''''''&amp;PON:GIDNumer&amp;'''''' and l.PEL_POELp=27 and l.PEL_PONtyp= 7691 and d.DPK_Id=24'')',0,4,'1',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,2,0,0,'tns:WartoscFaktur','','tns:FakturaCtrl','','',29,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,0,39,0,0,'FakturaWierszCtrl',4,0,0,0,0,0,0,0,20,200,0,0,'',0,0,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:FakturaWierszCtrl','','','','',37,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,33,40,28,3,'Liczba wierszy faktur',4,120,0,15,80,0,0,0,15,0,0,0,'SQL(''select COUNT(1) from cdn.PodElemNagListy where PEN_PONNumer= ''''''&amp;PON:GIDNumer&amp;'''''' and PEN_POELp=28 and PEN_PONtyp= 7691'')',0,4,'1',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,2,0,0,'tns:LiczbaWierszyFaktur','','tns:FakturaWierszCtrl','','',38,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,34,41,29,2,'Wartość wierszy faktur',4,0,0,12,80,0,0,0,12,0,0,0,'SQL(''SELECT sum(Convert(Decimal(18,2),l.PEL_WartoscString)) ''''Kwota'''' from CDN.PodElemListy l join cdn.DefPodElem e on l.PEL_POELp=e.DPE_Id join CDN.DefPodElemKolumny d on e.DPE_DPNID=d.DPK_DPNId and e.DPE_Lp=d.DPK_DPELp and l.PEL_DPKId=d.DPK_Id WHERE DPE_DPNId= ''''''&amp;PON:DPNId&amp;'''''' and l.PEL_PONNumer= ''''''&amp;PON:GIDNumer&amp;'''''' and l.PEL_POELp=28 and l.PEL_PONtyp= 7691 and d.DPK_Id=8'')',0,4,'1',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,2,0,0,'tns:WartoscWierszyFaktur','','tns:FakturaWierszCtrl','','',39,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,0,42,0,0,'Stawki podatku',4,0,0,0,0,0,0,0,30,200,0,0,'',0,0,'',0,'0',0,'',0,0,0,'',0,0,0,'','',0,'',0,0,0,0,0,0,'tns:StawkiPodatku','','','','',30,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,35,43,30,2,'Stawka1',4,60,0,15,40,0,0,0,15,0,0,0,'0.23',0,1,'',0,'0',0,'',0,0,0,'',0,0,0,'1','',1,'',0,0,0,2,0,0,'tns:Stawka1','','tns:StawkiPodatku','','',31,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,36,44,31,2,'Stawka2',4,0,0,12,40,0,0,0,12,0,0,0,'0.08',0,1,'',0,'0',0,'',0,0,0,'',0,0,0,'1','',1,'',0,0,0,2,0,0,'tns:Stawka2','','tns:StawkiPodatku','','',32,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,37,45,32,2,'Stawka3',4,0,0,12,40,0,0,0,12,0,0,0,'0.05',0,1,'',0,'0',0,'',0,0,0,'',0,0,0,'1','',1,'',0,0,0,2,0,0,'tns:Stawka3','','tns:StawkiPodatku','','',33,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,38,46,33,2,'Stawka4',4,0,0,12,40,0,0,0,12,0,0,0,'0.00',0,1,'',0,'0',0,'',0,0,0,'',0,0,0,'1','',1,'',0,0,0,2,0,0,'tns:Stawka4','','tns:StawkiPodatku','','',34,0,0)
+INSERT INTO CDN.DefPodElem(DPE_DPNID,DPE_ID,DPE_Lp,DPE_Numer,DPE_Typ,DPE_Nazwa,DPE_Strona,DPE_WspX,DPE_WspXPoleNumer,DPE_WspY,DPE_Szerokosc,DPE_Wysokosc,DPE_OpisWspX,DPE_OpisWspXPoleNumer,DPE_OpisWspY,DPE_OpisSzerokosc,DPE_OpisWysokosc,DPE_Bezwzgledne,DPE_Wyrazenie,DPE_Definiowalne,DPE_Oblicz,DPE_Nieaktywne,DPE_Platnosc,DPE_Wymagane,DPE_PusteGdy0,DPE_Czcionka,DPE_Rozmiar,DPE_Kolor,DPE_Styl,DPE_OpisCzcionka,DPE_OpisRozmiar,DPE_OpisKolor,DPE_OpisStyl,DPE_Ograniczenie,DPE_OgraniczenieDolne,DPE_TypOgraniczenia,DPE_Ukryte,DPE_DFNID,DPE_DFNKwotaWmr,DPE_OpisNrPodpoziomu,DPE_Precyzja,DPE_NieLiczGdyNieaktywne,DPE_Agreguj,DPE_XMLTagNazwa,DPE_XMLTagAtrybuty,DPE_XMLParTagNazwa,DPE_XMLRekordTagNazwa,DPE_XMLRekordTagAtrybuty,DPE_XMLLp,DPE_XMLPominGdyPuste,DPE_XMLPusteGdyBrakRownoleglychElem)
+VALUES(@ID,39,47,34,2,'Stawka5',4,0,0,12,40,0,0,0,12,0,0,0,'0.00',0,1,'',0,'0',0,'',0,0,0,'',0,0,0,'1','',1,'',0,0,0,2,0,0,'tns:Stawka5','','tns:StawkiPodatku','','',35,0,0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,28,1,'AggDataFa','Data',8,'@d17-',1,0,0,0,0,'',1,0,0,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,28,2,'AggTypFa','Typ',1,'30L|@s5',2,0,0,0,0,'',2,0,0,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,28,3,'AggWartFa','Netto',2,'@N-18.2',3,0,0,0,0,'',0,0,0,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,28,4,'AggWartVat','VAT',2,'@N-18.2',4,0,0,0,0,'',0,0,0,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,1,'jpk_P_1','Data wystawienia',8,'@d17-',1,0,0,0,0,'',1,28,1,'tns:P_1','',1)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,2,'jpk_P_2A','Numer faktury',1,'60L|@s200',2,0,0,0,0,'',0,0,0,'tns:P_2A','',2)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,3,'jpk_P_3A','Nabywca',1,'75L|@s200',3,1,0,0,0,'',0,0,0,'tns:P_3A','',3)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,4,'jpk_P_3B','Adres nabywcy',1,'70L|@s200',4,1,0,0,0,'',0,0,0,'tns:P_3B','',4)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,5,'jpk_P_3C','Sprzedawca',1,'75L|@s200',5,0,0,0,0,'',0,0,0,'tns:P_3C','',5)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,6,'jpk_P_3D','Adres sprzedawcy',1,'70L|@s200',6,0,0,0,0,'',0,0,0,'tns:P_3D','',6)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,7,'jpk_P_4A','Prefiks sprzedawcy',1,'20L|@s3',7,1,0,0,0,'',0,0,0,'tns:P_4A','',7)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,8,'jpk_P_4B','NIP sprzedawcy',1,'60L|@s20',8,1,0,0,0,'',0,0,0,'tns:P_4B','',8)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,9,'jpk_P_5A','Prefiks nabywcy',1,'20L|@s3',9,1,0,0,0,'',0,0,0,'tns:P_5A','',9)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,10,'jpk_P_5B','NIP nabywcy',1,'60L|@s20',10,1,0,0,0,'',0,0,0,'tns:P_5B','',10)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,11,'jpk_P_6','Data sprzedaży',8,'@d17-',11,1,0,0,0,'',0,0,0,'tns:P_6','',11)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,12,'jpk_P_13_1','Netto 23%',2,'@n-18.2B',12,0,0,0,0,'',0,0,0,'tns:P_13_1','',12)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,13,'jpk_P_14_1','VAT 23%',2,'@n-18.2B',13,0,0,0,0,'',0,0,0,'tns:P_14_1','',13)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,14,'jpk_P_13_2','Netto 7,8%',2,'@n-18.2B',14,0,0,0,0,'',0,0,0,'tns:P_13_2','',14)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,15,'jpk_P_14_2','VAT 7,8%',2,'@n-18.2B',15,0,0,0,0,'',0,0,0,'tns:P_14_2','',15)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,16,'jpk_P_13_3','Netto 5%',2,'@n-18.2B',16,0,0,0,0,'',0,0,0,'tns:P_13_3','',16)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,17,'jpk_P_14_3','VAT 5%',2,'@n-18.2B',17,0,0,0,0,'',0,0,0,'tns:P_14_3','',17)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,18,'jpk_P_13_4','Netto NP-OO',2,'@N-18.2B',18,0,0,0,0,'',0,0,0,'tns:P_13_4','',18)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,19,'jpk_P_14_4','VAT  NP-OO',2,'@N-18.2B',19,0,0,0,0,'',0,0,0,'tns:P_14_4','',19)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,20,'jpk_P_13_5','Netto NP',2,'@N-18.2B',20,0,0,0,0,'',0,0,0,'tns:P_13_5','',20)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,21,'jpk_P_14_5','VAT NP',2,'@N-18.2B',21,0,0,0,0,'',0,0,0,'tns:P_14_5','',21)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,22,'jpk_P_13_6','Netto 0%',2,'@n-18.2B',22,1,0,0,0,'',0,0,0,'tns:P_13_6','',22)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,23,'jpk_P_13_7','Netto zw.',2,'@n-18.2B',23,1,0,0,0,'',0,0,0,'tns:P_13_7','',23)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,24,'jpk_P_15','Należność',2,'@n-18.2B',24,0,0,0,0,'',0,0,0,'tns:P_15','',24)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,25,'jpk_P_16','Metoda kasowa',1,'@s20',25,0,0,0,0,'',0,0,0,'tns:P_16','',25)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,26,'jpk_P_17','Samofakturowanie',1,'@s20',26,0,0,0,0,'',0,0,0,'tns:P_17','',26)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,27,'jpk_P_18','Odwrotne obciążenie',1,'@s20',27,0,0,0,0,'',0,0,0,'tns:P_18','',27)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,28,'jpk_P_19','Zwolnienie z VAT',1,'@s20',28,0,0,0,0,'',0,0,0,'tns:P_19','',28)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,29,'jpk_P_19A','Przepis ustawy',1,'@s200',29,1,0,0,0,'',0,0,0,'tns:P_19A','',29)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,30,'jpk_P_19B','Przepis dyrektywy',1,'@s200',30,1,0,0,0,'',0,0,0,'tns:P_19B','',30)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,31,'jpk_P_19C','Inna podstawa',1,'@s200',31,1,0,0,0,'',0,0,0,'tns:P_19C','',31)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,32,'jpk_P_20','Faktura komornika',1,'@s20',32,0,0,0,0,'',0,0,0,'tns:P_20','',32)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,33,'jpk_P_20A','Nazwa komornika',1,'@s200',33,1,0,0,0,'',0,0,0,'tns:P_20A','',33)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,34,'jpk_P_20B','Adres komornika',1,'@s200',34,1,0,0,0,'',0,0,0,'tns:P_20B','',34)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,35,'jpk_P_21','Przedstawiciel podatkowy',1,'@s20',35,0,0,0,0,'',0,0,0,'tns:P_21','',35)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,36,'jpk_P_21A','Nazwa przedstawiciela',1,'@s200',36,1,0,0,0,'',0,0,0,'tns:P_21A','',36)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,37,'jpk_P_21B','Adres przedstawiciela',1,'@s200',37,1,0,0,0,'',0,0,0,'tns:P_21B','',37)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,38,'jpk_P_21C','Numer przedstawiciela',1,'@s50',38,1,0,0,0,'',0,0,0,'tns:P_21C','',38)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,39,'jpk_P_22A','Śr. transportu - data dopuszczenia',8,'@d17-',39,1,0,0,0,'',0,0,0,'tns:P_22A','',39)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,40,'jpk_P_22B','Śr. transportu – przebieg',1,'@s100',40,1,0,0,0,'',0,0,0,'tns:P_22B','',40)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,41,'jpk_P_22C','Nowy statek – liczba godzin',1,'@s50',41,1,0,0,0,'',0,0,0,'tns:P_22C','',41)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,42,'jpk_P_23','WTT – drugi podatnik',1,'@s20',42,0,0,0,0,'',0,0,0,'tns:P_23','',42)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,43,'jpk_P_106E_2','FV marża biur podróży',1,'@s20',43,0,0,0,0,'',0,0,0,'tns:P_106E_2','',43)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,44,'jpk_P_106E_3','FV marża',1,'@s20',44,1,0,0,0,'',0,0,0,'tns:P_106E_3','',44)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,45,'jpk_P_106E_3A','Procedura marży',1,'@s150',45,1,0,0,0,'',0,0,0,'tns:P_106E_3A','',45)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,46,'jpk_RodzajFaktury','Rodzaj faktury',1,'@s50',46,0,0,0,0,'',0,0,0,'tns:RodzajFaktury','',46)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,47,'jpk_PrzyczynaKorekty','Przyczyna korekty',1,'@s200',47,1,0,0,0,'',0,0,0,'tns:PrzyczynaKorekty','',47)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,48,'jpk_NrFaKorygowanej','Numer faktury pierwotnej',1,'@s200',48,1,0,0,0,'',0,0,0,'tns:NrFaKorygowanej','',48)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,49,'jpk_OkresFaKorygowanej','Okres korekty',1,'@s100',49,1,0,0,0,'',0,0,0,'tns:OkresFaKorygowanej','',49)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,50,'jpk_ZALZaplata','Otrzymana zaliczka',2,'@n-18.2B',50,0,0,0,0,'',0,0,0,'tns:ZALZaplata','',50)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,51,'jpk_ZALPodatek','VAT od zaliczki',2,'@n-18.2B',51,0,0,0,0,'',0,0,0,'tns:ZALPodatek','',51)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,52,'jpk_gidtyp','GIDTypFa',3,'@s20',52,0,1,1,0,'',0,0,0,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,53,'jpk_gidnumer','GIDNumerFa',3,'@s20',53,0,1,2,0,'',0,0,0,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,31,54,'jpk_typFaktury','TypFaktury',1,'@s5',54,0,1,0,0,'',0,28,2,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,1,'jpk_P_2B','Numer faktury',1,'60L|@s200',1,0,0,0,0,'',0,0,0,'tns:P_2B','',1)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,2,'jpk_P_7','Nazwa towaru',1,'60L|@s200',2,1,0,0,0,'',0,0,0,'tns:P_7','',2)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,3,'jpk_P_8A','J.m.',1,'40L|@s50',3,1,0,0,0,'',0,0,0,'tns:P_8A','',3)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,4,'jpk_P_8B','Ilość',2,'@n-18.2',4,1,0,0,0,'',0,0,0,'tns:P_8B','',4)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,5,'jpk_P_9A','Cena jedn.',2,'@n-18.2B',5,1,0,0,0,'',0,0,0,'tns:P_9A','',5)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,6,'jpk_P_9B','Cena brutto',2,'@n-18.2B',6,1,0,0,0,'',0,0,0,'tns:P_9B','',6)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,7,'jpk_P_10','Kwota rabatu',2,'@n-18.2B',7,1,0,0,0,'',0,0,0,'tns:P_10','',7)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,8,'jpk_P_11','Wartość netto',2,'@n-18.2',8,1,0,0,0,'',0,0,0,'tns:P_11','',8)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,9,'jpk_P_11A','Wartość brutto',2,'@n-18.2',9,1,0,0,0,'',0,0,0,'tns:P_11A','',9)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,10,'jpk_P_12','Stawka VAT',1,'@s20',10,1,0,0,0,'',0,0,0,'tns:P_12','',10)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,11,'jpk_Wiersz_gidtyp','GIDTypFaw',3,'@s20',11,0,1,1,0,'',0,0,0,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,12,'jpk_Wiersz_gidnumer','GIDNumerFaw',3,'@s20',12,0,1,2,0,'',1,0,0,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,13,'jpk_Wiersz_gidlp','GidLp',3,'@s20',13,0,1,3,0,'',0,0,0,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,14,'Wiersz_spityp','spityp',3,'@s20',14,0,1,0,0,'',0,31,52,'','',0)
+INSERT INTO CDN.DefPodElemKolumny(DPK_DPNId,DPK_DPELp,DPK_Id,DPK_NazwaPola,DPK_NazwaNaglowka,DPK_Typ,DPK_Picture,DPK_NrKolumny,DPK_PusteGdy0,DPK_Ukryta,DPK_KluczGlowny,DPK_PominKolumne,DPK_PrezentujWartoscWyr,DPK_Sortowanie,DPK_ParentDPELp,DPK_ParentDPKId,DPK_XMLTagNazwa,DPK_XMLTagAtrybuty,DPK_XMLLp)
+VALUES(@ID,32,15,'Wiersz_spinumer','spinumer',3,'@s20',15,0,1,0,0,'',0,31,53,'','',0)
+update trg set trg.DPE_Wyrazenie=src.DPE_Wyrazenie,trg.DPE_DFNID=src.DPE_DFNID,trg.DPE_DFNKwotaWmr = src.DPE_DFNKwotaWmr from cdn.DefPodElem trg join #DefPodElem src on trg.DPE_DPNID=src.DPE_DPNID and trg.DPE_ID=src.DPE_ID where trg.DPE_DPNID = @ID and (src.DPE_Definiowalne&lt;&gt;0 and trg.DPE_Definiowalne &lt;&gt; 0 or src.DPE_Definiowalne=0 and src.DPE_DFNID&lt;&gt;0)
+drop table #DefPodElem
+
+
+SET NOCOUNT OFF
+</scriptdef>
+</ROOT>
