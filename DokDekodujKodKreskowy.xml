@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="DokDekodujKodKreskowy">
+CREATE FUNCTION  CDN.DokDekodujKodKreskowy(@Code VARCHAR(19))
+RETURNS @GIDTable TABLE 
+(	GIDTyp INT,
+	GIDNumer INT
+)
+AS
+BEGIN
+
+DECLARE @codeLength AS TINYINT
+DECLARE @gidTypLength AS TINYINT
+DECLARE @gidTypOffset AS TINYINT
+DECLARE @gidNumerLength AS TINYINT
+DECLARE @gidNumerOffset AS TINYINT
+
+SET @codeLength = 19;
+SET @gidTypLength = 5;
+SET @gidTypOffset = 3;
+SET @gidNumerLength = 10;
+SET @gidNumerOffset = 8;
+
+IF LEN(@Code) &lt;&gt; @codeLength
+	RETURN --INSERT INTO @GIDTable VALUES (0,0);
+
+IF LEFT(@Code,2) &lt;&gt; '01' 
+	RETURN --INSERT INTO @GIDTable VALUES (0,0);
+
+IF RIGHT('0'+CONVERT(VARCHAR(2),98-(CONVERT(BIGINT,SUBSTRING(@Code,2,@codeLength-3)) % 97)),2) &lt;&gt; RIGHT(@Code,2)
+	RETURN --INSERT INTO @GIDTable VALUES (0,0);
+
+INSERT INTO @GIDTable VALUES (CONVERT(INT,SUBSTRING(@Code,@gidTypOffset,@gidTypLength)),CONVERT(INT,SUBSTRING(@Code,@gidNumerOffset,@gidNumerLength)));
+	
+RETURN
+END
+</functiondef>
+</ROOT>

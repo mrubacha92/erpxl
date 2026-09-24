@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="DokGenerujKodKreskowy">
+CREATE FUNCTION  CDN.DokGenerujKodKreskowy(@GIDTyp INT, @GIDNumer INT)
+RETURNS VARCHAR(19)  AS
+BEGIN
+
+DECLARE @code AS VARCHAR(19);
+DECLARE @controlNo AS VARCHAR(2);
+
+IF (@GIDTyp &lt; 0 OR @GIDTyp &gt; 99999 OR @GIDNumer &lt; 0 OR @GIDNumer &gt; 9999999999)
+  RETURN '';
+
+SET @code = '01' + SUBSTRING('00000' + CONVERT(VARCHAR(5),@GIDTyp),LEN(CONVERT(VARCHAR(5),@GIDTyp))+1,5) + SUBSTRING('0000000000' + CONVERT(VARCHAR(10),@GIDNumer),LEN(CONVERT(VARCHAR(10),@GIDNumer))+1,10);
+SET @controlNo = CONVERT(VARCHAR(2),98-(CONVERT(BIGINT,@code) % 97));
+
+IF ( LEN(@controlNo)=1 )  
+  SET @controlNo = '0' + @controlNo;
+	
+RETURN (@code + @controlNo)
+
+END
+</functiondef>
+</ROOT>

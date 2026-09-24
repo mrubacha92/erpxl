@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Wyłączenie triggerów DokDefinicje" hidden="False">
+alter table CDN.DokDefinicje disable trigger all
+</scriptdef>
+<scriptdef name="Wypełnienie tabeli DokDefinicje" hidden="False">
+    SET NOCOUNT ON
+
+    delete from CDN.DokDefinicje where DOK_FRSId&lt;&gt;1 AND DOK_GidTyp IN (7942,7943)
+
+    	SET NOCOUNT OFF 
+</scriptdef>
+<scriptdef name="Włączenie triggerów DokDefinicje" hidden="False">
+alter table CDN.DokDefinicje enable trigger all
+</scriptdef>
+</ROOT>

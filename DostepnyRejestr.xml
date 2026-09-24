@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="DostepnyRejestr">
+create function cdn.DostepnyRejestr( @Rejestr varchar(5), @CentrumID int )
+returns int
+as
+begin
+  declare @rzr int
+  declare @parid int
+  declare @id int
+
+  select @rzr = isnull(frs_rejestryzrodzica,0), @parid = isnull(frs_gronumer,0) from cdn.frmstruktura where frs_id = @centrumid
+  if @rzr = 0
+    if exists( select kar_seria from cdn.rejestry join cdn.frmobiekty on fro_gidtyp=kar_gidtyp and fro_gidnumer=kar_gidnumer where kar_seria=@rejestr and fro_frmid=@CentrumID)
+      return 1
+    else
+      return 0
+
+  if @parid = 0
+    if exists( select kar_seria from cdn.rejestry where kar_seria=@Rejestr )
+      return 1
+    else
+      return 0
+
+  while @parid &lt;&gt; 0
+  begin
+    select @id = @parid, @rzr = isnull(frs_rejestryzrodzica,0), @parid = isnull(frs_gronumer,0) from cdn.frmstruktura where frs_id = @parid
+    if @parid = 0 and exists( select kar_seria from cdn.rejestry where kar_seria=@Rejestr )
+      return 1
+    if @rzr = 0 
+      if exists( select kar_seria from cdn.rejestry join cdn.frmobiekty on fro_gidtyp=kar_gidtyp and fro_gidnumer=kar_gidnumer where kar_seria=@rejestr and fro_frmid=@id)
+        return 1
+      else
+        return 0
+  end
+  return 0
+end
+</functiondef>
+</ROOT>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="DodajDoRodzicow">
+CREATE PROCEDURE CDN.DodajDoRodzicow(@ID int,@Typ smallint,@Firma int,@Numer int,@Lp smallint) AS 
+BEGIN
+  CREATE TABLE #rodzice (FRS_ID INT UNIQUE,Poziom INT)
+  insert into #rodzice exec cdn.frmrodzice @ID
+  insert into cdn.frmobiekty (FRO_FRMID, FRO_GIDTyp, FRO_GIDFirma, FRO_GIDNumer, FRO_GIDLp, FRO_GID2Typ, FRO_GID2Firma, FRO_GID2Numer, FRO_GID2Lp)
+    select FRS_ID,@Typ,@Firma,@Numer,@Lp,0,0,0,0 
+    from #rodzice where not exists (select * from cdn.frmobiekty where FRO_GIDTyp=@typ and FRO_GIDFirma=@Firma and FRO_GIDNumer=@Numer and FRO_GIDLp=@Lp and FRO_FRMID=#rodzice.FRS_ID) AND EXISTS(SELECT * FROM CDN.FrmObiekty WHERE FRO_FRMID=#rodzice.FRS_ID AND FRO_GIDTyp=@Typ)
+  drop table #rodzice
+END
+</proceduredef>
+</ROOT>

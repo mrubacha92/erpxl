@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury DXZapiszFormat" hidden="True">
+IF EXISTS(SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'CDN.DXZapiszFormat') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+DROP PROCEDURE CDN.DXZapiszFormat
+</scriptdef>
+<scriptdef name="Tworzenie procedury DXZapiszFormat" hidden="False">
+
+CREATE PROCEDURE CDN.DXZapiszFormat
+@Format NVARCHAR(MAX),
+@Procedura VARCHAR(50),
+@Operator INT,
+@IDKontrolki INT
+AS
+	
+UPDATE CDN.FormatyList SET FLS_Format = @Format WHERE FLS_Procedura = @Procedura AND FLS_IDOperatora = @Operator AND FLS_IDKontrolki = @IDKontrolki
+IF @@ROWCOUNT=0
+	INSERT INTO CDN.FormatyList (FLS_Modul,FLS_Procedura,FLS_IDOperatora,FLS_IDKontrolki,FLS_IDFormatu,FLS_NazwaFormatu,FLS_Flaga,FLS_Format,FLS_VarLine) VALUES('ERP XL',@Procedura,@Operator,@IDKontrolki,1,N'Domyślny format DX',1,@Format,'')
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury DXZapiszFormat" hidden="False">
+GRANT EXECUTE ON CDN.DXZapiszFormat TO CDNRaport
+</scriptdef>
+</ROOT>

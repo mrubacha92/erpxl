@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="DekretSumaRozrachunku">
+CREATE PROCEDURE CDN.DekretSumaRozrachunku
+@DTNumer int,
+@DTLp smallint,
+@DTDC smallint,
+@DataC int
+AS
+	select isnull(sum(a.SumaWal),0) sumaWal, isnull(sum(a.SumaSys),0) SumaSys
+	from (
+		select sum(r2_KwotaWal1) sumaWal, sum(R2_KwotaSys) sumaSys
+		from cdn.Rozliczenia
+		where R2_Dekret1Numer = @DTNumer and R2_Dekret1Lp = @DTLp and R2_Dekret1DC = @DTDC and (@DataC = 0 or @DataC &lt;&gt; 0 and R2_DataRozrachunku &lt;= @DataC)
+		union all
+		select sum(r2_KwotaWal2) sumaWal, sum(R2_KwotaSys) sumaSys
+		from cdn.Rozliczenia
+		where R2_Dekret2Numer = @DTNumer and R2_Dekret2Lp = @DTLp and R2_Dekret2DC = @DTDC and (@DataC = 0 or @DataC &lt;&gt; 0 and R2_DataRozrachunku &lt;= @DataC)
+		) a
+</proceduredef>
+</ROOT>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="DateToTS">
+create procedure CDN.DateToTS(@dt datetime)
+as
+begin
+ return DATEDIFF( ss, '01/01/1990 00:00:00', @dt )
+end
+</proceduredef>
+</ROOT>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie funkcji ESKLEP_ImportujGrupyDabDlaZgody" hidden="True">
+IF EXISTS (SELECT NAME FROM sysobjects WHERE NAME = 'ESKLEP_ImportujGrupyDabDlaZgody' AND Type = 'P')
+  DROP PROCEDURE CDN.ESKLEP_ImportujGrupyDabDlaZgody;
+</scriptdef>
+<scriptdef name="Tworzenie procedury ESKLEP_ImportujGrupyDabDlaZgody" hidden="False">
+CREATE PROCEDURE CDN.ESKLEP_ImportujGrupyDabDlaZgody @DBG_ID INT OUTPUT,@VerID VARCHAR(36),@ESklepID INT
+AS
+BEGIN
+	DECLARE @Typ_GrupaDanychBinarnych SMALLINT = -14400
+	DECLARE @TimeStamp INT
+	SET @TimeStamp = DATEDIFF(s,CONVERT(DATETIME,'19900101',121),GETDATE())
+
+	SELECT @DBG_ID = PcL_ObiNumer FROM CDN.PicoLog WHERE PcL_PcKID = @ESklepID AND PcL_ObiTyp = @Typ_GrupaDanychBinarnych AND PcL_ObiektGUID = @VerID
+	IF ISNULL(@DBG_ID,0) = 0
+	BEGIN
+		BEGIN TRAN
+		INSERT INTO CDN.DaneBinarneGrupy(DBG_Ojciec,DBG_Nazwa,DBG_Opis) VALUES (-2,CDN.ESKLEP_UstalKolejnaNazweGrupyDab('Treść zgody'),'')
+		SELECT @DBG_ID = SCOPE_IDENTITY()	
+		IF NOT EXISTS(SELECT PcL_ID FROM CDN.PicoLog WHERE PcL_PcKID = @ESklepID AND PcL_ObiTyp = @Typ_GrupaDanychBinarnych AND PcL_ObiNumer = @DBG_ID)
+				INSERT INTO CDN.PicoLog ( PcL_PckID, PcL_ObiTyp, PcL_ObiNumer, PcL_ObiektID, PcL_Komentarz, PcL_Info, PcL_TStamp,PCL_ObiektGUID) VALUES ( @ESklepID, @Typ_GrupaDanychBinarnych, @DBG_ID, 0, 'Grupa załaczników zgód', '', @TimeStamp,@VerID) 
+		COMMIT
+	END
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ESKLEP_ImportujGrupyDabDlaZgody" hidden="False">
+GRANT EXECUTE ON CDN.ESKLEP_ImportujGrupyDabDlaZgody TO CDNRaport
+</scriptdef>
+<scriptdef name="Kasowanie funkcji ESKLEP_UstalKolejnaNazweGrupyDab" hidden="True">
+IF EXISTS (SELECT NAME FROM sysobjects WHERE NAME = 'ESKLEP_UstalKolejnaNazweGrupyDab' AND Type = 'FN')
+  DROP FUNCTION CDN.ESKLEP_UstalKolejnaNazweGrupyDab;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji ESKLEP_UstalKolejnaNazweGrupyDab" hidden="False">
+CREATE FUNCTION CDN.ESKLEP_UstalKolejnaNazweGrupyDab (@Nazwa VARCHAR(100))
+RETURNS VARCHAR(110)
+AS
+BEGIN
+	DECLARE @NazwaTmp VARCHAR(50)
+	SET @NazwaTmp = @Nazwa
+	DECLARE @i INT
+	SET @i = 1
+
+	WHILE EXISTS(SELECT * FROM CDN.DaneBinarneGrupy WHERE DBG_Nazwa = @NazwaTmp)
+	BEGIN
+		SET @NazwaTmp = @Nazwa + '('+CAST(@i AS VARCHAR)+')'
+		SET @i = @i+1
+	END
+	
+	RETURN @NazwaTmp
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji ESKLEP_UstalKolejnaNazweGrupyDab" hidden="False">
+GRANT EXECUTE ON CDN.ESKLEP_UstalKolejnaNazweGrupyDab TO CDNRaport
+</scriptdef>
+<scriptdef name="Dodawanie grupy ''Załączniki dla zgód''" hidden="False">
+SET NOCOUNT ON
+IF NOT EXISTS(SELECT * FROM CDN.DaneBinarneGrupy WHERE DBG_Id = -2)
+BEGIN	
+	DECLARE @Nazwa VARCHAR(110)
+
+	SET @Nazwa = CDN.ESKLEP_UstalKolejnaNazweGrupyDab('Załączniki dla zgód')
+
+	SET IDENTITY_INSERT CDN.DaneBinarneGrupy ON
+	INSERT INTO CDN.DaneBinarneGrupy(DBG_Id,DBG_Ojciec,DBG_Nazwa,DBG_Opis) VALUES (-2,0,@Nazwa ,@Nazwa)
+	SET IDENTITY_INSERT CDN.DaneBinarneGrupy OFF
+END
+SET NOCOUNT OFF
+</scriptdef>
+</ROOT>

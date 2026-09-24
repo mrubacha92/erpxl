@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji DaneFirmy" hidden="True">
+IF EXISTS (SELECT o.name FROM sys.objects o join sys.schemas s on o.schema_id=s.schema_id WHERE o.name = 'DaneFirmy' and s.name = 'CDN' and o.type in ('FN','IF','TF'))
+DROP FUNCTION CDN.DaneFirmy;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji funkcji DaneFirmy" hidden="False">
+CREATE FUNCTION CDN.DaneFirmy
+(
+	@frm_gidnumer int
+)
+RETURNS @firma table (
+	frm_nip varchar(20), 
+	frm_nipprefiks VARCHAR(2), 
+	frm_nazwa1 VARCHAR(50), 
+	frm_nazwa2 VARCHAR(50), 
+	frm_nazwa3 VARCHAR(50), 
+	frm_nazwa4 VARCHAR(200),
+	frm_kodp VARCHAR(10),
+	frm_miasto VARCHAR(30), 
+	frm_ulica VARCHAR(30),
+    frs_id INTEGER,  -- nieużywane, zostawione dla zgodności z wydrukami
+	frm_dnazwa VARCHAR(128),
+	frm_drodzaj tinyint,
+	frm_regon VARCHAR(20), 
+	frm_dnazwaSkr VARCHAR(128),
+	frm_numerbdo VARCHAR(20)
+	)
+AS 
+BEGIN
+ 	insert into @firma select top 1
+	   frm_nip, frm_nipprefiks, frm_nazwa1, frm_nazwa2, frm_nazwa3, frm_nazwa4
+	   , frm_kodp, frm_miasto, frm_ulica,0,frm_dnazwa,frm_drodzaj,frm_regon,frm_dnazwaSkr,frm_numerbdo
+	from cdn.firma where Frm_GidNumer = @frm_gidnumer;
+
+	if not exists (select * from @firma) 
+	insert into @firma select  top 1
+	   frm_nip, frm_nipprefiks, frm_nazwa1, frm_nazwa2, frm_nazwa3, frm_nazwa4
+	   , frm_kodp, frm_miasto, frm_ulica,0,frm_dnazwa,frm_drodzaj,frm_regon,frm_dnazwaSkr,frm_numerbdo
+	from cdn.firma join cdn.frmstruktura on frs_frmnumer = frm_gidnumer
+	where FrS_Id = 1;
+
+	if not exists (select * from @firma) 
+	insert into @firma select  top 1
+	   frm_nip, frm_nipprefiks, frm_nazwa1, frm_nazwa2, frm_nazwa3, frm_nazwa4
+	   , frm_kodp, frm_miasto, frm_ulica,0,frm_dnazwa,frm_drodzaj,frm_regon,frm_dnazwaSkr,frm_numerbdo
+	from cdn.firma join cdn.frmstruktura on frs_frmnumer = frm_gidnumer
+	where frm_gidnumer = 1;
+
+	return;
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji DaneFirmy" hidden="False">
+
+</scriptdef>
+</ROOT>

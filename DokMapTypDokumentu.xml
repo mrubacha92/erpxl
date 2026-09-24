@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="DokMapTypDokumentu">
+CREATE   FUNCTION CDN.DokMapTypDokumentu (@GIDTyp INT , @ZamTyp INT, @Rodzaj int)
+RETURNS int AS 
+BEGIN 
+return case @GidTyp
+		When 960 Then
+			case @ZamTyp
+				When 640 Then  8832 --OZ
+				When 768 Then 8960 --OS
+				When 1152 Then 9344 --ZZ
+				When 1280 Then
+					CASE WHEN @Rodzaj = 8 Then 9473 --ZW
+					ELSE 9472 END--ZS
+				When 2688 Then 10880 --ZOZ
+				When 2816 Then 11008 --ZOS
+				When 3200 Then 11392 --PZZ
+				When 3328 Then 11520 --PZS
+				Else 9472
+			end
+		Else @GidTyp		 
+	   END
+END
+</functiondef>
+</ROOT>

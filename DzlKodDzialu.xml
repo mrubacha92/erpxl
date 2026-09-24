@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="DzlKodDzialu">
+create procedure CDN.DzlKodDzialu 
+	@SourceName  VARCHAR(255),
+	@SourceDatabase  VARCHAR(255),
+	@p_DzlId int,
+	@returns varchar(40) OUTPUT
+as
+begin
+
+	declare @Kod varchar(40)
+	declare @DZL_ParentId int
+
+	DECLARE @sql NVARCHAR(4000)
+	DECLARE @params NVARCHAR(4000)
+
+	select @sql = 
+	N'
+	select @Kod=(case when DZL_LokId=1 then DZL_Kod else '''' end),@DZL_ParentId=DZL_ParentId
+	from ['+@SourceName+'].['+@SourceDatabase +'].CDN.Dzialy 
+	where DZL_DzlId=@p_DzlId
+	'		
+		SELECT @params =N'@p_DzlId int,
+						  @Kod varchar(40) OUTPUT,
+						  @DZL_ParentId int OUTPUT'
+		EXEC sp_executesql @sql, @params, @p_DzlId, @Kod OUTPUT,@DZL_ParentId OUTPUT
+
+	if @Kod is not null and @Kod&lt;&gt;''
+			SET @returns = @Kod
+	ELSE
+	BEGIN
+		select @sql = 
+		N'
+		select @Kod=DZL_Kod from ['+@SourceName+'].['+@SourceDatabase +'].CDN.Dzialy where DZL_DzlId=@DZL_ParentId
+		'		
+		SELECT @params =N'@Kod varchar(40) OUTPUT,
+						  @DZL_ParentId int '
+		EXEC sp_executesql @sql, @params, @Kod OUTPUT,@DZL_ParentId
+	
+		SET @returns = @Kod
+	END
+end
+</proceduredef>
+</ROOT>

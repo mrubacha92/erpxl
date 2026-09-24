@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="DateDiffClarion">
+CREATE FUNCTION  cdn.DateDiffClarion (@typ smallint, @Data1 int, @Data2 int)
+RETURNS int AS  
+BEGIN 
+	declare @dC datetime
+	declare @d1 datetime
+	declare @d2 datetime
+
+
+	set @dC = convert(datetime,'18001228')
+	set @d1 = dateadd(day,@Data1,@dC)
+	set @d2 = dateadd(day,@Data2,@dC)
+
+
+	if @typ = 1
+		return( datediff(day, @d1 , @d2 ))
+	else	
+		if @typ = 2 
+			return(datediff(month, @d1 , @d2 ))
+		else
+			return(datediff(year, @d1 , @d2 ))
+
+	
+	return(0)
+END
+</functiondef>
+</ROOT>

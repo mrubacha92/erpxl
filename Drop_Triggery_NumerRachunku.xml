@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie wyzwalacza KntKartyInsert_DodajNumerRachunku" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'KntKartyInsert_DodajNumerRachunku' AND xtype = 'TR')
+  DROP TRIGGER CDN.KntKartyInsert_DodajNumerRachunku
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza KntAdresyInsert_DodajNumerRachunku" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'KntAdresyInsert_DodajNumerRachunku' AND xtype = 'TR')
+  DROP TRIGGER CDN.KntAdresyInsert_DodajNumerRachunku
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza PrcKartyInsert_DodajNumerRachunku" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'PrcKartyInsert_DodajNumerRachunku' AND xtype = 'TR')
+   DROP TRIGGER CDN.PrcKartyInsert_DodajNumerRachunku
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza KntKartyUpdate_AktualizujNumerRachunku" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'KntKartyUpdate_AktualizujNumerRachunku' AND xtype = 'TR')
+   DROP TRIGGER CDN.KntKartyUpdate_AktualizujNumerRachunku
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza PrcKartyUpdate_AktualizujNumerRachunku" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'PrcKartyUpdate_AktualizujNumerRachunku' AND xtype = 'TR')
+   DROP TRIGGER CDN.PrcKartyUpdate_AktualizujNumerRachunku
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza KntAdresyUpdate_AktualizujNumerRachunku" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'KntAdresyUpdate_AktualizujNumerRachunku' AND xtype = 'TR')
+   DROP TRIGGER CDN.KntAdresyUpdate_AktualizujNumerRachunku
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza UrzedyInsert_DodajNumerRachunku" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'UrzedyInsert_DodajNumerRachunku' AND xtype = 'TR')
+   DROP TRIGGER CDN.UrzedyInsert_DodajNumerRachunku
+</scriptdef>
+<scriptdef name="Usuwanie wyzwalacza UrzedyUpdate_AktualizujNumerRachunku" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE NAME = 'UrzedyUpdate_AktualizujNumerRachunku' AND xtype = 'TR')
+   DROP TRIGGER CDN.UrzedyUpdate_AktualizujNumerRachunku
+</scriptdef>
+</ROOT>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Wyłączanie wyzwalacza TraNag_KontrolujVAT" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'TraNag_KontrolujVAT')
+ALTER TABLE [CDN].[TraNag] DISABLE TRIGGER [TraNag_KontrolujVAT]
+</scriptdef>
+<scriptdef name="Wyłączanie wyzwalacza AtrybutyKomplety_CzasModyfikacji" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'AtrybutyKomplety_CzasModyfikacji')
+ALTER TABLE [CDN].[AtrybutyKomplety] DISABLE TRIGGER [AtrybutyKomplety_CzasModyfikacji]
+</scriptdef>
+<scriptdef name="Wyłączanie wyzwalacza AtrybutyObiekty_CzasModyfikacji" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'AtrybutyObiekty_CzasModyfikacji')
+ALTER TABLE [CDN].[AtrybutyObiekty] DISABLE TRIGGER [AtrybutyObiekty_CzasModyfikacji]
+</scriptdef>
+<scriptdef name="Wyłączanie wyzwalacza AtrybutyWartosci_CzasModyfikacji" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'AtrybutyWartosci_CzasModyfikacji')
+ALTER TABLE [CDN].[AtrybutyWartosci] DISABLE TRIGGER [AtrybutyWartosci_CzasModyfikacji]
+</scriptdef>
+<scriptdef name="Wyłączanie wyzwalacza AtrybutyKlasy_CzasModyfikacji" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'AtrybutyKlasy_CzasModyfikacji')
+ALTER TABLE [CDN].[AtrybutyKlasy] DISABLE TRIGGER [AtrybutyKlasy_CzasModyfikacji]
+</scriptdef>
+<scriptdef name="Wyłączanie wyzwalacza Rejestry_CzasModyfikacji" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'Rejestry_CzasModyfikacji')
+ALTER TABLE [CDN].[Rejestry] DISABLE TRIGGER [Rejestry_CzasModyfikacji]
+</scriptdef>
+<scriptdef name="Wyłączanie wyzwalacza Operacje_CzasModyfikacji" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'Operacje_CzasModyfikacji')
+ALTER TABLE [CDN].[Operacje] DISABLE TRIGGER [Operacje_CzasModyfikacji]
+</scriptdef>
+<scriptdef name="Wyłączanie wyzwalacza KntLastModC" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'KntLastModC')
+ALTER TABLE [CDN].[KntKarty] DISABLE TRIGGER [KntLastModC]
+</scriptdef>
+<scriptdef name="Wyłączanie wyzwalacza TwrLastModC" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'TwrLastModC')
+ALTER TABLE [CDN].[TwrKarty] DISABLE TRIGGER [TwrLastModC]
+</scriptdef>
+<scriptdef name="Wyłączenie wyzwalacza DokDefinicje_DeleteHandler" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'DokDefinicje_DeleteHandler')
+ALTER TABLE [CDN].[DokDefinicje] DISABLE TRIGGER [DokDefinicje_DeleteHandler]
+</scriptdef>
+<scriptdef name="Wyłączenie wyzwalacza DokDefinicje_PrzepiszParametry" hidden="False">
+IF EXISTS (SELECT name FROM sys.triggers WHERE name = 'DokDefinicje_PrzepiszParametry')
+ALTER TABLE [CDN].[DokDefinicje] DISABLE TRIGGER [DokDefinicje_PrzepiszParametry]
+</scriptdef>
+</ROOT>

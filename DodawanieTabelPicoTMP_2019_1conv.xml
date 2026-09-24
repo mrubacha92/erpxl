@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kreowanie tymczasowej tabeli PicoStnowiskaOperatorzy " hidden="False">
+IF OBJECT_ID('CDN.PicoStnowiskaOperatorzy', 'U') IS NULL 
+	create table CDN.PicoStnowiskaOperatorzy(qwerty int)
+</scriptdef>
+<scriptdef name="Kreowanie tymczasowej tabeli  PicoStnowiskaFormyPl " hidden="False">
+IF OBJECT_ID('CDN.PicoStnowiskaFormyPl', 'U') IS NULL 
+	create table CDN.PicoStnowiskaFormyPl(qwerty int)
+</scriptdef>
+</ROOT>
