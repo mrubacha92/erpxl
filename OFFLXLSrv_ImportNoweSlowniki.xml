@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury OFFLXLSrv_ImportNoweSlowniki" hidden="True">
+IF EXISTS(SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'CDN.OFFLXLSrv_ImportNoweSlowniki') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+DROP PROCEDURE CDN.OFFLXLSrv_ImportNoweSlowniki
+</scriptdef>
+<scriptdef name="Tworzenie procedury CDN.OFFLXLSrv_ImportNoweSlowniki" hidden="False">
+CREATE PROCEDURE CDN.OFFLXLSrv_ImportNoweSlowniki
+ @ID	INT -- ID Oddziału
+,@LogID INT = -1 -- ID Loga synchronizacji 
+AS
+	RAISERROR('Procedura OFFLXLSrv_ImportNoweSlowniki nie jest obługiwana na MSSQL 2000',16,1)
+</scriptdef>
+<scriptdef name="Kasowanie procedury OFFLXLSrv_ImportNoweSlowniki" hidden="True">
+IF (EXISTS(SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'CDN.OFFLXLSrv_ImportNoweSlowniki') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+    AND CAST(SERVERPROPERTY('ProductVersion') AS VARCHAR(3)) &lt;&gt; '8.0')
+DROP PROCEDURE CDN.OFFLXLSrv_ImportNoweSlowniki
+</scriptdef>
+<scriptdef name="Tworzenie procedury CDN.OFFLXLSrv_ImportNoweSlowniki" hidden="False">
+CREATE PROCEDURE CDN.OFFLXLSrv_ImportNoweSlowniki
+ @SLSPredefiniowany	INT -- SLSPredefiniowany unikalny numer kategorii slownika
+,@Wartosc VARCHAR(256) -- ID Loga synchronizacji 
+WITH EXECUTE AS SELF
+AS
+
+
+	DECLARE @WynikID int,
+		@Kategoria varchar(256)
+	
+	SET @WynikID = 0
+	IF exists(select slw_id from cdn.Slowniki join cdn.SlownikiStruktura on SLW_SLSId = SLS_Id
+				where SLS_Predefiniowany = @SLSPredefiniowany and slw_wartoscs = @Wartosc)
+	BEGIN
+		select @WynikID=slw_id from cdn.Slowniki join cdn.SlownikiStruktura on SLW_SLSId = SLS_Id
+				where SLS_Predefiniowany = @SLSPredefiniowany and slw_wartoscs = @Wartosc
+	 END
+	 ELSE
+	 BEGIN
+		declare @MaxId int, @Czas int
+		select @MaxId = isnull(max(Slw_Id),0), @Czas = datediff(s,'19900101',getdate()) from CDN.Slowniki
+		DECLARE @id int;
+		SELECT @id = SLS_Id, @Kategoria=SLS_Nazwa FROM CDN.SlownikiStruktura WHERE SLS_Predefiniowany = @SLSPredefiniowany
+		INSERT INTO CDN.SLOWNIKI (SLW_ID,SLW_Predefiniowany,SLW_Kategoria,SLW_WartoscS,SLW_Nazwa,SLW_WartoscN1,SLW_WartoscN2,SLW_WartoscN3,SLW_Aktywny,SLW_Konto,SLW_OptimaID,SLW_Domyslny,SLW_WartoscL1,SLW_WartoscL2,SLW_WartoscN4,SLW_WartoscS1,SLW_WartoscL3,SLW_WartoscS2,SLW_SLSId,SLW_CzasModyfikacji,SLW_Archiwalny,SLW_WersjaZrodlo,SLW_WersjaNr)
+		VALUES (@MaxId+1,1,@Kategoria,@Wartosc,'',0,0,0,1,'',0,0,0,0,0,'',0,'',@id,@Czas,0,@MaxId+1,1);
+		SET @WynikID=@MaxId+1
+	 END
+	select @WynikID
+
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury OFFLXLSrv_ImportNoweSlowniki" hidden="False">
+GRANT EXECUTE ON CDN.OFFLXLSrv_ImportNoweSlowniki TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Aktualizacja tabeli Operacje" hidden="False">
+set nocount on
+
+update CDN.Operacje set KAO_Tresc = KAO_Nazwa where isnull(KAO_Tresc,'') = ''
+
+set nocount off
+</scriptdef>
+</ROOT>

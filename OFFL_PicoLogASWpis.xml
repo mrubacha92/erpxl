@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="OFFL_PicoLogASWpis">
+CREATE PROCEDURE CDN.OFFL_PicoLogASWpis(@pckid int,@info varchar(64),@komunikat varchar(200))
+AS
+BEGIN
+	SET NOCOUNT ON
+	declare @maxID 		int
+	declare @commitFlag	int
+
+	set @commitFlag = 0
+
+	begin transaction
+	while 1=1
+	begin
+		select @maxID=ISNULL(MAX(PcL_ObiNumer),0) from CDN.PicoLog with(tablock) where PcL_PcKID=@pckid and PcL_ObiTyp=0
+		if @@error&lt;&gt;0 break
+		set @maxID = @maxID + 1
+
+		insert into CDN.PicoLog (PcL_PcKID,PcL_ObiTyp,PcL_ObiNumer,PcL_ObiektID,PcL_Komentarz,PcL_Info)
+			values (@pckid,0,@maxID,0,@komunikat,@info)
+		if @@error&lt;&gt;0 break
+
+		set @commitFlag = 1
+			
+		break
+	end	
+	if @commitFlag = 1
+		commit
+	else
+		rollback
+
+	SET NOCOUNT OFF
+	select @commitFlag
+end
+</proceduredef>
+</ROOT>

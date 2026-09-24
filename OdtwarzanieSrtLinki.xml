@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="CreateSrtLinki">
+CREATE PROCEDURE cdn.CreateSrtLinki AS 
+begin 
+    DECLARE @n int 
+    DECLARE @GidTyp SMALLINT 
+    DECLARE @GidFirma INT 
+    DECLARE @GidNumer INT 
+    DECLARE @GroTyp SMALLINT 
+    DECLARE @GroFirma INT 
+    DECLARE @GroNumer INT 
+    DECLARE @InsertedGroNumer INT 
+    DECLARE @prevcount INT 
+    DECLARE @count INT 
+    DELETE FROM CDN.SrtLinki 
+    DECLARE gc CURSOR FOR SELECT SrG_GIDTyp,SrG_GIDFirma,SrG_GIDNumer, 
+    SrG_GROTyp,SrG_GROFirma,SrG_GRONumer FROM CDN.SrtGrupy WHERE SrG_GIDTyp=368 
+    OPEN gc 
+    FETCH NEXT FROM gc INTO @GidTyp,@GidFirma,@GidNumer,@GroTyp,@GroFirma,@GroNumer 
+    WHILE @@FETCH_STATUS = 0 
+    BEGIN 
+    SET @prevcount=0 
+    SET @count=-1 
+    CREATE TABLE #gronumery(GN INT,C INT) 
+    INSERT INTO #gronumery exec CDN.SrtRodzice @GroNumer 
+    INSERT INTO CDN.SrtLinki  
+    SELECT @GIDTyp,@GIDFirma,@GIDNumer,0,-368,@GROFirma,GN,0,0,0 FROM  
+    (SELECT @GIDNumer as GIDNr,GN,Linki.SrL_GRONumer as GRO FROM #gronumery  
+    LEFT OUTER JOIN CDN.SrtLinki AS Linki ON Linki.SrL_GIDNumer=@GIDNumer  
+    AND Linki.SrL_GRONumer=GN) SelectWewn WHERE GRO IS NULL 
+    UPDATE CDN.SrtLinki 
+    SET SrL_LiczbaPowtorzen=SrL_LiczbaPowtorzen+(SELECT c FROM #gronumery WHERE GN=SrL_GRONumer) 
+    WHERE  
+    SrL_GiDTyp = @GidTyp AND 
+    SrL_GiDFirma = @GidFirma AND 
+    SrL_GiDNumer = @GidNumer AND 
+    SrL_GroTyp = @GroTyp AND 
+    SrL_GroFirma = @GroFirma AND 
+    SrL_GroNumer IN (SELECT GN FROM #gronumery) 
+    UPDATE CDN.SrtLinki 
+    SET SrL_Lisc=1 
+    WHERE  
+    SrL_GiDTyp = @GidTyp AND 
+    SrL_GiDFirma = @GidFirma AND 
+    SrL_GiDNumer = @GidNumer AND 
+    SrL_GroTyp = @GroTyp AND 
+    SrL_GroFirma = @GroFirma AND 
+    SrL_GroNumer =@GROnumer 
+    DROP TABLE #gronumery 
+    FETCH NEXT FROM gc INTO @GidTyp,@GidFirma,@GidNumer,@GroTyp,@GroFirma,@GroNumer 
+    END 
+    CLOSE gc 
+    DEALLOCATE gc; 
+end; 
+</proceduredef>
+</ROOT>

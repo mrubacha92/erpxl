@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="ObliczObrotySalda">
+CREATE PROCEDURE CDN.ObliczObrotySalda 
+  @DataOd      INTEGER, 
+  @DataDo      INTEGER, 
+  @Konto       VARCHAR(30)
+AS 
+
+EXEC CDN.ObliczObrotySaldaEx @DataOd, @DataDo, 1, 0, @Konto, 0, '', '', '', '', 1, 0, 0, 1
+</proceduredef>
+</ROOT>

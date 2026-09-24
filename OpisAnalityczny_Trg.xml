@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="FrmStruktura_SprawdzOpisAnalityczny">
+CREATE TRIGGER FrmStruktura_SprawdzOpisAnalityczny
+  ON CDN.FrmStruktura
+  FOR DELETE
+AS
+BEGIN
+  IF EXISTS(SELECT * FROM DELETED WHERE DELETED.FrS_Warstwa=2)
+  BEGIN
+    IF EXISTS(SELECT OWS_GIDTyp FROM CDN.OpisWymSElem WHERE OWS_TypWymiaru=1 AND OWS_WmrId IN (SELECT DELETED.FrS_Id FROM DELETED))
+    BEGIN
+      RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą OpisWymSElem). ', 16, 1)
+      ROLLBACK TRAN
+      RETURN
+    END      
+    IF EXISTS(SELECT PDS_GIDTyp FROM CDN.PodzielnikSElem WHERE PDS_TypWymiaru=1 AND PDS_WmrId IN (SELECT DELETED.FrS_Id FROM DELETED))
+    BEGIN
+      RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą PodzielnikSElem). ', 16, 1)
+      ROLLBACK TRAN
+      RETURN
+    END      
+  END
+END
+</triggerdef>
+<triggerdef name="Slowniki_SprawdzOpisAnalityczny">
+CREATE TRIGGER Slowniki_SprawdzOpisAnalityczny
+  ON CDN.Slowniki
+  FOR DELETE
+AS
+BEGIN
+  IF EXISTS(SELECT * FROM DELETED join cdn.slownikistruktura on DELETED.SLW_SLSID = SLS_Id WHERE Sls_Predefiniowany=52)
+  BEGIN
+    IF EXISTS(SELECT OWS_GIDTyp FROM CDN.OpisWymSElem WHERE OWS_TypWymiaru=2 AND OWS_WmrId IN (SELECT DELETED.Slw_Id FROM DELETED))
+    BEGIN
+      RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą OpisWymSElem). ', 16, 1)
+      ROLLBACK TRAN
+      RETURN
+    END      
+    IF EXISTS(SELECT PDS_GIDTyp FROM CDN.PodzielnikSElem WHERE PDS_TypWymiaru=2 AND PDS_WmrId IN (SELECT DELETED.Slw_Id FROM DELETED))
+    BEGIN
+      RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą PodzielnikSElem). ', 16, 1)
+      ROLLBACK TRAN
+      RETURN
+    END      
+  END
+END
+</triggerdef>
+<triggerdef name="Wymiary_SprawdzOpisAnalityczny">
+CREATE TRIGGER Wymiary_SprawdzOpisAnalityczny
+  ON CDN.Wymiary
+  FOR DELETE
+AS
+BEGIN
+  IF EXISTS(SELECT OWS_GIDTyp FROM CDN.OpisWymSElem WHERE (OWS_TypWymiaru=0 OR OWS_TypWymiaru=4) AND OWS_WmrId IN (SELECT DELETED.Wmr_Id FROM DELETED))
+  BEGIN
+    RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą OpisWymSElem). ', 16, 1)
+    ROLLBACK TRAN
+    RETURN
+  END      
+  IF EXISTS(SELECT PDS_GIDTyp FROM CDN.PodzielnikSElem WHERE (PDS_TypWymiaru=0 OR PDS_TypWymiaru=4) AND PDS_WmrId IN (SELECT DELETED.Wmr_Id FROM DELETED))
+  BEGIN
+    RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą PodzielnikSElem). ', 16, 1)
+    ROLLBACK TRAN
+    RETURN
+  END      
+END
+</triggerdef>
+<triggerdef name="Projekty_SprawdzOpisAnalityczny">
+CREATE TRIGGER Projekty_SprawdzOpisAnalityczny
+  ON CDN.PrjStruktura
+  FOR DELETE
+AS
+BEGIN
+  IF EXISTS(SELECT OWS_GIDTyp FROM CDN.OpisWymSElem WHERE OWS_TypWymiaru=5 AND OWS_WmrId IN (SELECT DELETED.Prj_Id FROM DELETED))
+  BEGIN
+    RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą OpisWymSElem). ', 16, 1)
+    ROLLBACK TRAN
+    RETURN
+  END      
+  IF EXISTS(SELECT PDS_GIDTyp FROM CDN.PodzielnikSElem WHERE PDS_TypWymiaru=5 AND PDS_WmrId IN (SELECT DELETED.Prj_Id FROM DELETED))
+  BEGIN
+    RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą PodzielnikSElem). ', 16, 1)
+    ROLLBACK TRAN
+    RETURN
+  END      
+END
+</triggerdef>
+<triggerdef name="KntKarty_SprawdzOpisAnalityczny">
+CREATE TRIGGER KntKarty_SprawdzOpisAnalityczny
+  ON CDN.KntKarty
+  FOR DELETE
+AS
+BEGIN
+  IF EXISTS(SELECT OWS_GIDTyp FROM CDN.OpisWymSElem WHERE OWS_TypWymiaru=3 AND OWS_WmrId IN (SELECT DELETED.Knt_GIDNumer FROM DELETED))
+  BEGIN
+    RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą OpisWymSElem). ', 16, 1)
+    ROLLBACK TRAN
+    RETURN
+  END      
+  IF EXISTS(SELECT PDS_GIDTyp FROM CDN.PodzielnikSElem WHERE PDS_TypWymiaru=3 AND PDS_WmrId IN (SELECT DELETED.Knt_GIDNumer FROM DELETED))
+  BEGIN
+    RAISERROR('Istnieją zapisy powiązane z modyfikowanym rekordem (powiązanie z tabelą PodzielnikSElem). ', 16, 1)
+    ROLLBACK TRAN
+    RETURN
+  END      
+END
+</triggerdef>
+</ROOT>

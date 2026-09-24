@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="Odbudowa_Konta">
+CREATE PROCEDURE CDN.Odbudowa_Konta
+@OkresID INT
+
+AS
+SET NOCOUNT ON
+
+declare @Poziom int
+
+set @Poziom = 0
+
+while @Poziom &lt; 7
+begin
+	
+	update a set
+		a.KKS_SubKonto = a.KKS_SubKonto,
+		a.KKS_SynNumer = a.KKS_SynNumer
+	from cdn.Konta a 
+	where a.KKS_Poziom = @Poziom and a.KKS_OkresID = @OkresID
+		
+
+	set @Poziom = @Poziom + 1
+end
+
+SET NOCOUNT OFF
+
+</proceduredef>
+</ROOT>

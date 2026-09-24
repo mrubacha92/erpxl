@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="OFFL_EksportOpe">
+CREATE PROCEDURE CDN.OFFL_EksportOpe
+@ID 		INT -- ID oddziału  (PK z tabeli CDN.PicoKonfig) 
+AS
+DECLARE @Typ_Ope SMALLINT
+SET @Typ_Ope = 128
+
+SELECT Ope_GIDNumer, 
+       Ope_Ident, 
+       Ope_Nazwisko, 
+       Ope_Haslo, 
+       Ope_Haslo_chk, 
+       Ope_Administrator, 
+       Ope_Dyrektor, 
+       CASE WHEN Ope_Zablokowane=1 THEN 1 ELSE 0 END AS Ope_Zablokowane, 
+       Ope_WidziCenyZakupu,
+       Pck_Blokady&amp;1     As Ope_BlokadaTwr, 
+       (Pck_Blokady&amp;2)/2 As Ope_BlokadaCenSpr, 
+       (Pck_Blokady&amp;4)/4 AS Ope_BlokadaCenZak,
+       (Pck_Blokady&amp;8)/8 AS Ope_BlokadaCenZam
+       FROM CDN.FrmStruktura 
+       JOIN CDN.FrmLinki ON FrL_GrOTyp=FrS_GIDTyp AND FrL_GrONumer=FrS_GIDNumer AND FrL_GIDTyp=@Typ_Ope
+       JOIN CDN.OpeKarty ON FrL_GIDNumer = Ope_GIDNUmer
+       JOIN CDN.PicoKonfig ON FRS_ID=Pck_CentrumID
+       WHERE Pck_PicoID = @ID
+</proceduredef>
+</ROOT>

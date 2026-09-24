@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="OdbudowaStanowKont">
+CREATE PROCEDURE CDN.OdbudowaStanowKont
+@OkresID INT = 0,
+@OdbudujBO INT = 1
+AS
+DECLARE @Poczatek DATETIME
+DECLARE @Koniec DATETIME
+DECLARE @PoczatekC int
+DECLARE @KoniecC int
+
+DECLARE @Miesiac INT
+DECLARE @RokMiesiac DATETIME
+declare @PoczatekRokMiesiac int
+declare @KoniecRokMiesiac int
+
+DECLARE @Poziom INT
+declare @StrPusty varchar(1)
+set @StrPusty = ''
+declare @DziennikBO varchar(4)
+set @DziennikBO = '*BO*'
+
+
+create table #BO ( KKSNumer int, ODT DECIMAL(15,2), OCT DECIMAL(15,2) )
+create table #Obroty ( KKSNumer int, RokMiesiac int, ODT DECIMAL(15,2), ODTB DECIMAL(15,2), OCT DECIMAL(15,2), OCTB DECIMAL(15,2) )
+
+IF @OkresID = 0
+  SELECT @OkresID = OKR_ID FROM CDN.Okresy WHERE DATEDIFF( dd, '18001228', GetDate() ) BETWEEN OKR_Poczatek AND OKR_Koniec
+
+SELECT @OkresID = OKR_ID, 
+	@Poczatek = DATEADD( dd, OKR_Poczatek, '18001228' ), 
+	@Koniec = DATEADD( dd, OKR_Koniec, '18001228' ),
+	@PoczatekC = Okr_Poczatek,
+	@KoniecC = Okr_Koniec
+   FROM CDN.Okresy WHERE OKR_ID = @OkresID
+
+IF @OkresID IS NULL
+BEGIN
+  RAISERROR( 'Brak okresu obrachunkowego', 16, 1 )
+  RETURN
+END
+SET NOCOUNT ON
+
+
+set @PoczatekRokMiesiac = year(@Poczatek)*100+month(@Poczatek)
+set @KoniecRokMiesiac = year(@Koniec)*100+month(@Koniec)
+
+BEGIN TRAN
+
+IF @OdbudujBO = 1
+BEGIN
+	update cdn.Konta set
+		KKS_BODebet = 0,
+		KKS_BOCredit = 0
+	where KKS_OkresID = @OkresID
+
+
+
+	INSERT INTO #BO( KKSNumer, ODT, OCT )
+	SELECT KKS_GIDNumer,
+		ISNULL( SUM(CASE WHEN DT_DC=1 THEN DT_Kwota ELSE 0 END), 0 ), 
+		ISNULL( SUM(CASE WHEN DT_DC=2 THEN DT_Kwota ELSE 0 END), 0 ) 
+	FROM CDN.Konta 
+		LEFT OUTER JOIN CDN.Dekrety 
+			ON KKS_GIDNumer=DT_KKSNumer AND (DT_GIDNumer IS NULL OR (not DT_GIDNumer IS NULL and DT_Dziennik=@DziennikBO AND
+			DT_DataDekr BETWEEN @PoczatekC AND @KoniecC))
+	WHERE KKS_OkresID= @OkresID
+	GROUP BY KKS_GIDNumer
+
+
+
+	--na analitykach saldo jednostronne
+	UPDATE CDN.Konta SET 
+		KKS_BODebet = CASE when KKS_SaldoWgObr = 1 or 1=1 then
+					ODT
+				else
+					case WHEN ODT-OCT&gt;0 THEN ODT-OCT ELSE 0 END
+				end,
+
+		KKS_BOCredit = CASE when KKS_SaldoWgObr = 1 or 1=1 then
+					OCT
+				else
+					CASE WHEN OCT-ODT&gt;0 THEN OCT-ODT ELSE 0 END
+				end
+
+	FROM CDN.Konta 
+		JOIN #BO 
+			ON KKS_GIDNumer = KKSNumer
+	WHERE KKS_OkresID = @OkresID
+	
+END
+
+
+
+
+
+INSERT INTO #Obroty( KKSNumer, RokMiesiac, ODT, ODTB, OCT, OCTB )
+SELECT KKS_GIDNumer, DT_Rok*100+DT_Miesiac,
+ISNULL( SUM(CASE WHEN DT_DC=1 AND DT_Bufor=@StrPusty THEN DT_Kwota ELSE 0 END), 0 ), 
+ISNULL( SUM(CASE WHEN DT_DC=1 THEN DT_Kwota ELSE 0 END), 0 ), 
+ISNULL( SUM(CASE WHEN DT_DC=2 AND DT_Bufor=@StrPusty THEN DT_Kwota ELSE 0 END), 0 ), 
+ISNULL( SUM(CASE WHEN DT_DC=2 THEN DT_Kwota ELSE 0 END), 0 ) 
+FROM CDN.Konta
+	JOIN CDN.Dekrety 
+		ON KKS_GIDNumer=DT_KKSNumer AND DT_Dziennik &lt;&gt; @DziennikBO AND
+			DT_DataDekr BETWEEN @PoczatekC AND @KoniecC
+WHERE KKS_OkresID= @OkresID
+GROUP BY KKS_GIDNumer, DT_Rok*100+DT_Miesiac
+	
+
+
+
+INSERT INTO #Obroty( KKSNumer, RokMiesiac, ODT, ODTB, OCT, OCTB )
+SELECT KKS_GIDNumer, OkM_Rok*100+OkM_Miesiac, 0, 0, 0, 0
+FROM CDN.Konta 
+	join cdn.OkresyMiesiace
+		on KKS_OkresID = OkM_OkrID
+	left join #Obroty
+		on KKS_GIDNumer = KKSNumer and OkM_Rok*100+OkM_Miesiac = RokMiesiac
+WHERE KKS_OkresID = @OkresID and KKS_Analityka = 1 and KKSNumer is null
+
+
+
+
+DELETE FROM CDN.Stany WHERE DTS_RokMiesiac BETWEEN @PoczatekRokMiesiac AND @KoniecRokMiesiac
+
+
+
+INSERT INTO CDN.Stany( DTS_KKSNumer, DTS_RokMiesiac, DTS_SPID, DTS_ObrotyDebet, DTS_ObrotyDebetBuf, DTS_ObrotyCredit, DTS_ObrotyCreditBuf )
+  SELECT KKS_GIDNumer, RokMiesiac, 0, ODT, ODTB, OCT, OCTB 
+  FROM CDN.Konta JOIN #Obroty ON KKS_GIDNumer = KKSNumer and KKS_Analityka = 1
+  WHERE KKS_OkresID = @OkresID
+  ORDER by KKS_GIDNumer, RokMiesiac 
+
+
+
+SET @Miesiac = 0
+SET @RokMiesiac = @Poczatek
+
+WHILE @RokMiesiac &lt; @Koniec
+BEGIN
+
+	IF @Miesiac = 0
+  	begin
+		UPDATE a SET
+			a.DTS_ObrotyNarDebet = isnull(a.DTS_ObrotyNarDebet,0) + a.DTS_ObrotyDebet,
+			a.DTS_ObrotyNarCredit = isnull(a.DTS_ObrotyNarCredit,0) + a.DTS_ObrotyCredit,
+			a.DTS_ObrotyNarDebetBuf = isnull(a.DTS_ObrotyNarDebetBuf,0) + a.DTS_ObrotyDebetBuf,
+			a.DTS_ObrotyNarCreditBuf = isnull(a.DTS_ObrotyNarCreditBuf,0) + a.DTS_ObrotyCreditBuf
+
+			
+		FROM CDN.Stany a 
+			JOIN CDN.Konta 
+				ON a.DTS_KKSNumer = KKS_GIDNumer
+		WHERE KKS_OkresID = @OkresID AND DTS_RokMiesiac = Year( @RokMiesiac )*100+Month( @RokMiesiac )
+			
+	end
+  	else
+	begin
+		UPDATE a SET 
+			a.DTS_ObrotyNarDebet = isnull(c.DTS_ObrotyNarDebet,0) + isnull(a.DTS_ObrotyDebet,0),
+			a.DTS_ObrotyNarCredit = isnull(c.DTS_ObrotyNarCredit,0) + isnull(a.DTS_ObrotyCredit,0),
+			a.DTS_ObrotyNarDebetBuf = isnull(c.DTS_ObrotyNarDebetBuf,0) + isnull(a.DTS_ObrotyDebetBuf,0),
+			a.DTS_ObrotyNarCreditBuf = isnull(c.DTS_ObrotyNarCreditBuf,0) + isnull(a.DTS_ObrotyCreditBuf,0)
+
+		FROM CDN.Stany a 
+			JOIN CDN.Konta 
+				ON a.DTS_KKSNumer = KKS_GIDNumer
+			JOIN (SELECT b.DTS_KKSNumer DTS_KKSNumer,
+			    	b.DTS_ObrotyNarDebet DTS_ObrotyNarDebet, 
+			    	b.DTS_ObrotyNarCredit DTS_ObrotyNarCredit, 
+			    	b.DTS_ObrotyNarDebetBuf DTS_ObrotyNarDebetBuf, 
+			    	b.DTS_ObrotyNarCreditBuf DTS_ObrotyNarCreditBuf
+
+				FROM CDN.Stany b 
+				WHERE b.DTS_RokMiesiac = Year( DATEADD( mm, -1, @RokMiesiac ) )*100+Month( DATEADD( mm, -1, @RokMiesiac ) ) 
+			) c
+				ON c.DTS_KKSNumer = a.DTS_KKSNumer
+		WHERE KKS_OkresID = @OkresID AND a.DTS_RokMiesiac = Year( @RokMiesiac )*100+Month( @RokMiesiac )
+	end
+
+
+	SET @Miesiac = @Miesiac + 1
+	SET @RokMiesiac = DATEADD( mm, @Miesiac, @Poczatek )
+END
+
+COMMIT TRAN
+drop table #BO
+drop table #Obroty
+
+SET NOCOUNT OFF
+
+</proceduredef>
+</ROOT>

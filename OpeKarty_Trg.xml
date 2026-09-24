@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<triggerdef name="OpeKarty_UaktualnijStruktureFirmy">
+CREATE TRIGGER OpeKarty_UaktualnijStruktureFirmy
+  ON CDN.OpeKarty
+  FOR UPDATE
+AS
+BEGIN
+  IF UPDATE(Ope_Ident) OR UPDATE(Ope_Nazwisko)
+  BEGIN
+
+    DECLARE @GIDTyp   INTEGER;
+    DECLARE @GIDFirma INTEGER;
+    DECLARE @GIDNumer INTEGER;
+    DECLARE @Nazwa VARCHAR(40);
+    DECLARE @Opis VARCHAR(254);
+
+    SELECT @GIDTyp=Ope_GIDTyp, @GIDFirma=Ope_GIDFirma, @GIDNumer=Ope_GIDNumer, @Nazwa=Ope_Ident, @Opis=Ope_Nazwisko
+      FROM inserted;
+
+    UPDATE CDN.FrmStruktura
+      SET Frs_Nazwa=@Nazwa,Frs_Opis=@Opis
+      WHERE Frs_GIDTyp=@GIDTyp and Frs_GIDFirma=@GIDFirma and Frs_GIDNumer=@GIDNumer;
+  END
+END
+</triggerdef>
+</ROOT>
