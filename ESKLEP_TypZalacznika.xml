@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="ESKLEP_TypZalacznika">
+CREATE FUNCTION CDN.ESKLEP_TypZalacznika(@sRozszerzenie AS VARCHAR(20),@bZdjecieGlowne TINYINT)
+RETURNS INTEGER
+AS
+BEGIN
+	RETURN CASE 
+	WHEN RTRIM(UPPER(@sRozszerzenie)) IN ('JPG','JPEG','GIF','BMP','PNG') THEN 
+		CASE WHEN @bZdjecieGlowne = 1 THEN 0 ELSE 1 END
+	WHEN RTRIM(UPPER(@sRozszerzenie)) IN ('MP4','AVI','MKV','OGG','WMV') THEN 2
+	WHEN RTRIM(UPPER(@sRozszerzenie)) IN ('MP3','WAV') THEN 3
+	WHEN RTRIM(UPPER(@sRozszerzenie)) IN ('FLV','FLA','SLW') THEN 4
+	WHEN RTRIM(UPPER(@sRozszerzenie)) IN ('PDF') THEN 5
+	WHEN RTRIM(UPPER(@sRozszerzenie)) IN ('TXT','RTF','DOCX','DOC','ODT') THEN 6
+	WHEN RTRIM(UPPER(@sRozszerzenie)) IN ('XLS','SXW','STW','XLSX','XLW','XLX') THEN 7
+	WHEN RTRIM(UPPER(@sRozszerzenie)) IN ('ZIP','RAW','ARJ','7Z','GZ','TAR') THEN 8
+	ELSE 9
+	END
+END
+</functiondef>
+</ROOT>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury ESKLEP_EksportInfoBlok" hidden="True">
+IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'CDN.ESKLEP_EksportInfoBlok') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+  DROP PROCEDURE CDN.ESKLEP_EksportInfoBlok
+</scriptdef>
+<scriptdef name="Tworzenie procedury ESKLEP_EksportInfoBlok" hidden="False">
+CREATE PROCEDURE CDN.ESKLEP_EksportInfoBlok
+  @ID			INT    -- ID e-sklepu
+ ,@ExpOpcje     INT    -- Maska opcji eksportu
+AS
+SET NOCOUNT ON
+
+DECLARE  @TimeStamp INT
+DECLARE	 @WalutaSys VARCHAR(3)
+		,@BazaDanych VARCHAR(31)
+		,@WersjaBazy VARCHAR(8)
+
+SET @TimeStamp = DATEDIFF(s,CONVERT(DATETIME,'19900101',121),GETDATE())
+
+SELECT @WalutaSys	= Kon_Wartosc FROM CDN.Konfig	 WHERE Kon_Numer = 211
+SELECT @BazaDanych	= SYS_Wartosc FROM CDN.SystemCDN WHERE SYS_ID = 1
+-- Wyciagniecie wersji bazy z jednoczesnym usunieciem wszystkich kropek poza pierwsza
+SELECT @WersjaBazy	= left(SYS_Wartosc,charindex('.',SYS_Wartosc))+replace(RIGHT(SYS_Wartosc,LEN(SYS_Wartosc)-charindex('.',SYS_Wartosc)),'.','') FROM CDN.SystemCDN WHERE SYS_ID = 3
+
+/******** Update timestampów w PicoKonfig *********/
+UPDATE CDN.PicoKonfig SET PcK_TSSynchr = @TimeStamp WHERE PcK_PicoId = @ID
+
+IF (@ExpOpcje &amp; 1 = 1)		 -- eksport cennika
+   UPDATE CDN.PicoKonfig SET PcK_TSSynchrTwr = @TimeStamp WHERE PcK_PicoId = @ID
+ 
+IF((@ExpOpcje &amp; 4) / 4 = 1)  -- eksport grup
+   UPDATE CDN.PicoKonfig SET PcK_TSSynchrGrup = @TimeStamp WHERE PcK_PicoId = @ID
+ 
+SET NOCOUNT OFF
+
+SELECT	 PcK_PicoID			AS eSklepID 
+		,'14'				AS Wersja
+		,PcK_TSSynchr		AS TSSynchr 
+		,PcK_TSSynchrTwr	AS TSSynchrTwr
+		,PcK_TSSynchrGrup	AS TSSynchrGrup
+		,PcK_TSSynchrKnt	AS TSSynchrKntPtw
+		,PcK_TwGNumer		AS ExpTwGNumer
+		,0					AS TSSynchrBin 
+		,0					AS TSSynchrCSelling
+		,@ExpOpcje			AS EksportTyp
+		,@WalutaSys			AS WalutaSys
+		,0					AS Rabaty
+		,2					AS ZrodloID
+		,1					AS Lokalizacja
+		,@BazaDanych		AS BazaDanych
+		,@WersjaBazy		AS WersjaBazy
+		,PcK_NrCeny			AS CenaD
+		,CASE WHEN PcK_NrCenyDomyslnej &gt; 0 THEN PcK_NrCenyDomyslnej ELSE -1 END AS CenaDP
+		,CASE WHEN @ExpOpcje = 0 THEN 1 ELSE 0 END AS Koniec
+		,PCK_ZatwierdzanieZamPoPrzekrLimitu AS Zam
+FROM CDN.PicoKonfig AS INFOBLOK
+WHERE PcK_PicoID = @ID
+FOR XML AUTO
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ESKLEP_EksportInfoBlok" hidden="False">
+GRANT EXECUTE ON CDN.ESKLEP_EksportInfoBlok TO CDNRaport
+</scriptdef>
+</ROOT>

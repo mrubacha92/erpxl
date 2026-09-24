@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury ESKLEP_AktualizujSlwReklamacje" hidden="True">
+IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'CDN.ESKLEP_AktualizujSlwReklamacje') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+  DROP PROCEDURE CDN.ESKLEP_AktualizujSlwReklamacje
+</scriptdef>
+<scriptdef name="Tworzenie procedury ESKLEP_AktualizujSlwReklamacje" hidden="False">
+CREATE PROCEDURE CDN.ESKLEP_AktualizujSlwReklamacje
+  @RekNazwa VARCHAR(256)
+ ,@RekSlownikID INT 
+ ,@RekNazwaESklep VARCHAR(256) = NULL
+
+AS
+SET NOCOUNT ON
+DECLARE @SLSID INT
+DECLARE @SLWID INT 
+SELECT @SLSID = SLS_ID FROM CDN.SlownikiStruktura WHERE SLS_Predefiniowany=65
+SELECT @SLWID = ISNULL((SELECT MAX(Slw_ID) FROM CDN.Slowniki)+1,1)
+IF EXISTS(SELECT * FROM CDN.Slowniki WHERE SLW_SLSId=@SLSID AND SLW_WartoscS = @RekNazwa)
+	UPDATE CDN.Slowniki SET SLW_WartoscL1 = @RekSlownikID WHERE SLW_SLSId = @SLSID AND SLW_WartoscS = @RekNazwa
+ELSE
+	INSERT INTO CDN.Slowniki(SLW_ID, SLW_Predefiniowany, SLW_Kategoria, SLW_WartoscS, SLW_WartoscS1, SLW_Nazwa, SLW_WartoscL1, SLW_SLSId,SLW_Aktywny, SLW_WersjaZrodlo, SLW_WersjaNr) VALUES(@SLWID, 0, 'Żądanie reklamującego', @RekNazwa, ISNULL(@RekNazwaESklep, @RekNazwa), @RekNazwa, @RekSlownikID, @SLSID,1,@SLWID,1)
+
+SET NOCOUNT OFF
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ESKLEP_AktualizujSlwReklamacje" hidden="False">
+GRANT EXECUTE ON CDN.ESKLEP_AktualizujSlwReklamacje TO CDNRaport
+</scriptdef>
+</ROOT>

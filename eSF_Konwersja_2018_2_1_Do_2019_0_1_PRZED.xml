@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Zmiana nazw obiektów tabel eSF" hidden="False">
+BEGIN TRY
+
+	if not Exists(select 1 from sys.objects where object_id = Object_ID('cdn.SFSlownikiElem'))
+		return
+		--raiserror('Błąd konwersji. Wersja 2018.2.1 nie była aktualizowana do współpracy z eSprawozdaniami',16,1)
+
+	BEGIN TRAN
+
+	exec sp_rename 'CDN.ZestKSElem.ZKE_SFEID','ZKE_SFEID_TMP','COLUMN'
+	exec sp_rename 'CDN.ZestKSElem.ZKE_SFPominEksport','ZKE_SFPominEksport_TMP','COLUMN'
+	exec sp_rename 'CDN.ZestKSNag.ZKN_SFEksport','ZKN_SFEksport_TMP','COLUMN'
+	exec sp_rename 'CDN.ZestKSNag.ZKN_SFNJednostka','ZKN_SFNJednostka_TMP','COLUMN'
+	exec sp_rename 'CDN.ZestKSNag.ZKN_SFNZestawienie','ZKN_SFNZestawienie_TMP','COLUMN'
+	exec sp_rename 'CDN.ZestKSNag.ZKN_SFNID','ZKN_SFNID_TMP','COLUMN'	
+
+	exec sp_rename 'CDN.DF_ZKE_SFEID','DF_ZKE_SFEID_TMP'
+	exec sp_rename 'CDN.DF_ZKE_SFPominEksport','DF_ZKE_SFPominEksport_TMP'
+	exec sp_rename 'CDN.DF_ZKN_SFEksport','DF_ZKN_SFEksport_TMP'
+	exec sp_rename 'CDN.DF_ZKN_SFNJednostka','DF_ZKN_SFNJednostka_TMP'
+	exec sp_rename 'CDN.DF_ZKN_SFNZestawienie','DF_ZKN_SFNZestawienie_TMP'
+	exec sp_rename 'CDN.DF_ZKN_SFNID','DF_ZKN_SFNID_TMP'
+
+
+	exec sp_rename 'CDN.SFSlownikiElem','SFSlownikiElem_TMP'
+	exec sp_rename 'CDN.DF_SFSE_SFSNID','DF_SFSE_SFSNID_TMP'
+	exec sp_rename 'CDN.DF_SFSE_ParID','DF_SFSE_ParID_TMP'
+	exec sp_rename 'CDN.DF_SFSE_Kod','DF_SFSE_Kod_TMP'
+	exec sp_rename 'CDN.DF_SFSE_Nazwa','DF_SFSE_Nazwa_TMP'
+	exec sp_rename 'CDN.DF_SFSE_GuidID','DF_SFSE_GuidID_TMP'
+	exec sp_rename 'CDN.SFSE_Primary','SFSE_Primary_TMP'
+	exec sp_rename 'CDN.FK_SFSESFNID','FK_SFSESFNID_TMP'
+	exec sp_rename 'CDN.SFSlownikiElem_TMP.SFSESFNID','SFSESFNID_TMP', 'INDEX'
+	exec sp_rename 'CDN.SFSlownikiElem_TMP.SFSEGUIDID','SFSEGUIDID_TMP', 'INDEX'	
+	
+
+
+	exec sp_rename 'CDN.SFSlownikiNag','SFSlownikiNag_TMP'	
+	exec sp_rename 'CDN.DF_SFSN_KodSystemowy','DF_SFSN_KodSystemowy_TMP'
+	exec sp_rename 'CDN.DF_SFSN_WersjaSchemy','DF_SFSN_WersjaSchemy_TMP'
+	exec sp_rename 'CDN.DF_SFSN_WersjaSlownika','DF_SFSN_WersjaSlownika_TMP'
+	exec sp_rename 'CDN.DF_SFSN_Nazwa','DF_SFSN_Nazwa_TMP'
+	exec sp_rename 'CDN.DF_SFSN_Jednostka','DF_SFSN_Jednostka_TMP'
+	exec sp_rename 'CDN.DF_SFSN_Zestawienie','DF_SFSN_Zestawienie_TMP'	
+	exec sp_rename 'CDN.SFSN_Primary','SFSN_Primary_TMP'
+
+	exec sp_rename 'CDN.SFNag','SFNag_TMP'
+	exec sp_rename 'CDN.SFN_Primary','SFN_Primary_TMP'
+	exec sp_rename 'CDN.DF_SFN_NazwaFirmy','DF_SFN_NazwaFirmy_TMP'
+	exec sp_rename 'CDN.DF_SFN_DataDo','DF_SFN_DataDo_TMP'
+	exec sp_rename 'CDN.DF_SFN_DataSporzadzenia','DF_SFN_DataSporzadzenia_TMP'
+	exec sp_rename 'CDN.DF_SFN_Typ','DF_SFN_Typ_TMP'
+	exec sp_rename 'CDN.DF_SFN_WersjaSchemy','DF_SFN_WersjaSchemy_TMP'
+	exec sp_rename 'CDN.DF_SFN_Status','DF_SFN_Status_TMP'
+	exec sp_rename 'CDN.DF_SFN_Aktywny','DF_SFN_Aktywny_TMP'
+	exec sp_rename 'CDN.DF_SFN_NrReferencyjny','DF_SFN_NrReferencyjny_TMP'
+	exec sp_rename 'CDN.DF_SFN_UPOKod','DF_SFN_UPOKod_TMP'
+	exec sp_rename 'CDN.DF_SFN_UPOOpis','DF_SFN_UPOOpis_TMP'
+
+	exec sp_rename 'CDN.SFZalaczniki','SFZalaczniki_TMP'
+	exec sp_rename 'CDN.SFZ_Primary','SFZ_Primary_TMP'
+	exec sp_rename 'CDN.DF_SFZ_Nazwa','DF_SFZ_Nazwa_TMP'
+	exec sp_rename 'CDN.DF_SFZ_SFNId','DF_SFZ_SFNId_TMP'
+	exec sp_rename 'CDN.DF_SFZ_Typ','DF_SFZ_Typ_TMP'
+	exec sp_rename 'CDN.FK_SFZSFNId','FK_SFZSFNId_TMP'
+	
+	if @@TRANCOUNT &gt; 0
+		COMMIT TRAN
+END TRY
+BEGIN CATCH	
+	if @@TRANCOUNT &gt; 0
+		ROLLBACK TRAN
+	;THROW
+END CATCH
+</scriptdef>
+<scriptdef name="Zmiana nazwy pola w tabeli OpeKarty" hidden="False">
+set nocount on;
+IF EXISTS(
+      select * from sys.all_columns 
+      join sys.tables on sys.all_columns.object_id = sys.tables.object_id
+      where sys.tables.name = 'OpeKarty' and sys.all_columns.name = 'Ope_EsprawozdaniaFinansowe'
+      )
+BEGIN
+	exec sp_rename 'CDN.OpeKarty.Ope_EsprawozdaniaFinansowe','Ope_EsprawozdaniaFinansowe_TMP'
+	exec sp_rename 'CDN.DF_Ope_EsprawozdaniaFinansowe','DF_Ope_EsprawozdaniaFinansowe_TMP'
+END
+
+set nocount off;
+</scriptdef>
+</ROOT>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury FakturySprzedazyVatJPK" hidden="True">
+if exists (select name from sysobjects where name = 'FakturySprzedazyVatJPK' and type = 'P')
+  drop procedure CDN.FakturySprzedazyVatJPK;
+</scriptdef>
+<scriptdef name="Tworzenie procedury FakturySprzedazyVatJPK" hidden="False">
+create procedure [CDN].[FakturySprzedazyVatJPK] (@miesiac tinyint, @rok smallint) as
+begin
+		
+	declare @Typ_FW		int = 2036
+	declare @Typ_FWK    int = 2044	
+	declare @Typ_FWS	int = 3379
+	declare @Typ_FKS	int = 3387
+
+	declare @e_SPR_nNieEksportowy                    tinyint = 1       -- nie eksportowy
+	declare @e_SPR_nEksportowyVat0                   tinyint = 2       -- eksportowy VAT0%
+	declare @e_SPR_nEksportowyVatDowolny             tinyint = 3       -- eksportowy VAT dowolny
+	declare @e_SPR_nEksportowyVatDowolnyKorekta      tinyint = 4       -- korekta vat dowolny  -&gt; vat eksportowy
+	declare @e_SPR_nEksportowyVat0Korekta            tinyint = 5       -- korekta vat eksportowy -&gt; vat dowolny
+	declare @e_SPR_nWewnatrzwspolnotowyVat0D         tinyint = 6       -- Wewnątrzwspólnotowy dostawa Vat 0
+	declare @e_SPR_nWewnatrzwspolnotowyVatDowolnyD   tinyint = 7       -- Wewnątrzwspólnotowy dostawa Vat dowolny
+	declare @e_SPR_nWewnatrzwspolnotowyVat0DT        tinyint = 8       -- Wewnątrzwspólnotowa dostawa, trójstronna Vat 0,
+	declare @e_SPR_nWewnatrzwspolnotowyVatDowolnyDT  tinyint = 9       -- Wewnątrzwspólnotowa dostawa, trójstronna Vat dowolny,
+	declare @e_SPR_nWewnatrzwspolnotowyVat0N         tinyint = 10      -- Wewnątrzwspólnotowe nabycie Vat 0
+	declare @e_SPR_nWewnatrzwspolnotowyVatDowolnyN   tinyint = 11      -- Wewnątrzwspólnotowe nabycie Vat dowolny
+	declare @e_SPR_nWewnatrzwspolnotowyVat0NT        tinyint = 12      -- Wewnątrzwspólnotowe nabycie, trójstronne Vat 0
+	declare @e_SPR_nWewnatrzwspolnotowyVatDowolnyNT  tinyint = 13      -- Wewnątrzwspólnotowe nabycie, trójstronne Vat dowolny
+	declare @e_SPR_nImportowyVat0FW                  tinyint = 14      -- eksportowy VAT0% dla FWS
+	declare @e_SPR_nImportowyVatDowolnyFW            tinyint = 15      -- eksportowy VAT dowolny dla FWS
+	declare @e_SPR_nWewnatrzwspolnotowyVatDowolnyDKorekta   tinyint = 16      -- korekta wewnątrzwspólnotowy dostawa Vat dowolny
+	declare @e_SPR_nWewnatrzwspolnotowyVat0DKorekta         tinyint = 17      -- korekta wewnątrzwspólnotowy dostawa Vat 0
+	declare @e_SPR_nWewnatrzwspolnotowyVatDowolnyDTKorekta  tinyint = 18      -- korekta wewnątrzwspólnotowa dostawa trójstronna Vat dowolny
+	declare @e_SPR_nWewnatrzwspolnotowyVat0DTKorekta        tinyint = 19      -- korekta wewnątrzwspólnotowa dostawa trójstronna Vat 0
+	declare @e_SPR_nEksportowyNabywca                       tinyint = 20      -- podatnikiem jest nabywca
+	declare @e_SPR_nDostawaOpodatkowanaWWsp                 tinyint = 21      -- dostawa opodatkowana poza terytorium kraju
+	declare @e_SPR_nTaxFree                                 tinyint = 22      -- tax free
+	declare @e_SPR_nDostawaOpodatkowanaInne                 tinyint = 23      -- dostawa opodatkowana poza terytorium kraju
+	declare @e_SPR_nEksportowyNabywcaWsp					tinyint = 24      --podatnikiem jest Nabywca (transakcja Wewnątrzwspólnotowa)
+	declare @e_SPR_nEksportowyNabywcaInne					tinyint = 25      --podatnikime jest Nabywca (transakcja Inna zagranicznia)
+	
+	declare @g_ksi_lUwzgledniajNieopodatkowane tinyint =  0
+	declare @g_ksi_lUwzgledniajZakup0zw tinyint =  0
+	select @g_ksi_lUwzgledniajNieopodatkowane = CAST(KON_Wartosc as int) from cdn.Konfig where Kon_Numer = 2056
+	select @g_ksi_lUwzgledniajZakup0zw = CAST(KON_Wartosc as int) from cdn.Konfig where Kon_Numer = 2071
+
+	-------------------------------------------------------------------------------------------------------------------------------------
+
+	--@e_SPR_nNieEksportowy, @e_SPR_nTaxFree, @e_SPR_nEksportowyNabywca
+		
+		select KnA_GIDNumer, KnA_Nip, KnA_Akronim, min(VatTyp) VatTyp from
+		(
+			SELECT KnA_GIDNumer, KnA_Nip, KnA_Akronim, TrN_VatTyp VatTyp
+			FROM CDN.TraVat 
+				JOIN CDN.TraSVat ON TRV_GIDTyp = TSV_GIDTyp AND TRV_GIDNumer = TSV_GIDNumer AND TrV_GIDLp = TSV_GIDLp
+				JOIN CDN.TraNag ON TRV_GIDTyp = TRN_GIDTyp AND TRV_GIDNumer = TRN_GIDNumer 				
+				JOIN CDN.KntAdresy ON TRN_KNANumer = KnA_GIDNumer
+			WHERE TSV_Rozliczac=1 AND TSV_DeklRok = @rok AND TSV_DeklMiesiac = @miesiac AND TRN_VatRejestr &lt;&gt; '' and 
+				(
+					(TRN_VatTyp=2 AND TrV_ExpoNorm = @e_SPR_nEksportowyNabywca)
+					OR
+					(TRN_VatTyp=1 AND TrV_ExpoNorm in (@e_SPR_nNieEksportowy, @e_SPR_nTaxFree, @e_SPR_nEksportowyNabywca) AND
+					TRV_FlagaVat = 1 AND ( @g_ksi_lUwzgledniajZakup0zw = 1 OR @g_ksi_lUwzgledniajZakup0zw = 0 AND TRV_StawkaPod &lt;&gt; 0 ) )
+				)
+
+			UNION ALL
+				
+			SELECT case when SAN_GIDTyp = 3376 then isnull(k2.KnA_GIDNumer, 0) else isnull(k1.KnA_GIDNumer, 0) end
+				, case when SAN_GIDTyp = 3376 then isnull(k2.KnA_Nip,'') else isnull(k1.KnA_Nip,'') end
+				, case when SAN_GIDTyp = 3376 then isnull(k2.KnA_Akronim,'') else isnull(k1.KnA_Akronim,'') end
+				, SaN_VatTyp
+			FROM CDN.TraVAT 
+				JOIN CDN.SadNag ON TRV_GIDTyp = SAN_GIDTyp AND TRV_GIDNumer = SAN_GIDNumer
+				JOIN CDN.TraSVat ON TRV_GIDTyp = TSV_GIDTyp AND TRV_GIDNumer = TSV_GIDNumer AND TrV_GIDLp = TSV_GIDLp
+				LEFT JOIN CDN.KntAdresy k1 ON SAN_KNANumer = k1.KnA_GIDNumer
+				LEFT JOIN CDN.KntAdresy k2 ON SaN_DstAdres = k2.KnA_GIDNumer
+			WHERE TSV_Rozliczac = 1 AND TSV_DeklRok = @rok AND TSV_DeklMiesiac = @miesiac
+				AND SAN_VatRejestr &lt;&gt; '' and 
+				(
+					(SAN_VatTyp=2 AND TrV_ExpoNorm = @e_SPR_nEksportowyNabywca AND SAN_GIDTyp in (@Typ_FWS, @Typ_FKS ))
+					OR
+					(SAN_VatTyp=1 AND TrV_ExpoNorm in (@e_SPR_nNieEksportowy, @e_SPR_nTaxFree, @e_SPR_nEksportowyNabywca) AND
+					TRV_FlagaVat = 1 AND ( @g_ksi_lUwzgledniajZakup0zw = 1 OR @g_ksi_lUwzgledniajZakup0zw = 0 AND TRV_StawkaPod &lt;&gt; 0 ) )
+				)
+				
+		)    as aa 
+		group by KnA_Nip, KnA_GIDNumer, KnA_Akronim
+		order by VatTyp
+	-------------------------------------------------------------------------------------------------------------------------------------     
+
+	
+set nocount off	
+END	
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury FakturySprzedazyVatJPK" hidden="False">
+GRANT EXECUTE ON CDN.FakturySprzedazyVatJPK TO CDNRaport
+</scriptdef>
+</ROOT>

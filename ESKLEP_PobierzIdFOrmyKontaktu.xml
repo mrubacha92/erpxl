@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie funkcji ESKLEP_PobierzIdFormyKontaktu" hidden="True">
+IF EXISTS (SELECT NAME FROM sysobjects WHERE NAME = 'ESKLEP_PobierzIdFormyKontaktu' AND Type = 'FN')
+  DROP FUNCTION CDN.ESKLEP_PobierzIdFormyKontaktu;
+</scriptdef>
+<scriptdef name="Tworzenie procedury ESKLEP_PobierzIdFormyKontaktu" hidden="False">
+CREATE FUNCTION CDN.ESKLEP_PobierzIdFormyKontaktu (@FormaKontaktu VARCHAR(256))
+RETURNS VARCHAR(36)
+AS
+BEGIN
+	DECLARE @ID VARCHAR(36)
+	SELECT @ID = CASE 
+		WHEN @FormaKontaktu = 'E-mail' THEN 'C56924B9-8560-6099-677A-346A4B0430B4'
+		WHEN @FormaKontaktu = 'Telefon' THEN '8AE09577-576B-1385-30CA-99852ACE6173'
+		WHEN @FormaKontaktu = 'Sms' THEN '62120227-59AC-41F4-B952-2859604131F5'
+		WHEN @FormaKontaktu = 'Przesyłka' THEN '68A0BB81-2350-42E8-8985-BC3F72C9E510'
+	END
+	RETURN @ID
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ESKLEP_PobierzIdFormyKontaktu" hidden="False">
+GRANT EXECUTE ON CDN.ESKLEP_PobierzIdFormyKontaktu TO CDNRaport
+</scriptdef>
+</ROOT>

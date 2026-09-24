@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Usuwanie funkcji ESKLEP_UstalTypKlasyAtrybutow" hidden="True">
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'ESKLEP_UstalTypKlasyAtrybutow' AND xtype = 'FN')
+  DROP FUNCTION CDN.ESKLEP_UstalTypKlasyAtrybutow;
+</scriptdef>
+<scriptdef name="Tworzenie funkcji ESKLEP_UstalTypKlasyAtrybutow" hidden="False">
+CREATE FUNCTION CDN.ESKLEP_UstalTypKlasyAtrybutow (@AtkTyp TINYINT,@AtkFormat VARCHAR(129))
+RETURNS INT
+AS
+BEGIN
+	DECLARE @Wynik INT
+	SET @Wynik = CASE @AtkTyp WHEN 3 THEN 2 ELSE 1 END
+	IF UPPER(@AtkFormat) = '@D17' SET @Wynik = 4
+	RETURN @Wynik
+END
+</scriptdef>
+<scriptdef name="Przyznanie praw do funkcji ESKLEP_UstalTypKlasyAtrybutow" hidden="False">
+GRANT EXECUTE ON CDN.ESKLEP_UstalTypKlasyAtrybutow TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury ESKLEP_EksportGrup" hidden="True">
+IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'CDN.ESKLEP_EksportGrup') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+  DROP PROCEDURE CDN.ESKLEP_EksportGrup
+</scriptdef>
+<scriptdef name="Tworzenie procedury ESKLEP_EksportGrup" hidden="False">
+CREATE  PROCEDURE CDN.ESKLEP_EksportGrup
+  @ID INT			-- ID e-sklepu
+ ,@TypExp INT		-- Typ eksportu grup (0 - różnicowy, 1 - pełny)
+AS
+
+DECLARE @Typ_GrT SMALLINT
+DECLARE @Typ_Twr SMALLINT
+SET @Typ_GrT = -16
+SET @Typ_Twr = 16
+
+CREATE TABLE #tmpGrupy(Lp INT, GIDTyp INT, GIDNumer INT, GrOTyp INT, GrONumer INT, Kod VARCHAR(40) COLLATE Polish_CI_AS, Nazwa VARCHAR(255) COLLATE Polish_CI_AS, Opis VARCHAR(MAX) COLLATE Polish_CI_AS
+                                            ,JezykID SMALLINT, KodJezyk VARCHAR(255) COLLATE Polish_CI_AS, NazwaJezyk NVARCHAR(255)
+                                            ,OpisJezyk NVARCHAR(MAX) ,OpisKrotki VARCHAR(500) COLLATE Polish_CI_AS, Tytul VARCHAR(100) COLLATE Polish_CI_AS, Kluczowe VARCHAR(500) COLLATE Polish_CI_AS, MetaOpis VARCHAR(320) COLLATE Polish_CI_AS, Url VARCHAR(200) COLLATE Polish_CI_AS, Szukaj VARCHAR(512)  COLLATE Polish_CI_AS
+											,OpisKrotkiLang NVARCHAR(500), TytulLang NVARCHAR(100), KluczoweLang NVARCHAR(500), MetaOpisLang NVARCHAR(320), UrlLang NVARCHAR(200), SzukajLang NVARCHAR(512)
+                 /* Atrybuty */ ,AtrId INT, AtrDefId INT, AtrJezykID SMALLINT, AtKTyp SMALLINT, AtKFormat SMALLINT, AtKNazwa VARCHAR(40) COLLATE Polish_CI_AS, AtKNazwaJezyk VARCHAR(255) COLLATE Polish_CI_AS, AtrWartosc VARCHAR(100) COLLATE Polish_CI_AS,AtrWartoscJezyk VARCHAR(255) COLLATE Polish_CI_AS, AtrLp INT
+				 /*ZALI*/		,DABID INT, DABTwGGIDNumer INT, DABTyp SMALLINT, DABLp INT, DABNazwa VARCHAR(100)
+                                            )
+
+
+ INSERT INTO #tmpGrupy
+         SELECT DISTINCT
+            0,
+                TWG.TwG_GIDTyp AS GIDTyp,
+                CASE WHEN TWG.TwG_GIDTyp = @Typ_GrT THEN TWG.TwG_SyncID ELSE TWG.TwG_GIDNumer END AS GIDNumer, --TFSID:251309
+                TWG.TwG_GrOTyp AS GrOTyp,
+                CASE WHEN TWG.TwG_GroNumer = -1 THEN -1 ELSE ISNULL(TWGGRO.TwG_SyncID,0) END AS GrONumer, --TFSID:254108
+                CDN.XLValidateXMLChars(TWG.TwG_Kod) AS  Kod,
+                CDN.XLValidateXMLChars(TWG.TwG_Nazwa) AS  Nazwa,
+				CDN.XLValidateXMLChars(OpisPL.WTO_OPIS) AS Opis,
+                SLW_WartoscL3 JezykID,
+                RTRIM(K.TLM_Tekst) AS KodJezyk,
+                CASE WHEN ISNULL(SLW_Predefiniowany,0) IN (21,22,23,24,25,34,35,36,98,99,100) AND ISNULL(SLW_WartoscL3,0) IN (4,8) THEN 
+					CASE WHEN SLW_WartoscL1 = 204 THEN CDN.CyrillicToUnicode(RTRIM(N.TLM_Tekst))
+					ELSE RTRIM(N.TLM_Tekst) END
+				ELSE CDN.XLValidateXMLChars(RTRIM(N.TLM_Tekst)) END AS NazwaJezyk,
+                CASE WHEN ISNULL(SLW_Predefiniowany,0) IN (21,22,23,24,25,34,35,36,98,99,100) AND ISNULL(SLW_WartoscL3,0) IN (4,8) THEN 
+					CASE WHEN SLW_WartoscL1 = 204 THEN CDN.CyrillicToUnicode(OpisLang.WTO_Opis)
+					ELSE OpisLang.WTO_OPIS END
+				ELSE CDN.XLValidateXMLChars(OpisLang.WTO_OPIS) END AS Opis,
+                CDN.XLValidateXMLChars(TAOPL.TPO_OpisKrotki) AS OpisKrotki,
+                CDN.XLValidateXMLChars(TAOPL.TPO_TytulStrony) AS Tytul,
+                CDN.XLValidateXMLChars(TAOPL.TPO_SlowaKluczowe) AS Kluczowe,
+                CDN.XLValidateXMLChars(TAOPL.TPO_MetaOpis) AS MetaOpis,
+                TAOPL.TPO_Url AS Url,
+                TAOPL.TPO_SlowaKluczoweW as Szukaj,
+				CASE WHEN SLW_WartoscL1 = 204 THEN CDN.CyrillicToUnicode(TAOLANG.TPO_OpisKrotki) ELSE CDN.XLValidateXMLChars(TAOLANG.TPO_OpisKrotki) END AS OpisKrotkiLang,
+                CASE WHEN SLW_WartoscL1 = 204 THEN CDN.CyrillicToUnicode(TAOLANG.TPO_TytulStrony) ELSE CDN.XLValidateXMLChars(TAOLANG.TPO_TytulStrony) END AS TytulLang,
+                CASE WHEN SLW_WartoscL1 = 204 THEN CDN.CyrillicToUnicode(TAOLANG.TPO_SlowaKluczowe) ELSE CDN.XLValidateXMLChars(TAOLANG.TPO_SlowaKluczowe) END AS KluczoweLang,
+                CASE WHEN SLW_WartoscL1 = 204 THEN CDN.CyrillicToUnicode(TAOLANG.TPO_MetaOpis) ELSE CDN.XLValidateXMLChars(TAOLANG.TPO_MetaOpis) END AS MetaOpisLang,
+                CASE WHEN SLW_WartoscL1 = 204 THEN CDN.CyrillicToUnicode(TAOLANG.TPO_Url) ELSE TAOLANG.TPO_Url END AS UrlLang,
+                CASE WHEN SLW_WartoscL1 = 204 THEN CDN.CyrillicToUnicode(TAOLANG.TPO_SlowaKluczoweW) ELSE TAOLANG.TPO_SlowaKluczoweW END AS SzukajLang,
+        Atr.Id, Atr.Id, Atr.Jezyk, CASE WHEN Atr.AtKID = PcK_KnGENumer THEN 2 WHEN Atr.AtKTyp = 8 THEN 3 WHEN Atr.AtKTyp IS NOT NULL THEN 1 END AS AtKTyp
+        , Atr.AtKFormat, CDN.XLValidateXMLChars(Atr.AtKNazwa), Atr.AtKNazwaJezyk, CDN.XLValidateXMLChars(Atr.Wartosc), Atr.WartoscJezyk, Atr.Lp		
+		 ,Daneb.DAO_DABId, Daneb.DAO_ObiNumer, Daneb.DAO_ObiTyp, Daneb.DAO_Pozycja, DaneBNazwa.DAB_Nazwa
+           FROM CDN.TwrGrupy TWG		   
+		   LEFT JOIN CDN.TwrGrupy TWGGRO ON TWGGRO.Twg_GIDNumer = TWG.TwG_GrONumer AND TWGGRO.TwG_GIDTyp = TWG.TwG_GrOTyp
+           JOIN CDN.PicoKonfig ON PcK_PicoID=@ID
+		   JOIN CDN.TwrGrupy PCKTWG ON PCKTWG.TwG_SyncId = PcK_TwGNumer AND PCKTWG.TwG_GIDTyp = -16
+           LEFT OUTER JOIN CDN.TwrWzOpisy OpisPL ON OpisPL.WTO_GrpTyp = TWG.TwG_GIDTyp AND OpisPL.WTO_GrpNumer = TWG.TwG_GIDNumer AND OpisPL.WTO_Jezyk = 0
+           LEFT OUTER JOIN CDN.TwrAplikacje ON TWG.TwG_GIDNumer  = TAP_ObiNumer and TWG.TwG_GIDTyp  = TAP_ObiTyp
+           LEFT OUTER JOIN CDN.TwrAplikacjeOpisy TAOPL ON TWG.TwG_GIDNumer  = TAOPL.TPO_ObiNumer and TWG.TwG_GIDTyp  = TAOPL.TPO_ObiTyp and TAOPL.TPO_JezykId = 0
+           LEFT OUTER JOIN CDN.Tlumaczenia AS K ON K.TLM_Numer = TWG.TwG_GIDNumer AND K.TLM_Typ = TWG.TwG_GIDTyp AND K.TLM_Pole = 1
+           LEFT OUTER JOIN CDN.Tlumaczenia AS N ON N.TLM_Numer = TWG.TwG_GIDNumer AND N.TLM_Typ = TWG.TwG_GIDTyp AND N.TLM_Pole = 2 AND K.TLM_Jezyk = N.TLM_Jezyk
+           LEFT OUTER JOIN CDN.Slowniki ON SLW_ID = K.TLM_Jezyk AND SLW_WartoscL2 in (2,3) -- parametr isklep24
+		   LEFT OUTER JOIN CDN.TwrWzOpisy OpisLang ON OpisLang.WTO_GrpTyp = TWG.TwG_GIDTyp AND OpisLang.WTO_GrpNumer = TWG.TwG_GIDNumer AND OpisLang.WTO_Jezyk = SLW_ID 
+		   LEFT OUTER JOIN CDN.TwrAplikacjeOpisy TAOLANG ON TAOLANG.TPO_ObiTyp = TWG.TwG_GIDTyp AND TAOLANG.TPO_ObiNumer = TWG.TwG_GIDNumer AND TAOLANG.TPO_JezykId = SLW_ID
+           LEFT OUTER JOIN
+                        (
+                        -- Czesc do wysylania atrybutow zwiazanych z grupa spelniajacych odpowiednie warunki
+                        select AtK_ID as Id,CASE WHEN TLM.TLM_Jezyk = 1 THEN 1 ELSE SLW_WartoscL3 END as Jezyk, AtrGrp.Atr_ObiTyp as obityp, AtrGrp.Atr_ObiNumer AS obinumer, TLM_Tekst as AtkNazwa, null as AtKNazwaJezyk,
+                        AtK_ID as AtkID, 1 as AtKTyp
+                        , case when AtK_Typ = 2 then 1 when AtK_Typ =4 then 3 when  AtK_Typ = 3 AND AtK_Format = '@d17' then 4 else 1 end as AtKFormat,
+                        CDN.XLValidateXMLChars(AtrGrp.Atr_Wartosc) as Wartosc, CDN.XLValidateXMLChars(AtrGrp.Atr_Wartosc) as WartoscJezyk,
+                        NULL as DAB_ID, 1 as Lp
+                        from cdn.Atrybuty AtrGrp
+                        join cdn.AtrybutyKlasy on Atr_AtkId = AtK_ID and Atr_ObiLp = 1 and AtrGrp.Atr_ObiTyp = -16
+						JOIN (SELECT TLM_Numer, TLM_Typ, TLM_Pole, TLM_Jezyk, TLM_Tekst FROM CDN.Tlumaczenia -- tlumaczenia
+							UNION ALL 
+							SELECT AtK_ID, 14416, 2, 1, AtK_Nazwa FROM CDN.AtrybutyKlasy /* dodatkowy rekord dla jezyka polskiego, odpowiedni typ i pole dla nazw atrybutow */
+						) AS TLM ON TLM.TLM_Numer = AtK_Id AND TLM.TLM_Typ = 14416 AND TLM.TLM_Pole = 2
+						LEFT OUTER JOIN CDN.Slowniki ON SLW_ID = TLM.TLM_Jezyk
+                        join cdn.Atrybuty AtrTwr on AtrTwr.Atr_AtkId = AtK_ID and AtrTwr.Atr_ObiTyp = 16
+                        where AtK_Typ in (2,4) OR (AtK_Typ = 3 AND AtK_Format = '@d17')
+                        ) Atr ON TWG.TwG_GIDNumer = Atr.ObiNumer AND TWG.TwG_GIDTyp = Atr.ObiTyp
+			LEFT OUTER JOIN
+				(SELECT DAB_ID AS DABID,DAO_OBINumer AS DABTwGGIDNumer, 0 AS DABTyp /*zdjecie g?ˇwne*/, DAO_Pozycja AS DABLp, DAO_OBITyp AS OBITyp, DAB_Nazwa AS DABNazwa FROM CDN.DaneObiekty JOIN CDN.DaneBinarne ON DAO_DABId = DAB_ID
+				WHERE DAO_eSklep = 1
+				) DaneBAll ON TWG.TwG_GIDNumer = DaneBAll.DABTwGGIDNumer AND TWG.TwG_GIDTyp = DaneBAll.OBITyp
+			LEFT OUTER JOIN
+				CDN.DaneObiekty DaneB ON DaneBAll.DABID IS NOT NULL AND DaneB.DAO_ObiNumer = DaneBAll.DABTwGGIDNumer AND DaneB.DAO_ObiTyp = DaneBAll.OBITyp AND DaneB.DAO_Pozycja &lt;= DaneBAll.DABLp
+			LEFT OUTER JOIN
+				CDN.DaneBinarne DaneBNazwa ON DaneBNazwa.DAB_ID = DaneB.DAO_DABId
+
+           WHERE TWG.TwG_GIDTyp=@Typ_GrT AND (EXISTS(SELECT * FROM CDN.TwrGrupy WHERE TwG_GIDTyp = @Typ_GrT AND TwG_CzasModyfikacji &gt; PcK_TSSynchrGrupPtw) OR @TypExp=1)
+           AND (TWG.TwG_SyncID = PcK_TwGNumer OR TWG.TwG_GrONumer = PCKTWG.TwG_GIDNumer OR EXISTS(SELECT * FROM CDN.TwrLinki WHERE TwL_GIDTyp = @Typ_GrT  AND TwL_GIDNumer = TWG.TwG_GrONumer AND TwL_GrONumer = PCKTWG.TwG_GIDNumer) )
+         UNION ALL
+
+         SELECT DISTINCT
+            0,
+                TWG.TwG_GIDTyp AS GIDTyp,
+                CASE WHEN TWG.TwG_GIDTyp = @Typ_GrT THEN TWG.TwG_SyncID ELSE TWG.TwG_GIDNumer END AS GIDNumer, --TFSID:251309
+                TWG.TwG_GrOTyp AS GrOTyp,
+                ISNULL(TWGGRO.TwG_SyncID,0) AS GrONumer,
+                CDN.XLValidateXMLChars(TWG.TwG_Kod) AS  Kod,
+                CDN.XLValidateXMLChars(TWG.TwG_Nazwa) AS  Nazwa,
+				CDN.XLValidateXMLChars(OpisPL.WTO_OPIS) AS Opis,
+                CASE WHEN ISNULL(SLW_Predefiniowany,0) IN (21,22,23,24,25,34,35,36,98,99,100) THEN SLW_WartoscL3 ELSE 0 END AS JezykID,
+                RTRIM(K.TLM_Tekst) AS KodJezyk,
+                CASE WHEN ISNULL(SLW_Predefiniowany,0) IN (21,22,23,24,25,34,35,36,98,99,100) AND ISNULL(SLW_WartoscL3,0) IN (4,8) THEN CDN.CyrillicToUnicode(RTRIM(N.TLM_Tekst)) ELSE CDN.XLValidateXMLChars(RTRIM(N.TLM_Tekst)) END AS NazwaJezyk,
+                CASE WHEN ISNULL(SLW_Predefiniowany,0) IN (21,22,23,24,25,34,35,36,98,99,100) AND ISNULL(SLW_WartoscL3,0) IN (4,8) THEN CDN.CyrillicToUnicode(OpisLang.WTO_Opis) ELSE CDN.XLValidateXMLChars(OpisLang.WTO_Opis) END AS Opis,
+                CDN.XLValidateXMLChars(TPO_OpisKrotki) AS OpisKrotki,
+                CDN.XLValidateXMLChars(TPO_TytulStrony) AS Tytul,
+                CDN.XLValidateXMLChars(TPO_SlowaKluczowe) AS Kluczowe,
+                CDN.XLValidateXMLChars(TPO_MetaOpis) AS MetaOpis,
+                TPO_Url AS Url,
+                CDN.XLValidateXMLChars(TPO_SlowaKluczoweW) as Szukaj,
+				CDN.XLValidateXMLChars(TPO_OpisKrotki) AS OpisKrotkiLang,
+                CDN.XLValidateXMLChars(TPO_TytulStrony) AS TytulLang,
+                CDN.XLValidateXMLChars(TPO_SlowaKluczowe) AS KluczoweLang,
+                CDN.XLValidateXMLChars(TPO_MetaOpis) AS MetaOpisLang,
+                TPO_Url AS UrlLang,
+                TPO_SlowaKluczoweW as SzukajLang,
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+				,NULL, NULL, NULL, NULL,NULL
+           FROM CDN.TwrGrupy TWG
+		   LEFT JOIN CDN.TwrGrupy TWGGRO ON TWGGRO.Twg_GIDNumer = TWG.TwG_GrONumer AND TWGGRO.TwG_GIDTyp = TWG.TwG_GrOTyp
+           JOIN CDN.TwrKarty ON Twr_GIDTyp=TWG.TwG_GIDTyp AND Twr_GIDNumer=TWG.TwG_GIDNumer
+           JOIN CDN.PicoKonfig ON PcK_PicoID=@ID
+		JOIN CDN.TwrGrupy PCKTWG ON PCKTWG.TwG_SyncId = PcK_TwGNumer AND PCKTWG.TwG_GIDTyp = -16
+           LEFT OUTER JOIN CDN.TwrWzOpisy OpisPL ON OpisPL.WTO_GrpTyp = TWG.TwG_GIDTyp AND OpisPL.WTO_GrpNumer = TWG.TwG_GIDNumer AND OpisPL.WTO_Jezyk = 0
+           LEFT OUTER JOIN CDN.TwrAplikacje ON TWG.TwG_GIDNumer  = TAP_ObiNumer and TWG.TwG_GIDTyp  = TAP_ObiTyp
+           LEFT OUTER JOIN CDN.TwrAplikacjeOpisy ON TWG.TwG_GIDNumer  = TPO_ObiNumer and TWG.TwG_GIDTyp  = TPO_ObiTyp and TPO_JezykId = 0
+           LEFT OUTER JOIN CDN.Tlumaczenia AS K ON K.TLM_Numer = Twr_GIDNumer AND K.TLM_Typ = Twr_GIDTyp AND K.TLM_Pole = 1
+           LEFT OUTER JOIN CDN.Tlumaczenia AS N ON N.TLM_Numer = Twr_GIDNumer AND N.TLM_Typ = Twr_GIDTyp AND N.TLM_Pole = 2 AND K.TLM_Jezyk = N.TLM_Jezyk
+           LEFT OUTER JOIN CDN.Slowniki ON SLW_ID = K.TLM_Jezyk AND SLW_WartoscL2 in (2,3) -- parametr isklep24
+		   LEFT OUTER JOIN CDN.TwrWzOpisy OpisLang ON OpisLang.WTO_GrpTyp = TWG.TwG_GIDTyp AND OpisLang.WTO_GrpNumer = TWG.TwG_GIDNumer AND OpisLang.WTO_Jezyk = SLW_ID 
+           LEFT OUTER JOIN CDN.PicoLog ON PcL_PcKID = Pck_PicoId AND PcL_ObiTyp = Twr_GIDTyp AND PcL_ObiNumer = Twr_GIDNumer
+           WHERE TWG.TwG_GIDTyp = @Typ_Twr AND TWG.TwG_GIDNumer &gt; 0 AND Twr_eSklep = 1 AND Twr_Archiwalny = 0
+           AND (TWG.TwG_SyncId = PcK_TwGNumer OR TWG.TwG_GrONumer = PCKTWG.TwG_GIDNumer OR EXISTS(SELECT * FROM CDN.TwrLinki WHERE TwL_GIDTyp = @Typ_GrT  AND TwL_GIDNumer = TWG.TwG_GrONumer AND TwL_GrONumer = PCKTWG.TwG_GIDNumer) )
+           AND (TWG.TwG_CzasModyfikacji &gt; CASE WHEN @TypExp=0 THEN PcK_TSSynchrGrupPtw ELSE 0 END OR ISNULL(PcL_TStamp,PcK_TSSynchrGrupPtw + 1) &gt; PcK_TSSynchrGrupPtw)
+
+-- TFSID: 310742
+-- Usuniecie grup, ktore nie znajduja w galezi zdefiniowanej w oddziale
+;WITH Groups (GidNumer, SyncId, ParentSyncNumer, GidTyp)
+AS
+(
+	-- Root
+	SELECT TwG_GIDNumer, TwG_SyncId, NULL, TwG_GIDTyp
+	FROM CDN.TwrGrupy 
+	WHERE TwG_SyncId = (SELECT PcK_TwGNumer FROM CDN.PicoKonfig WHERE PcK_PicoID=@ID)
+	AND TwG_GIDTyp = @Typ_GrT
+
+	UNION ALL
+
+	-- SubGroups
+	SELECT TwG_GIDNumer, CASE WHEN TwG_GIDTyp = @Typ_GrT THEN TwG_SyncID ELSE TwG_GIDNumer END, Parent.SyncId, TwG_GIDTyp
+	FROM CDN.TwrGrupy
+	INNER JOIN Groups AS Parent ON Parent.GidNumer = TwG_GrONumer AND Parent.GidTyp = @Typ_GrT
+)
+DELETE
+FROM #tmpGrupy
+WHERE NOT EXISTS
+	(SELECT * FROM Groups WHERE SyncId = #tmpGrupy.GIDNumer AND
+		(ParentSyncNumer = #tmpGrupy.GrONumer OR ParentSyncNumer IS NULL /* root element */ )
+	) 
+	
+ SELECT DISTINCT  1 AS Tag, NULL AS Parent  /* &lt;TWG&gt; */
+        ,GIDTyp AS [TWG!1!GIDTyp], GIDNumer AS [TWG!1!GIDNumer], GrOTyp AS [TWG!1!GrOTyp],GrONumer AS [TWG!1!GrONumer],ISNULL(DABID,0) AS [TWG!1!ZdjecieID]
+        ,NULL AS [TWGJI!2]
+        ,NULL AS [TWGJ!3!Lp], NULL AS [TWGJ!3!GIDTyp], NULL AS [TWGJ!3!GIDNumer], NULL AS [TWGJ!3!JezykID], NULL AS [TWGJ!3!Kod!Hide], NULL AS [TWGJ!3!Nazwa], NULL AS [TWGJ!3!NazwaNag]
+        ,NULL AS [TWGJ!3!Opis],NULL AS [TWGJ!3!OpisKrotki],NULL AS [TWGJ!3!PSTitle],NULL AS [TWGJ!3!PSKluczowe],NULL AS [TWGJ!3!POpis],NULL AS [TWGJ!3!URLTitle],NULL AS [TWGJ!3!Szukaj]
+    ,NULL AS [TWGAI!4]
+    ,NULL AS [TWGA!5!GIDNumer], NULL AS [TWGA!5!ID], NULL AS [TWGA!5!DefID], NULL AS [TWGA!5!Typ], NULL AS [TWGA!5!JezykID], NULL AS [TWGA!5!Nazwa], NULL AS [TWGA!5!Wartosc], NULL AS [TWGA!5!Format], NULL AS [TWGA!5!Lp] --, NULL AS [TWGA!5!Lp!Hide]
+    ,NULL AS [ZALI!6]
+				,NULL AS [ZAL!7!ID], NULL AS [ZAL!7!GIDNumer], NULL AS [ZAL!7!Typ], NULL AS [ZAL!7!Lp]
+
+ FROM  #tmpGrupy
+
+ UNION ALL
+
+ SELECT DISTINCT  2 AS Tag, 1 AS Parent       /* Nazwy &lt;TWGJI&gt; */
+    ,GIDTyp, GIDNumer, NULL, NULL,NULL
+        ,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL
+    ,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	,NULL 
+		,NULL , NULL , NULL , NULL 
+
+ FROM  #tmpGrupy
+
+ UNION ALL
+
+ SELECT DISTINCT  3 AS Tag, 2 AS Parent    /* Nazwy &lt;TWGJ&gt; polski */
+        ,GIDTyp, GIDNumer, NULL, NULL,NULL
+        ,NULL
+        ,Lp,GIDTyp, GIDNumer,1,Kod,Nazwa, Nazwa
+        ,Opis, OpisKrotki, Tytul, Kluczowe, MetaOpis, Url, Szukaj
+        ,NULL
+    ,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	,NULL 
+		,NULL , NULL , NULL , NULL 
+ FROM  #tmpGrupy
+
+ UNION ALL
+
+ SELECT DISTINCT  3 AS Tag, 2 AS Parent    /* Nazwy &lt;TWGJ&gt; */
+        ,GIDTyp, GIDNumer, NULL, NULL,NULL
+        ,NULL
+        ,Lp ,GIDTyp, GIDNumer,JezykID,KodJezyk as [Kod] ,NazwaJezyk as [Nazwa] ,NazwaJezyk as [NazwaNag]
+        ,OpisJezyk, OpisKrotkiLang, TytulLang, KluczoweLang, MetaOpisLang, Url, SzukajLang
+        ,NULL
+    ,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	,NULL 
+		,NULL , NULL , NULL , NULL 
+ FROM  #tmpGrupy WHERE ISNULL(JezykID,0) &lt;&gt; 0
+
+ UNION ALL
+
+ SELECT DISTINCT  4 AS Tag, 1 AS Parent       /* Atrybuty &lt;TWGAI&gt; */
+    ,GIDTyp, GIDNumer, NULL, NULL,NULL
+        ,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL
+    ,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	,NULL 
+		,NULL , NULL , NULL , NULL 
+ FROM  #tmpGrupy
+
+ UNION ALL
+ SELECT DISTINCT 5 AS Tag, 4 AS Parent  /* Atrybuty &lt;TWGA&gt; */
+    ,GIDTyp, GIDNumer, NULL, NULL,NULL
+        ,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL
+    ,GIDNumer, AtrId, AtrDefId, AtKTyp, AtrJezykId, AtKNazwa, AtrWartosc, AtKFormat, AtrLp
+	,NULL 
+		,NULL , NULL , NULL , NULL 
+ FROM #tmpGrupy WHERE AtrId IS NOT NULL AND AtrJezykID &lt;&gt; 0
+
+ UNION ALL
+ SELECT DISTINCT 5 AS Tag, 4 AS Parent  /* Atrybuty &lt;TWGA&gt; - stare załączniki*/
+    ,GIDTyp, GIDNumer, NULL, NULL,NULL
+        ,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL
+    ,GIDNumer, DABID, DABID, 2, 0, DABNazwa, CAST(DABID AS VARCHAR(10)), 5, DABLp	
+	,NULL 
+		,NULL , NULL , NULL , NULL 
+ FROM #tmpGrupy WHERE DABID IS NOT NULL
+ /*SELECT DISTINCT  6 AS Tag, 1 AS Parent       /* Atrybuty &lt;ZALI&gt; */
+    ,GIDTyp, GIDNumer, NULL, NULL,NULL
+        ,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL
+    ,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	,NULL 
+		,NULL , NULL , NULL , NULL 
+ FROM  #tmpGrupy
+
+ UNION ALL
+ SELECT DISTINCT 7 AS Tag, 6 AS Parent  /* Atrybuty &lt;ZAL&gt; */
+    ,GIDTyp, GIDNumer, NULL, NULL,NULL
+        ,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+        ,NULL
+    ,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	,NULL 
+		,DABID, DABTwGGIDNumer, DABTyp, DABLp 
+ FROM #tmpGrupy WHERE DABID IS NOT NULL*/
+
+ ORDER BY [TWG!1!GIDTyp],[TWG!1!GIDNumer],1,[TWGJ!3!JezykID]
+ FOR XML EXPLICIT
+
+
+DROP TABLE #tmpGrupy
+
+
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ESKLEP_EksportGrup" hidden="False">
+GRANT EXECUTE ON CDN.ESKLEP_EksportGrup TO CDNRaport
+</scriptdef>
+</ROOT>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<proceduredef name="ESKLEP_AktualizujObiekt">
+CREATE  PROCEDURE CDN.ESKLEP_AktualizujObiekt
+  @ESklepID INT		-- ID e-sklepu
+ ,@ObiTyp   INT		-- GIDTyp obiektu 
+ ,@ObiNumer INT     	-- GIDNumer obiektu 
+ ,@ObiektID INT		-- ID obiektu w e-sklepie	
+AS
+SET NOCOUNT ON
+IF @ObiTyp = 32
+ BEGIN
+  UPDATE CDN.KntKarty SET Knt_PlatnikVat = CASE WHEN (SELECT LTRIM(Knt_NipE) FROM CDN.KntKarty WHERE Knt_GIDNumer = @ObiNumer ) = '' THEN 0 ELSE 1 END
+   WHERE Knt_GIDNumer = @ObiNumer
+  END
+IF @ObiTyp = 960
+  BEGIN
+   UPDATE CDN.ZamNag SET ZaN_OddDokId = @ObiektID, ZaN_PcKID = @ESklepID WHERE ZaN_GIDNumer = @ObiNumer
+  END
+SET NOCOUNT OFF
+</proceduredef>
+</ROOT>

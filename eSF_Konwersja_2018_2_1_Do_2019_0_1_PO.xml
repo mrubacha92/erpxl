@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Zmiana nazw obiektów tabel eSF" hidden="False">
+BEGIN TRY
+	if not Exists(select 1 from sys.objects where object_id = Object_ID('cdn.SFSlownikiElem_TMP'))
+		return
+		--raiserror('Brak uruchomionego skryptu przed konwersją do wersji 2019.0.1',16,1)
+
+
+	BEGIN TRAN
+
+	ALTER TABLE CDN.SFZalWlasne
+	DROP CONSTRAINT FK_SFZWSFNId;
+
+	ALTER TABLE CDN.SFPodpisy
+	DROP CONSTRAINT FK_SFPSFNId;
+
+	drop table cdn.SFSlownikiElem
+	drop table cdn.SFSlownikiNag
+	drop table CDN.SFZalaczniki
+	drop table CDN.SFNag 	
+
+	ALTER TABLE CDN.ZestKSElem DROP CONSTRAINT DF_ZKE_SFEID
+	ALTER TABLE CDN.ZestKSElem DROP CONSTRAINT DF_ZKE_SFPominEksport
+
+	ALTER TABLE CDN.ZestKSNag DROP CONSTRAINT DF_ZKN_SFEksport
+	ALTER TABLE CDN.ZestKSNag DROP CONSTRAINT DF_ZKN_SFNJednostka
+	ALTER TABLE CDN.ZestKSNag DROP CONSTRAINT DF_ZKN_SFNZestawienie
+	ALTER TABLE CDN.ZestKSNag DROP CONSTRAINT DF_ZKN_SFNID
+
+
+	ALTER TABLE CDN.ZestKSElem DROP COLUMN ZKE_SFEID
+	ALTER TABLE CDN.ZestKSElem DROP COLUMN ZKE_SFPominEksport
+
+	ALTER TABLE CDN.ZestKSNag DROP COLUMN ZKN_SFEksport
+	ALTER TABLE CDN.ZestKSNag DROP COLUMN ZKN_SFNJednostka
+	ALTER TABLE CDN.ZestKSNag DROP COLUMN ZKN_SFNZestawienie
+	ALTER TABLE CDN.ZestKSNag DROP COLUMN ZKN_SFNID
+
+
+	exec sp_rename 'CDN.ZestKSElem.ZKE_SFEID_TMP','ZKE_SFEID','COLUMN'
+	exec sp_rename 'CDN.ZestKSElem.ZKE_SFPominEksport_TMP','ZKE_SFPominEksport','COLUMN'
+	exec sp_rename 'CDN.ZestKSNag.ZKN_SFEksport_TMP','ZKN_SFEksport','COLUMN'
+	exec sp_rename 'CDN.ZestKSNag.ZKN_SFNJednostka_TMP','ZKN_SFNJednostka','COLUMN'
+	exec sp_rename 'CDN.ZestKSNag.ZKN_SFNZestawienie_TMP','ZKN_SFNZestawienie','COLUMN'
+	exec sp_rename 'CDN.ZestKSNag.ZKN_SFNID_TMP','ZKN_SFNID','COLUMN'	
+
+	exec sp_rename 'CDN.DF_ZKE_SFEID_TMP','DF_ZKE_SFEID'
+	exec sp_rename 'CDN.DF_ZKE_SFPominEksport_TMP','DF_ZKE_SFPominEksport'
+	exec sp_rename 'CDN.DF_ZKN_SFEksport_TMP','DF_ZKN_SFEksport'
+	exec sp_rename 'CDN.DF_ZKN_SFNJednostka_TMP','DF_ZKN_SFNJednostka'
+	exec sp_rename 'CDN.DF_ZKN_SFNZestawienie_TMP','DF_ZKN_SFNZestawienie'
+	exec sp_rename 'CDN.DF_ZKN_SFNID_TMP','DF_ZKN_SFNID'
+
+
+	exec sp_rename 'CDN.SFSlownikiElem_TMP','SFSlownikiElem'
+	exec sp_rename 'CDN.DF_SFSE_SFSNID_TMP','DF_SFSE_SFSNID'
+	exec sp_rename 'CDN.DF_SFSE_ParID_TMP','DF_SFSE_ParID'
+	exec sp_rename 'CDN.DF_SFSE_Kod_TMP','DF_SFSE_Kod'
+	exec sp_rename 'CDN.DF_SFSE_Nazwa_TMP','DF_SFSE_Nazwa'
+	exec sp_rename 'CDN.DF_SFSE_GuidID_TMP','DF_SFSE_GuidID'
+	exec sp_rename 'CDN.SFSE_Primary_TMP','SFSE_Primary'
+	exec sp_rename 'CDN.SFSlownikiElem.SFSESFNID_TMP','SFSESFNID', 'INDEX'
+	exec sp_rename 'CDN.SFSlownikiElem.SFSEGUIDID_TMP','SFSEGUIDID', 'INDEX'	
+	exec sp_rename 'CDN.FK_SFSESFNID_TMP','FK_SFSESFNID'
+
+
+	exec sp_rename 'CDN.SFSlownikiNag_TMP','SFSlownikiNag'	
+	exec sp_rename 'CDN.DF_SFSN_KodSystemowy_TMP','DF_SFSN_KodSystemowy'
+	exec sp_rename 'CDN.DF_SFSN_WersjaSchemy_TMP','DF_SFSN_WersjaSchemy'
+	exec sp_rename 'CDN.DF_SFSN_WersjaSlownika_TMP','DF_SFSN_WersjaSlownika'
+	exec sp_rename 'CDN.DF_SFSN_Nazwa_TMP','DF_SFSN_Nazwa'
+	exec sp_rename 'CDN.DF_SFSN_Jednostka_TMP','DF_SFSN_Jednostka'
+	exec sp_rename 'CDN.DF_SFSN_Zestawienie_TMP','DF_SFSN_Zestawienie'	
+	exec sp_rename 'CDN.SFSN_Primary_TMP','SFSN_Primary'	
+	
+	exec sp_rename 'CDN.SFNag_TMP','SFNag'
+	exec sp_rename 'CDN.SFN_Primary_TMP','SFN_Primary'
+	exec sp_rename 'CDN.DF_SFN_NazwaFirmy_TMP','DF_SFN_NazwaFirmy'
+	exec sp_rename 'CDN.DF_SFN_DataDo_TMP','DF_SFN_DataDo'
+	exec sp_rename 'CDN.DF_SFN_DataSporzadzenia_TMP','DF_SFN_DataSporzadzenia'
+	exec sp_rename 'CDN.DF_SFN_Typ_TMP','DF_SFN_Typ'
+	exec sp_rename 'CDN.DF_SFN_WersjaSchemy_TMP','DF_SFN_WersjaSchemy'
+	exec sp_rename 'CDN.DF_SFN_Status_TMP','DF_SFN_Status'
+	exec sp_rename 'CDN.DF_SFN_Aktywny_TMP','DF_SFN_Aktywny'
+	exec sp_rename 'CDN.DF_SFN_NrReferencyjny_TMP','DF_SFN_NrReferencyjny'
+	exec sp_rename 'CDN.DF_SFN_UPOKod_TMP','DF_SFN_UPOKod'
+	exec sp_rename 'CDN.DF_SFN_UPOOpis_TMP','DF_SFN_UPOOpis'
+
+	exec sp_rename 'CDN.SFZalaczniki_TMP','SFZalaczniki'
+	exec sp_rename 'CDN.SFZ_Primary_TMP','SFZ_Primary'
+	exec sp_rename 'CDN.DF_SFZ_Nazwa_TMP','DF_SFN_Nazwa'
+	exec sp_rename 'CDN.DF_SFZ_SFNId_TMP','DF_SFZ_SFNId'
+	exec sp_rename 'CDN.DF_SFZ_Typ_TMP','DF_SFZ_Typ'
+	exec sp_rename 'CDN.FK_SFZSFNId_TMP','FK_SFZSFNId'
+
+	ALTER TABLE [CDN].[SFZalWlasne]  WITH CHECK ADD  CONSTRAINT [FK_SFZWSFNId] FOREIGN KEY([SFZW_SFNId])
+	REFERENCES [CDN].[SFNag] ([SFN_Id])
+	ON DELETE CASCADE
+
+	ALTER TABLE [CDN].[SFZalWlasne] CHECK CONSTRAINT [FK_SFZWSFNId]
+
+	ALTER TABLE [CDN].[SFPodpisy]  WITH CHECK ADD  CONSTRAINT [FK_SFPSFNId] FOREIGN KEY([SFP_SFNId])
+	REFERENCES [CDN].[SFNag] ([SFN_Id])
+	ON DELETE CASCADE
+
+	ALTER TABLE [CDN].[SFPodpisy] CHECK CONSTRAINT [FK_SFPSFNId]
+
+	if @@TRANCOUNT &gt; 0
+		COMMIT TRAN
+END TRY
+BEGIN CATCH
+	if @@TRANCOUNT &gt; 0
+		ROLLBACK TRAN
+	
+	;THROW
+END CATCH
+</scriptdef>
+<scriptdef name="Przywrocenie pola w tabeli OpeKarty" hidden="False">
+set nocount on;
+IF EXISTS(
+      select * from sys.all_columns 
+      join sys.tables on sys.all_columns.object_id = sys.tables.object_id
+      where sys.tables.name = 'OpeKarty' and sys.all_columns.name = 'Ope_EsprawozdaniaFinansowe_TMP'
+      )
+BEGIN
+	IF EXISTS(
+		select * from sys.default_constraints
+		join sys.tables on sys.default_constraints.parent_object_id = sys.tables.object_id
+		where sys.tables.name = 'OpeKarty' and sys.default_constraints.name = 'DF_Ope_EsprawozdaniaFinansowe'
+		)
+			alter table cdn.OpeKarty drop constraint DF_Ope_EsprawozdaniaFinansowe;
+
+	alter table cdn.OpeKarty drop column Ope_EsprawozdaniaFinansowe
+	exec sp_rename 'cdn.OpeKarty.Ope_EsprawozdaniaFinansowe_TMP', 'Ope_EsprawozdaniaFinansowe'
+	exec sp_rename 'CDN.DF_Ope_EsprawozdaniaFinansowe_TMP','DF_Ope_EsprawozdaniaFinansowe'
+END	
+
+set nocount off;
+</scriptdef>
+</ROOT>

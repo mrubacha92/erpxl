@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury ESKLEP_EksportTwr" hidden="True">
+IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'CDN.ESKLEP_EksportTwr') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+  DROP PROCEDURE CDN.ESKLEP_EksportTwr
+</scriptdef>
+<scriptdef name="Tworzenie procedury ESKLEP_EksportTwr" hidden="False">
+CREATE PROCEDURE CDN.ESKLEP_EksportTwr
+  @ID INT      -- ID e-sklepu
+ ,@TypExp INT  -- Typ eksportu cennika (0 - różnicowy, 1 - pełny)
+
+AS
+SET NOCOUNT ON
+
+DECLARE @Typ_GrT SMALLINT
+SET @Typ_GrT = -16
+DECLARE @Typ_Twr SMALLINT
+SET @Typ_Twr = 16
+DECLARE @MaxDate INT
+SET @MaxDate = 93890
+DECLARE @AtrLp INT = 0;
+DECLARE @PcKTwGNumer INT
+DECLARE @PcKTSSynchrTwrPtw INT
+DECLARE @PcKTSSynchrPtw INT
+DECLARE @PcKNrCeny SMALLINT
+DECLARE @PcKNrCenyDomyslnej SMALLINT
+DECLARE @idwalutydomyslnej varchar(4) -- waluta domyślna dla iSklepu
+DECLARE @MaxINT INT = CAST(2.0*POWER(2,30)-1 AS INT)
+SELECT @idwalutydomyslnej = PcK_Waluta,@PcKTSSynchrTwrPtw = PcK_TSSynchrTwrPtw,@PcKTwGNumer = PcK_TwGNumer,@PcKNrCeny = PcK_NrCeny, @PcKNrCenyDomyslnej = PcK_NrCenyDomyslnej,@PcKTSSynchrPtw = PcK_TSSynchrPtw from cdn.PicoKonfig where PcK_PicoID = @ID
+
+--Wybranie grup z SyncId z gałęzi zdefiniowanej na oddziale e-sklepu
+DECLARE @GrupyEsklep TABLE(GidNumer INT, SyncId INT)
+;WITH Grupy (GidNumer, SyncId)
+AS
+(
+	-- Root
+	SELECT TwG_GIDNumer, TwG_SyncId
+	FROM CDN.TwrGrupy 
+	WHERE TwG_SyncId = (SELECT PcK_TwGNumer FROM CDN.PicoKonfig WHERE PcK_PicoID=@ID) AND TwG_GIDTyp = @Typ_GrT
+
+	UNION ALL
+
+	-- SubGroups
+	SELECT TwG_GIDNumer, TwG_SyncID
+	FROM CDN.TwrGrupy
+	INNER JOIN Grupy AS Parent ON Parent.GidNumer = TwG_GrONumer 
+	WHERE TwG_GIDTyp = @Typ_GrT
+)
+INSERT INTO @GrupyEsklep SELECT GidNumer, SyncId FROM Grupy
+
+--Same towary
+CREATE TABLE #tmpTowary(
+          TwrGIDNumer INT, TwrKod VARCHAR(40) COLLATE Polish_CI_AS, TwrKatalog VARCHAR(40) COLLATE Polish_CI_AS, TwrJm VARCHAR(8) COLLATE Polish_CI_AS, TwrURL VARCHAR(255) COLLATE Polish_CI_AS, TwrOkresGwarancji INT,Kgo DECIMAL(15,2),GrupaID INT,iGaleria24Grupa INT,CzyRabat SMALLINT,
+		  TAPStatus SMALLINT, TAPStatusData INT, Dostepnosc SMALLINT, KontrolaStanow SMALLINT, EAN VARCHAR(40) COLLATE Polish_CI_AS, ProducentKod VARCHAR(40) COLLATE Polish_CI_AS, Flagi INT, TwrNazwa VARCHAR(255) COLLATE Polish_CI_AS, TwrNazwa1 VARCHAR(255) COLLATE Polish_CI_AS,TwrJMiSklep INT,MarkaID INT,
+		  ProducentID INT,KalkulacjaDostaw SMALLINT, WagaBrutto DECIMAL(15,3), WagaOpak DECIMAL(15,3), WagaNetto DECIMAL(15,3), KalkulacjaDostawWartosc DECIMAL(15,2),TwrStawkaPodSpr DECIMAL(5,2),TwrEsklep TINYINT,TwrArchiwalny SMALLINT,TwrPunkty INT, Nadrzedny INT
+		   )
+CREATE NONCLUSTERED INDEX tmpTowaryInd ON #tmpTowary(TwrGIDNumer)
+
+INSERT INTO #tmpTowary
+	SELECT Twr_GIDNumer,CDN.XLValidateXMLChars(Twr_Kod) AS TwrKod, Twr_Katalog, Twr_Jm, CDN.XLValidateXMLChars(Twr_URL) AS Twr_URL,Twr_OkresGwarancji,SlwKGO.SLW_WartoscN1 AS Kgo,
+		CASE
+			WHEN EXISTS(SELECT * FROM @GrupyEsklep WHERE GidNumer = ISNULL(TAP_GrupaeSklep, 0)) THEN (SELECT TOP 1 SyncId FROM @GrupyEsklep WHERE GidNumer = ISNULL(TAP_GrupaeSklep, 0))
+			WHEN EXISTS(SELECT * FROM CDN.TwrGrupy (NOLOCK) WHERE TwG_GIDNumer = ISNULL(TAP_GrupaeSklep, 0) AND TwG_GIDTyp = @Typ_GrT) THEN (SELECT TOP 1 TwG_SyncID FROM CDN.TwrGrupy (NOLOCK) WHERE TwG_GIDTyp = @Typ_GrT AND TwG_GIDNumer = ISNULL(TAP_GrupaeSklep,0)) 
+			ELSE 0
+		END AS GrupaID,
+		ISNULL(KGT_IdM,-2) AS iGaleria24Grupa,CASE WHEN TAP_PodlegaRabatowaniu=1 THEN 0 ELSE 1 END AS CzyRabat,
+		TAP_Status AS TAPStatus, 
+		CASE WHEN TAP_Status != 0 OR TAP_ZapowiedzDataOd = @MaxDate THEN NULL 
+				WHEN TAP_ZapowiedzDataOd - DATEDIFF(DAY,CONVERT(DATETIME,'28-12-1800',105),CONVERT(DATETIME,'01-01-1990',105)) &gt; 0 THEN TAP_ZapowiedzDataOd - DATEDIFF(DAY,CONVERT(DATETIME,'28-12-1800',105),CONVERT(DATETIME,'01-01-1990',105))
+				ELSE 0 END AS TAPStatusData,
+		TAP_Dostepnosc-1 AS Dostepnosc, TAP_KontrolaStanow AS KontrolaStanow, CDN.XLValidateXMLChars(Wlasny.TwK_Kod) AS EAN, CDN.XLValidateXMLChars(Knt.TwK_Kod) AS ProducentKod, TAP_Flagi AS Flagi,Twr_Nazwa,Twr_Nazwa1,Twr_JMiSklep,Twr_MarkaId AS MarkaID,
+		ISNULL(KntProd.Knt_GIDNumer,0) AS ProducentID,TAP_IndywKosztDst AS KalkulacjaDostaw,
+		[Twr_WagaBrutto] = CASE WHEN Twr_WJm = 'Gram' THEN Twr_WagaBrutto/1000
+                WHEN Twr_WJm = 'Dkg' THEN Twr_WagaBrutto/100
+                WHEN Twr_WJm = 'Tona' THEN Twr_WagaBrutto * 1000
+                WHEN Twr_WJm = 'Kg' OR Twr_WJm = '' THEN Twr_WagaBrutto END
+         , [Waga_Opak] = CASE WHEN Twr_WJm = 'Gram' THEN Twr_WagaBrutto/1000
+                WHEN Twr_WJm = 'Dkg' THEN Twr_WagaBrutto/100
+                WHEN Twr_WJm = 'Tona' THEN Twr_WagaBrutto * 1000
+                WHEN Twr_WJm = 'Kg' OR Twr_WJm = '' THEN Twr_WagaBrutto END -
+                CASE WHEN Twr_WJm = 'Gram' THEN Twr_Waga/1000
+                WHEN Twr_WJm = 'Dkg' THEN Twr_Waga/100
+                WHEN Twr_WJm = 'Tona' THEN Twr_Waga * 1000
+                WHEN Twr_WJm = 'Kg' OR Twr_WJm = '' THEN Twr_Waga END
+         , [Twr_Waga] = CASE WHEN Twr_WJm = 'Gram' THEN Twr_Waga/1000
+                WHEN Twr_WJm = 'Dkg' THEN Twr_Waga/100
+                WHEN Twr_WJm = 'Tona' THEN Twr_Waga * 1000
+                WHEN Twr_WJm = 'Kg' OR Twr_WJm = '' THEN Twr_Waga END
+         , TAP_KosztDstWartosc,Twr_StawkaPodSpr,Twr_ESklep,Twr_Archiwalny,Twr_Punkty,
+		 CASE WHEN TAP_TwrNadrzedny &gt; 0 THEN TAP_TwrNadrzedny ELSE CASE WHEN EXISTS (SELECT * FROM CDN.TwrAplikacje WHERE TAP_TwrNadrzedny = Twr_GIDNumer) THEN 0 ELSE -1 END END
+FROM CDN.TwrKarty
+JOIN CDN.TwrGrupy PCKTWG ON PCKTWG.TwG_SyncId = @PcKTwGNumer AND PCKTWG.TwG_GIDTyp = @Typ_GrT --1&lt;&gt;1
+JOIN CDN.TwrGrupyDom on Twr_GIDTyp = TGD_GIDTyp and Twr_GIDNumer = TGD_GIDNumer
+LEFT OUTER JOIN CDN.TwrAplikacje ON Twr_GIDNumer = TAP_ObiNumer and Twr_GIDTyp = TAP_ObiTyp --1&lt;&gt;1
+LEFT OUTER JOIN CDN.KatGrupyTwr ON KGT_Id = TAP_GrupaiMall--1&lt;&gt;1
+LEFT OUTER JOIN CDN.PicoLog ON PcL_ObiNumer = Twr_GIDNumer AND PcL_ObiTyp = Twr_GIDTyp AND PcL_PcKID = @ID  --1&lt;&gt;1
+LEFT OUTER JOIN CDN.Slowniki SlwKGO ON SlwKGO.SLW_ID = Twr_StawkaKGO
+LEFT OUTER JOIN CDN.KntKarty KntProd ON Twr_PrdNumer = KntProd.Knt_GIDNumer AND Twr_PrdTyp = KntProd.Knt_GIDTyp
+LEFT OUTER JOIN (/* kod kreskowy wlasny powiazany z jednostka podstawowa */
+        SELECT TwK_Kod, TwK_TwrNumer, TwK_Jm
+        FROM cdn.TwrKody
+        WHERE TwK_Rodzaj=0 AND TwK_Domyslny=1 AND TwK_Pochodzenie = 1) Wlasny ON Wlasny.TwK_TwrNumer=Twr_GIDNumer and Wlasny.TwK_Jm = Twr_jm
+LEFT OUTER JOIN (/* kod kreskowy obcy powiazany z producentem */
+        SELECT twk_kod, twk_twrnumer, TKK_KntNumer FROM  CDN.TwrKody
+        JOIN cdn.TwrKodyKnt ON tkk_TwKId = TwK_Id
+        WHERE tkk_domyslny=1 AND twk_rodzaj = 1) Knt ON Knt.TwK_TwrNumer = twr_gidnumer AND Knt.TKK_KntNumer = Twr_PrdNumer
+WHERE Twr_eSklep = 1 AND Twr_Archiwalny = 0
+AND (TAP_CzasModyfikacji &gt; CASE WHEN @TypExp=0 THEN @PcKTSSynchrTwrPtw ELSE 0 END OR ISNULL(PcL_TStamp,@PcKTSSynchrTwrPtw + 1) &gt; @PcKTSSynchrTwrPtw)
+AND EXISTS(SELECT * FROM CDN.TwrLinki WHERE Twr_GIDTyp = TwL_GIDTyp AND Twr_GIDNumer = TwL_GIDNumer AND TwL_GrONumer = PCKTWG.TwG_GIDNumer )
+
+--Teraz aktualne ceny
+CREATE TABLE #tmpCeny(
+          TwrGIDNumer INT,TwCTwrLp SMALLINT,TwCWartoscNetto DECIMAL(15,2),TwCWartoscBrutto DECIMAL(15,2),TwC_Podatek DECIMAL(5,2),TWCID INT,TwC_Punkty INT
+		   )
+
+INSERT INTO #tmpCeny
+SELECT TWC.TwC_TwrNumer,TWC.TwC_TwrLp, CONVERT(DECIMAL(15,2),ROUND(CDN.CenaNetto(TwC_Wartosc,TwC_TwrLp,TwrStawkaPodSpr),2))*WalutyiSklep.PwL_KursL/WalutyiSklep.PwL_KursM As TwCWartoscNetto, CONVERT(DECIMAL(15,2),ROUND(CDN.CenaBrutto(TwC_Wartosc,TwC_TwrLp,TwrStawkaPodSpr),2))*WalutyiSklep.PwL_KursL/WalutyiSklep.PwL_KursM As TwCWartoscBrutto, TwrStawkaPodSpr AS TwC_Podatek,TWC.TwC_ID AS TWCID, CASE WHEN TwrPunkty &gt; 0 THEN TwrPunkty ELSE NULL END
+	FROM #tmpTowary--CDN.TwrKarty 
+	CROSS APPLY CDN.ZwrocCeneAktualna(TwrGIDNumer,@PcKNrCeny,DATEDIFF(s,CONVERT(DATETIME,'1990-01-01',120),GETDATE())) TWC
+	JOIN CDN.TwrGrupy PCKTWG ON PCKTWG.TwG_SyncId = @PcKTwGNumer AND PCKTWG.TwG_GIDTyp = -16 --1&lt;&gt;1
+	JOIN (SELECT PwL_SymbolM, PwL_KursM, PwL_KursL,PwL_KursTS FROM cdn.PicoWaluty WHERE PwL_PckID = @ID AND PwL_TSArchiwizacji = 0
+		UNION ALL SELECT @idwalutydomyslnej, 1, 1, @MaxINT) WalutyiSklep ON TWC.TwC_Waluta = WalutyiSklep.PwL_SymbolM
+	LEFT OUTER JOIN CDN.PicoLog ON PcL_PcKID = @ID AND PcL_ObiTyp = @Typ_Twr AND PcL_ObiNumer = TwrGIDNumer
+	LEFT OUTER JOIN CDN.PicoCenniki ON PcC_PcKID=@ID and PcC_TwCTwrTyp=64 AND PcC_TwCTwrNumer=TWC.TwC_ID and PcC_TwCTwrLp = 0
+	WHERE TwreSklep = 1 AND TwrArchiwalny = 0 AND TWC.TwC_TwrLp&lt;&gt;0
+	AND EXISTS(SELECT * FROM CDN.TwrLinki WHERE @Typ_twr = TwL_GIDTyp AND TwrGIDNumer = TwL_GIDNumer AND TwL_GrONumer = PCKTWG.TwG_GIDNumer )
+	--Ceny z towarem trzeba zawsze jakieś wysłać
+	-- AND (TWC.TwC_CzasModyfikacji &gt; CASE WHEN @TypExp=0 AND ISNULL(PcC_TS,0) &gt; 0 THEN @PcKTSSynchrTwrPtw ELSE 0 END 
+	--		OR ISNULL(PcL_TStamp,@PcKTSSynchrTwrPtw + 1) &gt; @PcKTSSynchrTwrPtw 
+	--		OR (PwL_KursTS &gt; CASE WHEN @TypExp=0 THEN @PcKTSSynchrPtw ELSE 0 END))
+UNION
+SELECT TWC.TwC_TwrNumer,TWC.TwC_TwrLp, CONVERT(DECIMAL(15,2),ROUND(CDN.CenaNetto(TWC.TwC_Wartosc,TWC.TwC_TwrLp,Twr_StawkaPodSpr),2))*WalutyiSklep.PwL_KursL/WalutyiSklep.PwL_KursM As TwCWartoscNetto, CONVERT(DECIMAL(15,2),ROUND(CDN.CenaBrutto(TWC.TwC_Wartosc,TWC.TwC_TwrLp,Twr_StawkaPodSpr),2))*WalutyiSklep.PwL_KursL/WalutyiSklep.PwL_KursM As TwCWartoscBrutto, Twr_StawkaPodSpr AS TwC_Podatek,TWC.TwC_ID AS TWCID, CASE WHEN Twr_Punkty &gt; 0 THEN Twr_Punkty ELSE NULL END
+	FROM CDN.TwrKarty 
+	JOIN CDN.TwrCeny C ON Twr_GIDNumer = C.TwC_TwrNumer
+	JOIN (SELECT ID FROM CDN.ESKLEP_CenyEksportowane(@ID)) Ceny ON Ceny.ID = C.TwC_TwrLp
+	CROSS APPLY CDN.ZwrocCeneAktualna(Twr_GIDNumer,C.TwC_TwrLp,DATEDIFF(s,CONVERT(DATETIME,'1990-01-01',120),GETDATE())) TWC
+	JOIN CDN.TwrGrupy PCKTWG ON PCKTWG.TwG_SyncId = @PcKTwGNumer AND PCKTWG.TwG_GIDTyp = -16 --1&lt;&gt;1
+	JOIN (SELECT PwL_SymbolM, PwL_KursM, PwL_KursL,PwL_KursTS FROM cdn.PicoWaluty WHERE PwL_PckID = @ID AND PwL_TSArchiwizacji = 0
+		UNION ALL SELECT @idwalutydomyslnej, 1, 1, CASE WHEN @TypExp=0 THEN @PcKTSSynchrPtw ELSE @MaxINT END) WalutyiSklep ON TWC.TwC_Waluta = WalutyiSklep.PwL_SymbolM
+	LEFT OUTER JOIN CDN.PicoLog ON PcL_PcKID = @ID AND PcL_ObiTyp = @Typ_Twr AND PcL_ObiNumer = Twr_GIDNumer
+	LEFT OUTER JOIN CDN.PicoCenniki ON PcC_PcKID=@ID and PcC_TwCTwrTyp=64 AND PcC_TwCTwrNumer=TWC.TwC_ID --and PcC_TwCTwrLp = 0
+	WHERE Twr_ESklep = 1 AND Twr_Archiwalny = 0 AND TWC.TwC_TwrLp&lt;&gt;0
+	AND EXISTS(SELECT * FROM CDN.TwrLinki WHERE @Typ_Twr = TwL_GIDTyp AND Twr_GIDNumer = TwL_GIDNumer AND TwL_GrONumer = PCKTWG.TwG_GIDNumer )
+	AND (TWC.TwC_CzasModyfikacji &gt; CASE WHEN @TypExp=0 AND ISNULL(PcC_TS,0) &gt; 0 THEN @PcKTSSynchrTwrPtw ELSE 0 END 
+			OR ISNULL(PcL_TStamp,@PcKTSSynchrTwrPtw + 1) &gt; @PcKTSSynchrTwrPtw 
+			OR (PwL_KursTS &gt; CASE WHEN @TypExp=0 THEN @PcKTSSynchrPtw ELSE 0 END))
+	
+--Zmienił się cennik ale nie towar - dorzuć do listy towarów
+INSERT INTO #tmpTowary
+	SELECT DISTINCT Twr_GIDNumer,CDN.XLValidateXMLChars(Twr_Kod) AS TwrKod, Twr_Katalog, Twr_Jm, CDN.XLValidateXMLChars(Twr_URL) AS Twr_URL,Twr_OkresGwarancji,SlwKGO.SLW_WartoscN1 AS Kgo,
+		CASE
+			WHEN EXISTS(SELECT * FROM @GrupyEsklep WHERE GidNumer = ISNULL(TAP_GrupaeSklep, 0)) THEN (SELECT TOP 1 SyncId FROM @GrupyEsklep WHERE GidNumer = ISNULL(TAP_GrupaeSklep, 0))
+			WHEN EXISTS(SELECT * FROM CDN.TwrGrupy (NOLOCK) WHERE TwG_GIDNumer = ISNULL(TAP_GrupaeSklep, 0) AND TwG_GIDTyp = @Typ_GrT) THEN (SELECT TOP 1 TwG_SyncID FROM CDN.TwrGrupy (NOLOCK) WHERE TwG_GIDTyp = @Typ_GrT AND TwG_GIDNumer = ISNULL(TAP_GrupaeSklep,0)) 
+			ELSE 0
+		END AS GrupaID,
+		  ISNULL(KGT_IdM,-2) AS iGaleria24Grupa,CASE WHEN TAP_PodlegaRabatowaniu=1 THEN 0 ELSE 1 END AS CzyRabat,
+		TAP_Status AS TAPStatus, 
+		CASE WHEN TAP_Status != 0 OR TAP_ZapowiedzDataOd = @MaxDate THEN NULL 
+				WHEN TAP_ZapowiedzDataOd - DATEDIFF(DAY,CONVERT(DATETIME,'28-12-1800',105),CONVERT(DATETIME,'01-01-1990',105)) &gt; 0 THEN TAP_ZapowiedzDataOd - DATEDIFF(DAY,CONVERT(DATETIME,'28-12-1800',105),CONVERT(DATETIME,'01-01-1990',105))
+				ELSE 0 END AS TAPStatusData,
+		TAP_Dostepnosc-1 AS Dostepnosc, TAP_KontrolaStanow AS KontrolaStanow, CDN.XLValidateXMLChars(Wlasny.TwK_Kod) AS EAN, CDN.XLValidateXMLChars(Knt.TwK_Kod) AS ProducentKod, TAP_Flagi AS Flagi,Twr_Nazwa,Twr_Nazwa1,Twr_JMiSklep,Twr_MarkaId AS MarkaID,
+		ISNULL(KntProd.Knt_GIDNumer,0) AS ProducentID,TAP_IndywKosztDst AS KalkulacjaDostaw,
+		[Twr_WagaBrutto] = CASE WHEN Twr_WJm = 'Gram' THEN Twr_WagaBrutto/1000
+                WHEN Twr_WJm = 'Dkg' THEN Twr_WagaBrutto/100
+                WHEN Twr_WJm = 'Tona' THEN Twr_WagaBrutto * 1000
+                WHEN Twr_WJm = 'Kg' OR Twr_WJm = '' THEN Twr_WagaBrutto END
+         , [Waga_Opak] = CASE WHEN Twr_WJm = 'Gram' THEN Twr_WagaBrutto/1000
+                WHEN Twr_WJm = 'Dkg' THEN Twr_WagaBrutto/100
+                WHEN Twr_WJm = 'Tona' THEN Twr_WagaBrutto * 1000
+                WHEN Twr_WJm = 'Kg' OR Twr_WJm = '' THEN Twr_WagaBrutto END -
+                CASE WHEN Twr_WJm = 'Gram' THEN Twr_Waga/1000
+                WHEN Twr_WJm = 'Dkg' THEN Twr_Waga/100
+                WHEN Twr_WJm = 'Tona' THEN Twr_Waga * 1000
+                WHEN Twr_WJm = 'Kg' OR Twr_WJm = '' THEN Twr_Waga END
+         , [Twr_Waga] = CASE WHEN Twr_WJm = 'Gram' THEN Twr_Waga/1000
+                WHEN Twr_WJm = 'Dkg' THEN Twr_Waga/100
+                WHEN Twr_WJm = 'Tona' THEN Twr_Waga * 1000
+                WHEN Twr_WJm = 'Kg' OR Twr_WJm = '' THEN Twr_Waga END
+         , TAP_KosztDstWartosc,Twr_StawkaPodSpr,Twr_ESklep,Twr_Archiwalny,Twr_Punkty,
+		 CASE WHEN TAP_TwrNadrzedny &gt; 0 THEN TAP_TwrNadrzedny ELSE CASE WHEN EXISTS (SELECT * FROM CDN.TwrAplikacje WHERE TAP_TwrNadrzedny = Twr_GIDNumer) THEN 0 ELSE -1 END END
+	FROM #tmpCeny C
+	LEFT JOIN #tmpTowary B ON B.TwrGIDNumer = C.TwrGIDNumer
+	JOIN CDN.TwrKarty ON Twr_GIDNumer = C.TwrGIDNumer
+	JOIN CDN.TwrGrupy PCKTWG ON PCKTWG.TwG_SyncId = @PcKTwGNumer AND PCKTWG.TwG_GIDTyp = @Typ_GrT --1&lt;&gt;1
+	JOIN CDN.TwrGrupyDom on Twr_GIDTyp = TGD_GIDTyp and Twr_GIDNumer = TGD_GIDNumer
+	LEFT OUTER JOIN CDN.KntKarty KntProd ON Twr_PrdNumer = KntProd.Knt_GIDNumer AND Twr_PrdTyp = KntProd.Knt_GIDTyp
+	LEFT OUTER JOIN CDN.Slowniki SlwKGO ON SlwKGO.SLW_ID = Twr_StawkaKGO
+	LEFT OUTER JOIN CDN.TwrAplikacje ON Twr_GIDNumer = TAP_ObiNumer and Twr_GIDTyp = TAP_ObiTyp --1&lt;&gt;1
+	LEFT OUTER JOIN CDN.KatGrupyTwr ON  KGT_Id = TAP_GrupaiMall --1&lt;&gt;1	
+	LEFT OUTER JOIN (/* kod kreskowy wlasny powiazany z jednostka podstawowa */
+        SELECT TwK_Kod, TwK_TwrNumer, TwK_Jm
+        FROM cdn.TwrKody
+        WHERE TwK_Rodzaj=0 AND TwK_Domyslny=1 AND TwK_Pochodzenie = 1) Wlasny ON Wlasny.TwK_TwrNumer=Twr_GIDNumer and Wlasny.TwK_Jm = Twr_jm
+	LEFT OUTER JOIN (/* kod kreskowy obcy powiazany z producentem */
+        SELECT twk_kod, twk_twrnumer, TKK_KntNumer FROM  CDN.TwrKody
+        JOIN cdn.TwrKodyKnt ON tkk_TwKId = TwK_Id
+        WHERE tkk_domyslny=1 AND twk_rodzaj = 1) Knt ON Knt.TwK_TwrNumer = twr_gidnumer AND Knt.TKK_KntNumer = Twr_PrdNumer
+	WHERE B.TwrGIDNumer IS NULL
+
+	
+--Tłumaczenia TWRJ
+CREATE TABLE #tmpTlumaczeniaTwr(TwrGIDNumer INT,JezykID SMALLINT,Kod NVARCHAR(255),Nazwa NVARCHAR(255),Nazwa1 NVARCHAR(255),OpisKrotki NVARCHAR(500),Opis NVARCHAR(MAX),PSTitle NVARCHAR(100),PSKluczowe NVARCHAR(500),POpis NVARCHAR(320),JM NVARCHAR(8),URLTitle NVARCHAR(100),Szukaj NVARCHAR(512))
+INSERT INTO #tmpTlumaczeniaTwr
+    SELECT TwrGIDNumer, CASE WHEN ISNULL(SlwJezyk.SLW_Predefiniowany,0) IN (21,22,23,24,25,34,35,36,98,99,100,101,110) THEN SlwJezyk.SLW_WartoscL3 ELSE 0 END AS JezykID,#tmpTowary.TwrKod AS Kod,CASE WHEN ISNULL(SlwJezyk.SLW_Predefiniowany,0) IN (21,22,23,24,25,34,35,36,98,99,100,101,110) AND ISNULL(SlwJezyk.SLW_WartoscL3,0) IN (4,8) THEN CDN.CyrillicToUnicode(CDN.XLValidateXMLChars(RTRIM(N.TLM_Tekst))) ELSE CDN.XLValidateXMLChars(RTRIM(N.TLM_Tekst)) END AS Nazwa
+	,'',CDN.XLValidateXMLChars(TPO_OpisKrotki),CASE WHEN ISNULL(SlwJezyk.SLW_Predefiniowany,0) IN (21,22,23,24,25,34,35,36,98,99,100,101,110) AND ISNULL(SlwJezyk.SLW_WartoscL3,0) IN (4,8) THEN CDN.CyrillicToUnicode(RTRIM(REPLACE(TwO_Opis,'&amp;#',''))) ELSE CDN.XLValidateXMLChars(RTRIM(REPLACE(TwO_Opis,'&amp;#',''))) END AS Opis
+	,CDN.XLValidateXMLChars(TPO_TytulStrony),CDN.XLValidateXMLChars(TPO_SlowaKluczowe),CDN.XLValidateXMLChars(TPO_MetaOpis),RTRIM(JM.TLM_Tekst) AS JM,CDN.XLValidateXMLChars(TPO_Url),CDN.XLValidateXMLChars(TPO_SlowaKluczoweW)
+	FROM #tmpTowary
+	JOIN CDN.Tlumaczenia AS N ON N.TLM_Numer = TwrGIDNumer AND N.TLM_Typ = @Typ_Twr AND N.TLM_Pole = 2
+	LEFT OUTER JOIN CDN.Slowniki SlwJezyk ON SlwJezyk.SLW_ID = N.TLM_Jezyk AND SLW_WartoscL2 in (2,3) -- parametr isklep24
+	LEFT OUTER JOIN CDN.TwrAplikacjeOpisy ON TwrGIDNumer = TPO_ObiNumer and @Typ_Twr = TPO_ObiTyp AND TPO_JezykId = N.TLM_Jezyk
+	LEFT OUTER JOIN CDN.TwrOpisy ON TwrGIDNumer = TwO_TwrNumer AND TwO_Jezyk = N.TLM_Jezyk
+    LEFT OUTER JOIN CDN.Nazwy AS NJM ON NJM.NAZ_GIDTyp = 144 AND NJM.Naz_Nazwa = TwrJm
+	LEFT OUTER JOIN CDN.Tlumaczenia AS JM ON JM.TLM_Typ = NJM.NAZ_GIDTyp AND JM.TLM_Numer = NJM.NAZ_GIDLp AND JM.TLM_Pole = 2 AND JM.TLM_Jezyk = N.TLM_Jezyk
+	WHERE SlwJezyk.SLW_WartoscL3 != 0
+	UNION ALL -- teraz po polsku
+    SELECT TwrGIDNumer,1,CDN.XLValidateXMLChars(TwrKod),CDN.XLValidateXMLChars(ISNULL(TPO_Nazwa, TwrNazwa)),CDN.XLValidateXMLChars(TwrNazwa1),CDN.XLValidateXMLChars(TPO_OpisKrotki),CDN.XLValidateXMLChars(ISNULL(TPO_Opis, TwO_Opis)),CDN.XLValidateXMLChars(TPO_TytulStrony),CDN.XLValidateXMLChars(TPO_SlowaKluczowe),CDN.XLValidateXMLChars(TPO_MetaOpis),RTRIM(TwrJm) AS JM,CDN.XLValidateXMLChars(TPO_Url),CDN.XLValidateXMLChars(TPO_SlowaKluczoweW)
+	FROM #tmpTowary	
+	LEFT OUTER JOIN CDN.TwrAplikacjeOpisy ON TwrGIDNumer = TPO_ObiNumer and @Typ_Twr = TPO_ObiTyp AND TPO_JezykId = 0
+	LEFT OUTER JOIN CDN.TwrOpisy ON TwrGIDNumer = TwO_TwrNumer AND TwO_Jezyk = 0
+
+--Towary jednostki miary TWRJM
+CREATE TABLE #tmpTwrJM(TWRJMID INT, TWRJMGIDNumer INT, TWRJMJezykID SMALLINT, TWRJMJM  VARCHAR(10) COLLATE Polish_CI_AS, TWRJMJML DECIMAL(15,4), TWRJMJMM DECIMAL(15,4), TWRJMLok SMALLINT, TWRJMDomyslny SMALLINT)
+INSERT INTO #tmpTwrJM
+	SELECT twj_twrlp AS [TWRJMID]
+        , TwJ_TwrNumer AS [TWRJMGIDNumer]
+        , 1 AS [TWRJMJezykID]
+        , TwJ_JmZ AS [TWRJMJM]
+        , TwJ_PrzeliczL AS [TWRJMJML]
+        , TwJ_PrzeliczM AS [TWRJMJMM]
+        , 1 AS [TWRJMLok]
+		, CASE WHEN TwrJMiSklep = TwJ_TwrLp THEN 1 ELSE 0 END AS [TWRJMDomyslny]
+        FROM #tmpTowary
+        INNER JOIN CDN.TwrJm on TwJ_TwrTyp = @Typ_Twr and TwJ_TwrNumer = TwrGIDNumer AND TwJ_iSklep = 1
+        UNION ALL
+        select twj_twrlp
+        , TwJ_TwrNumer
+        , CASE WHEN SLW_Predefiniowany IN (21,22,23,24,25,34,35,36,98,99,100,101,110) THEN SLW_WartoscL3 ELSE 0 END
+        , RTRIM(TLM_Tekst)
+        , TwJ_PrzeliczL
+        , TwJ_PrzeliczM
+        , 0
+		, CASE WHEN TwrJMiSklep = TwJ_TwrLp THEN 1 ELSE 0 END
+        FROM #tmpTowary
+        INNER JOIN CDN.TwrJm ON TwJ_TwrTyp = @Typ_Twr and TwJ_TwrNumer = TwrGIDNumer
+        INNER JOIN CDN.Nazwy ON Naz_GIDTyp = 144 and rtrim(ltrim(TwJ_JmZ)) = rtrim(ltrim(Naz_Nazwa))
+        LEFT OUTER JOIN CDN.Tlumaczenia ON TLM_Numer = Naz_GIDLp AND TLM_Typ = Naz_GIDTyp AND TLM_Pole = 2
+        INNER JOIN CDN.Slowniki ON SLW_ID = TLM_Jezyk AND SLW_WartoscL2 in (2,3) -- parametr isklep24
+        WHERE TwJ_iSklep = 1
+
+--Załączniki ZALI
+CREATE TABLE #tmpZal(DABID INT, DABTwrGIDNumer INT, DABTyp SMALLINT, DABLp INT,DABOPIS NVARCHAR(1025),DABKOD NVARCHAR(40),DABJEZYKID INT,ZALID INT,CzyTlumaczenie TINYINT)
+INSERT INTO #tmpZal
+    SELECT  DAB_ID AS DABID,TwrGIDNumer AS DABTwrGIDNumer,
+		CASE WHEN ISNULL(dd.DAO_Pozycja,dd.DAO_ZalID) = (SELECT MIN(ISNULL(mn.DAO_Pozycja,mn.DAO_ZalID)) FROM CDN.DaneObiekty mn (NOLOCK) WHERE mn.DAO_ObiTyp = dd.DAO_ObiTyp AND mn.DAO_ObiNumer = dd.DAO_ObiNumer AND mn.DAO_ObiLp = dd.DAO_ObiLp AND mn.DAO_ObiSubLp = dd.DAO_ObiSubLp) THEN CDN.ESKLEP_TypZalacznika(DAB_Rozszerzenie,CASE WHEN DAB_Id = DAB_Tlumaczenie THEN 1 ELSE 0 END) ELSE CDN.ESKLEP_TypZalacznika(DAB_Rozszerzenie,0) END AS DABTyp /*zdjecie główne*/,
+		ISNULL(dd.DAO_Pozycja,dd.DAO_ZalID) AS DABLp, CDN.XLValidateXMLChars(DAB_Opis) AS  DABOPIS,CDN.XLValidateXMLChars(DAB_Kod) AS DABKOD,ISNULL(SLW_WartoscL3, 1) AS DABJEZYKID,dd.DAO_ZALID AS ZALID,
+		CASE WHEN dd.DAO_DABId = DAB_Tlumaczenie AND dd.DAO_DABId &lt;&gt; DAB_ID THEN 1 ELSE 0 END AS CzyTlumaczenie
+		FROM #tmpTowary
+		JOIN CDN.DaneObiekty dd ON dd.DAO_ObiTyp = @Typ_Twr AND dd.DAO_ObiNumer = TwrGIDNumer
+		JOIN CDN.DaneBinarne ON (DAO_DABId = DAB_ID) OR (dd.DAO_DABId = DAB_Tlumaczenie)
+		LEFT OUTER JOIN CDN.Slowniki ON SLW_ID = DAB_Jezyk
+		--nowy esklep WHERE 1=(CASE WHEN (@TypExp = 0 AND (DAB_CzasModyfikacji &gt; @PcKTSSynchrTwrPtw OR EXISTS(SELECT * FROM CDN.DaneBinarne testDab WHERE TestDab.DAB_Tlumaczenie = DAO_DABId AND TestDab.DAB_CzasModyfikacji &gt; @PcKTSSynchrTwrPtw))) OR @TypExp = 1 THEN 1 ELSE 0 END) AND dd.DAO_eSklep = 1 -- Jeżeli czasmodyfikacji tłumaczenia się zmienił to musi też wziąć oryginał
+		WHERE dd.DAO_eSklep = 1 AND (SLW_WartoscL3 != 0 OR DAB_Jezyk = 0)
+
+SELECT 1 AS Tag, NULL AS Parent  /* Towary  &lt;TWR&gt; */
+                                ,TwrGIDNumer AS [TWR!1!GIDNumer], TwrKatalog AS [TWR!1!Symbol], TwrURL AS [TWR!1!URL], TwrOkresGwarancji AS [TWR!1!OkresGwarancji], KGO AS [TWR!1!Kgo], GrupaID AS [TWR!1!GrupaID], iGaleria24Grupa AS [TWR!1!iGaleria24Grupa], MarkaID AS [TWR!1!MarkaID], ProducentID AS [TWR!1!ProducentID]
+                                , TwrJm AS [TWR!1!JM], CzyRabat AS [TWR!1!CzyRabat], TAPStatus AS [TWR!1!Status], TAPStatusData AS [TWR!1!StatusData], Dostepnosc AS [TWR!1!Dostepnosc], KontrolaStanow AS [TWR!1!KontrolaStanow], EAN AS [TWR!1!EAN], ProducentKod AS [TWR!1!ProducentKod], KalkulacjaDostaw AS [TWR!1!KalkulacjaDostaw], Flagi AS [TWR!1!Flagi]
+                                ,  WagaBrutto AS [TWR!1!WagaBrutto], WagaOpak AS [TWR!1!WagaOpak], WagaNetto AS [TWR!1!WagaNetto], KalkulacjaDostawWartosc AS [TWR!1!KalkulacjaDostawWartosc], Nadrzedny AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , NULL AS [TWM!11!ID], NULL AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]
+		,NULL AS [ZALI!12]
+				,NULL AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,NULL AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM  #tmpTowary 
+UNION ALL
+SELECT 2 AS Tag, 1 AS Parent  /* Tłumaczenia  &lt;TWRJI&gt; */
+                                ,TwrGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,TwrGIDNumer AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , NULL AS [TWM!11!ID], NULL AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]
+		,NULL AS [ZALI!12]
+				,NULL AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,NULL AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpTowary
+UNION ALL
+SELECT 3 AS Tag, 2 AS Parent  /* Tłumaczenia  &lt;TWRJ&gt; */
+                                ,TwrGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,TwrGIDNumer AS [TWRJ!3!GIDNumer], JezykID AS [TWRJ!3!JezykID], Kod AS [TWRJ!3!Kod], Nazwa AS [TWRJ!3!Nazwa],Nazwa1 AS [TWRJ!3!Nazwa1], Opis AS [TWRJ!3!Opis], JM AS [TWRJ!3!JM], OpisKrotki AS [TWRJ!3!OpisKrotki], PSKluczowe AS [TWRJ!3!PSKluczowe], POpis AS [TWRJ!3!POpis], PSTitle AS [TWRJ!3!PSTitle], URLTitle AS [TWRJ!3!URLTitle], Szukaj AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , NULL AS [TWM!11!ID], NULL AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]
+		,NULL AS [ZALI!12]
+				,NULL AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,NULL AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpTlumaczeniaTwr
+UNION ALL
+SELECT DISTINCT 8 AS Tag, 1 AS Parent  /* Jednostki  &lt;TWRJMI&gt; */
+                                ,TWRJMGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], TWRJMGIDNumer AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , NULL AS [TWM!11!ID], NULL AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]
+		,NULL AS [ZALI!12]
+				,NULL AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,NULL AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpTwrJM
+UNION ALL
+SELECT 9 AS Tag, 8 AS Parent  /* Jednostki  &lt;TWRJM&gt; */
+                                ,TWRJMGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , TWRJMID AS [TWRJM!9!ID], TWRJMGIDNumer AS [TWRJM!9!GIDNumer], TWRJMJezykID AS [TWRJM!9!JezykID], TWRJMJM AS [TWRJM!9!JM], TWRJMJML AS [TWRJM!9!JML], TWRJMJMM AS [TWRJM!9!JMM], TWRJMLok AS [TWRJM!9!Lok], TWRJMDomyslny AS [TWRJM!9!Domyslny],TWRJMID AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , NULL AS [TWM!11!ID], NULL AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]
+		,NULL AS [ZALI!12]
+				,NULL AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,NULL AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpTwrJM
+UNION ALL
+SELECT 10 AS Tag, 1 AS Parent  /* Jednostki  &lt;TWMI&gt; */
+                                ,TWRJMGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , NULL AS [TWM!11!ID], TWRJMGIDNumer AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]
+		,NULL AS [ZALI!12]
+				,NULL AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,NULL AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpTwrJM WHERE TWRJMID IS NOT NULL AND ISNULL(TwrJMJezykID,0) = 1 AND TWRJMDomyslny = 1
+UNION ALL
+SELECT 11 AS Tag, 10 AS Parent  /* Jednostki  &lt;TWM&gt; */
+                                ,TWRJMGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , TWRJMID AS [TWM!11!ID], TWRJMGIDNumer AS [TWM!11!GIDNumer], TWRJMJezykID AS [TWM!11!JezykID], TWRJMJML AS [TWM!11!JML], TWRJMJMM AS [TWM!11!JMM], TWRJMJM AS [TWM!11!JM]  
+		,NULL AS [ZALI!12]
+				,NULL AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,NULL AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpTwrJM WHERE TWRJMID IS NOT NULL AND ISNULL(TwrJMJezykID,0) = 1 AND TWRJMDomyslny = 1
+UNION ALL
+SELECT 12 AS Tag, 1 AS Parent  /* Załączniki  &lt;ZALI&gt; */
+                                ,TwrGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , NULL AS [TWM!11!ID], NULL AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]
+		,NULL AS [ZALI!12]
+				,NULL AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,NULL AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpTowary
+UNION ALL
+SELECT 13 AS Tag, 12 AS Parent  /* Załączniki  &lt;ZAL&gt; */
+                                ,DABTwrGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , 0 AS [TWM!11!ID], NULL AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]  
+		,NULL AS [ZALI!12]
+				,ZALID AS [ZAL!13!ID], DABTwrGIDNumer AS [ZAL!13!GIDNumer], DABTyp AS [ZAL!13!Typ], DABLp AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,ZALID AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpZal WHERE CzyTlumaczenie = 0
+UNION ALL
+SELECT 14 AS Tag, 13 AS Parent  /* Załączniki tłumaczenia &lt;ZALIJ&gt; */
+                                ,DABTwrGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , NULL AS [TWM!11!ID], NULL AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]
+		,NULL AS [ZALI!12]
+				,ZALID AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,ZALID AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpZal WHERE CzyTlumaczenie = 0
+UNION ALL
+SELECT 15 AS Tag, 14 AS Parent  /* Załączniki tłumaczenia &lt;ZAJ&gt; */
+                                ,DABTwrGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , NULL AS [TWM!11!ID], NULL AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]  
+		,NULL AS [ZALI!12]
+				,ZALID AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,ZALID /*aby była unikalność id załącznika*/ AS [ZAJ!15!ID], CASE WHEN DABTyp = 0 THEN 0 ELSE DABJEZYKID END AS [ZAJ!15!JezykID], DABID AS [ZAJ!15!DabID], '' AS [ZAJ!15!TagLink], DABKOD AS [ZAJ!15!TagAlt],0 AS [ZAJ!15!TagRel],DABOPIS AS [ZAJ!15!TagTitle]
+FROM #tmpZal 
+UNION ALL
+SELECT 4 AS Tag, 1 AS Parent  /* Cenniki &lt;CNYI&gt; */
+                                ,TwrGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , NULL AS [CNY!5!GIDNumer],NULL AS [CNY!5!ID], NULL AS [CNY!5!CenaN], NULL AS [CNY!5!CenaB], NULL AS [CNY!5!VAT], NULL AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , NULL AS [TWM!11!ID], TwrGIDNumer AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]
+		,NULL AS [ZALI!12]
+				,NULL AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,NULL AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpTowary
+UNION ALL
+SELECT 5 AS Tag, 4 AS Parent  /* Cenniki &lt;CNY&gt; */
+                                ,TwrGIDNumer AS [TWR!1!GIDNumer], NULL AS [TWR!1!Symbol], NULL AS [TWR!1!URL], NULL AS [TWR!1!OkresGwarancji], NULL AS [TWR!1!Kgo], NULL AS [TWR!1!GrupaID], NULL AS [TWR!1!iGaleria24Grupa], NULL AS [TWR!1!MarkaID], NULL AS [TWR!1!ProducentID]
+                                , NULL AS [TWR!1!JM], NULL AS [TWR!1!CzyRabat], NULL AS [TWR!1!Status], NULL AS [TWR!1!StatusData], NULL AS [TWR!1!Dostepnosc], NULL AS [TWR!1!KontrolaStanow], NULL AS [TWR!1!EAN], NULL AS [TWR!1!ProducentKod], NULL AS [TWR!1!KalkulacjaDostaw], NULL AS [TWR!1!Flagi]
+                                ,  NULL AS [TWR!1!WagaBrutto], NULL AS [TWR!1!WagaOpak], NULL AS [TWR!1!WagaNetto], NULL AS [TWR!1!KalkulacjaDostawWartosc], NULL AS [TWR!1!Nadrzedny]
+        ,NULL AS [TWRJI!2]
+                ,NULL AS [TWRJ!3!GIDNumer], NULL AS [TWRJ!3!JezykID], NULL AS [TWRJ!3!Kod], NULL AS [TWRJ!3!Nazwa],NULL AS [TWRJ!3!Nazwa1], NULL AS [TWRJ!3!Opis], NULL AS [TWRJ!3!JM], NULL AS [TWRJ!3!OpisKrotki], NULL AS [TWRJ!3!PSKluczowe], NULL AS [TWRJ!3!POpis], NULL AS [TWRJ!3!PSTitle], NULL AS [TWRJ!3!URLTitle], NULL AS [TWRJ!3!Szukaj]
+        ,NULL AS [CNYI!4]
+                , TwrGIDNumer AS [CNY!5!GIDNumer],TwCTwrLp AS [CNY!5!ID], TwCWartoscNetto AS [CNY!5!CenaN], TwCWartoscBrutto AS [CNY!5!CenaB], TwC_Podatek AS [CNY!5!VAT], TwC_Punkty AS [CNY!5!Punkty]
+        ,NULL AS [TWRJMI!8]
+                , NULL AS [TWRJM!9!ID], NULL AS [TWRJM!9!GIDNumer], NULL AS [TWRJM!9!JezykID], NULL AS [TWRJM!9!JM], NULL AS [TWRJM!9!JML], NULL AS [TWRJM!9!JMM], NULL AS [TWRJM!9!Lok], NULL AS [TWRJM!9!Domyslny],NULL AS [TWRJM!9!Lp]
+        ,NULL AS [TWMI!10]
+                , 0 AS [TWM!11!ID], NULL AS [TWM!11!GIDNumer], NULL AS [TWM!11!JezykID], NULL AS [TWM!11!JML], NULL AS [TWM!11!JMM], NULL AS [TWM!11!JM]  
+		,NULL AS [ZALI!12]
+				,NULL AS [ZAL!13!ID], NULL AS [ZAL!13!GIDNumer], NULL AS [ZAL!13!Typ], NULL AS [ZAL!13!Lp]
+		,NULL AS [ZALIJ!14]
+		,NULL AS [ZAJ!15]
+				,NULL AS [ZAJ!15!ID], NULL AS [ZAJ!15!JezykID], NULL AS [ZAJ!15!DabID], NULL AS [ZAJ!15!TagLink], NULL AS [ZAJ!15!TagAlt],NULL AS [ZAJ!15!TagRel],NULL AS [ZAJ!15!TagTitle]
+FROM #tmpCeny
+ORDER BY [TWR!1!GIDNumer],[ZAL!13!ID],[ZAJ!15!ID],Tag,[TWRJ!3!JezykID],[CNY!5!ID]
+FOR XML EXPLICIT,  BINARY BASE64
+
+-- po wyslaniu towaru ustawiamy flage Twr_Oddzialowy (informacja o wysłaniu do e-sklepu jest zapisywana na drugim bicie Twr_Oddzialowy)
+UPDATE CDN.TwrKarty SET Twr_Oddzialowy = (Twr_Oddzialowy&amp;1) + 2
+WHERE Twr_Oddzialowy &amp; 2 = 0 AND Twr_GIDNumer IN (SELECT TwrGIDNumer FROM  #tmpTowary )
+
+INSERT INTO CDN.PicoLog (PcL_PcKID, PcL_ObiTyp, PcL_ObiNumer, PcL_ObiektID, PcL_Komentarz, PcL_Info, PcL_TStamp)
+                        SELECT @ID, 16, Twr_GIDNumer, 1, 'Towar - '+ Twr_Kod, '', DATEDIFF(s,CONVERT(DATETIME,'19900101',121),GETDATE())
+                        FROM CDN.TwrKarty
+                        LEFT OUTER JOIN CDN.PicoLog ON PcL_PcKID = @ID AND PcL_ObiTyp = Twr_GIDTyp AND PcL_ObiNumer = Twr_GIDNumer
+                        WHERE Twr_GIDNumer IN (SELECT TwrGIDNumer FROM  #tmpTowary ) AND PcL_ID IS NULL
+
+DELETE A FROM CDN.PicoCenniki A 
+	JOIN #tmpCeny ON TWCID = A.PcC_TwCTwrNumer
+	WHERE A.PcC_TwCTwrTyp = 64 AND A.PcC_PcKID = @ID
+
+INSERT INTO cdn.PicoCenniki (PcC_TwCTwrTyp, PcC_TwCTwrNumer, PcC_TwCTwrLp, PcC_PcKID, PcC_TS)
+		SELECT DISTINCT 64, TwCID, TwCTwrLp, @ID, DATEDIFF(s,CONVERT(DATETIME,'1990-01-01',120),GETDATE())
+		FROM #tmpCeny
+
+DROP TABLE #tmpZal
+DROP TABLE #tmpTwrJM
+DROP TABLE #tmpTlumaczeniaTwr
+DROP TABLE #tmpTowary
+DROP TABLE #tmpCeny
+
+
+SET NOCOUNT OFF
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ESKLEP_EksportTwr" hidden="False">
+GRANT EXECUTE ON CDN.ESKLEP_EksportTwr TO CDNRaport
+</scriptdef>
+</ROOT>

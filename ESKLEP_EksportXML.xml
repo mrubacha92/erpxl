@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury ESKLEP_EksportXML" hidden="True">
+if exists (select * from dbo.sysobjects where id = object_id(N'CDN.ESKLEP_EksportXML') and OBJECTPROPERTY(id, N'IsProcedure') = 1)
+  drop procedure CDN.ESKLEP_EksportXML
+</scriptdef>
+<scriptdef name="Tworzenie procedury ESKLEP_EksportXML" hidden="False">
+CREATE PROCEDURE [CDN].[ESKLEP_EksportXML]
+  @ID INT             -- ID e-sklepu
+ ,@Opcje INT          -- Maska opcji eksportu
+ AS
+SET NOCOUNT ON
+
+DECLARE  @ExpCennik                             INT -- Eksport cennika (0 - nie, 1 - tak)
+                ,@ExpCennikTyp                  INT -- Typ eksportu cennika (0 - różnicowy, 1 - pełny)
+                ,@ExpGrup                               INT -- Eksport grup (0 - nie, 1 - tak)
+                ,@ExpGrupTyp                    INT -- Typ eksportu grup (0 - różnicowy, 1 - pełny)
+                ,@ExpDaneBinarne                INT -- Eksport danych binarnych (0 - nie, 1 - tak)
+                ,@ExpDaneBinarneTyp             INT     -- Typ eksportu danych binarnych (0 - różnicowy, 1 - pełny)
+                ,@ExpDaneBinarnePaczki  INT -- Eksport danych binarnych w paczkach (0 - pierwsza paczka, 1 - kolejne paczki z sami danymi binarnymi)
+                ,@ExpZasoby                             INT -- Eksport zasobów towarowych (0 - nie, 1 - tak)
+                ,@ExpCen                             INT -- Eksport tylko cen (0 - nie, 1 - tak)
+                ,@ExpKontrahentow                             INT -- Eksport kontrahentow, tylko nowi, nie aktualizujemy (0 - nie, 1 - tak)
+				,@ExpKontrahentowTyp			INT  --Typ eksportu kontrahentów (0 - różnicowy, 1 - pełny)                                
+				,@ExpAtrTyp			INT  --Typ eksportu atrybutow (0 - różnicowy, 1 - pełny)                                
+
+DECLARE @DABID INT                      -- ID danych binarnych, które były wysłane jako ostatnie w poprzedniej paczce
+DECLARE @PcK_Stan     INT   -- Stan e-sklepu : (0 - nowy; 1 - wykonano pierwszy eksport; 2 - wykonano pełną synchronizację (import,eksport) )
+
+SELECT  @PcK_Stan =   (SELECT PcK_Stan FROM CDN.PicoKonfig WHERE PcK_PicoID = @ID)
+
+SELECT   @ExpCennik                             =  @Opcje &amp; 1
+                ,@ExpCennikTyp                  = (@Opcje &amp; 2) / 2
+                ,@ExpGrup                               = (@Opcje &amp; 4) / 4
+            ,@ExpGrupTyp                        = (@Opcje &amp; 8) / 8
+                ,@ExpDaneBinarne                = (@Opcje &amp; 16) / 16
+                ,@ExpDaneBinarneTyp             = (@Opcje &amp; 32) / 32
+                ,@ExpDaneBinarnePaczki  = (@Opcje &amp; 64) / 64
+                ,@ExpZasoby                             = (@Opcje &amp; 128) / 128
+                ,@ExpCen							=  (@Opcje &amp; 256) / 256
+                ,@ExpKontrahentow					=  (@Opcje &amp; 512) / 512
+				,@ExpKontrahentowTyp				=  (@Opcje &amp; 1024) / 1024
+                
+ IF (SELECT PcK_TSSynchrTwrPtw FROM CDN.PicoKonfig WHERE PcK_PicoID = @ID) = 0 AND @Opcje &gt; 0
+         SET @ExpCennikTyp = 1
+ IF (SELECT PcK_TSSynchrGrupPtw FROM CDN.PicoKonfig WHERE PcK_PicoID = @ID) = 0 AND @Opcje &gt; 0
+         SET @ExpGrupTyp = 1
+
+SET @ExpAtrTyp = 1
+
+ SET @Opcje = @ExpCennik + 2*@ExpCennikTyp + 4*@ExpGrup + 8*@ExpGrupTyp + 16*@ExpDaneBinarne + 32*@ExpDaneBinarneTyp + 64*@ExpDaneBinarnePaczki + 128*@ExpZasoby + 
+ 256*@ExpCen + 512*@ExpKontrahentow + 4096*@ExpCennik + 8192*(CASE WHEN @Opcje &gt; 0 THEN @ExpAtrTyp ELSE 0 END)
+
+ UPDATE CDN.PicoKonfig SET PcK_EtapSynchronizacji = 2  WHERE PcK_PicoID = @ID -- etap synchronizacji: eksport
+
+ SELECT '&lt;ROOT&gt;'
+ EXEC CDN.ESKLEP_EksportInfoBlok @ID, @Opcje
+
+ IF @ExpDaneBinarnePaczki = 0 AND @ExpCen = 0
+        BEGIN
+                SELECT '&lt;PTWI&gt;'         -- Eksport potwierdzeń
+                EXEC CDN.ESKLEP_EksportPtw @ID, @ExpCennik, @ExpCennikTyp
+                SELECT '&lt;/PTWI&gt;'
+
+				SELECT '&lt;ZGDI&gt;'         -- Eksport definicji rodzajów zgód
+                EXEC CDN.ESKLEP_EksportRodzajowZgod @ID, 0
+                SELECT '&lt;/ZGDI&gt;'
+
+                IF (@ExpZasoby = 1)
+                        BEGIN
+                                SELECT '&lt;CECI&gt;'         -- Słownik cech towaru
+                                EXEC CDN.ESKLEP_EksportTwrCechy @ID, 1
+                                SELECT '&lt;/CECI&gt;'                        
+                        
+                                SELECT '&lt;CECA&gt;'         -- Słownik wartości cech towaru
+                                EXEC CDN.ESKLEP_EksportTwrWartoscCechy @ID, 1
+                                SELECT '&lt;/CECA&gt;'                        
+                        
+                                SELECT '&lt;CETC&gt;'         -- Przyporządkowanie cech do towaru
+                                EXEC CDN.ESKLEP_EksportTwrDoCechy @ID, 1
+                                SELECT '&lt;/CETC&gt;'
+                                                        
+                                SELECT '&lt;ZSBI&gt;'         -- Eksport stanów magazynowych
+                                EXEC CDN.ESKLEP_EksportTwrZasoby @ID, 1
+                                SELECT '&lt;/ZSBI&gt;'
+                        END
+
+                UPDATE CDN.PicoKonfig SET PcK_Blokady = 0 WHERE PcK_PicoID = @ID
+
+                IF (@ExpCennik = 1 AND @ExpDaneBinarne = 1)
+                        BEGIN
+                                SELECT '&lt;DABI&gt;' -- Eksport danych binarnych (pierwsza paczka)
+                                EXEC CDN.ESKLEP_EksportDaneBinarne @ID, @ExpCennikTyp, 0
+                                SELECT '&lt;/DABI&gt;'
+                        END
+
+                IF (@ExpGrup = 1)
+                        BEGIN
+                                SELECT '&lt;TWGI&gt;' -- Eksport grup towarowych
+                                EXEC CDN.ESKLEP_EksportGrup @ID, @ExpGrupTyp
+                                SELECT '&lt;/TWGI&gt;'
+								IF (@ExpCennik = 0)
+								BEGIN
+									SELECT '&lt;RBTI&gt;' -- Wysylanie rabatów
+									EXEC CDN.ESKLEP_EksportRabaty @ID, @ExpCennikTyp
+									SELECT '&lt;/RBTI&gt;'
+								END
+                        END
+                        
+				IF (@ExpKontrahentow = 1 )
+					BEGIN
+                                SELECT '&lt;KNTI&gt;' -- Wysyłanie kontrahentów róźnicowo 0, 1 pelny
+                                EXEC CDN.ESKLEP_EksportKnt @ID, @ExpKontrahentowTyp
+                                SELECT '&lt;/KNTI&gt;'      
+								IF (@ExpCennik = 0)
+								BEGIN
+									SELECT '&lt;RBTI&gt;' -- Wysylanie rabatów
+									EXEC CDN.ESKLEP_EksportRabaty @ID, @ExpCennikTyp
+									SELECT '&lt;/RBTI&gt;'
+								END                  
+                     END           
+
+                IF (@ExpCennik = 1)
+                        BEGIN
+                                SELECT '&lt;WALK&gt;' -- Eksport walut
+                                EXEC CDN.ESKLEP_EksportWalut @ID
+                                SELECT '&lt;/WALK&gt;'
+
+                                SELECT '&lt;MAGI&gt;' -- Eksport walut                                                
+                                EXEC CDN.ESKLEP_EksportMagazynow @ID
+                                SELECT '&lt;/MAGI&gt;'
+
+                                SELECT '&lt;CNDY&gt;' -- Eksport słwonika cen
+                                EXEC CDN.ESKLEP_EksportCenySlownik @ID
+                                SELECT '&lt;/CNDY&gt;'
+                                                        
+                                SELECT '&lt;TWRI&gt;' -- Eksport towarów
+                                EXEC CDN.ESKLEP_EksportTwr @ID, @ExpCennikTyp
+                                SELECT '&lt;/TWRI&gt;'
+
+                                SELECT '&lt;TWRATRI&gt;'
+                                EXEC CDN.ESKLEP_EksportTwrAtrybuty @ID, @ExpCennikTyp
+                                SELECT '&lt;/TWRATRI&gt;'
+
+                                SELECT '&lt;TWPII&gt;&lt;TWPI&gt;' -- Eksport towarów powiązanych (zestawy - Akcesoria, zamienniki - Kupili również..)
+                                EXEC CDN.ESKLEP_EksportTwrPowiazane @ID, @ExpCennikTyp
+                                SELECT '&lt;/TWPI&gt;&lt;/TWPII&gt;'
+                                
+                                SELECT '&lt;PDRI&gt;' -- Eksport producentów
+                                EXEC CDN.ESKLEP_EksportTwrProducent @ID, @ExpCennikTyp
+                                SELECT '&lt;/PDRI&gt;'
+
+                                SELECT '&lt;MRKI&gt;' -- Eksport marek
+                                EXEC CDN.ESKLEP_EksportTwrMarka @ID, @ExpCennikTyp
+                                SELECT '&lt;/MRKI&gt;'
+                                
+                                SELECT '&lt;SATRI&gt;' -- Wysylanie wartosci dla atrybutow przyslanych z iSklep
+                                EXEC CDN.ESKLEP_EksportAtrybuty @ID, @ExpCennikTyp
+                                SELECT '&lt;/SATRI&gt;'
+
+								SELECT '&lt;OATRI&gt;'
+                                EXEC CDN.ESKLEP_EksportAtrybutyObiekty @ID, @ExpCennikTyp
+                                SELECT '&lt;/OATRI&gt;'
+                                
+                                SELECT '&lt;DOKI&gt;' -- Wysylanie wartosci faktur dla zamówień z iSklepu
+                                EXEC CDN.ESKLEP_EksportDBFaktur @ID, @ExpCennikTyp
+                                SELECT '&lt;/DOKI&gt;'
+                                
+                                SELECT '&lt;RBTI&gt;' -- Wysylanie rabatów
+                                EXEC CDN.ESKLEP_EksportRabaty @ID, @ExpCennikTyp
+                                SELECT '&lt;/RBTI&gt;'
+                        END
+        END
+ELSE IF @ExpCen = 1
+		BEGIN
+		
+				SELECT '&lt;CNDY&gt;' -- Eksport słwonika cen
+				EXEC CDN.ESKLEP_EksportCenySlownik @ID
+				SELECT '&lt;/CNDY&gt;'
+                SELECT '&lt;TWRI&gt;&lt;TWR&gt;&lt;CNYI&gt;' -- Eksport cen
+                EXEC CDN.ESKLEP_EksportCeny @ID, @ExpCennikTyp
+                SELECT '&lt;/CNYI&gt;&lt;/TWR&gt;&lt;/TWRI&gt;'		
+				SELECT '&lt;RBTI&gt;' -- Wysylanie rabatów
+                EXEC CDN.ESKLEP_EksportRabaty @ID, @ExpCennikTyp
+                SELECT '&lt;/RBTI&gt;'
+                
+		END
+ELSE IF @ExpDaneBinarne = 1
+        BEGIN
+                SELECT @DABID = PcK_Blokady FROM CDN.PicoKonfig WHERE PcK_PicoID = @ID
+                SELECT '&lt;DABI&gt;' -- Eksport danych binarnych (kolejne paczki)
+                EXEC CDN.ESKLEP_EksportDaneBinarne @ID, @ExpCennikTyp, @DABID
+                SELECT '&lt;/DABI&gt;'
+        END
+SELECT '&lt;/ROOT&gt;'
+ UPDATE CDN.PicoKonfig SET PcK_EtapSynchronizacji = 0  WHERE PcK_PicoID = @ID -- Etap synchronizacji: bezczynny
+
+ IF @PcK_Stan = 0 -- nowo utworzony oddział
+        UPDATE CDN.PicoKonfig SET PcK_Stan = 1  WHERE PcK_PicoID = @ID -- Wykonano pierwszą synchronizację: eksport
+
+SET NOCOUNT OFF
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ESKLEP_EksportXML" hidden="False">
+GRANT EXECUTE ON CDN.ESKLEP_EksportXML TO CDNRaport
+</scriptdef>
+</ROOT>

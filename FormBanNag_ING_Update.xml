@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Zmiana adresu webservice dla ING Bank Śląski - WebService" hidden="False">
+	UPDATE CDN.FormBanNag
+	SET FBN_CDCAdres = 'https://ws.ingbusiness.pl/ing-ccs/cdc00101'
+	WHERE FBN_Nazwa = 'ING Bank Śląski - WebService' AND FBN_CDCAdres = 'https://ws.ingbusinessonline.pl/ing-ccs/cdc00101'
+</scriptdef>
+</ROOT>

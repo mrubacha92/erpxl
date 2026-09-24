@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:32:30 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name=" Dodawanie predefiniowanego formatu przelewu Millennium do CDN.FormBanNag" hidden="False">
+
+declare @MaxId int;
+
+select @MaxId = max(FBN_Id) from cdn.FormBanNag
+
+insert into CDN.FormBanNag(FBN_Id, FBN_Nazwa, FBN_Rozszerzenie, FBN_FormatDaty, FBN_Trim,
+FBN_SeparPol, FBN_SeparTys, FBN_ZnakDzies, FBN_OgrTekst, FBN_PodzWier, FBN_StronaKodowa, FBN_OddzielajPola, 
+FBN_ZamianaOgrTekst, FBN_WielkieLitery, FBN_SeparTytulem, FBN_Opis, FBN_CDC, FBN_CDCAdres)
+values(@MaxId + 1,'mBank – Webservice','','',1,'','','','','',0,0,'',0,'','',
+1,'https://ws.companynet.mbank.pl/mt/services/IBREService_v1_0')
+
+</scriptdef>
+</ROOT>

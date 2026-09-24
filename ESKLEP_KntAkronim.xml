@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="ESKLEP_KntAkronim">
+CREATE FUNCTION CDN.ESKLEP_KntAkronim (
+  @ESklepID INT             -- ID e-sklepu
+ ,@KntID    INT )           -- ID kontrahenta w e-sklepie
+RETURNS VARCHAR(20)
+BEGIN
+	DECLARE @Akronim VARCHAR(20)
+	SET @Akronim = 'ESKL' + CAST(@EsklepID AS VARCHAR) + '_' + CAST(@KntID AS VARCHAR)
+	RETURN @Akronim
+END
+
+</functiondef>
+</ROOT>

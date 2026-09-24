@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:30:52 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<scriptdef name="Kasowanie procedury ESKLEP_ImportTlumaczenRodzajowZgod" hidden="True">
+IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'CDN.ESKLEP_ImportTlumaczenRodzajowZgod') AND OBJECTPROPERTY(id, N'IsProcedure') = 1)
+  DROP PROCEDURE CDN.ESKLEP_ImportTlumaczenRodzajowZgod
+</scriptdef>
+<scriptdef name="Tworzenie procedury ESKLEP_ImportTlumaczenRodzajowZgod" hidden="False">
+CREATE PROCEDURE CDN.ESKLEP_ImportTlumaczenRodzajowZgod
+	@SlwId INT,
+	@PoleTlm SMALLINT,
+	@JezykSklepID SMALLINT,
+	@Tekst VARCHAR(2048)
+
+AS
+	SET NOCOUNT ON
+	DECLARE @E_TypSlownik SMALLINT = 8225
+	DECLARE @JezykIDXL INT;
+
+	SELECT @JezykIDXL = SLW_ID FROM CDN.Slowniki JOIN CDN.SlownikiStruktura ON SLW_SLSID = SLS_ID WHERE SLS_Predefiniowany = 95 AND SLW_WartoscL2 IN (2,3) AND SLW_WartoscL3 = @JezykSklepID
+	IF @JezykIDXL IS NULL
+		RETURN
+
+	IF NOT EXISTS(SELECT * FROM CDN.Tlumaczenia WHERE TLM_Typ = @E_TypSlownik AND TLM_Numer = @SlwId AND TLM_Pole = @PoleTlm AND TLM_Jezyk = @JezykIDXL)
+		INSERT INTO CDN.Tlumaczenia (TLM_Typ,TLM_Numer,TLM_Lp,TLM_Pole,TLM_Jezyk,TLM_Tekst) VALUES (@E_TypSlownik,@SlwId,0,@PoleTlm,@JezykIDXL,@Tekst)
+	ELSE
+		UPDATE CDN.Tlumaczenia SET TLM_Tekst = @Tekst WHERE TLM_Typ = @E_TypSlownik AND TLM_Numer = @SlwId AND TLM_Pole = @PoleTlm AND TLM_Jezyk = @JezykIDXL
+	
+
+	SET NOCOUNT OFF	
+
+</scriptdef>
+<scriptdef name="Przyznanie praw do procedury ESKLEP_ImportTlumaczenRodzajowZgod" hidden="False">
+GRANT EXECUTE ON CDN.ESKLEP_ImportTlumaczenRodzajowZgod TO CDNRaport
+</scriptdef>
+</ROOT>

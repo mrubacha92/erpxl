@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="windows-1250" ?>
+<?xml-stylesheet type="text/xsl" href="Style\Sql.xsl" ?>
+<!-- Plik wygenerowany automatycznie ze skryptu sql 18.9.2019 19:28:7 -->
+<!-- Copyright (C)CDN 2003 -->
+<ROOT>
+<functiondef name="ESKLEP_WyliczIloscBezRezerwacji">
+CREATE FUNCTION CDN.ESKLEP_WyliczIloscBezRezerwacji(@str varchar(255),@uwzglRez tinyint)
+RETURNS 
+DECIMAL(15,4)
+AS
+BEGIN
+DECLARE @wartosc DECIMAL(15,4)
+	set @wartosc = CAST(CDN.SubstringEx(@str,':',1) AS DECIMAL(15,4))-CASE WHEN @uwzglRez = 1 THEN CAST(CDN.SubstringEx(@str,':',3) AS DECIMAL(15,4)) ELSE 0 END
+	IF @wartosc &lt; 0  set @wartosc = 0
+	return @wartosc
+END
+</functiondef>
+</ROOT>
